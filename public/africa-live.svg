@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="100" viewBox="0 0 420 100">
+  <rect x="4" y="20" width="60" height="60" rx="18" fill="#facc15"/>
+  <path d="M28 36L49 50L28 64Z" fill="#09090b"/>
+  <text x="82" y="64" font-family="Arial,sans-serif" font-size="40" font-weight="800" fill="#fafafa">AFRICA <tspan fill="#facc15">LIVE</tspan></text>
+</svg>

@@ -1,0 +1,76 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1784753720298,
+      "tag": "0000_lumina_source_of_truth",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784753723115,
+      "tag": "0001_adopt_existing_lumina",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784754869458,
+      "tag": "0002_secure_catalog_lifecycle",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784757326680,
+      "tag": "0003_centralized_identity_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1784757398594,
+      "tag": "0004_clerk_session_lifecycle",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1784758839446,
+      "tag": "0005_reliable_playback",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1784762745518,
+      "tag": "0006_reliable_telemetry",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1784832238868,
+      "tag": "0007_playback_attempts",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784835683416,
+      "tag": "0008_direct_stream_eligibility",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1784838393649,
+      "tag": "0009_clerk_billing_abuse_foundations",
+      "breakpoints": true
+    }
+  ]
+}

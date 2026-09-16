@@ -1,0 +1,2 @@
+ALTER TABLE "playback_events" ADD COLUMN "attempt_id" text;--> statement-breakpoint
+CREATE UNIQUE INDEX "playback_events_attempt_lifecycle_unique_idx" ON "playback_events" USING btree ("attempt_id","event") WHERE "playback_events"."attempt_id" is not null and "playback_events"."event" in ('opened', 'started', 'stopped');
