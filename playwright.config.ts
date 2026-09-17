@@ -22,7 +22,8 @@ export default defineConfig({
     : {
         command: 'npm run dev',
         url: process.env.E2E_BASE_URL ?? 'http://localhost:3001',
-        reuseExistingServer: !process.env.CI,
+        // Reusing another checkout on port 3001 can produce a false positive.
+        reuseExistingServer: !process.env.CI && process.env.E2E_REUSE_SERVER === 'true',
         timeout: 120_000,
       },
 });

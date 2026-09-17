@@ -43,7 +43,8 @@ export async function findVlcCommand() {
 export async function launchLocalVlc(url: string) {
   const command = await findVlcCommand();
   return new Promise<void>((resolve, reject) => {
-    const vlc = spawn(command, ['--one-instance', '--no-playlist-enqueue', '--no-qt-start-minimized', '--', url], {
+    // VLC is installed on the local workstation, never packaged with the server.
+    const vlc = spawn(/* turbopackIgnore: true */ command, ['--one-instance', '--no-playlist-enqueue', '--no-qt-start-minimized', '--', url], {
       detached: true, stdio: 'ignore', windowsHide: false,
     });
     vlc.once('spawn', () => { vlc.unref(); resolve(); });

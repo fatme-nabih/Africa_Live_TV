@@ -65,7 +65,7 @@ function validatePolicy(policy: RateLimitPolicy) {
   }
 }
 
-function policyKey(policy: RateLimitPolicy) {
+export function rateLimitPolicyKey(policy: RateLimitPolicy) {
   validatePolicy(policy);
   return createHmac('sha256', hashSecret())
     .update(
@@ -96,7 +96,7 @@ export async function consumeRateLimits(
     { key: string; policy: RateLimitPolicy }
   >();
   for (const policy of policies) {
-    const key = policyKey(policy);
+    const key = rateLimitPolicyKey(policy);
     uniquePolicies.set(key, { key, policy });
   }
   const ordered = [...uniquePolicies.values()].sort((left, right) =>

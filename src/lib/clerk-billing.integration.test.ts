@@ -9,6 +9,7 @@ import { clerkBillingEvents, subscriptions, users } from '@/db/schema';
 
 import { processVerifiedClerkBillingEvent } from './clerk-billing-sync';
 import { syncClerkUser } from './identity';
+import { assertIntegrationTarget } from './integration-test-safety';
 
 const enabled = process.env.CLERK_BILLING_INTEGRATION_TEST === '1';
 
@@ -16,6 +17,7 @@ test(
   'Clerk Billing webhooks are idempotent and materialize subscription access',
   { skip: !enabled },
   async () => {
+    await assertIntegrationTarget(pool);
     const suffix = randomUUID();
     const clerkUserId = `user_billing_${suffix}`;
     const itemId = `subi_${suffix}`;

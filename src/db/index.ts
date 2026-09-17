@@ -2,8 +2,10 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { loadEnvConfig } from '@next/env';
 import { Pool } from 'pg';
 import * as schema from './schema';
+import { integrationTestSchema } from '../lib/integration-test-safety';
 
 loadEnvConfig(process.cwd());
+const testSchema = integrationTestSchema(process.env);
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -27,6 +29,8 @@ export const pool =
   globalForDb.pgPool ??
   new Pool({
     connectionString,
+    // No public fallback: a missing test table must fail, never reach local data.
+    ...(testSchema ? { options: `-c search_path=${testSchema}` } : {}),
   });
 
 if (process.env.NODE_ENV !== 'production') {

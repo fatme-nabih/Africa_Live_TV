@@ -775,7 +775,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
               exit={{ opacity: 0 }}
               className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/70 text-zinc-200"
             >
-              <LoaderCircle className="h-10 w-10 animate-spin text-yellow-300" />
+              <LoaderCircle className="h-10 w-10 animate-spin text-amber-400" />
               <span className="mt-3 text-sm font-bold">
                 {state.phase === 'resolving'
                   ? 'Actualisation des flux…'
@@ -795,7 +795,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
               onClick={() => startPlayback(true)}
               className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/70 text-white transition hover:bg-black/60"
             >
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-yellow-400 text-black shadow-lg shadow-yellow-900/30">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black shadow-lg shadow-amber-500/30">
                 <Play className="h-7 w-7 fill-current" />
               </span>
               <span className="mt-4 text-sm font-bold">
@@ -814,14 +814,14 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
               exit={{ opacity: 0 }}
               className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/85 p-6 text-center"
             >
-              <AlertCircle className="mb-4 h-14 w-14 text-yellow-400" />
+              <AlertCircle className="mb-4 h-14 w-14 text-amber-400" />
               <h4 className="text-xl font-bold text-zinc-100">{failureLabels[visibleFailure.category]}</h4>
               <p className="mt-2 max-w-lg text-sm text-zinc-300">{visibleFailure.message}</p>
               {state.attemptId && (
                 <button
                   type="button"
                   onClick={state.engine === 'vlc' ? () => openExternalPlayer(true) : tryAnotherSource}
-                  className="mt-5 inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-5 py-3 text-sm font-bold text-zinc-100 transition hover:border-yellow-300/60"
+                  className="mt-5 inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-5 py-3 text-sm font-bold text-zinc-100 transition hover:border-amber-400/60"
                 >
                   <RefreshCw className="h-4 w-4" />
                   {state.engine === 'vlc' ? 'Réessayer VLC' : 'Essayer une autre source'}
@@ -837,7 +837,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
               exit={{ opacity: 0 }}
               className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/85 p-6 text-center"
             >
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-yellow-400/15 text-yellow-300 ring-1 ring-yellow-300/30">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-400/30">
                 <ExternalLink className="h-8 w-8" />
               </span>
               <h4 className="mt-5 text-xl font-bold text-zinc-100">Ouvrez cette chaîne dans VLC</h4>
@@ -849,7 +849,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
                   <button
                     type="button"
                     onClick={tryAnotherSource}
-                    className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-5 py-3 text-sm font-bold text-zinc-100 transition hover:border-yellow-300/60"
+                    className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-5 py-3 text-sm font-bold text-zinc-100 transition hover:border-amber-400/60"
                   >
                     <RefreshCw className="h-4 w-4" />
                     Autre source web
@@ -858,7 +858,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
                 <button
                   type="button"
                   onClick={() => openExternalPlayer(true)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-yellow-400 px-5 py-3 text-sm font-bold text-black shadow-lg shadow-yellow-900/20 transition hover:bg-yellow-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-100"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 px-5 py-3 text-sm font-extrabold text-black shadow-lg shadow-amber-500/25 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
                 >
                   <ExternalLink className="h-4 w-4" />
                   Ouvrir dans VLC
@@ -874,7 +874,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
               exit={{ opacity: 0 }}
               className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/85 p-6 text-center"
             >
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-yellow-400/15 text-yellow-300 ring-1 ring-yellow-300/30">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-400/30">
                 <ExternalLink className="h-8 w-8" />
               </span>
               <h4 className="mt-5 text-xl font-bold text-zinc-100">VLC est prêt</h4>
@@ -884,7 +884,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
               <button
                 type="button"
                 onClick={confirmMobileExternalPlayer}
-                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-yellow-400 px-5 py-3 text-sm font-bold text-black shadow-lg shadow-yellow-900/20 transition hover:bg-yellow-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-100"
+                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 px-5 py-3 text-sm font-extrabold text-black shadow-lg shadow-amber-500/25 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
               >
                 <ExternalLink className="h-4 w-4" />
                 Ouvrir VLC maintenant
@@ -899,7 +899,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
               exit={{ opacity: 0 }}
               className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/85 p-6 text-center"
             >
-              <ExternalLink className="mb-4 h-14 w-14 text-yellow-400" />
+              <ExternalLink className="mb-4 h-14 w-14 text-amber-400" />
               <h4 className="text-xl font-bold text-zinc-100">VLC lancé</h4>
               <p className="mt-2 max-w-lg text-sm text-zinc-300">
                 Le lien a été transmis à VLC. La disponibilité de la vidéo dépend de la source ; vous pouvez revenir au catalogue.
@@ -922,7 +922,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
 
       <div className="flex flex-col gap-4 bg-zinc-950/80 p-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-yellow-300">En direct</span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400">En direct</span>
           <h3 className="truncate text-xl font-extrabold tracking-tight text-zinc-100">{displayedChannelName}</h3>
           <p className="mt-2 truncate text-xs text-zinc-400">
             {source ? 'Source sélectionnée' : 'Source indisponible'}
@@ -935,7 +935,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
             type="button"
             onClick={externalReady ? confirmMobileExternalPlayer : () => openExternalPlayer(true)}
             disabled={state.phase === 'external-opening'}
-            className="inline-flex items-center gap-2 rounded-xl bg-yellow-400 px-5 py-2.5 text-sm font-bold text-black shadow-lg shadow-yellow-900/20 transition hover:bg-yellow-300 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 px-5 py-2.5 text-sm font-extrabold text-black shadow-lg shadow-amber-500/20 transition hover:brightness-110 disabled:opacity-50"
           >
             {state.phase === 'external-opening' ? (
               <LoaderCircle className="h-4 w-4 animate-spin" />

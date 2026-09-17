@@ -5,6 +5,7 @@ import test from 'node:test';
 import { eq, inArray } from 'drizzle-orm';
 
 import { db, pool } from '@/db';
+import { assertIntegrationTarget } from './integration-test-safety';
 import {
   channels,
   playbackAttempts,
@@ -20,7 +21,7 @@ test(
   'server-owned resolution creates a session and permits only a unit fallback',
   { skip: !integrationEnabled },
   async () => {
-    assert.notEqual(process.env.NODE_ENV, 'production');
+    await assertIntegrationTarget(pool);
 
     const suffix = randomUUID();
     const userId = `lot8-user-${suffix}`;

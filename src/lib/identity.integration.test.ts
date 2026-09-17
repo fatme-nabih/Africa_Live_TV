@@ -1,21 +1,25 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { randomUUID } from 'node:crypto';
 
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 
 import { db, pool } from '@/db';
 import { apiAbuseCases, apiRateLimits, sessions, users } from '@/db/schema';
 
 import { clearAbuseCase, recordRateLimitAlert } from './abuse-alerts';
 import { syncClerkSession, syncClerkUser } from './identity';
-import { consumeRateLimit } from './rate-limit';
+import { consumeRateLimit, rateLimitPolicyKey } from './rate-limit';
+import { assertIntegrationTarget } from './integration-test-safety';
 
 const enabled = process.env.L3_INTEGRATION_TEST === '1';
 
 test('identity sync is idempotent and rate limits are enforced', { skip: !enabled }, async () => {
-  const clerkUserId = 'user_l3_integration_test';
-  await db.delete(users).where(eq(users.clerkUserId, clerkUserId));
-  await db.delete(apiRateLimits);
+  await assertIntegrationTarget(pool);
+  const suffix = randomUUID();
+  const clerkUserId = `user_l3_${suffix}`;
+  const sessionId = `sess_l3_${suffix}`;
+  const quotaKeys: string[] = [];
 
   try {
     const first = await syncClerkUser({
@@ -41,7 +45,7 @@ test('identity sync is idempotent and rate limits are enforced', { skip: !enable
     );
 
     await syncClerkSession({
-      id: 'sess_l3_integration_test',
+      id: sessionId,
       userId: first.id,
       status: 'active',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
@@ -50,7 +54,7 @@ test('identity sync is idempotent and rate limits are enforced', { skip: !enable
       endedAt: null,
     });
     await syncClerkSession({
-      id: 'sess_l3_integration_test',
+      id: sessionId,
       userId: first.id,
       status: 'ended',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
@@ -61,11 +65,14 @@ test('identity sync is idempotent and rate limits are enforced', { skip: !enable
     const storedSessions = await db
       .select()
       .from(sessions)
-      .where(eq(sessions.id, 'sess_l3_integration_test'));
+      .where(eq(sessions.id, sessionId));
     assert.equal(storedSessions.length, 1);
     assert.equal(storedSessions[0]?.status, 'ended');
 
     const options = { userId: first.id, bucket: 'integration', limit: 2, windowSeconds: 60 };
+    quotaKeys.push(...[
+      { bucket: 'integration', limit: 2 }, { bucket: 'integration.concurrent', limit: 5 },
+    ].map(policy => rateLimitPolicyKey({ ...policy, dimension: 'user', subject: first.id, windowSeconds: 60 })));
     assert.equal((await consumeRateLimit(options)).allowed, true);
     assert.equal((await consumeRateLimit(options)).allowed, true);
     const denied = await consumeRateLimit(options);
@@ -98,7 +105,7 @@ test('identity sync is idempotent and rate limits are enforced', { skip: !enable
     assert.equal(concurrent.filter((result) => !result.allowed).length, 15);
   } finally {
     await db.delete(users).where(eq(users.clerkUserId, clerkUserId));
-    await db.delete(apiRateLimits);
+    if (quotaKeys.length) await db.delete(apiRateLimits).where(inArray(apiRateLimits.key, quotaKeys));
     await pool.end();
   }
 });

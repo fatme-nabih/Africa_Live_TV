@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
 
-import { currentUser } from '@clerk/nextjs/server';
 import { and, eq, isNull, lte, or } from 'drizzle-orm';
 
 import { db } from '@/db';
@@ -91,6 +90,8 @@ export async function ensureInternalUser(clerkUserId: string) {
   const existing = await findInternalUserByClerkId(clerkUserId);
   if (existing) return existing;
 
+  // Webhook/database synchronization can run independently of the Next request runtime.
+  const { currentUser } = await import('@clerk/nextjs/server');
   const clerkUser = await currentUser();
   if (!clerkUser || clerkUser.id !== clerkUserId) {
     throw new Error('Authenticated Clerk user could not be loaded.');

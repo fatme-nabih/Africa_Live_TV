@@ -7,9 +7,9 @@ import { db, pool } from '@/db';
 import { catalogImports, channels, playbackEvents, streams, userFavorites } from '@/db/schema';
 
 import { runCatalogImport } from './catalog-import';
+import { assertIntegrationTarget } from './integration-test-safety';
 
 const integrationEnabled = process.env.CATALOG_INTEGRATION_TEST === '1';
-const expectedDatabaseMarker = '_l2_catalog_test';
 
 const firstPlaylist = `#EXTM3U
 #EXTINF:-1 tvg-id="Lot2One.fr" group-title="Test",Lot 2 One
@@ -31,8 +31,7 @@ test(
   'catalog publication is atomic, idempotent and preserves user data',
   { skip: !integrationEnabled },
   async () => {
-    const databaseUrl = new URL(process.env.DATABASE_URL || '');
-    assert.match(databaseUrl.pathname, new RegExp(`${expectedDatabaseMarker}$`));
+    await assertIntegrationTarget(pool);
 
     try {
       const favoritesBefore = await tableCount(userFavorites);

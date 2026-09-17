@@ -1,10 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { loadEnvConfig } from '@next/env';
 import { Pool } from 'pg';
+import { assertLocalE2ETarget } from '../src/lib/integration-test-safety';
 
 loadEnvConfig(process.cwd());
 test.use({ trace: 'off', screenshot: 'off' });
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+test.beforeAll(async ({ baseURL }) => { assertLocalE2ETarget(process.env, baseURL); });
 test.afterAll(async () => { await pool.end(); });
 
 test('catalogue is accessible without an account and pagination stays consistent', async ({ page }) => {

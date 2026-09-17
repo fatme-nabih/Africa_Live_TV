@@ -27,6 +27,8 @@ interface FilterSidebarProps {
   onFilterChange: (filters: ChannelFilters) => void;
   showFavoritesOnly: boolean;
   setShowFavoritesOnly: (value: boolean) => void;
+  isOpenMobile?: boolean;
+  onCloseMobile?: () => void;
 }
 const statusLabels: Partial<Record<StreamStatus, string>> = {
   BROWSER_OK: 'Navigateur',
@@ -45,6 +47,8 @@ export default function FilterSidebar({
   onFilterChange,
   showFavoritesOnly,
   setShowFavoritesOnly,
+  isOpenMobile = false,
+  onCloseMobile,
 }: FilterSidebarProps) {
   const [search, setSearch] = useState('');
   const [country, setCountry] = useState('');
@@ -101,36 +105,45 @@ export default function FilterSidebar({
     return () => window.clearTimeout(timeoutId);
   }, [onFilterChange, search, country, group, language, status]);
 
-  return (
-    <aside
-      aria-labelledby="catalog-filters-title"
-      className="flex h-full flex-col gap-6 rounded-2xl border border-zinc-800 bg-zinc-950 p-5"
-    >
+  const filterForm = (
+    <>
       <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-yellow-400/10 text-yellow-300 border border-yellow-400/20">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-400/10 text-amber-300 border border-amber-400/30">
             <FilterIcon className="h-4 w-4" aria-hidden="true" />
           </div>
           <h2 id="catalog-filters-title" className="text-base font-extrabold text-zinc-100">
             Filtres
           </h2>
         </div>
-        {(search || country || group || language || status || showFavoritesOnly) && (
-          <button
-            type="button"
-            onClick={() => {
-              setSearch('');
-              setCountry('');
-              setGroup('');
-              setLanguage('');
-              setStatus('');
-              setShowFavoritesOnly(false);
-            }}
-            className="text-xs font-bold text-yellow-400 hover:text-yellow-300 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300 rounded px-1"
-          >
-            Réinitialiser
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {(search || country || group || language || status || showFavoritesOnly) && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch('');
+                setCountry('');
+                setGroup('');
+                setLanguage('');
+                setStatus('');
+                setShowFavoritesOnly(false);
+              }}
+              className="text-xs font-bold text-amber-400 hover:text-amber-300 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded px-1"
+            >
+              Réinitialiser
+            </button>
+          )}
+          {onCloseMobile && (
+            <button
+              type="button"
+              onClick={onCloseMobile}
+              aria-label="Fermer les filtres"
+              className="flex lg:hidden h-7 w-7 items-center justify-center rounded-lg border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700"
+            >
+              <XIcon className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {error && (
@@ -142,7 +155,7 @@ export default function FilterSidebar({
           <button
             type="button"
             onClick={() => void loadFilters()}
-            className="mt-3 inline-flex items-center gap-2 rounded-lg border border-red-300/40 px-3 py-2 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300"
+            className="mt-3 inline-flex items-center gap-2 rounded-lg border border-red-300/40 px-3 py-2 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
           >
             <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
             Réessayer
@@ -156,18 +169,18 @@ export default function FilterSidebar({
         whileTap={{ scale: 0.98 }}
         onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
         aria-pressed={showFavoritesOnly}
-        className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300 ${
+        className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
           showFavoritesOnly
-            ? 'border-yellow-400/50 bg-yellow-400/15 text-yellow-200 shadow-lg shadow-yellow-950/30 font-bold'
-            : 'border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900'
+            ? 'border-amber-400/50 bg-amber-400/15 text-amber-200 shadow-lg shadow-amber-950/30 font-bold'
+            : 'border-zinc-800 bg-zinc-900/60 text-zinc-300 hover:border-zinc-750 hover:bg-zinc-900'
         }`}
       >
         <span className="flex items-center gap-3">
-          <StarIcon className={`h-4 w-4 ${showFavoritesOnly ? 'fill-current text-yellow-400' : 'text-zinc-400'}`} aria-hidden="true" />
+          <StarIcon className={`h-4 w-4 ${showFavoritesOnly ? 'fill-current text-amber-400' : 'text-zinc-400'}`} aria-hidden="true" />
           <span className="text-sm font-semibold">Mes favoris</span>
         </span>
         {showFavoritesOnly && (
-          <span className="flex h-2 w-2 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]" aria-hidden="true" />
+          <span className="flex h-2 w-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]" aria-hidden="true" />
         )}
       </motion.button>
 
@@ -181,7 +194,7 @@ export default function FilterSidebar({
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             autoComplete="off"
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/60 py-2.5 pl-10 pr-14 text-sm text-zinc-100 placeholder-zinc-500 transition focus-visible:border-yellow-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/30"
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/70 py-2.5 pl-10 pr-14 text-sm text-zinc-100 placeholder-zinc-500 transition focus-visible:border-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/30"
           />
           <SearchIcon className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-zinc-400" aria-hidden="true" />
           {!search ? (
@@ -193,7 +206,7 @@ export default function FilterSidebar({
               type="button"
               onClick={() => setSearch('')}
               aria-label="Effacer la recherche"
-              className="absolute right-2.5 top-2.5 flex h-6 w-6 items-center justify-center rounded-md text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300"
+              className="absolute right-2.5 top-2.5 flex h-6 w-6 items-center justify-center rounded-md text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
             >
               <XIcon className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
@@ -209,7 +222,7 @@ export default function FilterSidebar({
             value={group}
             onChange={(event) => setGroup(event.target.value)}
             disabled={loading && groups.length === 0}
-            className="w-full appearance-none rounded-xl border border-zinc-800 bg-zinc-900/60 py-2.5 pl-10 pr-8 text-sm text-zinc-100 transition focus-visible:border-yellow-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/30"
+            className="w-full appearance-none rounded-xl border border-zinc-800 bg-zinc-900/70 py-2.5 pl-10 pr-8 text-sm text-zinc-100 transition focus-visible:border-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/30"
           >
             <option value="">Toutes les catégories</option>
             {groups.map((availableGroup) => <option key={availableGroup} value={availableGroup} className="bg-zinc-950 text-zinc-100">{availableGroup}</option>)}
@@ -226,7 +239,7 @@ export default function FilterSidebar({
             value={country}
             onChange={(event) => setCountry(event.target.value)}
             disabled={loading && countries.length === 0}
-            className="w-full appearance-none rounded-xl border border-zinc-800 bg-zinc-900/60 py-2.5 pl-10 pr-8 text-sm text-zinc-100 transition focus-visible:border-yellow-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/30"
+            className="w-full appearance-none rounded-xl border border-zinc-800 bg-zinc-900/70 py-2.5 pl-10 pr-8 text-sm text-zinc-100 transition focus-visible:border-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/30"
           >
             <option value="">Tous les pays</option>
             {countries
@@ -246,7 +259,7 @@ export default function FilterSidebar({
             value={language}
             onChange={(event) => setLanguage(event.target.value)}
             disabled={loading && languages.length === 0}
-            className="w-full appearance-none rounded-xl border border-zinc-800 bg-zinc-900/60 py-2.5 pl-10 pr-8 text-sm text-zinc-100 transition focus-visible:border-yellow-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/30"
+            className="w-full appearance-none rounded-xl border border-zinc-800 bg-zinc-900/70 py-2.5 pl-10 pr-8 text-sm text-zinc-100 transition focus-visible:border-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/30"
           >
             <option value="">Toutes les langues</option>
             {languages
@@ -266,7 +279,7 @@ export default function FilterSidebar({
             value={status}
             onChange={(event) => setStatus(toFilterStatus(event.target.value))}
             disabled={loading && statuses.length === 0}
-            className="w-full appearance-none rounded-xl border border-zinc-800 bg-zinc-900/60 py-2.5 pl-10 pr-8 text-sm text-zinc-100 transition focus-visible:border-yellow-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/30"
+            className="w-full appearance-none rounded-xl border border-zinc-800 bg-zinc-900/70 py-2.5 pl-10 pr-8 text-sm text-zinc-100 transition focus-visible:border-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/30"
           >
             <option value="">Tous les statuts</option>
             {statuses.map((availableStatus) => (
@@ -280,6 +293,45 @@ export default function FilterSidebar({
       <p className="sr-only" aria-live="polite">
         {loading ? 'Chargement des options de filtre.' : 'Options de filtre chargées.'}
       </p>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar (visible on lg and up) */}
+      <aside
+        aria-labelledby="catalog-filters-title"
+        className="hidden lg:flex h-full flex-col gap-5 rounded-2xl border border-zinc-800/80 bg-zinc-950/90 p-5 shadow-xl backdrop-blur-md"
+      >
+        {filterForm}
+      </aside>
+
+      {/* Mobile Slide-over Drawer */}
+      {isOpenMobile && (
+        <div className="fixed inset-0 z-50 flex justify-end lg:hidden" role="dialog" aria-modal="true" aria-labelledby="catalog-filters-title">
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+            onClick={onCloseMobile}
+            aria-hidden="true"
+          />
+          <aside
+            className="relative z-10 flex h-full w-full max-w-xs sm:max-w-sm flex-col justify-between overflow-y-auto border-l border-zinc-800 bg-zinc-950 p-5 shadow-2xl gap-5"
+          >
+            <div className="flex flex-col gap-5">
+              {filterForm}
+            </div>
+            <div className="mt-4 pt-4 border-t border-zinc-800">
+              <button
+                type="button"
+                onClick={onCloseMobile}
+                className="w-full rounded-xl bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 py-3 text-sm font-extrabold text-black shadow-lg shadow-amber-500/25 transition hover:brightness-110 active:scale-[0.98]"
+              >
+                Appliquer les filtres
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
+    </>
   );
 }

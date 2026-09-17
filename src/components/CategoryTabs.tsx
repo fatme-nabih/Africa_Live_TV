@@ -112,10 +112,10 @@ export default function CategoryTabs({
               type="button"
               onClick={() => onSelectPreset(preset)}
               aria-pressed={isActive}
-              className={`relative flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-extrabold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300 ${
+              className={`relative flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-extrabold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
                 isActive
-                  ? 'bg-yellow-400 text-black shadow-lg shadow-yellow-400/25 scale-[1.02]'
-                  : 'bg-zinc-900/60 text-zinc-300 hover:bg-zinc-800 hover:text-white border border-zinc-800/50'
+                  ? 'bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black shadow-lg shadow-amber-500/25 scale-[1.02]'
+                  : 'bg-zinc-900/70 text-zinc-300 hover:bg-zinc-800 hover:text-white border border-zinc-800/80 hover:border-zinc-700'
               }`}
             >
               <Icon
@@ -127,7 +127,7 @@ export default function CategoryTabs({
               {preset.id === 'favorites' && favoritesCount > 0 && (
                 <span
                   className={`ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-black ${
-                    isActive ? 'bg-black/20 text-black' : 'bg-yellow-400/20 text-yellow-300'
+                    isActive ? 'bg-black/25 text-black' : 'bg-amber-400/20 text-amber-300 border border-amber-400/30'
                   }`}
                 >
                   {favoritesCount}
@@ -136,7 +136,7 @@ export default function CategoryTabs({
               {isActive && (
                 <motion.div
                   layoutId="activeCategoryGlow"
-                  className="absolute inset-0 rounded-xl bg-yellow-400/10 pointer-events-none ring-2 ring-yellow-400/50"
+                  className="absolute inset-0 rounded-xl bg-amber-400/10 pointer-events-none ring-2 ring-amber-400/60"
                   transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
                 />
               )}

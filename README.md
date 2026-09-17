@@ -80,8 +80,14 @@ Ne pas remplacer `DATABASE_URL` par la base utilisée par IPTV.
 
 ## Vérification
 
+La configuration et les commandes de préparation à la production sont décrites
+dans [deployment-configuration.md](docs/deployment-configuration.md).
+Le suivi des lots figure dans [production-progress.md](docs/production-progress.md).
+
 ```powershell
 npm test
+npm run test:integration
+npm run config:check
 npm run test:invariants
 npm run lint
 npx tsc --noEmit --incremental false

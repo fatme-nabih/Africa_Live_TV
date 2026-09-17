@@ -3,6 +3,8 @@ import { isLocalDevMode, isLocalDevRequest } from './lib/local-dev';
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
 const isProtectedRoute = createRouteMatcher([
+  '/admin(.*)',
+  '/api/admin(.*)',
   '/app(.*)',
   '/player(.*)',
   '/account(.*)',
@@ -23,6 +25,9 @@ const authenticatedProxy = clerkMiddleware(async (auth, req) => {
 export default function proxy(req: NextRequest, event: NextFetchEvent) {
   if (isLocalDevMode()) {
     if (!isLocalDevRequest(req)) return NextResponse.json({ error: 'Accès local uniquement.' }, { status: 403 });
+    if (/^\/(admin|api\/admin)(\/|$)/.test(req.nextUrl.pathname)) {
+      return NextResponse.json({ error: 'Une session administrateur Clerk est requise.' }, { status: 403 });
+    }
     if (/^\/(account|pricing|sign-in|sign-up)(\/|$)/.test(req.nextUrl.pathname)) {
       return NextResponse.redirect(new URL('/app', req.url));
     }

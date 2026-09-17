@@ -29,16 +29,23 @@ export default function SeparatePlayerPage({ channelId }: { channelId: string })
           type="button"
           onClick={showCatalog}
           aria-label="Retourner au catalogue Africa Live"
-          className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300"
+          className="flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 group"
         >
-          <Image
-            src="/africa-live.svg"
-            alt="Africa Live"
-            width={250}
-            height={140}
-            className="h-12 w-auto object-contain sm:h-14"
-            priority
-          />
+          <div className="relative flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-full bg-black p-0.5 ring-2 ring-amber-400/40 group-hover:ring-amber-400 transition-all shadow-[0_0_12px_rgba(250,204,21,0.2)]">
+            <Image
+              src="/logo.png"
+              alt="Africa Live"
+              width={88}
+              height={88}
+              className="h-full w-full object-cover rounded-full"
+              priority
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-base sm:text-lg font-black tracking-tight bg-gradient-to-r from-emerald-400 via-amber-300 to-red-500 bg-clip-text text-transparent">
+              AFRICA LIVE
+            </span>
+          </div>
         </button>
         <div className="flex items-center gap-2">
           <button

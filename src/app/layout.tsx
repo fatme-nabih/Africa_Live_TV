@@ -10,19 +10,24 @@ export const metadata: Metadata = {
   title: "Africa Live — Catalogue unifié",
   description: "Un catalogue TV fluide et fiabilisé avec détection de compatibilité navigateur et lecteur externe VLC.",
   icons: {
-    icon: "/africa-live.svg",
-    apple: "/africa-live.svg",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/logo-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
   },
+  manifest: "/site.webmanifest",
   openGraph: {
     title: "Africa Live",
     description: "Catalogue TV fluide avec lecture navigateur et VLC.",
-    images: ["/africa-live.svg"],
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Africa Live" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Africa Live",
     description: "Catalogue TV fluide avec lecture navigateur et VLC.",
-    images: ["/africa-live.svg"],
+    images: ["/og-image.png"],
   },
 };
 

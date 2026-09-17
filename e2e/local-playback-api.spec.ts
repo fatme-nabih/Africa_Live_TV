@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { loadEnvConfig } from '@next/env';
 import { Pool } from 'pg';
+import { assertLocalE2ETarget } from '../src/lib/integration-test-safety';
 
 loadEnvConfig(process.cwd());
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -10,7 +11,8 @@ const firstUrl = `https://media.fixture.test/${channelId}/first.m3u8`;
 const secondUrl = `https://media.fixture.test/${channelId}/second.m3u8?token=fixture`;
 test.use({ trace: 'off', screenshot: 'off' });
 
-test.beforeAll(async () => {
+test.beforeAll(async ({ baseURL }) => {
+  assertLocalE2ETarget(process.env, baseURL);
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -29,6 +31,7 @@ test.beforeAll(async () => {
 
 test.afterAll(async () => {
   try {
+    assertLocalE2ETarget(process.env, process.env.E2E_BASE_URL ?? 'http://localhost:3001');
     await pool.query('DELETE FROM playback_sessions WHERE channel_id = $1', [channelId]);
     await pool.query('DELETE FROM channels WHERE id = $1', [channelId]);
   } finally { await pool.end(); }
