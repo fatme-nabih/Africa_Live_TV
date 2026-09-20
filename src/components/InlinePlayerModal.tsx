@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExternalLink, X, Tv, Globe } from 'lucide-react';
 import Player from '@/components/Player';
@@ -20,6 +20,9 @@ export default function InlinePlayerModal({
   onClose,
   onOpenPopoutWindow,
 }: InlinePlayerModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -41,6 +44,34 @@ export default function InlinePlayerModal({
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const frame = window.requestAnimationFrame(() => closeButtonRef.current?.focus());
+    const keepFocusInside = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+      const focusable = [...dialogRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), a[href], video[controls], [tabindex]:not([tabindex="-1"])',
+      )].filter((element) => !element.hasAttribute('hidden'));
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener('keydown', keepFocusInside);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('keydown', keepFocusInside);
+      previouslyFocused?.focus();
+    };
+  }, [isOpen]);
+
   if (!channel) return null;
 
   return (
@@ -59,6 +90,7 @@ export default function InlinePlayerModal({
 
           {/* Modal Content */}
           <motion.div
+            ref={dialogRef}
             initial={{ opacity: 0, scale: 0.96, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 15 }}
@@ -66,6 +98,7 @@ export default function InlinePlayerModal({
             role="dialog"
             aria-modal="true"
             aria-labelledby="inline-player-title"
+            aria-describedby="inline-player-description"
             className="relative z-10 flex flex-col w-full h-full sm:h-auto max-w-5xl overflow-hidden rounded-none sm:rounded-3xl border-0 sm:border border-amber-500/25 bg-zinc-950 shadow-2xl shadow-amber-950/30 justify-between sm:justify-start"
           >
             {/* Header */}
@@ -93,6 +126,9 @@ export default function InlinePlayerModal({
                       </>
                     )}
                   </div>
+                  <p id="inline-player-description" className="sr-only">
+                    Lecteur direct de la chaîne sélectionnée. Appuyez sur Échap pour fermer.
+                  </p>
                 </div>
               </div>
 
@@ -109,6 +145,7 @@ export default function InlinePlayerModal({
                   <span>Fenêtre séparée</span>
                 </button>
                 <button
+                  ref={closeButtonRef}
                   type="button"
                   onClick={onClose}
                   aria-label="Fermer le lecteur"

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
+import BrandLogo from '@/components/BrandLogo';
 import LocalAccountControls from '@/components/LocalAccountControls';
 import FilterSidebar from '@/components/FilterSidebar';
 import ChannelGrid from '@/components/ChannelGrid';
@@ -149,6 +149,7 @@ export default function Home() {
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
+    if (baseFilters.search) count++;
     if (baseFilters.country) count++;
     if (baseFilters.group) count++;
     if (baseFilters.language) count++;
@@ -323,10 +324,13 @@ export default function Home() {
       });
       const data = await readApiResponse(response, catalogResponseSchema);
       if (!catalogRequestsRef.current!.isCurrent(request.id)) return;
+      const visibleChannels = data.channels.filter(
+        (channel) => channel.availabilityStatus !== 'OFFLINE',
+      );
       setChannels((current) => {
-        if (!append) return data.channels;
+        if (!append) return visibleChannels;
         const merged = new Map(current.map((channel) => [channel.id, channel]));
-        for (const channel of data.channels) merged.set(channel.id, channel);
+        for (const channel of visibleChannels) merged.set(channel.id, channel);
         return [...merged.values()];
       });
       setNextCursor(data.nextCursor);
@@ -438,7 +442,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-black text-zinc-100 flex flex-col selection:bg-yellow-400/25 selection:text-yellow-100">
+    <main className="min-h-screen bg-[#050608] text-zinc-100 flex flex-col selection:bg-yellow-400/25 selection:text-yellow-100">
       <a
         href="#catalogue"
         className="sr-only z-[100] rounded-lg bg-yellow-300 px-4 py-2 font-bold text-black focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
@@ -447,35 +451,23 @@ export default function Home() {
       </a>
       <h1 className="sr-only">Catalogue Africa Live</h1>
       {/* Entête */}
-      <header className="border-b border-zinc-900 bg-black/85 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 py-2.5 sm:py-3">
+      <header className="sticky top-0 z-40 border-b border-white/[0.07] bg-[#050608]/88 px-4 py-2.5 shadow-[0_10px_35px_-30px_rgba(0,0,0,0.9)] backdrop-blur-xl sm:px-6 sm:py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
           <Link
             href="/"
             aria-label="Retour à la page d’accueil Africa Live"
-            className="flex items-center gap-2.5 sm:gap-3 group rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+            className="group flex items-center gap-2.5 rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 sm:gap-3"
           >
-            <div className="relative flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full bg-black p-0.5 ring-2 ring-amber-400/40 group-hover:ring-amber-400 transition-all duration-300 shadow-[0_0_16px_rgba(250,204,21,0.25)]">
-              <Image
-                src="/logo.png"
-                alt="Africa Live"
-                width={96}
-                height={96}
-                className="h-full w-full object-cover rounded-full"
-                priority
-              />
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-yellow-400/20 to-yellow-600/5 p-1 ring-1 ring-yellow-400/25 transition group-hover:ring-yellow-400/50 sm:h-11 sm:w-11">
+              <BrandLogo className="h-full w-full drop-shadow-[0_2px_8px_rgba(250,204,21,0.25)]" />
             </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1 sm:gap-1.5">
-                <span className="text-base sm:text-xl font-black tracking-tight bg-gradient-to-r from-emerald-400 via-emerald-300 to-yellow-300 bg-clip-text text-transparent">
-                  AFRICA
-                </span>
-                <span className="text-base sm:text-xl font-black tracking-tight bg-gradient-to-r from-yellow-300 via-amber-400 to-red-500 bg-clip-text text-transparent">
-                  LIVE
-                </span>
-                <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)] ml-0.5" />
+            <div className="hidden flex-col sm:flex">
+              <div className="flex items-center gap-0.5">
+                <span className="text-base font-black tracking-tight text-white sm:text-lg">Africa Live</span>
+                <span className="text-lg font-black text-yellow-400">.</span>
               </div>
-              <span className="text-[10px] font-semibold text-zinc-400 tracking-wider uppercase -mt-0.5 hidden sm:block">
-                Télévision Directe
+              <span className="-mt-0.5 hidden text-[9px] font-bold uppercase tracking-[0.16em] text-zinc-500 sm:block">
+                Le direct panafricain
               </span>
             </div>
           </Link>
@@ -522,25 +514,25 @@ export default function Home() {
 
             <div aria-live="polite" className="hidden sm:flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full bg-zinc-950 border border-zinc-800 text-zinc-400">
               <span aria-hidden="true" className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              {channels.length} chaînes chargées
+              {channels.length} chaînes visibles
             </div>
           </div>
         </div>
       </header>
 
       {showVlcNotice && (
-        <section className="border-b border-zinc-900 bg-black px-4 md:px-6 py-2.5 sm:py-3">
+        <section className="border-b border-zinc-900 bg-[#050608] px-4 py-2.5 sm:py-3 md:px-6">
           <div className="max-w-7xl mx-auto flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-amber-400/25 bg-gradient-to-r from-zinc-950 via-zinc-900/90 to-zinc-950 px-4 py-3 shadow-lg shadow-amber-950/15">
             <div className="flex min-w-0 items-start gap-3">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-400/15 text-amber-300 border border-amber-400/30">
                 <MonitorPlay aria-hidden="true" className="h-5 w-5" />
               </span>
               <div className="min-w-0">
-                <p className="text-sm font-bold text-zinc-100">
-                  Téléchargez VLC pour profiter pleinement de nos services.
-                </p>
-                <p className="mt-0.5 text-xs leading-5 text-zinc-400">
-                  La lecture bascule automatiquement vers VLC si le flux n&apos;est pas compatible navigateur.
+                  <p className="text-sm font-bold text-zinc-100">
+                    Certains flux fonctionnent mieux dans VLC
+                  </p>
+                <p className="mt-0.5 hidden text-xs leading-5 text-zinc-400 sm:block">
+                    Africa Live privilégie le lecteur web et vous propose VLC lorsqu&apos;un format le nécessite.
                 </p>
               </div>
             </div>
@@ -551,7 +543,7 @@ export default function Home() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 px-3.5 py-2 text-xs font-extrabold text-black transition hover:brightness-110 shadow-sm shadow-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
               >
-                Télécharger VLC
+                Obtenir VLC
                 <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
               </a>
               <button
@@ -593,7 +585,7 @@ export default function Home() {
           />
 
           {/* Contrôleur du lecteur séparé */}
-          <section aria-label="Lecteur séparé" className="rounded-2xl border border-zinc-800/80 bg-zinc-950/85 p-4 sm:p-5 shadow-xl backdrop-blur-md overflow-hidden relative">
+          <section aria-label="Lecteur" className="relative overflow-hidden rounded-2xl border border-zinc-800/80 bg-[radial-gradient(circle_at_90%_10%,rgba(250,204,21,0.10),transparent_36%),rgba(9,9,11,0.88)] p-4 shadow-xl backdrop-blur-md sm:p-5">
             <div className="h-0.5 w-full bg-tricolor-bar absolute top-0 left-0 right-0 opacity-80" />
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 items-start gap-3 sm:gap-4">
@@ -602,15 +594,15 @@ export default function Home() {
                 </span>
                 <div className="min-w-0">
                   <h2 className="text-base sm:text-lg font-extrabold text-zinc-100 flex items-center gap-2">
-                    Lecteur Africa Live
+                    {selectedChannel ? selectedChannel.name : 'Prêt pour le direct'}
                     {selectedChannel && (
                       <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                     )}
                   </h2>
-                  <p aria-live="polite" className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-zinc-400 truncate">
+                  <p aria-live="polite" className="mt-0.5 line-clamp-2 text-xs leading-5 text-zinc-400 sm:mt-1 sm:text-sm">
                     {selectedChannel
-                      ? `${selectedChannel.name} — Prête pour la lecture.`
-                      : 'Choisissez une chaîne : lecture navigateur, puis ouverture automatique dans VLC si nécessaire.'}
+                      ? 'La chaîne est sélectionnée. Lancez-la ici ou dans une fenêtre séparée.'
+                      : 'Choisissez une chaîne ci-dessous. Le lecteur web sera essayé en priorité, avec VLC en solution de repli.'}
                   </p>
                 </div>
               </div>
@@ -654,13 +646,18 @@ export default function Home() {
           {/* Grille de Chaînes */}
           <section id="catalogue" aria-labelledby="catalog-title" tabIndex={-1} className="flex scroll-mt-28 flex-col gap-4 focus:outline-none">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <h2 id="catalog-title" className="font-extrabold text-lg text-zinc-100 flex items-center gap-2">
-                <LayoutList aria-hidden="true" className="w-5 h-5 text-amber-400" />
-                {showFavoritesOnly ? 'Mes favoris' : 'Catalogue des chaînes'}
-              </h2>
+              <div>
+                <h2 id="catalog-title" className="flex items-center gap-2 text-lg font-extrabold text-zinc-100">
+                  <LayoutList aria-hidden="true" className="h-5 w-5 text-amber-400" />
+                  {showFavoritesOnly ? 'Mes favoris' : 'Chaînes en direct'}
+                </h2>
+                <p className="mt-1 text-xs leading-5 text-zinc-500">
+                  Les chaînes actuellement signalées comme indisponibles sont masquées.
+                </p>
+              </div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs text-zinc-400 font-mono bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-lg">
-                  {channels.length} chaînes affichées
+                  {channels.length} chaînes visibles
                 </span>
               </div>
             </div>

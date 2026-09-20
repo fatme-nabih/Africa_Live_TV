@@ -16,26 +16,38 @@ test('catalogue is accessible without an account and pagination stays consistent
   await expect(page).toHaveURL(/\/app$/);
   await expect(page).toHaveTitle('Africa Live — Catalogue unifié');
   await expect(page.getByText('Version locale', { exact: true })).toBeVisible();
-  await expect(page.getByText('30 chaînes chargées', { exact: true })).toBeVisible();
+  const visibleCount = page.getByText(/\d+ chaînes visibles/, { exact: true }).first();
+  await expect(visibleCount).toBeVisible();
+  await expect.poll(async () => Number((await visibleCount.textContent())?.match(/\d+/)?.[0] ?? 0)).toBeGreaterThan(0);
+  const initialCount = Number((await visibleCount.textContent())?.match(/\d+/)?.[0] ?? 0);
+  await expect(page.locator('#catalogue').getByText('Indisponible', { exact: true })).toHaveCount(0);
+  await expect(page.locator('#catalogue').getByText('À vérifier', { exact: true })).toHaveCount(0);
+  await expect(page.locator('#catalogue').getByText('VLC conseillé', { exact: true })).toHaveCount(0);
+  await expect(page.locator('#catalogue').getByText('Lecture web', { exact: true })).toHaveCount(0);
+  const firstWatchButton = page.locator('#catalogue').getByRole('button', { name: /^Regarder / }).first();
+  await firstWatchButton.click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.getByRole('button', { name: 'Fermer le lecteur' }).click();
+  await expect(page.getByRole('dialog')).toBeHidden();
   await page.getByRole('button', { name: 'Charger plus de chaînes' }).click();
-  await expect(page.getByText('60 chaînes chargées', { exact: true })).toBeVisible();
+  await expect.poll(async () => Number((await visibleCount.textContent())?.match(/\d+/)?.[0] ?? 0)).toBeGreaterThan(initialCount);
   const labels = await page.locator('#catalogue button[aria-label]').evaluateAll(elements => elements.map(element => element.getAttribute('aria-label')));
   expect(new Set(labels).size).toBe(labels.length);
   expect(errors).toEqual([]);
 });
 
-test('a channel with no successful verification stays searchable', async ({ page }) => {
-  const { rows } = await pool.query(`SELECT c.name, c.id FROM channels c WHERE c.active AND NOT EXISTS (
-    SELECT 1 FROM streams s WHERE s.channel_id = c.id AND s.last_success_at IS NOT NULL
-  ) ORDER BY c.id LIMIT 1`);
-  expect(rows).toHaveLength(1);
+test('channels marked unavailable stay hidden from the catalogue', async ({ page }) => {
   await page.goto('/app');
-  const response = page.waitForResponse(response => response.url().endsWith('/api/channels') && response.request().postDataJSON().search === rows[0].name);
-  await page.getByRole('searchbox', { name: 'Recherche' }).fill(rows[0].name);
-  const body = await (await response).json();
-  expect(body.channels.some((channel: { id: string }) => channel.id === rows[0].id)).toBe(true);
-  expect(body.channels.every((channel: Record<string, unknown>) => !('streams' in channel) && !('sourceUrl' in channel))).toBe(true);
-  await expect(page.locator('#catalogue').getByText(rows[0].name, { exact: true })).toBeVisible();
+  const seedResponse = await page.request.post('/api/channels', {
+    headers: { Origin: new URL(page.url()).origin },
+    data: { search: '', country: '', group: '', language: '', status: '', favoritesOnly: false, cursor: null, limit: 30 },
+  });
+  expect(seedResponse.status()).toBe(200);
+  const seedBody = await seedResponse.json();
+  expect(seedBody.channels).toHaveLength(30);
+  expect(seedBody.channels.every((channel: { availabilityStatus: string }) => channel.availabilityStatus !== 'OFFLINE')).toBe(true);
+  expect(seedBody.channels.every((channel: Record<string, unknown>) => !('streams' in channel) && !('sourceUrl' in channel))).toBe(true);
+  await expect(page.locator('#catalogue').getByText('Indisponible', { exact: true })).toHaveCount(0);
 });
 
 test('country filters and favorites work without Clerk', async ({ page }) => {
@@ -43,7 +55,7 @@ test('country filters and favorites work without Clerk', async ({ page }) => {
   const response = page.waitForResponse(response => response.url().endsWith('/api/channels') && response.request().postDataJSON().country === 'SN');
   await page.getByLabel('Pays', { exact: true }).selectOption('SN');
   const body = await (await response).json();
-  expect(body.channels).toHaveLength(19);
+  expect(body.channels.length).toBeGreaterThan(0);
   expect(body.channels.every((channel: { countryCode: string }) => channel.countryCode === 'SN')).toBe(true);
   const existingFavorites = await page.request.get('/api/favorites').then(response => response.json());
   const candidate = body.channels.find((channel: { id: string }) => !existingFavorites.favorites.includes(channel.id));

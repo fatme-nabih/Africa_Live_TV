@@ -28,6 +28,7 @@ import {
 import { PLAYBACK_SOURCE_FRESHNESS_MS } from '@/lib/playback-resolution-policy';
 import { authorizeAppRequest } from '@/lib/require-app-access';
 import { consumeAdditionalRequestQuota } from '@/lib/request-quota';
+import type { Channel } from '@/types/channel';
 
 const PLAYABLE_STATUSES = ['BROWSER_OK', 'VLC_ONLY'] as const;
 const PUBLIC_DIRECT_ELIGIBILITIES = [
@@ -162,54 +163,70 @@ export async function POST(request: Request) {
     if (status) conditions.push(inArray(channels.id, matchingChannelIds));
 
     const baseWhere = and(...conditions);
-    const cursorCondition = cursor
-      ? or(
-          gt(channels.name, cursor.name),
-          and(eq(channels.name, cursor.name), gt(channels.id, cursor.id)),
-        )
-      : undefined;
+    const scanBatchSize = Math.max(limit * 4, 120);
+    const visibleRows: Array<{
+      source: typeof channels.$inferSelect;
+      channel: Channel;
+    }> = [];
+    let scanCursor = cursor;
+    let exhausted = false;
 
-    const rows = await db
-      .select()
-      .from(channels)
-      .where(cursorCondition ? and(baseWhere, cursorCondition) : baseWhere)
-      .orderBy(asc(channels.name), asc(channels.id))
-      .limit(limit + 1);
+    while (visibleRows.length < limit + 1 && !exhausted) {
+      const cursorCondition = scanCursor
+        ? or(
+            gt(channels.name, scanCursor.name),
+            and(eq(channels.name, scanCursor.name), gt(channels.id, scanCursor.id)),
+          )
+        : undefined;
+      const rows = await db
+        .select()
+        .from(channels)
+        .where(cursorCondition ? and(baseWhere, cursorCondition) : baseWhere)
+        .orderBy(asc(channels.name), asc(channels.id))
+        .limit(scanBatchSize);
 
-    const hasMore = rows.length > limit;
-    const pageChannels = hasMore ? rows.slice(0, limit) : rows;
+      if (rows.length === 0) {
+        exhausted = true;
+        break;
+      }
 
-    const channelIds = pageChannels.map((channel) => channel.id);
-    const allStreams = channelIds.length === 0
-      ? []
-      : await db
-          .select({
-            channelId: streams.channelId,
-            status: streams.status,
-            verificationState: streams.verificationState,
-            directEligibility: streams.directEligibility,
-            lastSuccessAt: streams.lastSuccessAt,
-          })
-          .from(streams)
-          .where(
-            and(
-              eq(streams.active, true),
-              inArray(streams.channelId, channelIds),
-              status ? eq(streams.status, status) : undefined,
-            ),
-          );
+      const lastScannedChannel = rows.at(-1)!;
+      scanCursor = { name: lastScannedChannel.name, id: lastScannedChannel.id };
+      exhausted = rows.length < scanBatchSize;
 
-    const streamsByChannelId = new Map<string, typeof allStreams>();
-    for (const stream of allStreams) {
-      const channelStreams = streamsByChannelId.get(stream.channelId) ?? [];
-      channelStreams.push(stream);
-      streamsByChannelId.set(stream.channelId, channelStreams);
-    }
+      const channelIds = rows.map((channel) => channel.id);
+      const allStreams = await db
+        .select({
+          channelId: streams.channelId,
+          status: streams.status,
+          verificationState: streams.verificationState,
+          directEligibility: streams.directEligibility,
+          lastSuccessAt: streams.lastSuccessAt,
+        })
+        .from(streams)
+        .where(
+          and(
+            eq(streams.active, true),
+            inArray(streams.channelId, channelIds),
+            status ? eq(streams.status, status) : undefined,
+          ),
+        );
 
-    const lastChannel = pageChannels.at(-1);
-    const response = catalogResponseSchema.parse({
-      channels: pageChannels.map((channel) => {
+      const streamsByChannelId = new Map<string, typeof allStreams>();
+      for (const stream of allStreams) {
+        const channelStreams = streamsByChannelId.get(stream.channelId) ?? [];
+        channelStreams.push(stream);
+        streamsByChannelId.set(stream.channelId, channelStreams);
+      }
+
+      for (const channel of rows) {
         const channelStreams = streamsByChannelId.get(channel.id) ?? [];
+        const availabilityStatus = resolveChannelAvailability(
+          channelStreams,
+          freshnessCutoffDate,
+        );
+        if (availabilityStatus === 'OFFLINE') continue;
+
         const freshPublicStreams = channelStreams.filter((stream) => {
           const lastSuccessAt = stream.lastSuccessAt
             ? new Date(stream.lastSuccessAt).getTime()
@@ -227,19 +244,26 @@ export async function POST(request: Request) {
             )
           );
         });
-        return {
-          id: channel.id,
-          name: channel.name,
-          logoUrl: channel.logoUrl,
-          groupTitle: channel.groupTitle,
-          countryCode: channel.countryCode,
-          playbackMode: resolvePlaybackMode(freshPublicStreams),
-          availabilityStatus: resolveChannelAvailability(
-            channelStreams,
-            freshnessCutoffDate,
-          ),
-        };
-      }),
+        visibleRows.push({
+          source: channel,
+          channel: {
+            id: channel.id,
+            name: channel.name,
+            logoUrl: channel.logoUrl,
+            groupTitle: channel.groupTitle,
+            countryCode: channel.countryCode,
+            playbackMode: resolvePlaybackMode(freshPublicStreams),
+            availabilityStatus,
+          },
+        });
+      }
+    }
+
+    const hasMore = visibleRows.length > limit;
+    const pageRows = hasMore ? visibleRows.slice(0, limit) : visibleRows;
+    const lastChannel = pageRows.at(-1)?.source;
+    const response = catalogResponseSchema.parse({
+      channels: pageRows.map(({ channel }) => channel),
       hasMore,
       limit,
       nextCursor: hasMore && lastChannel

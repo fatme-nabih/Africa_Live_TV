@@ -18,7 +18,12 @@ function ClerkAccountControls() {
 
 export default function LocalAccountControls() {
   if (process.env.NEXT_PUBLIC_LOCAL_DEV_MODE === 'true' && process.env.NODE_ENV !== 'production') {
-    return <span className="rounded-lg border border-yellow-400/30 px-3 py-2 text-xs font-bold text-yellow-200">Version locale</span>;
+    return (
+      <span className="rounded-lg border border-yellow-400/30 px-2.5 py-2 text-xs font-bold text-yellow-200 sm:px-3">
+        <span className="sm:hidden">Local</span>
+        <span className="hidden sm:inline">Version locale</span>
+      </span>
+    );
   }
   return <ClerkAccountControls />;
 }

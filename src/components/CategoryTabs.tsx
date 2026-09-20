@@ -9,7 +9,6 @@ import {
   Trophy,
   Newspaper,
   Tv,
-  Globe,
   ChevronLeft,
   ChevronRight,
   Flame,
@@ -25,14 +24,13 @@ export interface CategoryPreset {
 }
 
 const CATEGORY_PRESETS: CategoryPreset[] = [
-  { id: 'all', label: 'Toutes les chaînes', icon: Sparkles },
-  { id: 'favorites', label: 'Mes favoris', icon: Star, favoritesOnly: true },
-  { id: 'france', label: 'France', icon: Globe, country: 'FR' },
-  { id: 'news', label: 'News', icon: Newspaper, group: 'News' },
-  { id: 'entertainment', label: 'Entertainment', icon: Flame, group: 'Entertainment' },
-  { id: 'movies', label: 'Movies', icon: Film, group: 'Movies' },
+  { id: 'all', label: 'Tout le direct', icon: Sparkles },
+  { id: 'favorites', label: 'Favoris', icon: Star, favoritesOnly: true },
+  { id: 'news', label: 'Actualités', icon: Newspaper, group: 'News' },
+  { id: 'entertainment', label: 'Divertissement', icon: Flame, group: 'Entertainment' },
+  { id: 'movies', label: 'Cinéma', icon: Film, group: 'Movies' },
   { id: 'sports', label: 'Sports', icon: Trophy, group: 'Sports' },
-  { id: 'series', label: 'Series', icon: Tv, group: 'Series' },
+  { id: 'series', label: 'Séries', icon: Tv, group: 'Series' },
 ];
 
 interface CategoryTabsProps {
@@ -70,7 +68,7 @@ export default function CategoryTabs({
   };
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-950/90 p-1.5 shadow-xl backdrop-blur-md">
+    <nav aria-label="Accès rapide aux catégories" className="relative w-full overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-950/90 p-1.5 shadow-xl backdrop-blur-md">
       {/* Scroll Left Button */}
       {canScrollLeft && (
         <button
@@ -144,6 +142,6 @@ export default function CategoryTabs({
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 }

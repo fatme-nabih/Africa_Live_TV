@@ -31,10 +31,9 @@ interface FilterSidebarProps {
   onCloseMobile?: () => void;
 }
 const statusLabels: Partial<Record<StreamStatus, string>> = {
-  BROWSER_OK: 'Navigateur',
-  VLC_ONLY: 'VLC',
-  UNTESTED: 'Non vérifié',
-  OFFLINE: 'Hors ligne',
+  BROWSER_OK: 'Lecture web',
+  VLC_ONLY: 'VLC conseillé',
+  UNTESTED: 'À tester',
 };
 
 function toFilterStatus(value: string): ChannelFilters['status'] {
@@ -75,7 +74,7 @@ export default function FilterSidebar({
       setCountries(data.countries);
       setGroups(data.groups);
       setLanguages(data.languages);
-      setStatuses(data.statuses);
+      setStatuses(data.statuses.filter((availableStatus) => availableStatus !== 'OFFLINE'));
     } catch (requestError) {
       if (request.signal.aborted || !filterRequestsRef.current!.isCurrent(request.id)) return;
       setError(messageForApiError(requestError, 'Impossible de charger les options de filtre.'));
@@ -104,6 +103,15 @@ export default function FilterSidebar({
     }, 300);
     return () => window.clearTimeout(timeoutId);
   }, [onFilterChange, search, country, group, language, status]);
+
+  useEffect(() => {
+    if (!isOpenMobile) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onCloseMobile?.();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpenMobile, onCloseMobile]);
 
   const filterForm = (
     <>
@@ -190,7 +198,7 @@ export default function FilterSidebar({
           <input
             id="catalog-search"
             type="search"
-            placeholder="Nom de la chaîne…"
+            placeholder="Rechercher une chaîne…"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             autoComplete="off"
@@ -301,7 +309,7 @@ export default function FilterSidebar({
       {/* Desktop Sidebar (visible on lg and up) */}
       <aside
         aria-labelledby="catalog-filters-title"
-        className="hidden lg:flex h-full flex-col gap-5 rounded-2xl border border-zinc-800/80 bg-zinc-950/90 p-5 shadow-xl backdrop-blur-md"
+        className="hidden lg:sticky lg:top-24 lg:flex lg:max-h-[calc(100vh-7rem)] flex-col gap-5 overflow-y-auto rounded-2xl border border-zinc-800/80 bg-zinc-950/90 p-5 shadow-xl backdrop-blur-md"
       >
         {filterForm}
       </aside>
@@ -326,7 +334,7 @@ export default function FilterSidebar({
                 onClick={onCloseMobile}
                 className="w-full rounded-xl bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 py-3 text-sm font-extrabold text-black shadow-lg shadow-amber-500/25 transition hover:brightness-110 active:scale-[0.98]"
               >
-                Appliquer les filtres
+                Voir les résultats
               </button>
             </div>
           </aside>

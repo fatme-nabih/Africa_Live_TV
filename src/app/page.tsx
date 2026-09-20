@@ -29,7 +29,7 @@ export default async function HomePage() {
   const { userId, sessionClaims } = await auth();
 
   const metrics = [
-    { label: 'Chaînes actives', value: '11 700+', icon: Tv, detail: 'Mises à jour en temps réel' },
+    { label: 'Chaînes référencées', value: '11 700+', icon: Tv, detail: 'Catalogue international' },
     { label: 'Pays représentés', value: '176', icon: Globe2, detail: 'Afrique & International' },
     { label: 'Modes de lecture', value: 'Web & VLC', icon: MonitorPlay, detail: 'Navigateur ou application native' },
     { label: 'Flux directs', value: '100%', icon: Zap, detail: 'Sans relais ni transcodage' },
@@ -50,15 +50,15 @@ export default async function HomePage() {
     },
     {
       icon: Heart,
-      title: 'Favoris & Récents Personnalisés',
-      description: 'Constituez votre bouquet sur-mesure. Vos chaînes favorites sont mémorisées instantanément pour un accès direct sur tous vos écrans.',
+      title: 'Favoris Personnalisés',
+      description: 'Constituez votre sélection sur mesure et retrouvez rapidement les chaînes qui comptent pour vous.',
       badge: 'Bouquet sur mesure',
     },
     {
       icon: Zap,
-      title: 'Vérification de Santé des Flux',
-      description: 'Un système continu vérifie la disponibilité et l’accessibilité des flux pour vous orienter vers les chaînes opérationnelles sans perte de temps.',
-      badge: 'Monitoring continu',
+      title: 'Statuts de Compatibilité Clairs',
+      description: 'Chaque chaîne affiche son dernier statut connu : lecture web, VLC conseillé, à tester ou indisponible.',
+      badge: 'Lecture transparente',
     },
   ];
 
@@ -171,7 +171,7 @@ export default async function HomePage() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
               </span>
-              <span>DIRECT LIVE • +11 700 chaînes disponibles</span>
+              <span>DIRECT • 11 700+ chaînes référencées</span>
             </div>
 
             {/* Headline */}
@@ -182,7 +182,7 @@ export default async function HomePage() {
 
             {/* Subhead */}
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-zinc-300">
-              Accédez au plus grand catalogue télévisuel panafricain. Information en temps réel,
+              Accédez à un vaste catalogue télévisuel panafricain. Information en direct,
               sports, divertissement, musiques et cultures régionales réunis dans une interface moderne et fluide.
             </p>
 
@@ -252,7 +252,7 @@ export default async function HomePage() {
                       ● LIVE
                     </span>
                     <span className="rounded bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-zinc-300 backdrop-blur-md">
-                      HD 60 FPS
+                      SOURCE DIRECTE
                     </span>
                   </div>
                   <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-medium text-yellow-300 backdrop-blur-md">
@@ -283,7 +283,7 @@ export default async function HomePage() {
                   </div>
                   <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-mono">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Flux vérifié
+                    Sans relais
                   </div>
                 </div>
               </div>
@@ -429,7 +429,7 @@ export default async function HomePage() {
                   </div>
                 </div>
                 <p className="text-[11px] text-center text-zinc-500">
-                  Compatible avec tous les systèmes : Windows, macOS, Linux, iOS et Android.
+                  Lecture web selon le format du flux, avec VLC conseillé sur ordinateur lorsque nécessaire.
                 </p>
               </div>
             </div>
@@ -473,7 +473,7 @@ export default async function HomePage() {
               Prêt à vivre la télévision autrement ?
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-base text-zinc-300">
-              Rejoignez Africa Live dès aujourd’hui et explorez plus de 11 700 chaînes à portée de main.
+              Rejoignez Africa Live et explorez plus de 11 700 chaînes réunies dans un catalogue simple à parcourir.
             </p>
             <div className="mt-8 flex justify-center">
               <Link
