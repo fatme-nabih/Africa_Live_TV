@@ -42,7 +42,23 @@ export default function RootLayout({
       className="h-full antialiased"
     >
       <body className="min-h-full flex flex-col">
-        {isLocalDevMode() ? children : <ClerkProvider>{children}</ClerkProvider>}
+        {isLocalDevMode() ? children : (
+          <ClerkProvider
+            signInUrl="/sign-in"
+            signUpUrl="/sign-up"
+            signInFallbackRedirectUrl="/app"
+            signUpFallbackRedirectUrl="/app"
+            appearance={{ variables: {
+              colorPrimary: '#fde047',
+              colorBackground: '#111319',
+              colorForeground: '#fafafa',
+              colorMutedForeground: '#a1a1aa',
+              borderRadius: '0.75rem',
+            } }}
+          >
+            {children}
+          </ClerkProvider>
+        )}
       </body>
     </html>
   );

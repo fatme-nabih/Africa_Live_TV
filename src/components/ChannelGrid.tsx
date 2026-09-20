@@ -6,6 +6,7 @@ import { Tv, Globe, Tag, RefreshCw, LayoutGrid, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatCountryName } from '@/lib/format';
 import type { Channel } from '@/types/channel';
+import { isLocalPlaybackMode } from '@/lib/local-playback-mode';
 
 interface ChannelGridProps {
   channels: Channel[];
@@ -70,7 +71,7 @@ export default function ChannelGrid({
           {channels.map((channel) => {
             const isSelected = selectedChannelId === channel.id;
             const isFavorite = favorites.includes(channel.id);
-            const localPlayback = process.env.NEXT_PUBLIC_LOCAL_DEV_MODE === 'true' && process.env.NODE_ENV !== 'production';
+            const localPlayback = isLocalPlaybackMode();
             const isBlocked = !localPlayback && (
               channel.availabilityStatus === 'REVIEW_REQUIRED' ||
               channel.availabilityStatus === 'OFFLINE'

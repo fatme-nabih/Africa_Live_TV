@@ -12,6 +12,8 @@ import {
   streams,
 } from '@/db/schema';
 import { isLocalDevMode } from './local-dev';
+import { isLocalPlaybackMode } from './local-playback-mode';
+import { isTrustedLocalRequest } from './local-request';
 import { isLocalPlaybackCandidate } from './local-playback-policy';
 import { selectBestStream } from '@/lib/channel-selection';
 import { directEligibilityStatesForDestination } from '@/lib/direct-eligibility';
@@ -45,6 +47,7 @@ type ResolvePlaybackAttemptInput = {
   previousAttemptId: string | null;
   accessExpiresAt: string | null;
   now?: Date;
+  request?: Request;
 };
 
 function resolutionUnavailable(destination: PlaybackDestination) {
@@ -79,7 +82,11 @@ export async function resolvePlaybackAttempt({
   previousAttemptId,
   accessExpiresAt,
   now = new Date(),
+  request,
 }: ResolvePlaybackAttemptInput) {
+  const localPlayback = isLocalDevMode() || (
+    isLocalPlaybackMode() && !!request && isTrustedLocalRequest(request)
+  );
   if (!productionPlaybackResolutionEnabled()) {
     throw new PlaybackResolutionError(
       503,
@@ -188,21 +195,21 @@ export async function resolvePlaybackAttempt({
         .where(and(
           eq(streams.channelId, channelId),
           eq(streams.active, true),
-          isLocalDevMode() ? undefined : inArray(streams.status, PLAYABLE_STATUSES),
-          isLocalDevMode() ? undefined : inArray(
+          localPlayback ? undefined : inArray(streams.status, PLAYABLE_STATUSES),
+          localPlayback ? undefined : inArray(
             streams.directEligibility,
             [...directEligibilityStatesForDestination(destination)],
           ),
-          isLocalDevMode() ? undefined : gte(streams.lastSuccessAt, freshnessCutoff),
+          localPlayback ? undefined : gte(streams.lastSuccessAt, freshnessCutoff),
         ));
       const eligibleSources = sourceRows.filter(
         (source) =>
           !attemptedStreamIds.has(source.id) &&
-          (isLocalDevMode()
+          (localPlayback
             ? isLocalPlaybackCandidate(source, destination)
             : isPlaybackSourceEligible(source, destination, now)),
       );
-      const preferredExternal = isLocalDevMode() && destination !== 'web'
+      const preferredExternal = localPlayback && destination !== 'web'
         ? selectBestStream(eligibleSources.filter(source => source.status === 'VLC_ONLY'))
         : null;
       const selectedSource = preferredExternal ?? selectBestStream(eligibleSources);

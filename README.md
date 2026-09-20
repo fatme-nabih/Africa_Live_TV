@@ -1,4 +1,33 @@
-# Africa Live — MVP local
+# Africa Live
+
+## Accueil et authentification Clerk
+
+La configuration de développement actuelle utilise la landing page publique et
+les formulaires Clerk sur `/sign-in` et `/sign-up`, avec retour par défaut vers
+`/app`. Les routes catalogue, compte et administration exigent une connexion.
+L'accès au catalogue conserve les règles d'essai et d'abonnement existantes.
+
+Dans `.env.local`, renseigner les deux clés de la même instance Clerk Development,
+et définir `LOCAL_DEV_MODE=false`, `NEXT_PUBLIC_LOCAL_DEV_MODE=false`,
+`ENABLE_LOCAL_VLC=false`. Conserver `africa_live_dev` et localhost:3001.
+Ne jamais publier ce fichier. Le rôle propriétaire se configure selon
+[admin-access.md](docs/admin-access.md).
+
+```powershell
+npm run dev
+```
+
+Les nouveaux essais d'entrée authentifiée sont dans `e2e/auth-entry.spec.ts`.
+Ils vérifient l'accueil, le chargement des formulaires et les refus anonymes ;
+ils ne simulent pas un utilisateur connecté ou un paiement réel.
+L'horloge Windows doit être synchronisée pour la validation des jetons Clerk.
+
+## Mode MVP local sans authentification
+
+Le fonctionnement ci-dessous reste disponible en définissant ensemble
+`LOCAL_DEV_MODE=true`, `NEXT_PUBLIC_LOCAL_DEV_MODE=true` et
+`ENABLE_LOCAL_VLC=true` dans la configuration locale, puis en redémarrant.
+Ces réglages ne sont jamais utilisables en production.
 
 Application indépendante d’IPTV : catalogue complet, recherche, filtres,
 favoris locaux, lecture navigateur directe et secours VLC automatique.
@@ -8,7 +37,8 @@ cliquables pour une nouvelle tentative locale.
 
 ## Démarrage
 
-La configuration et la base sont déjà préparées sur cette machine.
+La base est déjà préparée sur cette machine. Ce parcours nécessite le mode MVP
+local décrit ci-dessus.
 
 ```powershell
 npm run dev

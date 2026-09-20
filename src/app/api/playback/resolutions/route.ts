@@ -91,6 +91,7 @@ export async function POST(request: Request) {
 
   try {
     const result = await resolvePlaybackAttempt({
+      request,
       userId: authorization.user.id,
       channelId: parsed.data.channelId,
       destination: parsed.data.destination,

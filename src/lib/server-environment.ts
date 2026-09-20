@@ -26,7 +26,7 @@ export function validateServerEnvironment(env: Environment) {
   if (!database || !['postgres:', 'postgresql:'].includes(database.protocol) || database.pathname.length < 2) {
     issues.push('DATABASE_URL must be a PostgreSQL connection URL with a database name.');
   }
-  for (const name of ['LOCAL_DEV_MODE', 'NEXT_PUBLIC_LOCAL_DEV_MODE', 'ENABLE_LOCAL_VLC', 'PLAYBACK_ELIGIBILITY_READY']) {
+  for (const name of ['LOCAL_DEV_MODE', 'NEXT_PUBLIC_LOCAL_DEV_MODE', 'NEXT_PUBLIC_LOCAL_PLAYBACK', 'ENABLE_LOCAL_VLC', 'PLAYBACK_ELIGIBILITY_READY']) {
     if (env[name] !== undefined && !['true', 'false'].includes(env[name]!)) issues.push(`${name} must be true or false.`);
   }
   if (local) {
@@ -37,6 +37,13 @@ export function validateServerEnvironment(env: Environment) {
   }
 
   const app = parsedUrl(env.NEXT_PUBLIC_APP_URL);
+  if (env.NEXT_PUBLIC_LOCAL_PLAYBACK === 'true') {
+    if (productionRuntime) issues.push('NEXT_PUBLIC_LOCAL_PLAYBACK is forbidden in a deployed server.');
+    if (database?.pathname !== '/africa_live_dev') issues.push('Local playback requires africa_live_dev.');
+    if (!app || !['localhost', '127.0.0.1', '[::1]'].includes(app.hostname) || app.port !== '3001' || app.protocol !== 'http:') {
+      issues.push('Local playback requires http://localhost:3001.');
+    }
+  }
   if (!app || !['http:', 'https:'].includes(app.protocol) || app.username || app.password || app.search || app.hash || app.pathname !== '/') {
     issues.push('NEXT_PUBLIC_APP_URL must be an HTTP(S) origin without credentials, path or query.');
   }

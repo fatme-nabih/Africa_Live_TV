@@ -140,6 +140,7 @@ export async function POST(request: Request) {
     await onceLocalVlcLaunch(launchKey, async () => {
     if (request.signal.aborted) throw new LocalVlcError('VLC_REQUEST_CANCELLED', 'Ouverture VLC annulée.');
     const resolution = await resolvePlaybackAttempt({
+      request,
       userId: authorization.user.id,
       channelId: parsed.data.channelId,
       destination: 'vlc-local',

@@ -42,8 +42,9 @@ import {
 } from '@/lib/playback-machine';
 import { MAX_AUTOMATIC_WEB_ATTEMPTS } from '@/lib/local-playback-policy';
 import { PlaybackAttemptTelemetry } from '@/lib/playback-telemetry';
+import { isLocalPlaybackMode } from '@/lib/local-playback-mode';
 
-const LOCAL_AUTOMATIC_PLAYBACK = process.env.NEXT_PUBLIC_LOCAL_DEV_MODE === 'true' && process.env.NODE_ENV !== 'production';
+const LOCAL_AUTOMATIC_PLAYBACK = isLocalPlaybackMode();
 
 interface PlayerProps {
   channelId: string;

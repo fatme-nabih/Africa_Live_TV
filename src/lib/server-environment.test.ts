@@ -57,6 +57,18 @@ test('staging accepts matching test keys without weakening production', () => {
   assert.throws(() => validateServerEnvironment({ ...env, DEPLOYMENT_ENV: 'staging', CLERK_SECRET_KEY: validProduction().CLERK_SECRET_KEY }), EnvironmentValidationError);
 });
 
+test('independent local playback is restricted to the development database and origin', () => {
+  const env = { ...validProduction(), NODE_ENV: 'development',
+    NEXT_PUBLIC_LOCAL_PLAYBACK: 'true', DATABASE_URL: 'postgres://localhost/africa_live_dev',
+    NEXT_PUBLIC_APP_URL: 'http://localhost:3001' };
+  assert.doesNotThrow(() => validateServerEnvironment(env));
+  for (const overrides of [
+    { NODE_ENV: 'production' },
+    { DATABASE_URL: 'postgres://localhost/iptv' },
+    { NEXT_PUBLIC_APP_URL: 'https://tv.africa-live.test' },
+  ]) assert.throws(() => validateServerEnvironment({ ...env, ...overrides }), EnvironmentValidationError);
+});
+
 test('configuration errors never echo secrets or database credentials', () => {
   const sensitive = 'private-credential-that-must-not-appear';
   assert.throws(() => validateServerEnvironment({
