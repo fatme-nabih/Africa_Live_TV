@@ -21,7 +21,10 @@
     "test:e2e": "playwright test",
     "test:e2e:list": "playwright test --list",
     "baseline:db": "tsx src/scripts/export-db-inventory.ts",
+    "backup:restore-drill:local": "tsx src/scripts/test-backup-restore.ts",
+    "backup:restore-drill:railway": "tsx src/scripts/backup-restore-railway.ts",
     "db:migrate": "drizzle-kit migrate",
+    "db:migrate:deploy": "tsx src/scripts/migrate-deploy.ts",
     "db:check": "tsx src/scripts/check-schema-drift.ts",
     "db:check:migrations": "drizzle-kit check",
     "db:push": "drizzle-kit push",
@@ -37,6 +40,7 @@
     "telemetry:retention": "tsx src/scripts/retain-playback-telemetry.ts",
     "abuse:cleanup": "tsx src/scripts/cleanup-abuse-counters.ts",
     "verify:streams": "tsx src/scripts/verify-streams.ts",
+    "diagnose:local": "tsx src/scripts/diagnose-local.ts",
     "setup:local": "tsx src/scripts/setup-local.ts"
   },
   "dependencies": {

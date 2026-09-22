@@ -48,6 +48,21 @@ async function run() {
         if (statement.trim()) await pool.query(statement);
       }
     }
+    let expectedFailureObserved = false;
+    try {
+      await pool.query('begin');
+      await pool.query('create table migration_rollback_probe (id integer primary key)');
+      await pool.query('insert into migration_rollback_probe (id) values (1)');
+      await pool.query('select migration_failure_probe()');
+    } catch {
+      expectedFailureObserved = true;
+    } finally {
+      await pool.query('rollback');
+    }
+    if (!expectedFailureObserved) throw new Error('Migration rollback probe did not fail as expected.');
+    const rollbackProbe = await pool.query("select to_regclass('migration_rollback_probe') as relation");
+    if (rollbackProbe.rows[0]?.relation !== null) throw new Error('Failed migration left schema changes behind.');
+    console.log('Failed migration transaction rolled back without residual schema changes.');
     const witness = `witness-${randomUUID()}`;
     await pool.query('insert into api_rate_limits (key, window_started_at, request_count, expires_at, updated_at) values ($1, now(), 7, now() + interval \'1 hour\', now())', [witness]);
     const tests = (await readdir('src/lib')).filter(file => file.endsWith('.integration.test.ts')).sort();

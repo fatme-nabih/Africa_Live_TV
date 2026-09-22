@@ -201,6 +201,29 @@ export async function readApiResponse<T>(response: Response, schema: z.ZodType<T
   try {
     payload = await response.json();
   } catch {
+    // Clerk deliberately answers unauthenticated API requests with an HTML 404.
+    // Surface that as an expired session without weakening the server-side guard.
+    if (response.status === 401 || response.status === 404) {
+      throw new ApiRequestError(
+        'Votre session a expiré. Reconnectez-vous pour continuer.',
+        response.status,
+        'AUTHENTICATION_REQUIRED',
+      );
+    }
+    if (response.status === 403) {
+      throw new ApiRequestError(
+        'Votre compte ne permet pas d’effectuer cette action.',
+        response.status,
+        'ACCESS_DENIED',
+      );
+    }
+    if (response.status >= 500) {
+      throw new ApiRequestError(
+        'Le serveur est temporairement indisponible.',
+        response.status,
+        'SERVER_UNAVAILABLE',
+      );
+    }
     throw new ApiRequestError('La réponse du serveur est illisible.', response.status);
   }
 
