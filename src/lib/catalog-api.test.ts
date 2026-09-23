@@ -243,6 +243,35 @@ test('API response reader exposes server errors and rejects malformed success pa
     ),
     /contrat attendu/,
   );
+
+  await assert.rejects(
+    readApiResponse(
+      new Response('<!doctype html><title>Not found</title>', {
+        status: 404,
+        headers: { 'Content-Type': 'text/html' },
+      }),
+      catalogResponseSchema,
+    ),
+    (error: unknown) =>
+      error instanceof ApiRequestError &&
+      error.status === 404 &&
+      error.code === 'AUTHENTICATION_REQUIRED' &&
+      /session a expiré/.test(error.message),
+  );
+
+  await assert.rejects(
+    readApiResponse(
+      new Response('<!doctype html><title>Unavailable</title>', {
+        status: 503,
+        headers: { 'Content-Type': 'text/html' },
+      }),
+      catalogResponseSchema,
+    ),
+    (error: unknown) =>
+      error instanceof ApiRequestError &&
+      error.status === 503 &&
+      error.code === 'SERVER_UNAVAILABLE',
+  );
 });
 
 test('latest request aborts and invalidates the previous response', () => {

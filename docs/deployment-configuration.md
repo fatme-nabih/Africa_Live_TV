@@ -32,6 +32,21 @@ pas que les clés sont reconnues par Clerk ni que la connexion DB fonctionne.
 | CLERK_BILLING_PLAN_SLUG / CLERK_BILLING_PLAN_ID | facultatifs | au moins un identifiant de plan explicite |
 | PORT | 3001 fixé par npm run dev | fourni par la plateforme à npm start |
 
+## Origines réservées
+
+Le domaine `africatv.sn` est acquis, mais aucune origine personnalisée n'est
+encore active. La préproduction utilisera `https://staging.africatv.sn` après
+validation du CNAME/TXT, du certificat et du healthcheck. La production future
+utilisera `https://africatv.sn`; `https://www.africatv.sn` sera un alias ou une
+redirection canonique décidé au lancement. Ne jamais utiliser l'apex pour la
+préproduction ni inscrire les deux environnements dans les mêmes variables ou
+identifiants Clerk.
+
+Toute modification de `NEXT_PUBLIC_APP_URL` ou d'une autre variable
+`NEXT_PUBLIC_*` nécessite un nouveau build. Ajouter d'abord l'origine et les
+redirections exactes dans l'instance Clerk correspondante, puis effectuer le
+smoke test complet décrit dans `non-regression-checklist.md`.
+
 L'environnement staging n'active aucun accès local et ne contourne aucune règle
 d'abonnement ou d'éligibilité. Il autorise seulement les clés Clerk de test.
 L'état actuel de Clerk Billing sera réévalué avant le lot 2 si une migration
