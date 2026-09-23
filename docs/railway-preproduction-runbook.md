@@ -12,10 +12,10 @@ Il ne doit pas être promu en production par simple renommage.
 | Service | `Africa_Live_TV`, en ligne, domaine Railway | Conserver comme staging |
 | PostgreSQL | En ligne, volume persistant, 21 tables | Sauvegarde démontrée avant changement de schéma |
 | Région | US West, une réplique | EU West proposé après sauvegarde et fenêtre de maintenance |
-| Pré-déploiement | Actif : `npm run db:migrate` ; lot préparé : `npm run db:migrate:deploy`, 300 s | Appliquer avec la révision contenant la nouvelle commande |
-| Healthcheck | Actif : aucun ; lot préparé : `/api/health`, 120 s | Appliquer après livraison de la route |
+| Pré-déploiement | Actif et validé : `npm run db:migrate:deploy`, 300 s | Conserver ; ne jamais revenir à `db:push` |
+| Healthcheck | Actif et validé : `/api/health`, 120 s | Conserver public et sans fuite |
 | Sauvegardes natives | Aucune ; l'interface les réserve au plan Pro | Ne pas activer sans décision de plan et de coût |
-| Crédit d'essai | 25 jours ou 4,86 USD restants | Ne pas engager de dépense automatiquement |
+| Crédit d'essai | 24 jours ou 4,77 USD restants au 23 septembre 2026 | Ne pas engager de dépense automatiquement |
 | Domaine | `africatv.sn` acquis chez OVHcloud, zone DNS disponible ; aucun lien Railway | `staging.africatv.sn` pour la préproduction, apex/`www` réservés à la production |
 
 Railway indique aussi que `railway.json` est déprécié, que ce service ne peut

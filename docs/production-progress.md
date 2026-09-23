@@ -165,24 +165,26 @@ uniquement ; aucune variable Railway modifiée.
 
 ### RLY-002 — route de santé
 
-Statut : terminé localement, livraison Railway en attente. `GET /api/health`
+Statut : terminé localement et sur Railway. `GET /api/health`
 contrôle le processus et exécute `select 1`. Il retourne 200 avec
 `process=ok/database=ok`, ou 503 avec `database=error`, sans exception, hôte,
 mot de passe ni URL. La route est publique, dynamique et non mise en cache.
 Fichiers : `src/app/api/health/route.ts`, `src/lib/healthcheck.ts` et test associé.
-Preuve : requête réelle locale 200, JSON attendu et `Cache-Control: no-store` ;
-tests succès/échec et absence de secret. Risque : Railway ne surveille cette
+Preuve : requêtes réelles locale et Railway en 200, JSON attendu et
+`Cache-Control: no-store` ; tests succès/échec et absence de secret. Risque : Railway ne surveille cette
 route qu'au démarrage du déploiement. Retour arrière : retirer la route et son
 helper avant activation du healthcheck, jamais après sans supprimer d'abord le
 réglage Railway.
 
 ### RLY-003 — healthcheck Railway
 
-Statut : préparé dans Railway, à appliquer et valider. Le 23 septembre 2026,
-`Healthcheck Path=/api/health` et `Healthcheck Timeout=120` ont été enregistrés
-dans le lot de changements du service. Le récapitulatif Railway affiche bien les
-deux nouvelles valeurs ; **Deploy Changes** n'a pas été actionné afin de ne pas
-activer la sonde avant la livraison de la route.
+Statut : terminé et validé sur Railway le 23 septembre 2026.
+`Healthcheck Path=/api/health` et `Healthcheck Timeout=120` sont actifs. La
+révision saine `531275ef-d6de-481e-b754-ec82317ade70` a été acceptée. La révision
+de contrôle `ae48e479-38e7-42c3-b059-a131e42be52c`, configurée temporairement
+sur `/api/health-intentional-failure`, a été rejetée tandis que le domaine
+continuait à servir la version saine en 200. Le chemin normal a ensuite été
+restauré et la révision finale `106ae4da-3c6b-41b5-aba6-260ba5eb60b3` a réussi.
 Un ancien `railway.json` préparé pendant le lot a été retiré immédiatement :
 Railway indique que Config as Code est déprécié, indisponible pour un nouveau
 service et arrêté le 1er décembre 2026. Une future IaC doit être importée depuis
@@ -214,7 +216,7 @@ aucune base de restauration ni accès PostgreSQL public actif.
 
 ### RLY-005 — migrations de déploiement
 
-Statut : préparé dans Railway, à appliquer et valider. La commande
+Statut : terminé et validé sur Railway le 23 septembre 2026. La commande
 `npm run db:migrate:deploy` refuse
 les environnements non Railway, localhost et `africa_live_dev`, acquiert un
 verrou consultatif, limite attente de verrou à 10 s et requêtes à 240 s, puis
@@ -222,10 +224,13 @@ exécute les migrations Drizzle transactionnelles. Le test d'intégration provoq
 une erreur après création/insertion et confirme l'absence de table résiduelle.
 Fichiers : `src/lib/deploy-migration.ts`, son test,
 `src/scripts/migrate-deploy.ts`, `src/scripts/test-integration.ts` et
-`package.json`. Le 23 septembre 2026, Railway a enregistré dans le lot non
-appliqué le remplacement de `["npm run db:migrate"]` par
-`["npm run db:migrate:deploy"]` ainsi que `Pre Deploy Timeout Seconds=300`.
-Le déploiement actif conserve encore l'ancienne configuration. Risque : un
+`package.json`. La révision finale exécute
+`["npm run db:migrate:deploy"]` avec `Pre Deploy Timeout Seconds=300` ; les
+journaux confirment la fin de la migration dans la transaction Drizzle. Deux
+sessions PostgreSQL réelles ont confirmé le verrou : première acquisition
+réussie, acquisition concurrente refusée, puis acquisition réussie après
+libération. Le proxy TCP temporaire utilisé pour cette preuve a été supprimé.
+Risque : un
 rollback applicatif n'annule pas un schéma destructif ; stratégie expand/contract
 obligatoire. Retour arrière : remettre la commande précédente seulement si
 aucune migration nouvelle ne la requiert ; ne jamais employer `db:push`.
@@ -280,18 +285,21 @@ sous-domaine staging. L'acquisition du domaine n'est pas annulée.
 | `npm run backup:restore-drill:local` | Réussi en 2,8 s ; inventaire identique, nettoyage réussi |
 | `npm run backup:restore-drill:railway` | Réussi en 78,1 s ; dump chiffré, inventaire identique, base isolée et proxy temporaire supprimés |
 | `GET http://127.0.0.1:3001/api/health` | 200 ; processus et DB `ok`, réponse non cachée |
+| Déploiement Railway `106ae4da-3c6b-41b5-aba6-260ba5eb60b3` | Réussi ; commit `e5665b6`, migration transactionnelle, `/api/health`, délais 300/120 s |
+| Déploiement de contrôle `ae48e479-38e7-42c3-b059-a131e42be52c` | Échec attendu du healthcheck invalide ; version saine restée disponible en 200 |
+| Verrou PostgreSQL Railway | Première acquisition réussie, concurrente refusée, nouvelle acquisition réussie après libération |
+| `GET https://africalivetv-production.up.railway.app/api/health` | 200 ; processus et DB `ok`, `Cache-Control: no-store` |
 
 ### État de sortie du lot 2
 
-Statut : partiel. RLY-001, RLY-002 local, RLY-006 et RLY-007 décision sont
-terminés. RLY-009A/B sont terminés grâce à l'acquisition de `africatv.sn` et à
-la réservation des noms ; RLY-009C à F restent à exécuter. RLY-003 et RLY-005
-ont leurs quatre réglages préparés dans Railway, mais attendent livraison,
-application et validation ; RLY-004 est terminé pour la preuve
+Statut : partiel. RLY-001, RLY-002, RLY-003, RLY-005, RLY-006 documentaire et
+RLY-007 décision sont terminés. RLY-009A/B sont terminés grâce à l'acquisition
+de `africatv.sn` et à la réservation des noms ; RLY-009C à F restent à exécuter.
+RLY-004 est terminé pour la preuve
 logique, mais les sauvegardes natives/PITR restent dépendantes du plan ; RLY-008
-est bloqué par l'essai. Depuis
-la précédente clôture, Railway contient un lot non appliqué de quatre réglages
-A4/A5 ; aucun déploiement, changement OVHcloud, DNS ou dépense n'a été effectué.
+est bloqué par l'essai. Les quatre réglages A4/A5 sont actifs et validés sur le
+commit fusionné `e5665b6`. Aucun changement OVHcloud, DNS, de région ou de plan
+n'a été effectué.
 
 ## Périmètre autorisé
 

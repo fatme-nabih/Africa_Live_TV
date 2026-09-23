@@ -4,8 +4,8 @@ Date de référence : 23 septembre 2026.
 Statut : Railway existe et sert une préproduction logique ; lots opérationnels 0
 et 1 terminés, lot 2 préparé localement et audité le 22 septembre 2026. Son
 activation autorisée le 22 septembre 2026 ; la sauvegarde logique Railway et sa
-restauration isolée sont démontrées. Les quatre réglages A4/A5 sont préparés
-dans Railway sans avoir été appliqués ; la livraison GitHub reste à exécuter.
+restauration isolée sont démontrées. La PR #1 a été fusionnée le 23 septembre
+2026 et les quatre réglages A4/A5 ont été appliqués et validés sur Railway.
 Responsable d'exécution : assistant, avec décisions produit et infrastructure du propriétaire.
 
 ## État réel observé le 23 septembre 2026
@@ -50,10 +50,10 @@ encore reliés à Railway.
 | ID | Priorité | Travail | État au 23 septembre 2026 |
 |---|---|---|---|
 | RLY-001 | P0 | Qualifier Railway comme préproduction | Terminé : `DEPLOYMENT_ENV=staging` fait foi ; écart du nom d'interface documenté |
-| RLY-002 | P0 | Route de santé processus + DB | Terminé localement : `/api/health` retourne 200/503 sans données sensibles |
-| RLY-003 | P0 | Healthcheck Railway | Préparé : chemin `/api/health` et délai 120 s figurent dans le lot Railway non appliqué ; acceptation et rejet restent à valider |
+| RLY-002 | P0 | Route de santé processus + DB | Terminé : `/api/health` retourne 200 sur Railway avec processus et DB sains ; 503 et absence de fuite couvertes par les tests |
+| RLY-003 | P0 | Healthcheck Railway | Terminé : `/api/health`, délai 120 s, révision saine acceptée et révision à chemin invalide rejetée sans couper la version saine |
 | RLY-004 | P0 | Sauvegarde PostgreSQL | Terminé pour la preuve logique : dump Railway chiffré, déchiffré, restauré et comparé sur une base isolée ; sauvegarde native/PITR toujours dépendante du plan |
-| RLY-005 | P0 | Migrations automatiques sûres | Préparé : garde-fous, verrou, délais et rollback transactionnel testés ; commande et délai Railway dans le lot non appliqué |
+| RLY-005 | P0 | Migrations automatiques sûres | Terminé : `db:migrate:deploy`, délai 300 s et transaction validés sur Railway ; verrou concurrent refusé puis acquis après libération |
 | RLY-006 | P1 | Rollback applicatif | Terminé : procédure et limites DB documentées dans le runbook |
 | RLY-007 | P1 | Région d'hébergement | Terminé pour la décision : EU West proposé ; déplacement différé jusqu'à sauvegarde et fenêtre de maintenance |
 | RLY-008 | P1 | Alerte de budget | Bloqué par l'essai : seuil souple minimal 5 USD, crédit restant 4,86 USD ; aucune notification souscrite |
@@ -263,12 +263,11 @@ ces domaines remonte en P1 ; aucun grand refactoring cosmétique avant les corre
 
 ## Prochaine action
 
-Pousser la branche contrôlée `codex/railway-phase-a` contenant la route de santé
-et la commande de migration, puis la faire relire/fusionner selon le flux GitHub
-convenu. La sauvegarde logique Railway préalable est démontrée ; appliquer ensuite
-le lot de quatre changements A4/A5 déjà préparé, puis exécuter
-RLY-009C à RLY-009E sur `staging.africatv.sn`. Sans cette autorisation,
-conserver le domaine Railway actif et ne créer aucun enregistrement DNS.
+Exécuter A6 : rollback réel vers le dernier déploiement sain, puis vérifier la
+route de santé, Clerk et le catalogue. Enchaîner ensuite A7 (checklist complète
+et journal) puis A8 (plan, budget, sauvegardes natives et destinataire des
+alertes). Le domaine Railway reste actif et aucun enregistrement DNS ne doit être
+créé sans l'autorisation correspondante.
 Revoir le plan Railway pour les sauvegardes natives et RLY-008 : aucune dépense
 ou notification n'est présumée. Ne pas utiliser `africatv.sn` comme production ni promouvoir
 `DEPLOYMENT_ENV=production` avant une restauration Railway démontrée et
