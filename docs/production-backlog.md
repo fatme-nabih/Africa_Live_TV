@@ -1,13 +1,14 @@
 # Africa Live — Plan de préparation à la production
 
-Date de référence : 22 septembre 2026.
+Date de référence : 23 septembre 2026.
 Statut : Railway existe et sert une préproduction logique ; lots opérationnels 0
 et 1 terminés, lot 2 préparé localement et audité le 22 septembre 2026. Son
 activation autorisée le 22 septembre 2026 ; la sauvegarde logique Railway et sa
-restauration isolée sont démontrées, la livraison reste à exécuter.
+restauration isolée sont démontrées. Les quatre réglages A4/A5 sont préparés
+dans Railway sans avoir été appliqués ; la livraison GitHub reste à exécuter.
 Responsable d'exécution : assistant, avec décisions produit et infrastructure du propriétaire.
 
-## État réel observé le 22 septembre 2026
+## État réel observé le 23 septembre 2026
 
 Le projet Railway `just-compassion` existe. Son environnement Railway porte le
 nom `production`, mais l'application y est volontairement configurée avec
@@ -24,7 +25,7 @@ encore reliés à Railway.
 
 ### Lot opérationnel 0 — suivi
 
-| ID | Priorité | Travail | État au 22 septembre 2026 |
+| ID | Priorité | Travail | État au 23 septembre 2026 |
 |---|---|---|---|
 | DOC-001 | P0 | Aligner le backlog sur Railway | Terminé : service, DB, commit et limites consignés |
 | DOC-002 | P0 | Matrice Local / Staging Railway / Production | Terminé : voir [environment-matrix.md](environment-matrix.md) |
@@ -33,7 +34,7 @@ encore reliés à Railway.
 
 ### Lot opérationnel 1 — stabilisation locale
 
-| ID | Priorité | Travail | État au 22 septembre 2026 |
+| ID | Priorité | Travail | État au 23 septembre 2026 |
 |---|---|---|---|
 | LOC-001 | P0 | Horloge Windows compatible Clerk | Terminé : service Running/Automatic, source NTP et dérive ~0,14 s |
 | LOC-002 | P0 | Réinitialiser la session Clerk locale | Terminé : déconnexion/reconnexion interactive réussie |
@@ -46,13 +47,13 @@ encore reliés à Railway.
 
 ### Lot opérationnel 2 — Railway en préproduction fiable
 
-| ID | Priorité | Travail | État au 22 septembre 2026 |
+| ID | Priorité | Travail | État au 23 septembre 2026 |
 |---|---|---|---|
 | RLY-001 | P0 | Qualifier Railway comme préproduction | Terminé : `DEPLOYMENT_ENV=staging` fait foi ; écart du nom d'interface documenté |
 | RLY-002 | P0 | Route de santé processus + DB | Terminé localement : `/api/health` retourne 200/503 sans données sensibles |
-| RLY-003 | P0 | Healthcheck Railway | À valider : chemin `/api/health` et délai 120 s préparés, activation après livraison de la route |
+| RLY-003 | P0 | Healthcheck Railway | Préparé : chemin `/api/health` et délai 120 s figurent dans le lot Railway non appliqué ; acceptation et rejet restent à valider |
 | RLY-004 | P0 | Sauvegarde PostgreSQL | Terminé pour la preuve logique : dump Railway chiffré, déchiffré, restauré et comparé sur une base isolée ; sauvegarde native/PITR toujours dépendante du plan |
-| RLY-005 | P0 | Migrations automatiques sûres | À valider : garde-fous, verrou, délais et rollback transactionnel testés ; commande Railway pas encore basculée |
+| RLY-005 | P0 | Migrations automatiques sûres | Préparé : garde-fous, verrou, délais et rollback transactionnel testés ; commande et délai Railway dans le lot non appliqué |
 | RLY-006 | P1 | Rollback applicatif | Terminé : procédure et limites DB documentées dans le runbook |
 | RLY-007 | P1 | Région d'hébergement | Terminé pour la décision : EU West proposé ; déplacement différé jusqu'à sauvegarde et fenêtre de maintenance |
 | RLY-008 | P1 | Alerte de budget | Bloqué par l'essai : seuil souple minimal 5 USD, crédit restant 4,86 USD ; aucune notification souscrite |
@@ -262,9 +263,10 @@ ces domaines remonte en P1 ; aucun grand refactoring cosmétique avant les corre
 
 ## Prochaine action
 
-Livrer la branche contrôlée contenant la route de santé et la commande de
-migration. La sauvegarde logique Railway préalable est désormais démontrée ;
-activer ensuite le nouveau pré-déploiement et le healthcheck, puis exécuter
+Pousser la branche contrôlée `codex/railway-phase-a` contenant la route de santé
+et la commande de migration, puis la faire relire/fusionner selon le flux GitHub
+convenu. La sauvegarde logique Railway préalable est démontrée ; appliquer ensuite
+le lot de quatre changements A4/A5 déjà préparé, puis exécuter
 RLY-009C à RLY-009E sur `staging.africatv.sn`. Sans cette autorisation,
 conserver le domaine Railway actif et ne créer aucun enregistrement DNS.
 Revoir le plan Railway pour les sauvegardes natives et RLY-008 : aucune dépense

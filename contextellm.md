@@ -1,6 +1,6 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 22 septembre 2026, fuseau Africa/Dakar.
+Dernière mise à jour : 23 septembre 2026, fuseau Africa/Dakar.
 
 Ce document permet à une nouvelle session de reprendre le travail sans
 réinterpréter l'historique. Il ne contient volontairement aucun secret, cookie,
@@ -29,8 +29,8 @@ mot de passe, identifiant de paiement, clé Clerk ou URL de flux média.
 ## 2. Dépôt et règles non négociables
 
 - Workspace : `C:/Users/GAMER PC/Africa_Live_TV`.
-- Branche actuelle : `main`.
-- HEAD observé : `fb566d373c9237b12465908638a875280a78d00b`.
+- Branche actuelle : `codex/railway-phase-a`.
+- Commit local Phase A contenant le code et les preuves A1/A2 : `66a903a`.
 - Dépôt distant : `https://github.com/fatme-nabih/Africa_Live_TV.git`.
 - Aucun commit ou push ne doit être créé sans demande explicite de l'utilisateur.
 - Le projet source `C:/Users/GAMER PC/IPTV` doit rester entièrement inchangé.
@@ -162,8 +162,9 @@ staging/production, une cible non Railway, localhost et `africa_live_dev`. Elle
 acquiert un verrou consultatif PostgreSQL, borne l'attente du verrou à 10 s et
 les requêtes à 240 s, puis utilise les migrations transactionnelles Drizzle.
 Le test provoque une migration en échec et vérifie qu'aucune table résiduelle ne
-reste. La commande Railway visée est `npm run db:migrate:deploy`, avec un délai
-dashboard de 300 s. Elle n'est pas encore active sur Railway.
+reste. Le 23 septembre 2026, la commande `npm run db:migrate:deploy` et le délai
+dashboard de 300 s ont été ajoutés au lot de changements Railway préparé. Ils
+ne sont pas encore appliqués : l'ancien déploiement reste actif.
 
 ### Sauvegarde/restauration — RLY-004
 
@@ -247,9 +248,9 @@ uniquement les CNAME/TXT staging chez OVHcloud. L'acquisition du domaine reste.
 |---|---|
 | RLY-001 | Terminé |
 | RLY-002 | Terminé localement, livraison Railway en attente |
-| RLY-003 | À valider après déploiement de `/api/health` |
+| RLY-003 | Chemin `/api/health` et délai 120 s préparés dans Railway ; application et validation en attente |
 | RLY-004 | Sauvegarde logique Railway chiffrée et restauration isolée terminées ; sauvegarde native/PITR dépendante du plan |
-| RLY-005 | Implémenté/testé localement ; commande dashboard non basculée |
+| RLY-005 | Implémenté/testé localement ; commande et délai préparés dans Railway, application et validation en attente |
 | RLY-006 | Runbook de rollback terminé |
 | RLY-007 | Décision EU West proposée ; migration non exécutée |
 | RLY-008 | Bloqué par le plan d'essai actuel |
@@ -258,7 +259,9 @@ uniquement les CNAME/TXT staging chez OVHcloud. L'acquisition du domaine reste.
 | RLY-009F | Différé au lancement production |
 
 Le lot 2 n'est donc pas entièrement clôturé. Les fichiers et preuves locales
-sont prêts, mais les changements externes attendent une demande explicite.
+sont prêts. Railway contient quatre changements préparés, non appliqués et sans
+nouveau déploiement ; la livraison GitHub puis les validations réelles restent à
+faire.
 
 ## 9. Validations déjà obtenues
 
@@ -282,51 +285,32 @@ Les deux avertissements ESLint concernent `window.location.assign()` dans
 `src/components/SeparatePlayerPage.tsx` et préexistaient au lot 2. Ne pas les
 masquer dans le rapport d'une future validation.
 
-## 10. Working tree à préserver
+## 10. État Git à préserver
 
-Au moment de cette mise à jour, les fichiers suivis modifiés comprennent :
+La branche locale `codex/railway-phase-a` contient le commit `66a903a`, qui
+regroupe le code, les tests, les runbooks et la preuve A2. Les sauvegardes sous
+`backups/railway` restent ignorées par Git. La tentative de push n'a pas abouti,
+car Git Credential Manager attendait la sélection interactive d'un compte ;
+aucune branche distante ni PR n'a été créée.
 
-- `README.md` ;
-- `AGENTS.md` ;
-- `docs/deployment-configuration.md` ;
-- `docs/production-backlog.md` ;
-- `docs/production-progress.md` ;
-- `package.json` ;
-- `src/lib/api-contracts.ts` ;
-- `src/lib/catalog-api.test.ts` ;
-- `src/scripts/test-integration.ts`.
-
-Les fichiers non suivis importants comprennent :
-
-- `contextellm.md` ;
-- `docs/environment-matrix.md` ;
-- `docs/non-regression-checklist.md` ;
-- `docs/railway-preproduction-runbook.md` ;
-- `src/app/api/health/route.ts` ;
-- `src/lib/deploy-migration.ts` et son test ;
-- `src/lib/healthcheck.ts` et son test ;
-- `src/scripts/diagnose-local.ts` ;
-- `src/scripts/migrate-deploy.ts` ;
-- `src/scripts/test-backup-restore.ts`.
-
-Cette liste est un instantané : toujours refaire `git status --short`. Ne pas
-supprimer un fichier absent de la liste ni restaurer aveuglément une ancienne
-version. Aucun commit/push n'a été effectué pour ces lots.
+Toujours refaire `git status --short` avant une modification. Ne pas restaurer,
+nettoyer ou remplacer les changements existants avec une commande Git
+destructive.
 
 ## 11. Prochaine séquence sûre
 
 La prochaine session ne doit pas commencer par le DNS. L'ordre est :
 
-1. Obtenir l'autorisation explicite de créer un commit/push et de déployer la
-   préproduction. Décider si la livraison passe par une branche/PR ou directement
-   par le flux convenu par le propriétaire.
+1. Reprendre l'authentification GitHub interactive, pousser la branche
+   `codex/railway-phase-a` puis ouvrir/relire la PR avant fusion selon le flux
+   convenu. Le commit local est `66a903a` ; aucun push n'a encore abouti.
 2. Vérifier la copie logique Railway chiffrée et sa preuve de restauration déjà
    obtenues. Si un plan Pro est envisagé pour sauvegarde/PITR, demander la
    décision de coût ; ne jamais l'activer automatiquement.
 3. Livrer le code, puis vérifier `/api/health` sur le domaine Railway existant.
-4. Dans Railway, remplacer le pré-déploiement par
-   `npm run db:migrate:deploy`, délai 300 s, puis configurer le healthcheck
-   `/api/health`, délai 120 s.
+4. Relire puis appliquer ensemble les quatre changements déjà préparés dans
+   Railway : `npm run db:migrate:deploy`, 300 s, `/api/health` et 120 s. Ne pas
+   les appliquer tant que la source déployée ne contient pas la route.
 5. Déployer une seule révision et exécuter la checklist : santé, Clerk, 30
    chaînes, recherche, filtres, favori, lecture fermée attendue.
 6. Ajouter `staging.africatv.sn` à Railway ; relever les valeurs exactes.

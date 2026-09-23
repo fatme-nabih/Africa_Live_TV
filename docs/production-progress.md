@@ -178,8 +178,11 @@ réglage Railway.
 
 ### RLY-003 — healthcheck Railway
 
-Statut : à valider. L'audit du service confirme qu'aucun chemin n'est configuré.
-La cible est `/api/health` avec délai 120 s, à saisir après livraison de la route.
+Statut : préparé dans Railway, à appliquer et valider. Le 23 septembre 2026,
+`Healthcheck Path=/api/health` et `Healthcheck Timeout=120` ont été enregistrés
+dans le lot de changements du service. Le récapitulatif Railway affiche bien les
+deux nouvelles valeurs ; **Deploy Changes** n'a pas été actionné afin de ne pas
+activer la sonde avant la livraison de la route.
 Un ancien `railway.json` préparé pendant le lot a été retiré immédiatement :
 Railway indique que Config as Code est déprécié, indisponible pour un nouveau
 service et arrêté le 1er décembre 2026. Une future IaC doit être importée depuis
@@ -211,15 +214,18 @@ aucune base de restauration ni accès PostgreSQL public actif.
 
 ### RLY-005 — migrations de déploiement
 
-Statut : à valider sur Railway. La commande `npm run db:migrate:deploy` refuse
+Statut : préparé dans Railway, à appliquer et valider. La commande
+`npm run db:migrate:deploy` refuse
 les environnements non Railway, localhost et `africa_live_dev`, acquiert un
 verrou consultatif, limite attente de verrou à 10 s et requêtes à 240 s, puis
 exécute les migrations Drizzle transactionnelles. Le test d'intégration provoque
 une erreur après création/insertion et confirme l'absence de table résiduelle.
 Fichiers : `src/lib/deploy-migration.ts`, son test,
 `src/scripts/migrate-deploy.ts`, `src/scripts/test-integration.ts` et
-`package.json`. Le tableau de bord utilise encore `npm run db:migrate` sans
-délai ; cible future : nouvelle commande et délai Railway 300 s. Risque : un
+`package.json`. Le 23 septembre 2026, Railway a enregistré dans le lot non
+appliqué le remplacement de `["npm run db:migrate"]` par
+`["npm run db:migrate:deploy"]` ainsi que `Pre Deploy Timeout Seconds=300`.
+Le déploiement actif conserve encore l'ancienne configuration. Risque : un
 rollback applicatif n'annule pas un schéma destructif ; stratégie expand/contract
 obligatoire. Retour arrière : remettre la commande précédente seulement si
 aucune migration nouvelle ne la requiert ; ne jamais employer `db:push`.
@@ -280,11 +286,12 @@ sous-domaine staging. L'acquisition du domaine n'est pas annulée.
 Statut : partiel. RLY-001, RLY-002 local, RLY-006 et RLY-007 décision sont
 terminés. RLY-009A/B sont terminés grâce à l'acquisition de `africatv.sn` et à
 la réservation des noms ; RLY-009C à F restent à exécuter. RLY-003 et RLY-005
-attendent livraison et activation Railway ; RLY-004 est terminé pour la preuve
+ont leurs quatre réglages préparés dans Railway, mais attendent livraison,
+application et validation ; RLY-004 est terminé pour la preuve
 logique, mais les sauvegardes natives/PITR restent dépendantes du plan ; RLY-008
 est bloqué par l'essai. Depuis
-la précédente clôture, le seul changement externe constaté est l'acquisition du
-domaine par le propriétaire ; l'assistant n'a modifié ni Railway, ni OVHcloud.
+la précédente clôture, Railway contient un lot non appliqué de quatre réglages
+A4/A5 ; aucun déploiement, changement OVHcloud, DNS ou dépense n'a été effectué.
 
 ## Périmètre autorisé
 

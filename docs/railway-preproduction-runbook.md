@@ -1,6 +1,6 @@
 # Railway — runbook de préproduction
 
-Référence : 22 septembre 2026. Le projet Railway `just-compassion` est une
+Référence : 23 septembre 2026. Le projet Railway `just-compassion` est une
 **préproduction**, même si l'environnement porte encore le nom d'interface
 `production`. La valeur applicative qui fait foi est `DEPLOYMENT_ENV=staging`.
 Il ne doit pas être promu en production par simple renommage.
@@ -12,8 +12,8 @@ Il ne doit pas être promu en production par simple renommage.
 | Service | `Africa_Live_TV`, en ligne, domaine Railway | Conserver comme staging |
 | PostgreSQL | En ligne, volume persistant, 21 tables | Sauvegarde démontrée avant changement de schéma |
 | Région | US West, une réplique | EU West proposé après sauvegarde et fenêtre de maintenance |
-| Pré-déploiement | `npm run db:migrate` | `npm run db:migrate:deploy`, délai 300 s |
-| Healthcheck | Aucun chemin configuré | `/api/health`, délai 120 s |
+| Pré-déploiement | Actif : `npm run db:migrate` ; lot préparé : `npm run db:migrate:deploy`, 300 s | Appliquer avec la révision contenant la nouvelle commande |
+| Healthcheck | Actif : aucun ; lot préparé : `/api/health`, 120 s | Appliquer après livraison de la route |
 | Sauvegardes natives | Aucune ; l'interface les réserve au plan Pro | Ne pas activer sans décision de plan et de coût |
 | Crédit d'essai | 25 jours ou 4,86 USD restants | Ne pas engager de dépense automatiquement |
 | Domaine | `africatv.sn` acquis chez OVHcloud, zone DNS disponible ; aucun lien Railway | `staging.africatv.sn` pour la préproduction, apex/`www` réservés à la production |
@@ -38,19 +38,22 @@ Références Railway :
 
 ## Ordre d'activation du prochain déploiement
 
-L'activation externe est volontairement différée : aucun commit, push ou
-déploiement n'a été demandé. Au prochain créneau autorisé, respecter cet ordre.
+Le commit local est créé et les quatre réglages Railway sont préparés, mais le
+push GitHub et le déploiement n'ont pas abouti. Ne pas cliquer **Deploy Changes**
+tant que la révision livrée ne contient pas `/api/health`. Respecter cet ordre.
 
 1. Vérifier que la sauvegarde logique PostgreSQL chiffrée et sa preuve de
    restauration isolée sont encore disponibles. Ne jamais afficher l'URL ou le
    mot de passe dans les logs.
-2. Livrer la route publique `GET /api/health`. Elle retourne `200` uniquement si
+2. Pousser `codex/railway-phase-a`, relire/fusionner selon le flux GitHub convenu,
+   puis livrer la route publique `GET /api/health`. Elle retourne `200` uniquement si
    le processus répond et si `select 1` réussit ; sinon elle retourne `503`, sans
    détail de connexion.
-3. Dans **Africa_Live_TV → Settings → Deploy**, remplacer le pré-déploiement par
-   `npm run db:migrate:deploy` et fixer **Pre-deploy Timeout** à `300` secondes.
-4. Dans le même écran, définir **Healthcheck Path** sur `/api/health` et un délai
-   de `120` secondes.
+3. Relire le lot Railway préparé : **Pre-deploy Command**
+   `npm run db:migrate:deploy`, **Pre-deploy Timeout** `300`, **Healthcheck Path**
+   `/api/health` et **Healthcheck Timeout** `120`.
+4. Appliquer ces quatre changements avec la révision contenant la route ; ne pas
+   les appliquer seuls sur l'ancien code.
 5. Déployer une seule révision. Un échec de migration doit arrêter le
    déploiement ; un healthcheck non-2xx doit laisser la version précédente active.
 6. Vérifier `GET /api/health`, connexion Clerk, catalogue de 30 éléments,
