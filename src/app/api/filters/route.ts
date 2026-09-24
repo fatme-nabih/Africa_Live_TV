@@ -28,30 +28,27 @@ export async function GET(request: Request) {
     const availableJoin = and(
       eq(streams.channelId, channels.id),
       eq(streams.active, true),
+      eq(streams.verificationState, 'HEALTHY'),
       gte(streams.lastSuccessAt, freshnessCutoff),
       inArray(streams.status, PLAYABLE_STATUSES),
       inArray(streams.directEligibility, PUBLIC_DIRECT_ELIGIBILITIES),
     );
-    const inventoryJoin = and(
-      eq(streams.channelId, channels.id),
-      eq(streams.active, true),
-    );
-
+    
     const [rawCountries, rawGroups, rawLanguages, rawStatuses] = await Promise.all([
       db
         .selectDistinct({ code: channels.countryCode })
         .from(channels)
-        .leftJoin(streams, inventoryJoin)
+        .innerJoin(streams, availableJoin)
         .where(eq(channels.active, true)),
       db
         .selectDistinct({ title: channels.groupTitle })
         .from(channels)
-        .leftJoin(streams, inventoryJoin)
+        .innerJoin(streams, availableJoin)
         .where(eq(channels.active, true)),
       db
         .selectDistinct({ language: channels.language })
         .from(channels)
-        .leftJoin(streams, inventoryJoin)
+        .innerJoin(streams, availableJoin)
         .where(
           and(
             eq(channels.active, true),

@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { classifyHlsFailure, classifyPlayRejection, nextMediaRecoveryAction } from './playback-errors';
+import {
+  classifyHlsFailure,
+  classifyPlayRejection,
+  nextMediaRecoveryAction,
+  nextNetworkRecoveryAction,
+} from './playback-errors';
 
 test('play rejection distinguishes autoplay and codecs', () => {
   assert.equal(classifyPlayRejection(new DOMException('blocked', 'NotAllowedError')).category, 'autoplay');
@@ -19,4 +24,10 @@ test('media recovery is bounded to two attempts', () => {
   assert.equal(nextMediaRecoveryAction(0), 'recover');
   assert.equal(nextMediaRecoveryAction(1), 'swap-and-recover');
   assert.equal(nextMediaRecoveryAction(2), 'fail');
+});
+
+test('network recovery is bounded to two attempts per playback attempt', () => {
+  assert.equal(nextNetworkRecoveryAction(0), 'retry');
+  assert.equal(nextNetworkRecoveryAction(1), 'retry');
+  assert.equal(nextNetworkRecoveryAction(2), 'fail');
 });

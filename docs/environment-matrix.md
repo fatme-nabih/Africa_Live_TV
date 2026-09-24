@@ -12,11 +12,11 @@ est bien **staging** grâce à `DEPLOYMENT_ENV=staging`.
 | `LOCAL_DEV_MODE` | `false` | `true` | `false` | `false` |
 | `NEXT_PUBLIC_LOCAL_DEV_MODE` | `false` | `true` | `false` | `false` |
 | `NEXT_PUBLIC_LOCAL_PLAYBACK` | `true` pour retenter localement les contrôles anciens | `true` recommandé ; le mode MVP l'implique aussi | `false` | `false` |
-| `NEXT_PUBLIC_APP_URL` | `http://localhost:3001` | `http://localhost:3001` | domaine Railway actuel, puis `https://staging.africatv.sn` après validation TLS | `https://africatv.sn` uniquement après lancement autorisé |
-| `BROWSER_TEST_ORIGIN` | `http://localhost:3001` | `http://localhost:3001` | identique à `NEXT_PUBLIC_APP_URL` après bascule staging | `https://africatv.sn` après bascule production |
+| `NEXT_PUBLIC_APP_URL` | `http://localhost:3001` | `http://localhost:3001` | `https://staging.africatv.sn` | `https://africatv.sn` uniquement après lancement autorisé |
+| `BROWSER_TEST_ORIGIN` | `http://localhost:3001` | `http://localhost:3001` | `https://staging.africatv.sn`, identique à `NEXT_PUBLIC_APP_URL` | `https://africatv.sn` après bascule production |
 | `ENABLE_LOCAL_VLC` | `true` sur ce poste | `true` sur ce poste | `false` | `false` |
 | `VLC_PATH` | facultatif ; chemin local seulement | facultatif ; chemin local seulement | absent | absent |
-| `PLAYBACK_ELIGIBILITY_READY` | `false` | `false` | `false` observé | `true` uniquement après validation et décision de lancement |
+| `PLAYBACK_ELIGIBILITY_READY` | `false` | `false` | `true`, après validation du catalogue staging | `true` uniquement après validation et décision de lancement |
 | Clés Clerk | paire Development (`test`) cohérente | non requises par le parcours, mais formats locaux tolérés | paire `test` ou `live` cohérente ; `test` observé | paire `live` cohérente |
 | Webhook Clerk | facultatif pour le catalogue local | non requis | secret réel de l'endpoint staging | secret réel de l'endpoint production |
 | Plan Clerk Billing | facultatif | non requis | slug ou ID staging explicite | slug ou ID production explicite |
@@ -25,7 +25,7 @@ est bien **staging** grâce à `DEPLOYMENT_ENV=staging`.
 | `PORT` | `3001` via `npm run dev` | `3001` via `npm run dev` | fourni par Railway | fourni par la plateforme |
 | Authentification | obligatoire | contournement local explicite uniquement | obligatoire | obligatoire |
 | Lecture média | navigateur/VLC téléchargent directement depuis l'amont | idem | navigateur direct uniquement ; fermée tant que l'éligibilité n'est pas prête | navigateur direct selon éligibilité validée |
-| Santé | `/api/health` vérifie processus + DB | idem | `/api/health`, à activer comme healthcheck après livraison | healthcheck de déploiement + surveillance continue externe |
+| Santé | `/api/health` vérifie processus + DB | idem | `/api/health` actif, délai 120 s | healthcheck de déploiement + surveillance continue externe |
 | Migration de déploiement | `db:migrate` seulement sur la base locale autorisée | idem | `db:migrate:deploy`, garde-fous Railway, verrou et délais | même garde-fou, avec sauvegarde et stratégie expand/contract |
 | Sauvegarde | dump/restauration locale de validation | idem | dump logique avant migration ; sauvegarde/PITR natifs indisponibles sur l'essai | dump exportable + politique native/PITR selon plan validé |
 | Région | poste local à Dakar | poste local à Dakar | US West observé ; EU West proposé après sauvegarde | région décidée par mesures, application et DB colocalisées |
@@ -49,16 +49,16 @@ une modification Railway exige un nouveau build pour atteindre le navigateur.
 - Projet : `just-compassion`, environnement Railway nommé `production`.
 - Rôle applicatif : staging (`DEPLOYMENT_ENV=staging`).
 - Services : `Africa_Live_TV` et `Postgres`, tous deux en ligne.
-- Déploiement actif : commit `fb566d373c9237b12465908638a875280a78d00b`.
+- Déploiement actif : commit `e5665b699686a2f9f8065a3d098e11c04e7edc71`.
 - Runtime observé : Node.js 22.23.2, Railpack 0.39.0, une réplique US West.
-- Pré-déploiement actif : `npm run db:migrate` ; cible préparée
-  `npm run db:migrate:deploy` avec délai 300 s.
-- Healthcheck : aucun chemin actif ; `/api/health` est validé localement et doit
-  être configuré avec un délai de 120 s après livraison.
+- Pré-déploiement actif et validé : `npm run db:migrate:deploy`, délai 300 s.
+- Healthcheck actif et validé : `/api/health`, délai 120 s.
 - PostgreSQL : volume persistant et 21 tables ; sauvegarde/PITR non disponible sur le plan observé.
-- Lecture : `PLAYBACK_ELIGIBILITY_READY=false`, donc refus attendu et explicite.
-- Domaine acquis : `africatv.sn`, géré dans une zone DNS OVHcloud. Aucun
-  enregistrement Railway ni certificat personnalisé n'est encore validé.
+- Lecture : `PLAYBACK_ELIGIBILITY_READY=true` ; 8 911 flux HTTPS sont qualifiés
+  pour le navigateur et 2 089 flux HTTP pour un lecteur externe. Lecture directe
+  validée sur PC et mobile, sans relais média serveur.
+- Domaine staging : `staging.africatv.sn` actif avec DNS OVHcloud et certificat
+  Let's Encrypt validé. Le domaine Railway reste disponible en repli.
 - Nommage retenu : `staging.africatv.sn` pour cette préproduction ; apex et
   `www.africatv.sn` restent réservés à une production future.
 - Exploitation détaillée :

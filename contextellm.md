@@ -1,6 +1,6 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 23 septembre 2026, fuseau Africa/Dakar.
+Dernière mise à jour : 24 septembre 2026, fuseau Africa/Dakar.
 
 Ce document permet à une nouvelle session de reprendre le travail sans
 réinterpréter l'historique. Il ne contient volontairement aucun secret, cookie,
@@ -29,8 +29,9 @@ mot de passe, identifiant de paiement, clé Clerk ou URL de flux média.
 ## 2. Dépôt et règles non négociables
 
 - Workspace : `C:/Users/GAMER PC/Africa_Live_TV`.
-- Branche actuelle : `codex/railway-phase-a`.
-- Commit local Phase A contenant le code et les preuves A1/A2 : `66a903a`.
+- Branche locale : `codex/railway-phase-a` (contenant le commit documentaire `8cb1f90`).
+- Branche distante : `main` (commit `e5665b6`, PR #1 fusionnée avec succès).
+- Déploiement Railway actif : `6a13140b-8698-42d0-8a7b-83017356ff9d` (commit `e5665b6`).
 - Dépôt distant : `https://github.com/fatme-nabih/Africa_Live_TV.git`.
 - Aucun commit ou push ne doit être créé sans demande explicite de l'utilisateur.
 - Le projet source `C:/Users/GAMER PC/IPTV` doit rester entièrement inchangé.
@@ -57,14 +58,15 @@ L'application possède deux modes locaux indépendants :
 2. **MVP local sans Clerk** : activé uniquement par les trois flags locaux,
    accès complet au catalogue local, favoris, lecture directe et VLC.
 
-Le mode Railway est une préproduction authentifiée. La lecture publique reste
-fermée avec `PLAYBACK_ELIGIBILITY_READY=false`. Le domaine, le healthcheck ou
-un déploiement réussi ne constituent pas une validation des droits média.
+Le mode Railway est une préproduction authentifiée. La lecture directe y est
+ouverte avec `PLAYBACK_ELIGIBILITY_READY=true` depuis la validation du catalogue
+du 24 septembre 2026. Le domaine, le healthcheck ou un déploiement réussi ne
+constituent pas, à eux seuls, une validation des droits média.
 
 État local vérifié :
 
 - 11 778 chaînes ;
-- 12 396 sources ;
+- 12 396 sources (re-qualification intégrale achevée le 24 septembre 2026 : 4 588 BROWSER_OK, 2 446 VLC_ONLY, 4 556 OFFLINE, 806 UNTESTED ; 6 872 flux sains avec succès frais du jour ; 4 539 chaînes web directes) ;
 - 21 tables ;
 - 10 migrations Drizzle ;
 - 2 utilisateurs lors du dernier inventaire ;
@@ -102,30 +104,38 @@ Recherche, filtre, favori persistant, tentative web et lancement VLC réel ont
 La logique d'erreur client modifiée se trouve dans `src/lib/api-contracts.ts`,
 avec ses tests dans `src/lib/catalog-api.test.ts`.
 
-## 5. Railway : état réel observé
+## 5. Railway : état réel observé (24 septembre 2026)
 
 - Projet : `just-compassion`.
 - Environnement visible Railway : `production`.
 - Rôle réel de l'application : staging via `DEPLOYMENT_ENV=staging`.
-- Services : `Africa_Live_TV` et `Postgres`, observés en ligne.
-- Domaine technique : `africalivetv-production.up.railway.app`.
-- Déploiement actif observé : commit
-  `fb566d373c9237b12465908638a875280a78d00b`.
-- Runtime observé : Node.js 22.23.2, Railpack 0.39.0.
-- Région : US West, une réplique.
-- PostgreSQL : volume persistant, 21 tables.
-- Pré-déploiement actuel dans le dashboard : `npm run db:migrate`.
-- Healthcheck dashboard actuel : aucun chemin configuré.
-- Sauvegardes : aucune. L'interface indique que sauvegardes de volume et PITR
-  nécessitent le plan Pro.
-- Budget d'essai observé le 22 septembre : 25 jours ou 4,86 USD restants.
-  Le seuil minimal documenté d'alerte souple est 5 USD, donc il ne prévient pas
-  utilement l'épuisement de ce crédit. Aucune alerte n'a été créée.
-- La lecture reste fermée, ce qui est attendu.
-
-Aucun état Railway n'a été modifié pendant les lots 0 à 2. Aucun déploiement,
-changement de région, abonnement, limite budgétaire ou mise à niveau de plan n'a
-été déclenché.
+- Services : `Africa_Live_TV` et `Postgres`, en ligne et sains.
+- Domaine principal staging : `https://staging.africatv.sn` (SSL Let's Encrypt actif, DNS OVHcloud).
+- Domaine technique de repli : `africalivetv-production.up.railway.app`.
+- Déploiement actif : commit `e5665b699686a2f9f8065a3d098e11c04e7edc71` (PR #1).
+- Runtime : Node.js 22.23.2, Railpack 0.39.0.
+- Région : US West (sfo), 1 réplique.
+- PostgreSQL : volume persistant, 21 tables, 6 396 chaînes actives, 6 825 sources actives certifiées HEALTHY (11 778 chaînes et 12 396 sources au total en base).
+- Pré-déploiement actif : `npm run db:migrate:deploy` avec timeout 300 s.
+- Healthcheck actif : `/api/health` avec timeout 120 s (répond 200 OK, `checks: {process: ok, database: ok}`, `Cache-Control: no-store`).
+- Sauvegardes : dump logique PostgreSQL chiffré AES-256-GCM + DPAPI stocké hors volume sous `backups/railway`, restauration isolée validée en 78,1 s.
+- Consommation relevée : ~0,24 USD sur la période (facture estimée à 0,24 USD). Aucune limite dure.
+- Rollback applicatif : vérifié et exécuté en direct via mutation GraphQL `deploymentRollback`.
+- Déverrouillage de la lecture de préproduction : `PLAYBACK_ELIGIBILITY_READY=true` configuré sur Railway.
+- Qualification réelle des flux et des langues sur PostgreSQL Railway (24 septembre 2026) :
+  - Catalogue synchronisé transactionnellement depuis africa_live_dev : 11 778 chaînes et 12 396 sources (2 utilisateurs et favoris préservés).
+  - Scan exhaustif en direct avec 15 workers et l'origine réelle https://staging.africatv.sn (durée 49,1 min, écriture par lots de 100 avec réessai) :
+    - 11 819 flux soumis à contrôle réseau réel (manifestes HLS, en-têtes CORS staging, statuts HTTP, segments vidéo).
+    - 577 flux traités par décisions de sécurité statiques (requêtes sensibles, expiration, URL non prises en charge).
+    - 6 825 flux qualifiés sains (`HEALTHY`) avec succès direct certifié :
+      - 4 385 flux `PUBLIC_DIRECT_WEB` (`BROWSER_OK`, CORS staging validé, 0 mixed content).
+      - 2 440 flux `PUBLIC_DIRECT_VLC` (`VLC_ONLY`).
+    - 4 994 flux en échec temporaire protégés (`UNTESTED` / `TEMPORARY_FAILURE` / `REVIEW_REQUIRED`) sans déclaration artificielle d'indisponibilité permanente.
+    - 577 flux en revue statique (`UNTESTED` / `NEVER_CHECKED` / `REVIEW_REQUIRED`).
+    - 0 flux artificiellement qualifié sain ou hors-ligne par simple protocole.
+    - 4 339 chaînes avec au moins un flux direct web opérationnel, 2 103 avec flux externe VLC.
+  - Les langues principales des chaînes (`fra`, `eng`, `ara`, `spa`, `por`, `deu`, `ita`, `rus`, `tur`, `zho`, `hin`) sont renseignées dans `channels.language`.
+- Streaming direct vérifié et validé avec succès de bout en bout sur navigateur PC (Chrome/Edge) et sur smartphone mobile.
 
 ## 6. Lot 2 : ce qui a été implémenté localement
 
@@ -163,8 +173,8 @@ acquiert un verrou consultatif PostgreSQL, borne l'attente du verrou à 10 s et
 les requêtes à 240 s, puis utilise les migrations transactionnelles Drizzle.
 Le test provoque une migration en échec et vérifie qu'aucune table résiduelle ne
 reste. Le 23 septembre 2026, la commande `npm run db:migrate:deploy` et le délai
-dashboard de 300 s ont été ajoutés au lot de changements Railway préparé. Ils
-ne sont pas encore appliqués : l'ancien déploiement reste actif.
+dashboard de 300 s ont été appliqués et validés sur Railway, y compris le refus
+d'un verrou concurrent puis son acquisition après libération.
 
 ### Sauvegarde/restauration — RLY-004
 
@@ -191,15 +201,17 @@ hors poste ni le PITR Railway.
 ### Exploitation — RLY-001/003/006/007/008
 
 - Railway est documenté comme staging malgré le nom visible `production`.
-- Healthcheck futur : `/api/health`, délai 120 s, à activer seulement après que
-  la route a été livrée et vérifiée sur le domaine Railway.
-- Rollback documenté : utiliser le dernier déploiement sain ; la rétention
-  Trial/Free est annoncée à 24 h. Un rollback de code ne restaure pas la DB.
+- Healthcheck actif : `/api/health`, délai 120 s, validé sur le domaine Railway
+  et sur `staging.africatv.sn`.
+- Rollback documenté et exécuté en conditions réelles vers un déploiement sain ;
+  la rétention Trial/Free est annoncée à 24 h. Un rollback de code ne restaure
+  pas la DB.
 - Région proposée pour Dakar : EU West Amsterdam, à confirmer par mesure. Ne pas
   déplacer application ou volume avant sauvegarde et fenêtre de maintenance.
-- Objectifs provisoires staging : RPO 24 h, RTO 2 h. Ils ne sont pas garantis
-  tant qu'une sauvegarde Railway et sa restauration ne sont pas démontrées.
-- RLY-008 reste bloqué par le plan d'essai et le seuil d'alerte.
+- Objectifs provisoires staging : RPO 24 h, RTO 2 h. La restauration logique
+  isolée est démontrée, mais une destination durable hors poste reste à décider.
+- RLY-008 est clôturé par la décision de conserver le plan actuel sans surcoût,
+  sans limite dure ni alerte inadaptée au crédit restant.
 
 Le fichier `railway.json` a été envisagé puis supprimé : Railway indique que ce
 mécanisme est déprécié, indisponible pour ce service et arrêté le 1er décembre
@@ -224,11 +236,11 @@ Architecture décidée :
 
 - RLY-009A, propriété et zone DNS : terminé ;
 - RLY-009B, réservation des noms par environnement : terminé dans le plan ;
-- RLY-009C, ajouter `staging.africatv.sn` à Railway et reporter exactement ses
-  CNAME/TXT chez OVHcloud : à faire après healthcheck/migrations ;
-- RLY-009D, vérifier propagation, certificat, healthcheck et repli : à faire ;
-- RLY-009E, aligner Clerk, `NEXT_PUBLIC_APP_URL` et `BROWSER_TEST_ORIGIN`, puis
-  refaire le parcours authentifié : à faire ;
+- RLY-009C, liaison de `staging.africatv.sn` à Railway et enregistrements DNS
+  OVHcloud : terminé ;
+- RLY-009D, propagation, certificat, healthcheck et domaine de repli : terminé ;
+- RLY-009E, Clerk, `NEXT_PUBLIC_APP_URL`, `BROWSER_TEST_ORIGIN` et parcours
+  authentifié : terminé ;
 - RLY-009F, apex/`www` de production : différé jusqu'au lancement.
 
 Ne jamais deviner une cible DNS : utiliser exactement les valeurs fournies par
@@ -247,21 +259,23 @@ uniquement les CNAME/TXT staging chez OVHcloud. L'acquisition du domaine reste.
 | Ticket | État |
 |---|---|
 | RLY-001 | Terminé |
-| RLY-002 | Terminé localement, livraison Railway en attente |
-| RLY-003 | Chemin `/api/health` et délai 120 s préparés dans Railway ; application et validation en attente |
+| RLY-002 | Terminé et validé sur Railway (route `/api/health` 200/no-store) |
+| RLY-003 | Terminé et validé sur Railway (healthcheck 120 s actif, test négatif réussi) |
 | RLY-004 | Sauvegarde logique Railway chiffrée et restauration isolée terminées ; sauvegarde native/PITR dépendante du plan |
-| RLY-005 | Implémenté/testé localement ; commande et délai préparés dans Railway, application et validation en attente |
-| RLY-006 | Runbook de rollback terminé |
+| RLY-005 | Terminé et validé sur Railway (`db:migrate:deploy`, 300 s, verrou concurrent vérifié) |
+| RLY-006 | Terminé : runbook documenté et rollback réel vérifié (`6a13140b`) |
 | RLY-007 | Décision EU West proposée ; migration non exécutée |
-| RLY-008 | Bloqué par le plan d'essai actuel |
+| RLY-008 | Terminé : décision A8 actée (Option 1 : plan actuel sans surcoût, sauvegardes chiffrées hors volume) |
 | RLY-009A/B | Terminés |
-| RLY-009C/D/E | À faire après RLY-003/004/005 |
+| RLY-009C/D/E | Terminés et validés sur `staging.africatv.sn` (DNS OVHcloud, TLS Let's Encrypt, Clerk et garde-fous) |
 | RLY-009F | Différé au lancement production |
 
-Le lot 2 n'est donc pas entièrement clôturé. Les fichiers et preuves locales
-sont prêts. Railway contient quatre changements préparés, non appliqués et sans
-nouveau déploiement ; la livraison GitHub puis les validations réelles restent à
-faire.
+La Phase A et la Phase B sont 100 % validées et clôturées.
+Le domaine de staging `https://staging.africatv.sn` est pleinement opérationnel.
+La validation du streaming direct sur staging est également achevée et vérifiée sur PC et mobile.
+Prochaine séquence recommandée :
+- **Lot 3 (PROD-030..032)** : Adaptation de l'UX de lecture au site public (gestion propre des flux VLC sur mobile/web distant sans appel localhost `/api/open-vlc`, bouton de copie de flux direct M3U8, UX des formats externes).
+- **Lot 2 (PROD-020..022)** : Synchronisation des identités Clerk et gestion des abonnements.
 
 ## 9. Validations déjà obtenues
 
@@ -280,6 +294,7 @@ Dernière batterie complète après l'implémentation du lot 2 :
 | `npm run backup:restore-drill:railway` | Réussi en 78,1 s ; 21 tables, 11 000 chaînes/sources, base temporaire et proxy supprimés |
 | Healthcheck local réel | HTTP 200, JSON attendu, non caché |
 | E2E locaux ciblés des lots 0/1 | 13/13 réussis sur Edge |
+| Streaming direct staging | Validé sur `https://staging.africatv.sn/app` sur PC et mobile (flux HTTPS direct HLS) |
 
 Les deux avertissements ESLint concernent `window.location.assign()` dans
 `src/components/SeparatePlayerPage.tsx` et préexistaient au lot 2. Ne pas les
@@ -287,42 +302,31 @@ masquer dans le rapport d'une future validation.
 
 ## 10. État Git à préserver
 
-La branche locale `codex/railway-phase-a` contient le commit `66a903a`, qui
-regroupe le code, les tests, les runbooks et la preuve A2. Les sauvegardes sous
-`backups/railway` restent ignorées par Git. La tentative de push n'a pas abouti,
-car Git Credential Manager attendait la sélection interactive d'un compte ;
-aucune branche distante ni PR n'a été créée.
+La branche locale `codex/railway-phase-a` est suivie par
+`origin/codex/railway-phase-a`. Le commit `f5a2bc9` est présent sur la branche
+distante et le commit documentaire `8cb1f90` est présent localement avant la
+publication du présent lot. La PR #1 a été fusionnée dans `origin/main` au
+commit `e5665b6`. Les sauvegardes sous `backups/railway` restent ignorées par
+Git.
 
 Toujours refaire `git status --short` avant une modification. Ne pas restaurer,
 nettoyer ou remplacer les changements existants avec une commande Git
 destructive.
 
-## 11. Prochaine séquence sûre
+## 11. Prochaine séquence sûre — Adaptation de la lecture (Lot 3) ou Abonnements (Lot 2)
 
-La prochaine session ne doit pas commencer par le DNS. L'ordre est :
+Les Phases A, B et la validation du streaming staging sont terminées. L'ordre recommandé pour la suite est :
 
-1. Reprendre l'authentification GitHub interactive, pousser la branche
-   `codex/railway-phase-a` puis ouvrir/relire la PR avant fusion selon le flux
-   convenu. Le commit local est `66a903a` ; aucun push n'a encore abouti.
-2. Vérifier la copie logique Railway chiffrée et sa preuve de restauration déjà
-   obtenues. Si un plan Pro est envisagé pour sauvegarde/PITR, demander la
-   décision de coût ; ne jamais l'activer automatiquement.
-3. Livrer le code, puis vérifier `/api/health` sur le domaine Railway existant.
-4. Relire puis appliquer ensemble les quatre changements déjà préparés dans
-   Railway : `npm run db:migrate:deploy`, 300 s, `/api/health` et 120 s. Ne pas
-   les appliquer tant que la source déployée ne contient pas la route.
-5. Déployer une seule révision et exécuter la checklist : santé, Clerk, 30
-   chaînes, recherche, filtres, favori, lecture fermée attendue.
-6. Ajouter `staging.africatv.sn` à Railway ; relever les valeurs exactes.
-7. Avec autorisation d'écriture DNS, ajouter uniquement CNAME/TXT staging chez
-   OVHcloud. Attendre le certificat, tester HTTPS et conserver le domaine Railway.
-8. Mettre à jour l'origine et les redirections de l'instance Clerk staging, puis
-   `NEXT_PUBLIC_APP_URL` et `BROWSER_TEST_ORIGIN`. Rebuild et smoke tests.
-9. Documenter chaque preuve, durée, risque et retour arrière dans
-   `docs/production-progress.md`.
+1. **Lot 3 — Adaptation de la lecture en production (PROD-030..032)** :
+   - PROD-030 : Sur le site déployé (distant), `/api/open-vlc` rejette à juste titre les requêtes non-localhost. Adapter l'interface pour ne pas proposer un lancement local inopérant, mais offrir un lien direct ou une commande de copie pour lecteur externe (VLC mobile/desktop).
+   - PROD-031 : Affiner les fallbacks vidéo HLS et la gestion des flux non compatibles navigateur.
+   - PROD-032 : Télémétrie d'erreur de lecture sécurisée.
+2. **Lot 2 — Identités et abonnements (PROD-020..022)** :
+   - Webhook Clerk et synchronisation des utilisateurs.
+   - Abonnements et statut des droits d'accès.
 
-Ne pas déplacer la région dans cette même fenêtre. La migration US West vers EU
-West doit être un changement séparé, après sauvegarde et mesure de latence.
+Ne pas déplacer la région dans cette fenêtre. La migration US West vers EU
+West reste un changement séparé, après sauvegarde et mesure de latence.
 
 ## 12. Commandes utiles de reprise
 
@@ -356,16 +360,42 @@ Commandes ou actions à ne pas exécuter sans l'étape et l'autorisation adéqua
 - modification des domaines/URLs Clerk ;
 - activation de `africatv.sn` ou `www.africatv.sn` en production.
 
-## 13. Critère de clôture du lot 2
+## 13. Clôture des Phases A, B et validation Streaming Staging
 
-Le lot 2 sera réellement terminé lorsque :
+### Clôture Phase A — Validée le 23 septembre 2026
 
-- le healthcheck Railway bloque un déploiement défaillant et accepte la version
-  saine ;
-- la commande sécurisée de migration est active et un échec ne corrompt rien ;
-- une sauvegarde Railway a été restaurée sur une cible isolée et comparée ;
-- le rollback applicatif est reproductible ;
-- la stratégie de coût est compatible avec le plan choisi ;
-- `staging.africatv.sn` possède DNS et HTTPS valides, Clerk fonctionne, les API
-  et le catalogue passent la checklist, et le domaine Railway reste disponible ;
-- aucune dépense ou activation de production non autorisée n'a été engagée.
+- [x] Route `/api/health` publique déployée (HTTP 200, no-store).
+- [x] Healthcheck Railway configuré (120 s) et test d'échec bloquant validé.
+- [x] Migrations sécurisées `npm run db:migrate:deploy` (300 s) et verrou concurrent vérifiés.
+- [x] Sauvegarde logique PostgreSQL chiffrée AES-256-GCM et restauration isolée démontrées.
+- [x] Rollback applicatif testé et reproductible en direct (`6a13140b` en SUCCESS).
+- [x] Décision budgétaire A8 actée (Option 1 : plan actuel sans surcoût, sauvegardes chiffrées hors volume).
+- [x] Checklist fonctionnelle complète validée.
+
+### Clôture Phase B (`staging.africatv.sn`) — Validée le 23 septembre 2026
+
+- [x] `staging.africatv.sn` possède ses enregistrements CNAME/TXT validés chez OVHcloud (TTL 300 s) ;
+- [x] Le certificat SSL/TLS Let's Encrypt est actif et `https://staging.africatv.sn/api/health` répond 200 (no-store) ;
+- [x] L'instance Clerk autorise l'origine et détecte dynamiquement le domaine staging ;
+- [x] `NEXT_PUBLIC_APP_URL` et `BROWSER_TEST_ORIGIN` pointent vers `https://staging.africatv.sn` et sont intégrés au build ;
+- [x] La checklist complète est rejouée avec succès sur `https://staging.africatv.sn/app` (connexion, catalogue, favoris, barrière 503 conforme) ;
+- [x] Le domaine Railway `africalivetv-production.up.railway.app` reste actif en fallback de diagnostic ;
+- [x] L'apex `africatv.sn` et `www` restent réservés pour la production future.
+
+### Clôture de la validation de streaming staging — Validée le 24 septembre 2026
+
+- [x] Variable `PLAYBACK_ELIGIBILITY_READY=true` configurée sur Railway et effective.
+- [x] Synchronisation transactionnelle du catalogue vers Railway : 11 778 chaînes, 12 396 sources, 2 utilisateurs et favoris préservés, avec activation exclusive des 6 825 flux sains certifiés (6 396 chaînes actives dans l'application).
+- [x] Requalification réelle sur PostgreSQL Railway avec 15 workers et l'origine `https://staging.africatv.sn` (2 946 s / 49,1 min) :
+  - 11 819 contrôles réseau effectifs (manifestes HLS, segments vidéo, en-têtes CORS pour staging.africatv.sn, statuts HTTP).
+  - 577 décisions de sécurité statiques.
+  - 6 825 flux qualifiés sains (`HEALTHY`) avec preuve d'accès frais :
+    - 4 385 flux `PUBLIC_DIRECT_WEB` (`BROWSER_OK`, CORS staging validé, 0 mixed content).
+    - 2 440 flux `PUBLIC_DIRECT_VLC` (`VLC_ONLY`).
+  - 4 994 flux en échec temporaire protégés (`UNTESTED` / `TEMPORARY_FAILURE` / `REVIEW_REQUIRED`) sans bascule artificielle en hors-ligne.
+  - 577 flux en revue statique (`UNTESTED` / `NEVER_CHECKED` / `REVIEW_REQUIRED`).
+  - 4 339 chaînes disposent d'au moins un flux direct web opérationnel, 2 103 d'un flux externe VLC.
+- [x] Inférence des langues principales (`channels.language`) appliquée sur PostgreSQL Railway (filtre de langue opérationnel sur mobile et desktop).
+- [x] UX de lecture distante fiabilisée (Player.tsx) : budget de récupération réseau réinitialisé par tentative, copie sécurisée de l'URL M3U8 avec instructions pas-à-pas, pas d'appel local à `/api/open-vlc` sur staging.
+- [x] Interface publique épurée : retrait du filtre technique de statut dans `FilterSidebar.tsx` ; aucun badge technique brut exposé publiquement.
+- [x] Parcours complet de lecture web en direct validé avec succès sur ordinateur (PC) et téléphone mobile.

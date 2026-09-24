@@ -23,6 +23,7 @@
     "baseline:db": "tsx src/scripts/export-db-inventory.ts",
     "backup:restore-drill:local": "tsx src/scripts/test-backup-restore.ts",
     "backup:restore-drill:railway": "tsx src/scripts/backup-restore-railway.ts",
+    "catalog:sync:railway": "tsx src/scripts/sync-catalog-to-railway.ts",
     "db:migrate": "drizzle-kit migrate",
     "db:migrate:deploy": "tsx src/scripts/migrate-deploy.ts",
     "db:check": "tsx src/scripts/check-schema-drift.ts",

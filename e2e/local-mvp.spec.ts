@@ -24,6 +24,7 @@ test('catalogue is accessible without an account and pagination stays consistent
   await expect(page.locator('#catalogue').getByText('À vérifier', { exact: true })).toHaveCount(0);
   await expect(page.locator('#catalogue').getByText('VLC conseillé', { exact: true })).toHaveCount(0);
   await expect(page.locator('#catalogue').getByText('Lecture web', { exact: true })).toHaveCount(0);
+  await expect(page.locator('#catalog-status')).toHaveCount(0);
   const firstWatchButton = page.locator('#catalogue').getByRole('button', { name: /^Regarder / }).first();
   await firstWatchButton.click();
   await expect(page.getByRole('dialog')).toBeVisible();

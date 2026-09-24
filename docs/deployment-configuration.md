@@ -34,13 +34,13 @@ pas que les clés sont reconnues par Clerk ni que la connexion DB fonctionne.
 
 ## Origines réservées
 
-Le domaine `africatv.sn` est acquis, mais aucune origine personnalisée n'est
-encore active. La préproduction utilisera `https://staging.africatv.sn` après
-validation du CNAME/TXT, du certificat et du healthcheck. La production future
-utilisera `https://africatv.sn`; `https://www.africatv.sn` sera un alias ou une
-redirection canonique décidé au lancement. Ne jamais utiliser l'apex pour la
-préproduction ni inscrire les deux environnements dans les mêmes variables ou
-identifiants Clerk.
+Le domaine `africatv.sn` est acquis. L'origine personnalisée de préproduction
+`https://staging.africatv.sn` est active, avec CNAME/TXT validés, certificat TLS
+Let's Encrypt et healthcheck opérationnel. La production future utilisera
+`https://africatv.sn`; `https://www.africatv.sn` sera un alias ou une redirection
+canonique décidé au lancement. Ne jamais utiliser l'apex pour la préproduction
+ni inscrire les deux environnements dans les mêmes variables ou identifiants
+Clerk.
 
 Toute modification de `NEXT_PUBLIC_APP_URL` ou d'une autre variable
 `NEXT_PUBLIC_*` nécessite un nouveau build. Ajouter d'abord l'origine et les
