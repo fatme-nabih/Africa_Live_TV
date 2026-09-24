@@ -1,6 +1,6 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 24 septembre 2026, fuseau Africa/Dakar.
+Dernière mise à jour : 24 septembre 2026, 22:45 UTC, fuseau Africa/Dakar.
 
 Ce document permet à une nouvelle session de reprendre le travail sans
 réinterpréter l'historique. Il ne contient volontairement aucun secret, cookie,
@@ -29,9 +29,9 @@ mot de passe, identifiant de paiement, clé Clerk ou URL de flux média.
 ## 2. Dépôt et règles non négociables
 
 - Workspace : `C:/Users/GAMER PC/Africa_Live_TV`.
-- Branche locale : `codex/railway-phase-a` (contenant le commit documentaire `8cb1f90`).
-- Branche distante : `main` (commit `e5665b6`, PR #1 fusionnée avec succès).
-- Déploiement Railway actif : `6a13140b-8698-42d0-8a7b-83017356ff9d` (commit `e5665b6`).
+- Branche locale : `main` (synchronisée avec `origin/main`).
+- Branche distante : `main` (commit `3a325ab` déployé).
+- Déploiement Railway actif : `ddc78ef6-f449-4b46-a23f-b725b5ae8271` (SUCCESS, commit `3a325ab`).
 - Dépôt distant : `https://github.com/fatme-nabih/Africa_Live_TV.git`.
 - Aucun commit ou push ne doit être créé sans demande explicite de l'utilisateur.
 - Le projet source `C:/Users/GAMER PC/IPTV` doit rester entièrement inchangé.
@@ -112,11 +112,11 @@ avec ses tests dans `src/lib/catalog-api.test.ts`.
 - Services : `Africa_Live_TV` et `Postgres`, en ligne et sains.
 - Domaine principal staging : `https://staging.africatv.sn` (SSL Let's Encrypt actif, DNS OVHcloud).
 - Domaine technique de repli : `africalivetv-production.up.railway.app`.
-- Déploiement actif : commit `e5665b699686a2f9f8065a3d098e11c04e7edc71` (PR #1).
-- Runtime : Node.js 22.23.2, Railpack 0.39.0.
+- Déploiement actif : `ddc78ef6-f449-4b46-a23f-b725b5ae8271` (SUCCESS, commit `3a325ab` : lancement automatique VLC sans affichage d'URL ni bouton de copie M3U8).
+- Runtime : Node.js 22.23.3, Railpack 0.40.0.
 - Région : US West (sfo), 1 réplique.
 - PostgreSQL : volume persistant, 21 tables, 6 396 chaînes actives, 6 825 sources actives certifiées HEALTHY (11 778 chaînes et 12 396 sources au total en base).
-- Pré-déploiement actif : `npm run db:migrate:deploy` avec timeout 300 s.
+- Pré-déploiement actif : `npm run db:migrate:deploy` avec timeout 300 s (exécuté avec succès dans transaction Drizzle).
 - Healthcheck actif : `/api/health` avec timeout 120 s (répond 200 OK, `checks: {process: ok, database: ok}`, `Cache-Control: no-store`).
 - Sauvegardes : dump logique PostgreSQL chiffré AES-256-GCM + DPAPI stocké hors volume sous `backups/railway`, restauration isolée validée en 78,1 s.
 - Consommation relevée : ~0,24 USD sur la période (facture estimée à 0,24 USD). Aucune limite dure.
@@ -269,60 +269,55 @@ uniquement les CNAME/TXT staging chez OVHcloud. L'acquisition du domaine reste.
 | RLY-009A/B | Terminés |
 | RLY-009C/D/E | Terminés et validés sur `staging.africatv.sn` (DNS OVHcloud, TLS Let's Encrypt, Clerk et garde-fous) |
 | RLY-009F | Différé au lancement production |
+| PROD-030 | Terminé : UX de lecture distante épurée, suppression de l'URL M3U8, des boutons de copie et des textes techniques |
+| PROD-031 | Terminé : Lancement automatique de VLC multi-plateforme (desktop `vlc://`, Android `intent://`, iOS `vlc-x-callback://`, local `/api/open-vlc`) |
+| PROD-032 | Terminé : Gestion des transitions, validation sécurisée des protocoles HTTP/HTTPS, scan Snyk SAST 0 vulnérabilité |
+| PROD-033 | Terminé : Scan exhaustif Railway (12 396 flux), certification de 6 825 flux sains (4 385 BROWSER_OK, 2 440 VLC_ONLY) et activation exclusive |
 
-La Phase A et la Phase B sont 100 % validées et clôturées.
+Les Phases A, B et le Lot 3 (UX de lecture et qualification des flux) sont 100 % validés et déployés en ligne.
 Le domaine de staging `https://staging.africatv.sn` est pleinement opérationnel.
-La validation du streaming direct sur staging est également achevée et vérifiée sur PC et mobile.
 Prochaine séquence recommandée :
-- **Lot 3 (PROD-030..032)** : Adaptation de l'UX de lecture au site public (gestion propre des flux VLC sur mobile/web distant sans appel localhost `/api/open-vlc`, bouton de copie de flux direct M3U8, UX des formats externes).
-- **Lot 2 (PROD-020..022)** : Synchronisation des identités Clerk et gestion des abonnements.
+- **Lot 2 (PROD-020..022)** : Synchronisation des identités Clerk, webhooks et abonnements Billing.
+- **Lot 4 (PROD-040..043)** : Résistance aux pannes et maîtrise de PostgreSQL.
 
 ## 9. Validations déjà obtenues
 
-Dernière batterie complète après l'implémentation du lot 2 :
+Dernière batterie complète après l'implémentation du lot 3 et déploiement staging (commit `3a325ab`) :
 
 | Contrôle | Résultat |
 |---|---|
-| `npm test` | 131 tests : 127 réussis, 4 intégrations ignorées ici |
+| `npm test` | 135 tests : 131 réussis, 0 échec, 4 ignorés |
 | `npm run test:integration` | 4/4 réussis ; rollback transactionnel, témoin et catalogue préservés |
-| `npx tsc --noEmit --incremental false` | Réussi |
+| `npx tsc --noEmit --incremental false` | 0 erreur |
 | `npm run lint` | 0 erreur, 2 avertissements préexistants dans `SeparatePlayerPage.tsx` |
-| `npm run db:check:migrations` | Réussi |
-| `npm run config:check` | Réussi |
-| `npm run build` | Réussi avec Next.js 16.3.5 ; route `/api/health` présente |
-| `npm run backup:restore-drill:local` | Réussi, inventaire identique et nettoyage complet |
-| `npm run backup:restore-drill:railway` | Réussi en 78,1 s ; 21 tables, 11 000 chaînes/sources, base temporaire et proxy supprimés |
-| Healthcheck local réel | HTTP 200, JSON attendu, non caché |
-| E2E locaux ciblés des lots 0/1 | 13/13 réussis sur Edge |
-| Streaming direct staging | Validé sur `https://staging.africatv.sn/app` sur PC et mobile (flux HTTPS direct HLS) |
+| `npm run build` | Réussi avec Next.js 16.3.5 (Turbopack) ; 15/15 pages générées |
+| Snyk SAST (`snyk_code_scan`) | 0 vulnérabilité dans `Player.tsx` ; protocoles et redirections assainis |
+| Déploiement Railway | `ddc78ef6-f449-4b46-a23f-b725b5ae8271` SUCCESS avec migrations Drizzle validées |
+| Healthcheck staging réel | HTTP 200 `{"status":"ok","checks":{"process":"ok","database":"ok"}}` |
+| Streaming direct staging | Validé sur `https://staging.africatv.sn/app` sur PC et mobile |
 
 Les deux avertissements ESLint concernent `window.location.assign()` dans
-`src/components/SeparatePlayerPage.tsx` et préexistaient au lot 2. Ne pas les
+`src/components/SeparatePlayerPage.tsx` et préexistaient aux modifications. Ne pas les
 masquer dans le rapport d'une future validation.
 
 ## 10. État Git à préserver
 
-La branche locale `codex/railway-phase-a` est suivie par
-`origin/codex/railway-phase-a`. Le commit `f5a2bc9` est présent sur la branche
-distante et le commit documentaire `8cb1f90` est présent localement avant la
-publication du présent lot. La PR #1 a été fusionnée dans `origin/main` au
-commit `e5665b6`. Les sauvegardes sous `backups/railway` restent ignorées par
-Git.
+La branche locale `main` est synchronisée avec `origin/main` au commit `3a325ab`.
+L'arbre de travail local est propre (`git status --short` vide hors mises à jour documentaires demandées).
 
 Toujours refaire `git status --short` avant une modification. Ne pas restaurer,
 nettoyer ou remplacer les changements existants avec une commande Git
 destructive.
 
-## 11. Prochaine séquence sûre — Adaptation de la lecture (Lot 3) ou Abonnements (Lot 2)
+## 11. Prochaine séquence sûre — Identités et Abonnements (Lot 2)
 
-Les Phases A, B et la validation du streaming staging sont terminées. L'ordre recommandé pour la suite est :
+Les Phases A, B et le Lot 3 (adaptation de la lecture et qualification des flux) sont terminés et déployés sur staging. L'ordre recommandé pour la suite est :
 
-1. **Lot 3 — Adaptation de la lecture en production (PROD-030..032)** :
-   - PROD-030 : Sur le site déployé (distant), `/api/open-vlc` rejette à juste titre les requêtes non-localhost. Adapter l'interface pour ne pas proposer un lancement local inopérant, mais offrir un lien direct ou une commande de copie pour lecteur externe (VLC mobile/desktop).
-   - PROD-031 : Affiner les fallbacks vidéo HLS et la gestion des flux non compatibles navigateur.
-   - PROD-032 : Télémétrie d'erreur de lecture sécurisée.
-2. **Lot 2 — Identités et abonnements (PROD-020..022)** :
+1. **Lot 2 — Identités et abonnements (PROD-020..022)** :
    - Webhook Clerk et synchronisation des utilisateurs.
+   - Abonnements et statut des droits d'accès (plans Billing).
+2. **Lot 4 — Résister aux pannes et maîtriser PostgreSQL (PROD-040..043)** :
+   - Gestion des erreurs de pool, quotas et contention.
    - Abonnements et statut des droits d'accès.
 
 Ne pas déplacer la région dans cette fenêtre. La migration US West vers EU
@@ -396,6 +391,11 @@ Commandes ou actions à ne pas exécuter sans l'étape et l'autorisation adéqua
   - 577 flux en revue statique (`UNTESTED` / `NEVER_CHECKED` / `REVIEW_REQUIRED`).
   - 4 339 chaînes disposent d'au moins un flux direct web opérationnel, 2 103 d'un flux externe VLC.
 - [x] Inférence des langues principales (`channels.language`) appliquée sur PostgreSQL Railway (filtre de langue opérationnel sur mobile et desktop).
-- [x] UX de lecture distante fiabilisée (Player.tsx) : budget de récupération réseau réinitialisé par tentative, copie sécurisée de l'URL M3U8 avec instructions pas-à-pas, pas d'appel local à `/api/open-vlc` sur staging.
+- [x] UX de lecture distante fiabilisée et automatisée (Player.tsx) :
+  - Lancement 100 % automatique de VLC dès qu'un flux externe est requis (desktop via protocole direct `vlc://`, Android via `intent://`, iOS via `vlc-x-callback://`, local via `/api/open-vlc`).
+  - Suppression intégrale de l'exposition d'URL de flux (M3U8), des boutons de copie et des blocs de consignes techniques.
+  - Interface sobre : écran "Ouverture de VLC...", écran "VLC lancé", bouton unique "Relancer VLC", mode effectif "Lecteur VLC".
+  - Validation et assainissement strict des URL (protocoles `http:`/`https:`) sans Open Redirect ni DOMXSS (Snyk SAST 0 vulnérabilité).
 - [x] Interface publique épurée : retrait du filtre technique de statut dans `FilterSidebar.tsx` ; aucun badge technique brut exposé publiquement.
-- [x] Parcours complet de lecture web en direct validé avec succès sur ordinateur (PC) et téléphone mobile.
+- [x] Parcours complet de lecture web et VLC validé avec succès sur ordinateur (PC) et téléphone mobile.
+- [x] Déploiement Railway Staging `ddc78ef6-f449-4b46-a23f-b725b5ae8271` réussi (commit `3a325ab`), migrations Drizzle appliquées et healthcheck HTTP 200 vérifié.

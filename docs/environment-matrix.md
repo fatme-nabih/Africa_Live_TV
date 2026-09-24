@@ -49,14 +49,12 @@ une modification Railway exige un nouveau build pour atteindre le navigateur.
 - Projet : `just-compassion`, environnement Railway nommé `production`.
 - Rôle applicatif : staging (`DEPLOYMENT_ENV=staging`).
 - Services : `Africa_Live_TV` et `Postgres`, tous deux en ligne.
-- Déploiement actif : commit `e5665b699686a2f9f8065a3d098e11c04e7edc71`.
-- Runtime observé : Node.js 22.23.2, Railpack 0.39.0, une réplique US West.
+- Déploiement actif : `ddc78ef6-f449-4b46-a23f-b725b5ae8271` (commit `3a325ab`).
+- Runtime observé : Node.js 22.23.3, Railpack 0.40.0, une réplique US West.
 - Pré-déploiement actif et validé : `npm run db:migrate:deploy`, délai 300 s.
-- Healthcheck actif et validé : `/api/health`, délai 120 s.
+- Healthcheck actif et validé : `/api/health`, délai 120 s (200 OK).
 - PostgreSQL : volume persistant et 21 tables ; sauvegarde/PITR non disponible sur le plan observé.
-- Lecture : `PLAYBACK_ELIGIBILITY_READY=true` ; 8 911 flux HTTPS sont qualifiés
-  pour le navigateur et 2 089 flux HTTP pour un lecteur externe. Lecture directe
-  validée sur PC et mobile, sans relais média serveur.
+- Lecture : `PLAYBACK_ELIGIBILITY_READY=true` ; 6 825 flux sains certifiés (4 385 flux web direct BROWSER_OK et 2 440 flux VLC_ONLY) sur 12 396 flux. Lancement VLC 100 % automatique sans affichage d'URL ni bouton de copie M3U8. Lecture directe validée sur PC et mobile, sans relais média serveur.
 - Domaine staging : `staging.africatv.sn` actif avec DNS OVHcloud et certificat
   Let's Encrypt validé. Le domaine Railway reste disponible en repli.
 - Nommage retenu : `staging.africatv.sn` pour cette préproduction ; apex et

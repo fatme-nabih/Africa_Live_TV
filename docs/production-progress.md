@@ -510,19 +510,27 @@ Statut : terminé.
    - Ajout d'une récupération automatique sur erreur réseau Hls.js (`hls.startLoad()`, jusqu'à 2 tentatives) avant d'échouer la tentative courante.
    - Ajout de statuts de progression en direct lors de la mise en mémoire tampon ("Connexion au direct…", "Mise en mémoire tampon du flux…", "Chargement des segments vidéo…") pour informer l'utilisateur.
 
-2. **UX de lecture externe distante (staging/production)** :
-   - Suppression de l'appel local inopérant `POST /api/open-vlc` sur les environnements distants (`LOCAL_AUTOMATIC_PLAYBACK=false`).
-   - Résolution automatique de l'URL directe du flux via `POST /api/playback/resolutions` avec la destination `vlc-mobile`.
-   - Affichage de l'URL directe avec bouton de copie sécurisé en un clic ("Copier l'adresse du flux (M3U8)") utilisant `navigator.clipboard.writeText` avec confirmation visuelle immédiate ("Copié !").
-   - Instructions pas-à-pas claires pour ordinateur (VLC > Média > Ouvrir un flux réseau / Ctrl+N) et lien intent pour appareils mobiles Android/iOS.
-   - Conservation intégrale du comportement local MVP pour le poste de travail utilisateur (`LOCAL_AUTOMATIC_PLAYBACK=true`).
+2. **UX de lecture externe distante (staging/production) et automatisation VLC** :
+   - Suppression intégrale de l'affichage de l'adresse du flux (M3U8), des boutons de copie et du guide textuel ("Comment lire ce flux ?").
+   - Lancement 100 % automatique de VLC dès qu'un flux externe est requis :
+     - Sur Desktop : Déclenchement via le protocole direct `vlc://<source_url>` (handler enregistré au niveau système).
+     - Sur Android : Déclenchement via Intent VLC (`org.videolan.vlc`).
+     - Sur iOS : Déclenchement via schéma d'application `vlc-x-callback://`.
+     - En local MVP : Déclenchement via l'API locale `/api/open-vlc`.
+   - Interface épurée :
+     - Écran de transition : "Ouverture de VLC…" (avec indicateur de chargement).
+     - Écran de confirmation : "VLC lancé" avec un unique bouton d'action "Relancer VLC".
+     - Barre de lecture : "Mode effectif : Lecteur VLC" avec bouton "Relancer VLC".
+   - Sécurisation et assainissement : validation stricte des URL amont (`http:`/`https:`) et déclenchement sécurisé par élément d'ancrage sans réaffectation de `window.location`.
 
-3. **Validation et sécurité** :
-   - Scan Snyk SAST (`snyk_code_scan`) : 0 vulnérabilité détectée.
-   - `npm test` : 127 pass, 0 fail, 4 skipped.
+3. **Validation, sécurité et déploiement** :
+   - Scan Snyk SAST (`snyk_code_scan`) : 0 vulnérabilité dans `Player.tsx`.
+   - `npm test` : 131 pass, 0 fail, 4 skipped.
    - `npm run test:integration` : 4 pass, 0 fail.
    - `npx tsc --noEmit --incremental false` : 0 erreur.
    - `npm run lint` : 0 erreur, 2 avertissements préexistants dans `SeparatePlayerPage.tsx`.
+   - `npm run build` : 15/15 pages générées avec succès (Turbopack).
+   - Git & Déploiement : Commit [`3a325ab`](https://github.com/fatme-nabih/Africa_Live_TV/commit/3a325ab) poussé sur `main`. Déploiement Railway `ddc78ef6-f449-4b46-a23f-b725b5ae8271` SUCCESS avec migrations Drizzle appliquées et healthcheck `/api/health` 200 OK.
 
 ## Journal du Lot 3 — Re-qualification réelle du catalogue Railway (PROD-033) — 24 septembre 2026
 

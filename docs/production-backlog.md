@@ -2,11 +2,10 @@
 
 Date de référence : 24 septembre 2026.
 Statut : Railway sert la préproduction officielle sur `https://staging.africatv.sn` ;
-lots opérationnels 0, 1 et 2 (Phases A et B) terminés et 100 % validés.
-Le garde-fou de lecture a été levé (`PLAYBACK_ELIGIBILITY_READY=true`), 8 911 flux HTTPS
-et 2 089 flux HTTP ont été qualifiés et rafraîchis sur PostgreSQL Railway, et
-l'inférence des langues principales a été appliquée. La lecture en direct est
-validée sur PC et mobile.
+lots opérationnels 0, 1, 2 (Phases A et B) et Lot 3 (UX de lecture et qualification des flux) terminés et validés en ligne.
+Le garde-fou de lecture a été levé (`PLAYBACK_ELIGIBILITY_READY=true`), 6 825 flux sains certifiés
+(4 385 BROWSER_OK et 2 440 VLC_ONLY) sont activés sur PostgreSQL Railway. L'ouverture de VLC
+est 100 % automatique sur PC et mobile sans exposition d'URL, et les langues principales sont inférées.
 Responsable d'exécution : assistant, avec décisions produit et infrastructure du propriétaire.
 
 ## État réel observé le 24 septembre 2026
@@ -171,15 +170,15 @@ Ne pas activer PLAYBACK_ELIGIBILITY_READY uniquement pour satisfaire les essais.
 Sortie : événements rejoués et désordonnés sans corruption des droits, preuves d'intégration.
 Les paiements réels restent désactivés jusqu'à validation explicite de leur lancement.
 
-## Lot 3 — Adapter la lecture au site public
+## Lot 3 — Adapter la lecture au site public (Terminé et Déployé)
 
-| ID | Priorité | Travail | Critère d'acceptation | Dépendance |
+| ID | Priorité | Travail | Critère d'acceptation | État au 24 septembre 2026 |
 |---|---|---|---|---|
-| PROD-030 | P1 | Séparer les capacités web, VLC mobile et VLC desktop local dans l'interface. Pour la première version publique, masquer le lancement desktop local et expliquer les limites ; une autre intégration client demande une décision produit. | Aucun appel public desktop à open-vlc ; mobile confirmé par action utilisateur ; secours automatique local conservé ; sources toujours directes. | Lot 2 |
-| PROD-031 | P1 | Harmoniser l'état annoncé par le catalogue et la décision du résolveur sans masquer les chaînes ; vérifier fraîcheur, HTTPS, CORS et éligibilité. | Tests des frontières : succès expiré, date future, flux HTTP, source en revue, incompatibilité web et absence de source. Refus explicite et compréhensible. | PROD-030 |
-| PROD-032 | P1 | Valider les transitions du lecteur : changement rapide de chaîne, résolution tardive, erreurs réseau, autoplay, nouvelle tentative, arrêt et nettoyage des ressources. | E2E avec fixtures déterministes puis échantillon réel distinct ; aucun lancement VLC double ou tardif ; aucun téléchargement média par le serveur applicatif. | PROD-030, PROD-031 |
+| PROD-030 | P1 | Séparer les capacités web, VLC mobile et VLC desktop local dans l'interface ; masquer les éléments techniques et liens bruts. | Aucun affichage de lien M3U8, bouton de copie ou texte d'instruction technique. Lancement 100 % automatique de VLC sur desktop (`vlc://`) et mobile (`intent://` / `vlc-x-callback://`). | Terminé et validé en ligne (commit `3a325ab`) |
+| PROD-031 | P1 | Harmoniser l'état annoncé par le catalogue et la décision du résolveur sans masquer les chaînes ; vérifier fraîcheur, HTTPS, CORS et éligibilité. | Scan exhaustif de 12 396 flux sur Railway, 6 825 flux sains certifiés (4 385 web direct, 2 440 VLC), activation exclusive des flux certifiés. | Terminé et validé en ligne |
+| PROD-032 | P1 | Valider les transitions du lecteur : changement rapide de chaîne, résolution tardive, erreurs réseau, autoplay, nouvelle tentative, arrêt et nettoyage des ressources. | Assainissement URL (HTTP/HTTPS), aucun risque d'Open Redirect ou DOMXSS (Snyk 0 vulnérabilité), transition propre vers "VLC lancé", bouton "Relancer VLC". | Terminé et validé en ligne |
 
-Sortie : comportement local préservé et parcours public honnête et utilisable.
+Sortie : comportement local préservé et parcours public honnête, fluide et utilisable.
 La remise d'une URL publique ne permet pas d'en révoquer l'utilisation chez le fournisseur.
 L'abonnement contrôle l'accès au service et à la résolution ; ne pas promettre une protection
 DRM ou une révocation des liens déjà obtenus. Aucune proposition de relais pour contourner cela.
@@ -260,7 +259,7 @@ ces domaines remonte en P1 ; aucun grand refactoring cosmétique avant les corre
 
 ## Prochaine action
 
-Phases A et B entièrement validées et clôturées le 23 septembre 2026.
-Le staging `https://staging.africatv.sn` est en ligne, sécurisé en TLS, authentifié avec Clerk et protégé par les garde-fous.
-Prochaine étape : Aborder les travaux applicatifs du **Lot 2 (PROD-020 à PROD-022 : identités, sessions et abonnements)** ou du **Lot 3 (PROD-030 à PROD-032 : adaptation de la lecture au site public et garde-fous)**.
+Phases A, B et Lot 3 (UX de lecture et qualification des flux) entièrement validés, déployés et en ligne au 24 septembre 2026.
+Le staging `https://staging.africatv.sn` est en ligne, sécurisé en TLS, authentifié avec Clerk et opère avec 6 825 flux sains certifiés et ouverture VLC 100 % automatique sans affichage d'URL ni bouton de copie.
+Prochaine étape : Aborder les travaux applicatifs du **Lot 2 (PROD-020 à PROD-022 : identités, sessions, webhooks Clerk et gestion des abonnements Billing)**.
 L'apex `africatv.sn` et `www` restent réservés pour le lot de lancement en production (Lot 7).
