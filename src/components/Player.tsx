@@ -5,10 +5,7 @@ import Hls from 'hls.js';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertCircle,
-  Check,
-  Copy,
   ExternalLink,
-  Info,
   LoaderCircle,
   Play,
   RefreshCw,
@@ -47,7 +44,6 @@ import {
 import { MAX_AUTOMATIC_WEB_ATTEMPTS } from '@/lib/local-playback-policy';
 import { PlaybackAttemptTelemetry } from '@/lib/playback-telemetry';
 import { isLocalPlaybackMode } from '@/lib/local-playback-mode';
-import { copyTextToClipboard } from '@/lib/clipboard';
 
 const LOCAL_AUTOMATIC_PLAYBACK = isLocalPlaybackMode();
 const PLAYBACK_START_TIMEOUT_MS = 15_000;
@@ -63,14 +59,6 @@ type ActiveAttempt = {
   channelId: string;
   engine: PlayerEngine;
   startedAt: number;
-};
-
-type PendingMobileVlcOpen = {
-  playbackSessionId: string;
-  attemptId: string;
-  channelId: string;
-  sourceUrl: string;
-  launchUrl: string | null;
 };
 
 const failureLabels: Record<PlaybackFailure['category'], string> = {
@@ -110,7 +98,6 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const activeAttemptRef = useRef<ActiveAttempt | null>(null);
-  const pendingMobileVlcRef = useRef<PendingMobileVlcOpen | null>(null);
   const selectedChannelIdRef = useRef(channelId);
   const playbackSessionRef = useRef<{
     id: string;
@@ -131,20 +118,8 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
     telemetryRef.current = new PlaybackAttemptTelemetry(sendPlaybackEvent);
   }
 
-  const [externalStreamInfo, setExternalStreamInfo] = React.useState<{
-    channelId: string;
-    sourceUrl: string;
-    mobileLaunchUrl: string | null;
-    attemptId: string;
-    playbackSessionId: string;
-  } | null>(null);
-  const activeExternalStream = externalStreamInfo?.channelId === channelId ? externalStreamInfo : null;
-  const [copied, setCopied] = React.useState(false);
-  const [copyError, setCopyError] = React.useState(false);
-
   useEffect(() => {
     selectedChannelIdRef.current = channelId;
-    pendingMobileVlcRef.current = null;
     networkRecoveryCountRef.current = 0;
   }, [channelId]);
 
@@ -623,8 +598,6 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
   const openExternalPlayer = useCallback((retry = false) => {
     if (externalLaunchPendingRef.current) return;
     if (LOCAL_AUTOMATIC_PLAYBACK && externalLaunchRequestedRef.current && !retry) return;
-    setCopied(false);
-    setCopyError(false);
     if (retry || !launchIdRef.current) launchIdRef.current = crypto.randomUUID();
     externalLaunchRequestedRef.current = true;
     resolutionSequenceRef.current += 1;
@@ -699,108 +672,76 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
       .then((response) => readApiResponse(response, playbackResolutionResponseSchema))
       .then((payload) => {
         if (selectedChannelIdRef.current !== channelId) return;
-        const mobileLaunchUrl = mobilePlatform ? buildMobileVlcUrl(payload.sourceUrl, mobilePlatform) : null;
-        pendingMobileVlcRef.current = {
-          playbackSessionId: payload.playbackSessionId,
-          attemptId: payload.attemptId,
-          channelId,
-          sourceUrl: payload.sourceUrl,
-          launchUrl: mobileLaunchUrl,
-        };
-        setExternalStreamInfo({
-          channelId,
-          sourceUrl: payload.sourceUrl,
-          mobileLaunchUrl,
-          attemptId: payload.attemptId,
-          playbackSessionId: payload.playbackSessionId,
-        });
-        dispatch({ type: 'EXTERNAL_READY' });
-      })
-      .catch((error: unknown) => {
-        pendingMobileVlcRef.current = null;
-        setExternalStreamInfo(null);
-        dispatch({
-          type: 'EXTERNAL_FAILED',
-          failure: {
-            category: 'unknown',
-            code: error instanceof ApiRequestError
-              ? error.code ?? 'EXTERNAL_STREAM_UNAVAILABLE'
-              : 'EXTERNAL_STREAM_UNAVAILABLE',
-            message: messageForApiError(error, 'Impossible de préparer le flux pour lecteur externe.'),
-          },
-        });
-      });
-  }, [channelId, emitForActiveAttempt, stopStartupTimeout]);
 
-  const confirmMobileExternalPlayer = useCallback(() => {
-    const pending = pendingMobileVlcRef.current;
-    if (!pending || pending.channelId !== selectedChannelIdRef.current || !pending.launchUrl) return;
+        const parsed = new URL(payload.sourceUrl);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+          throw new Error('Protocole non pris en charge');
+        }
+        const safeStreamUrl = parsed.toString();
 
-    const previous = activeAttemptRef.current;
-    if (previous) {
-      telemetryRef.current?.emit(previous, 'stopped', {
-        playerEngine: telemetryEngine(previous.engine),
-        sessionEnded: true,
-      });
-    }
-    const attempt: ActiveAttempt = {
-      playbackSessionId: pending.playbackSessionId,
-      attemptId: pending.attemptId,
-      channelId: pending.channelId,
-      engine: 'vlc',
-      startedAt: performance.now(),
-    };
-    activeAttemptRef.current = attempt;
-    playbackSessionRef.current = {
-      id: attempt.playbackSessionId,
-      channelId: attempt.channelId,
-      attemptId: attempt.attemptId,
-    };
-    telemetryRef.current?.emit(attempt, 'opened', { playerEngine: 'vlc' });
-    dispatch({ type: 'EXTERNAL_OPENED' });
-    window.location.assign(pending.launchUrl);
-  }, []);
+        const targetUrl = mobilePlatform
+          ? buildMobileVlcUrl(safeStreamUrl, mobilePlatform)
+          : `vlc://${safeStreamUrl}`;
+        const externalLink = document.createElement('a');
+        externalLink.setAttribute('href', targetUrl);
+        externalLink.setAttribute('rel', 'noopener noreferrer');
+        externalLink.style.display = 'none';
+        document.body.appendChild(externalLink);
+        externalLink.click();
+        document.body.removeChild(externalLink);
 
-  const handleCopyStreamUrl = useCallback(async () => {
-    const url = activeExternalStream?.sourceUrl || pendingMobileVlcRef.current?.sourceUrl;
-    if (!url) return;
-    const ok = await copyTextToClipboard(url);
-    if (ok) {
-      setCopied(true);
-      setCopyError(false);
-      window.setTimeout(() => setCopied(false), 3000);
-      const pending = pendingMobileVlcRef.current;
-      if (pending && !activeAttemptRef.current) {
+        const previous = activeAttemptRef.current;
+        if (previous) {
+          telemetryRef.current?.emit(previous, 'stopped', {
+            playerEngine: telemetryEngine(previous.engine),
+            sessionEnded: true,
+          });
+          activeAttemptRef.current = null;
+        }
+
         const attempt: ActiveAttempt = {
-          playbackSessionId: pending.playbackSessionId,
-          attemptId: pending.attemptId,
-          channelId: pending.channelId,
+          playbackSessionId: payload.playbackSessionId,
+          attemptId: payload.attemptId,
+          channelId,
           engine: 'vlc',
           startedAt: performance.now(),
         };
+        activeAttemptRef.current = attempt;
+        playbackSessionRef.current = {
+          id: payload.playbackSessionId,
+          channelId,
+          attemptId: payload.attemptId,
+        };
         telemetryRef.current?.emit(attempt, 'opened', { playerEngine: 'vlc' });
-      }
-    } else {
-      setCopied(false);
-      setCopyError(true);
-    }
-  }, [activeExternalStream]);
+        dispatch({ type: 'EXTERNAL_OPENED' });
+      })
+      .catch((error: unknown) => {
+        if (selectedChannelIdRef.current !== channelId) return;
+        const failure: PlaybackFailure = {
+          category: 'unknown',
+          code: error instanceof ApiRequestError
+            ? error.code ?? 'EXTERNAL_STREAM_UNAVAILABLE'
+            : 'EXTERNAL_STREAM_UNAVAILABLE',
+          message: messageForApiError(error, 'Impossible de lancer VLC pour cette chaîne.'),
+        };
+        emitForActiveAttempt('failed', {
+          playerEngine: 'vlc',
+          errorCode: failure.code,
+          errorMessage: failure.message,
+        });
+        dispatch({ type: 'EXTERNAL_FAILED', failure });
+      });
+  }, [channelId, emitForActiveAttempt, stopStartupTimeout]);
 
   useEffect(() => {
     if (state.channelId !== channelId) return;
-    if (LOCAL_AUTOMATIC_PLAYBACK) {
-      if (state.phase === 'external-required') {
-        openExternalPlayer();
-      } else if (state.phase === 'exhausted' && state.engine !== 'vlc' && state.attemptId && source && state.failure?.category !== 'autoplay') {
-        if (automaticDecisionsRef.current.has(state.attemptId)) return;
-        automaticDecisionsRef.current.add(state.attemptId);
-        if (webAttemptCountRef.current < MAX_AUTOMATIC_WEB_ATTEMPTS) tryAnotherSource();
-        else openExternalPlayer();
-      }
-    } else {
-      if (state.phase === 'external-required' && !externalLaunchRequestedRef.current) {
-        openExternalPlayer();
-      }
+    if (state.phase === 'external-required') {
+      openExternalPlayer();
+    } else if (state.phase === 'exhausted' && state.engine !== 'vlc' && state.attemptId && source && state.failure?.category !== 'autoplay') {
+      if (automaticDecisionsRef.current.has(state.attemptId)) return;
+      automaticDecisionsRef.current.add(state.attemptId);
+      if (webAttemptCountRef.current < MAX_AUTOMATIC_WEB_ATTEMPTS) tryAnotherSource();
+      else openExternalPlayer();
     }
   }, [channelId, openExternalPlayer, source, state.attemptId, state.channelId, state.engine, state.failure?.category, state.phase, tryAnotherSource]);
 
@@ -826,8 +767,8 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
   );
   const visibleFailure = state.phase === 'exhausted' && !externalSuggested ? state.failure : null;
   const showError = Boolean(visibleFailure);
-  const mode = externalSuggested || externalReady
-    ? (activeExternalStream?.mobileLaunchUrl ? 'VLC mobile' : 'Lecteur externe')
+  const mode = externalSuggested || externalReady || externalOpened
+    ? 'Lecteur VLC'
     : state.engine === 'vlc' ? 'VLC'
       : state.engine ? 'Navigateur'
         : source ? 'Préparation' : 'Indisponible';
@@ -907,109 +848,45 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
             </motion.div>
           )}
 
-          {(externalReady || (externalSuggested && activeExternalStream)) && (
+          {state.phase === 'external-opening' && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/90 p-4 sm:p-6 text-center overflow-y-auto"
+              className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/85 p-6 text-center"
             >
-              <span className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-400/30">
-                <ExternalLink className="h-6 w-6 sm:h-7 sm:w-7" />
-              </span>
-              <h4 className="mt-3 text-lg sm:text-xl font-bold text-zinc-100">
-                {activeExternalStream?.mobileLaunchUrl ? 'Ouvrir dans VLC ou lecteur externe' : 'Flux pour lecteur externe (VLC)'}
-              </h4>
-              <p className="mt-1.5 max-w-lg text-xs sm:text-sm text-zinc-300">
-                Ce flux vidéo nécessite un lecteur externe compatible (VLC, application IPTV ou lecteur multimédia).
+              <LoaderCircle className="mb-4 h-12 w-12 text-amber-400 animate-spin" />
+              <h4 className="text-xl font-bold text-zinc-100">Ouverture de VLC…</h4>
+              <p className="mt-2 max-w-lg text-sm text-zinc-300">
+                Transmission automatique du flux vers votre lecteur VLC.
               </p>
-
-              {activeExternalStream?.sourceUrl && (
-                <div className="mt-3 w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900/90 p-3 text-left">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                    Adresse directe du flux (M3U8)
-                  </span>
-                  <div className="mt-1 flex items-center gap-2">
-                    <input
-                      type="text"
-                      readOnly
-                      value={activeExternalStream.sourceUrl}
-                      className="w-full truncate rounded-lg border border-zinc-700/60 bg-black/60 px-2.5 py-1.5 font-mono text-xs text-amber-200/90 focus:outline-none select-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleCopyStreamUrl}
-                      aria-label="Copier l'adresse du flux"
-                      title="Copier l'adresse du flux"
-                      className={`inline-flex items-center gap-1.5 shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                        copied
-                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                          : 'bg-zinc-800 text-zinc-200 border border-zinc-700 hover:bg-zinc-700 hover:text-white'
-                      }`}
-                    >
-                      {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                      <span>{copied ? 'Copié !' : 'Copier'}</span>
-                    </button>
-                  </div>
-                  {copyError && (
-                    <p className="mt-2 text-xs text-amber-300" role="status">
-                      Copie automatique impossible. Sélectionnez l’adresse ci-dessus puis copiez-la manuellement.
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2.5">
-                {activeExternalStream?.mobileLaunchUrl && (
-                  <button
-                    type="button"
-                    onClick={confirmMobileExternalPlayer}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 px-4 py-2.5 text-xs sm:text-sm font-extrabold text-black shadow-lg shadow-amber-500/25 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    Ouvrir dans l’app VLC
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={handleCopyStreamUrl}
-                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-extrabold transition shadow-lg ${
-                    copied
-                      ? 'bg-emerald-500 text-black shadow-emerald-500/25'
-                      : activeExternalStream?.mobileLaunchUrl
-                        ? 'border border-zinc-700 bg-zinc-800 text-zinc-100 hover:bg-zinc-700'
-                        : 'bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black shadow-amber-500/25 hover:brightness-110'
-                  }`}
-                >
-                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  <span>{copied ? 'Adresse M3U8 copiée !' : 'Copier l’adresse du flux (M3U8)'}</span>
-                </button>
-                {state.attemptId && (
-                  <button
-                    type="button"
-                    onClick={tryAnotherSource}
-                    className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-800/80 px-4 py-2.5 text-xs sm:text-sm font-bold text-zinc-200 transition hover:border-amber-400/60 hover:text-white"
-                  >
-                    <RefreshCw className="h-3.5 w-3.5" />
-                    Autre source web
-                  </button>
-                )}
-              </div>
-
-              <div className="mt-3.5 max-w-md rounded-xl border border-zinc-800/80 bg-zinc-950/60 p-2.5 text-left text-[11px] sm:text-xs text-zinc-400">
-                <p className="font-semibold text-zinc-300 flex items-center gap-1.5">
-                  <Info className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-                  Comment lire ce flux ?
-                </p>
-                <ul className="mt-1 space-y-0.5 list-disc list-inside text-zinc-400">
-                  <li><strong className="text-zinc-300">Sur PC / Mac :</strong> Dans VLC, ouvrez <em>Média &gt; Ouvrir un flux réseau</em> (Ctrl+N / Cmd+N) et collez l’adresse.</li>
-                  <li><strong className="text-zinc-300">Sur Mobile / TV :</strong> Dans votre lecteur (VLC Mobile, IPTV), ouvrez un <em>flux réseau</em> et collez l’adresse.</li>
-                </ul>
-              </div>
             </motion.div>
           )}
 
-          {externalSuggested && !activeExternalStream && (
+          {externalOpened && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/85 p-6 text-center"
+            >
+              <ExternalLink className="mb-4 h-14 w-14 text-amber-400" />
+              <h4 className="text-xl font-bold text-zinc-100">VLC lancé</h4>
+              <p className="mt-2 max-w-lg text-sm text-zinc-300">
+                Le flux vidéo a été transmis automatiquement à VLC. La lecture démarre dans votre lecteur.
+              </p>
+              <button
+                type="button"
+                onClick={() => openExternalPlayer(true)}
+                className="mt-5 inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-800/80 px-5 py-2.5 text-xs sm:text-sm font-bold text-zinc-200 transition hover:border-amber-400/60 hover:text-white"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Relancer VLC
+              </button>
+            </motion.div>
+          )}
+
+          {externalSuggested && !externalOpened && state.phase !== 'external-opening' && (
             <motion.div
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -1019,9 +896,9 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
               <span className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-400/30">
                 <ExternalLink className="h-8 w-8" />
               </span>
-              <h4 className="mt-5 text-xl font-bold text-zinc-100">Lecteur externe requis</h4>
+              <h4 className="mt-5 text-xl font-bold text-zinc-100">Lecteur VLC requis</h4>
               <p className="mt-2 max-w-lg text-sm leading-6 text-zinc-300">
-                Ce flux vidéo nécessite un lecteur externe ou VLC. Cliquez ci-dessous pour préparer le lien direct.
+                Cette chaîne se lit directement dans le lecteur VLC.
               </p>
               <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
                 {state.attemptId && (
@@ -1040,24 +917,9 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
                   className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 px-5 py-3 text-sm font-extrabold text-black shadow-lg shadow-amber-500/25 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
                 >
                   <ExternalLink className="h-4 w-4" />
-                  {LOCAL_AUTOMATIC_PLAYBACK ? 'Ouvrir dans VLC' : 'Obtenir le lien direct (M3U8)'}
+                  Lancer VLC
                 </button>
               </div>
-            </motion.div>
-          )}
-
-          {externalOpened && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/85 p-6 text-center"
-            >
-              <ExternalLink className="mb-4 h-14 w-14 text-amber-400" />
-              <h4 className="text-xl font-bold text-zinc-100">VLC lancé</h4>
-              <p className="mt-2 max-w-lg text-sm text-zinc-300">
-                Le lien a été transmis à VLC. La disponibilité de la vidéo dépend de la source ; vous pouvez revenir au catalogue.
-              </p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -1085,35 +947,21 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-          <button
-            type="button"
-            onClick={
-              activeExternalStream?.mobileLaunchUrl
-                ? confirmMobileExternalPlayer
-                : activeExternalStream
-                  ? handleCopyStreamUrl
-                  : () => openExternalPlayer(true)
-            }
-            disabled={state.phase === 'external-opening'}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 px-5 py-2.5 text-sm font-extrabold text-black shadow-lg shadow-amber-500/20 transition hover:brightness-110 disabled:opacity-50"
-          >
-            {state.phase === 'external-opening' ? (
-              <LoaderCircle className="h-4 w-4 animate-spin" />
-            ) : copied ? (
-              <Check className="h-4 w-4" />
-            ) : (
-              <ExternalLink className="h-4 w-4" />
-            )}
-            {copied
-              ? 'Copié !'
-              : activeExternalStream?.mobileLaunchUrl
-                ? 'Ouvrir VLC'
-                : activeExternalStream
-                  ? 'Copier M3U8'
-                  : LOCAL_AUTOMATIC_PLAYBACK
-                    ? 'VLC'
-                    : 'VLC / M3U8'}
-          </button>
+          {(externalSuggested || externalReady || externalOpened || state.engine === 'vlc') && (
+            <button
+              type="button"
+              onClick={() => openExternalPlayer(true)}
+              disabled={state.phase === 'external-opening'}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 px-5 py-2.5 text-sm font-extrabold text-black shadow-lg shadow-amber-500/20 transition hover:brightness-110 disabled:opacity-50"
+            >
+              {state.phase === 'external-opening' ? (
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+              ) : (
+                <ExternalLink className="h-4 w-4" />
+              )}
+              {state.phase === 'external-opening' ? 'Lancement…' : 'Relancer VLC'}
+            </button>
+          )}
         </div>
       </div>
     </motion.div>
