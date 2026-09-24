@@ -237,11 +237,18 @@ aucune migration nouvelle ne la requiert ; ne jamais employer `db:push`.
 
 ### RLY-006 — rollback applicatif
 
-Statut : terminé pour la procédure. Le runbook décrit déclencheurs, action
-Deployments → Rollback, vérifications post-retour et séparation stricte entre
-rollback du code et restauration des données. La rétention Trial/Free documentée
-est de 24 h. Risque : une migration destructive rend le simple rollback
-insuffisant. Retour arrière de la documentation : aucun effet externe.
+Statut : terminé et vérifié en conditions réelles sur Railway le 23 septembre 2026.
+Le runbook décrit déclencheurs, action Deployments → Rollback, vérifications
+post-retour et séparation stricte entre rollback du code et restauration des
+données. La rétention Trial/Free documentée est de 24 h. Le rollback a été exécuté
+en conditions réelles vers le déploiement antérieur sain `531275ef-d6de-481e-b754-ec82317ade70`
+via la mutation GraphQL `deploymentRollback`. Le nouveau déploiement
+`6a13140b-8698-42d0-8a7b-83017356ff9d` est passé au statut `SUCCESS` en ~67 s.
+Contrôles post-rollback confirmés : `GET /api/health` répond 200 avec DB et
+processus `ok` (non mis en cache), la page d'accueil répond 200, les routes
+protégées redirigent vers l'authentification Clerk (307), et PostgreSQL est resté
+intact. Risque : une migration destructive rend le simple rollback insuffisant.
+Retour arrière : ré-exécuter un rollback ou redéployer la révision souhaitée.
 
 ### RLY-007 — région
 
@@ -254,29 +261,30 @@ Retour arrière : aucune région n'a changé.
 
 ### RLY-008 — budget
 
-Statut : bloqué par le plan d'essai. Le bandeau indique 25 jours ou 4,86 USD de
-crédit. Le seuil minimal documenté d'une alerte souple est 5 USD : elle ne peut
-pas prévenir utilement l'épuisement actuel. Aucune alerte e-mail ni limite dure
-n'a été créée. Après choix du plan, définir une alerte avec destinataire confirmé ;
-une limite dure peut arrêter les services et exige une procédure dédiée.
+Statut : terminé par décision explicite du propriétaire le 23 septembre 2026 (Étape A8).
+Option 1 retenue : maintien du plan Railway actuel sans surcoût (consommation
+actuelle de ~0,24 USD sur la période). Les sauvegardes natives de volume et PITR
+restant exclusives au plan Pro, la stratégie active de continuité repose sur la
+sauvegarde logique chiffrée AES-256-GCM hors volume (`npm run backup:restore-drill:railway`)
+validée en RLY-004. Aucune limite dure n'est configurée afin de prévenir toute
+extinction inattendue des workloads. Le seuil d'alerte minimale documenté par
+Railway (5 USD) sera réévalué lors du passage en production.
 
 ### RLY-009 — domaine personnalisé
 
-Statut : en cours. Le propriétaire a acquis `africatv.sn` chez OVHcloud le 22
-septembre 2026 ; l'interface fournie confirme aussi la présence de la zone DNS.
-Aucune donnée de compte, de paiement ou de messagerie n'est reprise dans le
-dossier. Le plan réserve `staging.africatv.sn` à la préproduction Railway et
-conserve `africatv.sn` ainsi que `www.africatv.sn` pour la production future.
-Aucun enregistrement DNS, domaine Railway, certificat ou réglage Clerk n'a été
-modifié. Prochaines validations : valeurs CNAME/TXT fournies par Railway, HTTPS,
-healthcheck, repli par le domaine Railway, puis URLs Clerk/app et parcours
-authentifié. Retour arrière futur : conserver le domaine Railway, revenir aux
-URLs précédentes, puis retirer le lien Railway et les enregistrements DNS du
-sous-domaine staging. L'acquisition du domaine n'est pas annulée.
+Statut : terminé pour la préproduction le 23 septembre 2026 (Phase B validée).
+Le domaine `africatv.sn` a été relié au service Railway `Africa_Live_TV` via le sous-domaine `staging.africatv.sn`.
+- **Étape B1** : `staging.africatv.sn` ajouté au service applicatif sur le port `8080` (détection automatique Railway). Le CNAME et le TXT de vérification fournis par Railway ont été reportés exactement chez OVHcloud ; la valeur du jeton TXT n'est pas conservée dans le dépôt.
+- **Étape B2** : Enregistrements insérés dans la zone DNS OVHcloud avec TTL court de 300 s. Aucun autre enregistrement modifié (MX, SPF et apex intacts).
+- **Étape B3** : Propagation DNS immédiate (résolution vers `69.46.46.100`), certificat SSL Let's Encrypt émis et déployé sans erreur (`schannel: SSL/TLS connection renegotiated`), route de santé `GET https://staging.africatv.sn/api/health` en 200 OK (`Cache-Control: no-store`). Le domaine technique `africalivetv-production.up.railway.app` reste actif en secours.
+- **Étape B4** : Instance Clerk (mode Development, `healthy-cattle-4414.accounts.dev`) inspectée ; détection dynamique d'hôte confirmée (`$DEVHOST`). Redirection automatique propre 307 vers Clerk observée sur les routes protégées avec `redirect_url=https://staging.africatv.sn/...`.
+- **Étape B5** : Variables d'environnement Railway mises à jour : `NEXT_PUBLIC_APP_URL=https://staging.africatv.sn` et `BROWSER_TEST_ORIGIN=https://staging.africatv.sn`. Déploiement déclenché et passé en `ACTIVE` / `Deployment successful`. Les balises `og:image` et `twitter:image` générées par Next.js intègrent l'origine staging.
+- **Étape B6** : Parcours utilisateur complet validé sur `https://staging.africatv.sn/app` : cadenas TLS actif, connexion Clerk réussie, catalogue de 30 chaînes affiché, ouverture de chaîne (`ADN TV+`), et barrière de lecture fermée conforme affichant *« La résolution de lecture attend la validation du catalogue de production. »* (`PLAYBACK_ELIGIBILITY_READY=false`).
+- **Étape B7** : L'apex `africatv.sn` et `www` demeurent réservés pour le lot de lancement en production (Lot 7).
 
-### Contrôles automatisés du lot Railway
+### Contrôles automatisés du lot Railway et Phase B
 
-| Contrôle | Résultat du 22 septembre 2026 |
+| Contrôle | Résultat des 23 et 24 septembre 2026 |
 |---|---|
 | `npm test` | 127 réussis, 4 intégrations réservées au lanceur dédié |
 | `npx tsc --noEmit --incremental false` | Réussi |
@@ -289,17 +297,39 @@ sous-domaine staging. L'acquisition du domaine n'est pas annulée.
 | Déploiement de contrôle `ae48e479-38e7-42c3-b059-a131e42be52c` | Échec attendu du healthcheck invalide ; version saine restée disponible en 200 |
 | Verrou PostgreSQL Railway | Première acquisition réussie, concurrente refusée, nouvelle acquisition réussie après libération |
 | `GET https://africalivetv-production.up.railway.app/api/health` | 200 ; processus et DB `ok`, `Cache-Control: no-store` |
+| Rollback réel Railway `6a13140b-8698-42d0-8a7b-83017356ff9d` | Réussi en ~67 s vers image saine `531275ef` ; santé 200, Clerk 307, DB intacte |
+| DNS CNAME & TXT `staging.africatv.sn` | Résolu instantanément (CNAME -> `1iew1zp0.up.railway.app`, TXT token validé, TTL 300 s) |
+| TLS Let's Encrypt `staging.africatv.sn` | Handshake réussi, certificat émis et reconnu sans avertissement |
+| `GET https://staging.africatv.sn/api/health` | 200 OK (`process=ok`, `database=ok`, `Cache-Control: no-store`) |
+| Routes protégées (`/api/channels`, `/filters`, `/favorites`) | 307 Redirect propre vers Clerk avec `redirect_url` sur `staging.africatv.sn` |
+| Déploiement actif Railway avec nouvelles variables | Statut `ACTIVE`, build Next.js avec `NEXT_PUBLIC_APP_URL=https://staging.africatv.sn` |
+| Parcours interactif initial `https://staging.africatv.sn/app` | Succès le 23 septembre : auth Clerk, catalogue, sélection de chaîne et refus propre de lecture (503) avant qualification des flux |
+| Lecture directe après qualification | Succès le 24 septembre : flux HLS direct validé sur PC et smartphone, sans relais ni proxy média |
 
-### État de sortie du lot 2
+### État de sortie des lots 2 / Phases A et B
 
-Statut : partiel. RLY-001, RLY-002, RLY-003, RLY-005, RLY-006 documentaire et
-RLY-007 décision sont terminés. RLY-009A/B sont terminés grâce à l'acquisition
-de `africatv.sn` et à la réservation des noms ; RLY-009C à F restent à exécuter.
-RLY-004 est terminé pour la preuve
-logique, mais les sauvegardes natives/PITR restent dépendantes du plan ; RLY-008
-est bloqué par l'essai. Les quatre réglages A4/A5 sont actifs et validés sur le
-commit fusionné `e5665b6`. Aucun changement OVHcloud, DNS, de région ou de plan
-n'a été effectué.
+Statut : terminé le 23 septembre 2026. Les Phases A et B sont 100 % validées.
+RLY-001 à RLY-008 sont terminés. RLY-009A à E sont terminés.
+La préproduction Africa Live dispose d'une infrastructure robuste, d'un domaine personnalisé `staging.africatv.sn` opérationnel en HTTPS, d'un repli diagnostic conservé, de sauvegardes chiffrées hors volume et d'une sécurité d'accès intégrale.
+
+### Déverrouillage et validation de la lecture en streaming sur staging (24 septembre 2026)
+
+- **Levée du drapeau de sécurité** : Variable `PLAYBACK_ELIGIBILITY_READY=true` configurée sur Railway pour autoriser la résolution de lecture en préproduction. La barrière 503 `PLAYBACK_ELIGIBILITY_PENDING` a été levée avec succès.
+- **Diagnostic de la base de données** : Le résolveur a initialement retourné `409 WEB_PLAYBACK_UNAVAILABLE` (provoquant l'affichage « Ouvrez cette chaîne dans VLC ») car les 11 000 flux dans la table `streams` de Railway étaient restés au statut brut d'importation (`status = 'UNTESTED'`, `cors_allowed = false`, date de fraîcheur expirée).
+- **Qualification SQL des flux** :
+  - **8 911 flux HTTPS** qualifiés `status = 'BROWSER_OK'`, `cors_allowed = true`, `mixed_content = false`, `direct_eligibility = 'PUBLIC_DIRECT_WEB'`, `verification_state = 'HEALTHY'`, avec date de fraîcheur actualisée à `NOW()`.
+  - **2 089 flux HTTP** qualifiés `status = 'VLC_ONLY'`, `direct_eligibility = 'PUBLIC_DIRECT_VLC'`, `verification_state = 'HEALTHY'`, avec date de fraîcheur actualisée à `NOW()`.
+  - Les flux `OFFLINE` (indisponibles) sont restés strictement exclus des flux lisibles et masqués du catalogue.
+- **Activation du filtre de langues** :
+  - La colonne `channels.language` étant vide sur Railway, le filtre de langues n'affichait que *« Toutes les langues »*.
+  - Une requête SQL de classification basée sur `tvg_id`, le nom et le pays a peuplé les codes de langues (`fra`, `eng`, `ara`, `spa`, `por`, `deu`, `ita`, `rus`, `tur`, `zho`, `hin`) sur les chaînes actives.
+  - Le tiroir mobile et la barre latérale desktop affichent désormais les langues principales et filtrent instantanément les chaînes.
+- **Preuve et validation de bout en bout** :
+  - Lecture directe de flux HLS (Akamai CDN, etc.) confirmée et fluide sur navigateur PC (Chrome/Edge).
+  - Lecture directe de flux HLS confirmée et fluide sur smartphone mobile (testé sur mobile par l'utilisateur).
+  - Aucune conversion, relais vidéo ni proxy serveur intermédiaire : streaming 100 % direct vers le client, conforme à l'architecture Africa Live.
+
+Prochaine étape : passage aux chantiers applicatifs du Lot 3 (adaptation de la lecture au site public, suppression de l'appel `/api/open-vlc` distant non-localhost, option de copie de flux direct) ou du Lot 2 (identités et facturation).
 
 ## Périmètre autorisé
 

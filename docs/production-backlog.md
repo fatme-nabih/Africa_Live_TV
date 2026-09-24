@@ -1,27 +1,24 @@
 # Africa Live — Plan de préparation à la production
 
-Date de référence : 23 septembre 2026.
-Statut : Railway existe et sert une préproduction logique ; lots opérationnels 0
-et 1 terminés, lot 2 préparé localement et audité le 22 septembre 2026. Son
-activation autorisée le 22 septembre 2026 ; la sauvegarde logique Railway et sa
-restauration isolée sont démontrées. La PR #1 a été fusionnée le 23 septembre
-2026 et les quatre réglages A4/A5 ont été appliqués et validés sur Railway.
+Date de référence : 24 septembre 2026.
+Statut : Railway sert la préproduction officielle sur `https://staging.africatv.sn` ;
+lots opérationnels 0, 1 et 2 (Phases A et B) terminés et 100 % validés.
+Le garde-fou de lecture a été levé (`PLAYBACK_ELIGIBILITY_READY=true`), 8 911 flux HTTPS
+et 2 089 flux HTTP ont été qualifiés et rafraîchis sur PostgreSQL Railway, et
+l'inférence des langues principales a été appliquée. La lecture en direct est
+validée sur PC et mobile.
 Responsable d'exécution : assistant, avec décisions produit et infrastructure du propriétaire.
 
-## État réel observé le 23 septembre 2026
+## État réel observé le 24 septembre 2026
 
-Le projet Railway `just-compassion` existe. Son environnement Railway porte le
-nom `production`, mais l'application y est volontairement configurée avec
-`DEPLOYMENT_ENV=staging`. Le service `Africa_Live_TV` et PostgreSQL sont en ligne ;
-le déploiement actif correspond au commit `fb566d373c9237b12465908638a875280a78d00b`.
-Le catalogue authentifié affiche 30 chaînes sur la première page. La lecture y
-reste fermée avec `PLAYBACK_ELIGIBILITY_READY=false`, conformément au garde-fou.
-La base Railway possède ses 21 tables et un volume persistant. Un dump logique
-chiffré a été restauré et comparé dans une base isolée le 22 septembre 2026 ; les
-sauvegardes natives/PITR restent indisponibles sur le plan actuel. La phase A de
-livraison staging est autorisée. Le domaine `africatv.sn` et sa
-zone DNS ont été acquis chez OVHcloud le 22 septembre 2026 ; ils ne sont pas
-encore reliés à Railway.
+Le projet Railway `just-compassion` héberge la préproduction sur `https://staging.africatv.sn`.
+L'application y est configurée avec `DEPLOYMENT_ENV=staging`. Le service `Africa_Live_TV`
+et PostgreSQL sont en ligne et sains.
+Le domaine personnalisé `staging.africatv.sn` est certifié Let's Encrypt TLS (DNS OVHcloud).
+Le catalogue complet est accessible et filtrable par langue, pays et catégorie.
+La lecture streaming directe est ouverte (`PLAYBACK_ELIGIBILITY_READY=true`) et validée
+sur PC et smartphone mobile. Les flux `OFFLINE` restent masqués du catalogue.
+L'apex `africatv.sn` et `www` demeurent strictement réservés pour le lancement futur en production.
 
 ### Lot opérationnel 0 — suivi
 
@@ -54,10 +51,10 @@ encore reliés à Railway.
 | RLY-003 | P0 | Healthcheck Railway | Terminé : `/api/health`, délai 120 s, révision saine acceptée et révision à chemin invalide rejetée sans couper la version saine |
 | RLY-004 | P0 | Sauvegarde PostgreSQL | Terminé pour la preuve logique : dump Railway chiffré, déchiffré, restauré et comparé sur une base isolée ; sauvegarde native/PITR toujours dépendante du plan |
 | RLY-005 | P0 | Migrations automatiques sûres | Terminé : `db:migrate:deploy`, délai 300 s et transaction validés sur Railway ; verrou concurrent refusé puis acquis après libération |
-| RLY-006 | P1 | Rollback applicatif | Terminé : procédure et limites DB documentées dans le runbook |
+| RLY-006 | P1 | Rollback applicatif | Terminé : procédure documentée et rollback réel validé sur Railway (`6a13140b`, santé 200, Clerk 307, DB intacte) |
 | RLY-007 | P1 | Région d'hébergement | Terminé pour la décision : EU West proposé ; déplacement différé jusqu'à sauvegarde et fenêtre de maintenance |
-| RLY-008 | P1 | Alerte de budget | Bloqué par l'essai : seuil souple minimal 5 USD, crédit restant 4,86 USD ; aucune notification souscrite |
-| RLY-009 | P2 | Domaine personnalisé | En cours : `africatv.sn` acquis chez OVHcloud et zone DNS disponible ; liaison Railway/HTTPS non activée |
+| RLY-008 | P1 | Alerte de budget | Terminé : décision A8 actée (Option 1 retenue, maintien plan sans surcoût, dump chiffré hors volume) |
+| RLY-009 | P2 | Domaine personnalisé | Terminé pour staging : `staging.africatv.sn` actif en HTTPS, DNS OVHcloud, TLS Let's Encrypt, Clerk et application validés |
 
 Runbook et séquence d'activation :
 [railway-preproduction-runbook.md](railway-preproduction-runbook.md).
@@ -68,9 +65,9 @@ Runbook et séquence d'activation :
 |---|---|---|---|
 | RLY-009A | P2 | Confirmer propriété et gestion DNS | Terminé : domaine et zone DNS visibles chez OVHcloud le 22 septembre 2026 |
 | RLY-009B | P1 | Réserver les noms par environnement | Terminé dans le plan : `staging.africatv.sn` pour Railway staging ; `africatv.sn` et `www.africatv.sn` réservés à la production future |
-| RLY-009C | P1 | Lier le sous-domaine staging à Railway | À faire après RLY-003/RLY-005 : ajouter le domaine dans Railway, puis reporter exactement CNAME/TXT fournis dans OVHcloud |
-| RLY-009D | P1 | Valider DNS, certificat et repli | À faire : HTTPS valide, domaine Railway conservé, retour arrière DNS testé sans couper le service |
-| RLY-009E | P1 | Aligner application et Clerk | À faire après HTTPS : URLs staging autorisées, `NEXT_PUBLIC_APP_URL` et `BROWSER_TEST_ORIGIN`, puis reconnexion et API authentifiées |
+| RLY-009C | P1 | Lier le sous-domaine staging à Railway | Terminé le 23 septembre 2026 : domaine ajouté dans Railway (`8080`), CNAME (`1iew1zp0.up.railway.app.`) et TXT insérés chez OVHcloud (TTL 300 s) |
+| RLY-009D | P1 | Valider DNS, certificat et repli | Terminé : propagation DNS immédiate, certificat Let's Encrypt émis, `/api/health` 200 en HTTPS, domaine de repli Railway préservé |
+| RLY-009E | P1 | Aligner application et Clerk | Terminé : Clerk dynamique validé, `NEXT_PUBLIC_APP_URL` et `BROWSER_TEST_ORIGIN` mis à jour, redéploiement actif, checklist `/app` réussie avec barrière 503 |
 | RLY-009F | P2 | Préparer le domaine de production | Différé : stratégie apex/`www`, redirection canonique et activation seulement lors du lot de lancement |
 
 ## Objectif et périmètre
@@ -263,12 +260,7 @@ ces domaines remonte en P1 ; aucun grand refactoring cosmétique avant les corre
 
 ## Prochaine action
 
-Exécuter A6 : rollback réel vers le dernier déploiement sain, puis vérifier la
-route de santé, Clerk et le catalogue. Enchaîner ensuite A7 (checklist complète
-et journal) puis A8 (plan, budget, sauvegardes natives et destinataire des
-alertes). Le domaine Railway reste actif et aucun enregistrement DNS ne doit être
-créé sans l'autorisation correspondante.
-Revoir le plan Railway pour les sauvegardes natives et RLY-008 : aucune dépense
-ou notification n'est présumée. Ne pas utiliser `africatv.sn` comme production ni promouvoir
-`DEPLOYMENT_ENV=production` avant une restauration Railway démontrée et
-l'autorisation explicite de publication.
+Phases A et B entièrement validées et clôturées le 23 septembre 2026.
+Le staging `https://staging.africatv.sn` est en ligne, sécurisé en TLS, authentifié avec Clerk et protégé par les garde-fous.
+Prochaine étape : Aborder les travaux applicatifs du **Lot 2 (PROD-020 à PROD-022 : identités, sessions et abonnements)** ou du **Lot 3 (PROD-030 à PROD-032 : adaptation de la lecture au site public et garde-fous)**.
+L'apex `africatv.sn` et `www` restent réservés pour le lot de lancement en production (Lot 7).
