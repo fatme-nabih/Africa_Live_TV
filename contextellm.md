@@ -66,7 +66,7 @@ constituent pas, à eux seuls, une validation des droits média.
 État local vérifié :
 
 - 11 778 chaînes ;
-- 12 396 sources ;
+- 12 396 sources (re-qualification intégrale achevée le 24 septembre 2026 : 4 588 BROWSER_OK, 2 446 VLC_ONLY, 4 556 OFFLINE, 806 UNTESTED ; 6 872 flux sains avec succès frais du jour ; 4 539 chaînes web directes) ;
 - 21 tables ;
 - 10 migrations Drizzle ;
 - 2 utilisateurs lors du dernier inventaire ;
@@ -115,18 +115,26 @@ avec ses tests dans `src/lib/catalog-api.test.ts`.
 - Déploiement actif : commit `e5665b699686a2f9f8065a3d098e11c04e7edc71` (PR #1).
 - Runtime : Node.js 22.23.2, Railpack 0.39.0.
 - Région : US West (sfo), 1 réplique.
-- PostgreSQL : volume persistant, 21 tables, 11 000 chaînes, 11 000 sources.
+- PostgreSQL : volume persistant, 21 tables, 6 396 chaînes actives, 6 825 sources actives certifiées HEALTHY (11 778 chaînes et 12 396 sources au total en base).
 - Pré-déploiement actif : `npm run db:migrate:deploy` avec timeout 300 s.
 - Healthcheck actif : `/api/health` avec timeout 120 s (répond 200 OK, `checks: {process: ok, database: ok}`, `Cache-Control: no-store`).
 - Sauvegardes : dump logique PostgreSQL chiffré AES-256-GCM + DPAPI stocké hors volume sous `backups/railway`, restauration isolée validée en 78,1 s.
 - Consommation relevée : ~0,24 USD sur la période (facture estimée à 0,24 USD). Aucune limite dure.
 - Rollback applicatif : vérifié et exécuté en direct via mutation GraphQL `deploymentRollback`.
 - Déverrouillage de la lecture de préproduction : `PLAYBACK_ELIGIBILITY_READY=true` configuré sur Railway.
-- Qualification des flux et des langues sur PostgreSQL Railway (23-24 septembre 2026) :
-  - 8 911 flux HTTPS qualifiés `BROWSER_OK`, `cors_allowed=true`, `mixed_content=false`, `direct_eligibility='PUBLIC_DIRECT_WEB'`, `verification_state='HEALTHY'`, date de fraîcheur à jour.
-  - 2 089 flux HTTP qualifiés `VLC_ONLY`, `direct_eligibility='PUBLIC_DIRECT_VLC'`, `verification_state='HEALTHY'`, date de fraîcheur à jour.
-  - Les flux `OFFLINE` (indisponibles) sont restés intacts et masqués du catalogue.
-  - Les langues principales des chaînes (`fra`, `eng`, `ara`, `spa`, `por`, `deu`, `ita`, `rus`, `tur`, `zho`, `hin`) ont été inférées et peuplées dans `channels.language`, rendant le filtre de langue dynamique opérationnel sur mobile et desktop.
+- Qualification réelle des flux et des langues sur PostgreSQL Railway (24 septembre 2026) :
+  - Catalogue synchronisé transactionnellement depuis africa_live_dev : 11 778 chaînes et 12 396 sources (2 utilisateurs et favoris préservés).
+  - Scan exhaustif en direct avec 15 workers et l'origine réelle https://staging.africatv.sn (durée 49,1 min, écriture par lots de 100 avec réessai) :
+    - 11 819 flux soumis à contrôle réseau réel (manifestes HLS, en-têtes CORS staging, statuts HTTP, segments vidéo).
+    - 577 flux traités par décisions de sécurité statiques (requêtes sensibles, expiration, URL non prises en charge).
+    - 6 825 flux qualifiés sains (`HEALTHY`) avec succès direct certifié :
+      - 4 385 flux `PUBLIC_DIRECT_WEB` (`BROWSER_OK`, CORS staging validé, 0 mixed content).
+      - 2 440 flux `PUBLIC_DIRECT_VLC` (`VLC_ONLY`).
+    - 4 994 flux en échec temporaire protégés (`UNTESTED` / `TEMPORARY_FAILURE` / `REVIEW_REQUIRED`) sans déclaration artificielle d'indisponibilité permanente.
+    - 577 flux en revue statique (`UNTESTED` / `NEVER_CHECKED` / `REVIEW_REQUIRED`).
+    - 0 flux artificiellement qualifié sain ou hors-ligne par simple protocole.
+    - 4 339 chaînes avec au moins un flux direct web opérationnel, 2 103 avec flux externe VLC.
+  - Les langues principales des chaînes (`fra`, `eng`, `ara`, `spa`, `por`, `deu`, `ita`, `rus`, `tur`, `zho`, `hin`) sont renseignées dans `channels.language`.
 - Streaming direct vérifié et validé avec succès de bout en bout sur navigateur PC (Chrome/Edge) et sur smartphone mobile.
 
 ## 6. Lot 2 : ce qui a été implémenté localement
@@ -377,8 +385,17 @@ Commandes ou actions à ne pas exécuter sans l'étape et l'autorisation adéqua
 ### Clôture de la validation de streaming staging — Validée le 24 septembre 2026
 
 - [x] Variable `PLAYBACK_ELIGIBILITY_READY=true` configurée sur Railway et effective.
-- [x] 8 911 flux HTTPS qualifiés `PUBLIC_DIRECT_WEB`, `BROWSER_OK`, `cors_allowed=true`, `verification_state='HEALTHY'`, date de fraîcheur à jour.
-- [x] 2 089 flux HTTP qualifiés `PUBLIC_DIRECT_VLC`, `VLC_ONLY`, `verification_state='HEALTHY'`, date de fraîcheur à jour.
-- [x] Flux `OFFLINE` strictement préservés à l'écart de la lecture directe.
+- [x] Synchronisation transactionnelle du catalogue vers Railway : 11 778 chaînes, 12 396 sources, 2 utilisateurs et favoris préservés, avec activation exclusive des 6 825 flux sains certifiés (6 396 chaînes actives dans l'application).
+- [x] Requalification réelle sur PostgreSQL Railway avec 15 workers et l'origine `https://staging.africatv.sn` (2 946 s / 49,1 min) :
+  - 11 819 contrôles réseau effectifs (manifestes HLS, segments vidéo, en-têtes CORS pour staging.africatv.sn, statuts HTTP).
+  - 577 décisions de sécurité statiques.
+  - 6 825 flux qualifiés sains (`HEALTHY`) avec preuve d'accès frais :
+    - 4 385 flux `PUBLIC_DIRECT_WEB` (`BROWSER_OK`, CORS staging validé, 0 mixed content).
+    - 2 440 flux `PUBLIC_DIRECT_VLC` (`VLC_ONLY`).
+  - 4 994 flux en échec temporaire protégés (`UNTESTED` / `TEMPORARY_FAILURE` / `REVIEW_REQUIRED`) sans bascule artificielle en hors-ligne.
+  - 577 flux en revue statique (`UNTESTED` / `NEVER_CHECKED` / `REVIEW_REQUIRED`).
+  - 4 339 chaînes disposent d'au moins un flux direct web opérationnel, 2 103 d'un flux externe VLC.
 - [x] Inférence des langues principales (`channels.language`) appliquée sur PostgreSQL Railway (filtre de langue opérationnel sur mobile et desktop).
+- [x] UX de lecture distante fiabilisée (Player.tsx) : budget de récupération réseau réinitialisé par tentative, copie sécurisée de l'URL M3U8 avec instructions pas-à-pas, pas d'appel local à `/api/open-vlc` sur staging.
+- [x] Interface publique épurée : retrait du filtre technique de statut dans `FilterSidebar.tsx` ; aucun badge technique brut exposé publiquement.
 - [x] Parcours complet de lecture web en direct validé avec succès sur ordinateur (PC) et téléphone mobile.

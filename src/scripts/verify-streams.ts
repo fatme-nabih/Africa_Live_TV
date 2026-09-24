@@ -420,14 +420,22 @@ export async function expireStalePlaybackClassifications(now = new Date()) {
   return expired.length;
 }
 
-async function writeUpdatesInBatches(updates: PendingUpdate[]) {
-  for (let offset = 0; offset < updates.length; offset += UPDATE_BATCH_SIZE) {
-    const batch = updates.slice(offset, offset + UPDATE_BATCH_SIZE);
-    await db.transaction(async (tx) => {
-      for (const update of batch) {
-        await tx.update(streams).set(update.values).where(eq(streams.id, update.stream.id));
-      }
-    });
+async function writeSingleBatchWithRetry(batch: PendingUpdate[], maxRetries = 3) {
+  let attempt = 0;
+  while (attempt < maxRetries) {
+    attempt += 1;
+    try {
+      await db.transaction(async (tx) => {
+        for (const update of batch) {
+          await tx.update(streams).set(update.values).where(eq(streams.id, update.stream.id));
+        }
+      });
+      return;
+    } catch (error) {
+      if (attempt >= maxRetries) throw error;
+      console.warn(`Échec d'écriture du lot (${attempt}/${maxRetries}), nouvelle tentative dans 2s...`, error);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
   }
 }
 
@@ -529,7 +537,31 @@ async function run() {
 
   const queue = [...targets];
   const pendingUpdates: PendingUpdate[] = [];
+  const writeQueue: PendingUpdate[] = [];
+  let isWriting = false;
   let completed = 0;
+  let written = 0;
+
+  async function flushWriteQueue(force = false) {
+    if (options.dryRun) return;
+    while (writeQueue.length >= UPDATE_BATCH_SIZE || (force && writeQueue.length > 0)) {
+      if (isWriting) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        continue;
+      }
+      isWriting = true;
+      try {
+        const batch = writeQueue.splice(0, UPDATE_BATCH_SIZE);
+        if (batch.length > 0) {
+          await writeSingleBatchWithRetry(batch);
+          written += batch.length;
+          console.log(`[Base de données] ${written}/${targets.length} flux synchronisés en base.`);
+        }
+      } finally {
+        isWriting = false;
+      }
+    }
+  }
 
   async function worker() {
     while (queue.length > 0) {
@@ -571,16 +603,21 @@ async function run() {
             retries: options.retries,
             origin: BROWSER_TEST_ORIGIN,
           });
-      pendingUpdates.push({
+      const updateItem: PendingUpdate = {
         stream,
         result,
         values: enforcedStaticDecision
           ? buildStaticReviewUpdate(enforcedStaticDecision, new Date())
           : buildVerificationUpdate(stream, result, new Date(), reviewedQuery),
-      });
+      };
+      pendingUpdates.push(updateItem);
+      writeQueue.push(updateItem);
       completed += 1;
+      if (writeQueue.length >= UPDATE_BATCH_SIZE) {
+        void flushWriteQueue();
+      }
       if (completed % 10 === 0 || completed === targets.length) {
-        console.log(`Progression: ${completed}/${targets.length}`);
+        console.log(`Progression: ${completed}/${targets.length} vérifiés (dont ${written} écrits en base)`);
       }
     }
   }
@@ -589,7 +626,13 @@ async function run() {
     Array.from({ length: Math.min(options.concurrency, targets.length) }, () => worker()),
   );
   if (!options.dryRun) {
-    await writeUpdatesInBatches(pendingUpdates);
+    while (isWriting) {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    await flushWriteQueue(true);
+    while (isWriting) {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
     const expiredAfterVerification = await expireStalePlaybackClassifications(
       new Date(),
     );

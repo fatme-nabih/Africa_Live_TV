@@ -496,3 +496,69 @@ vulnérable pour effectuer un retour arrière public.
 Restent hors périmètre : vrais comptes Clerk et paiements, correction de l'ordre
 Billing, migration Better Auth éventuelle, choix Railway, tests de charge,
 sauvegarde/restauration et migrations non réécrites sur base vierge.
+
+## Journal du Lot 3 — UX de lecture distante et fiabilisation (PROD-030) — 24 septembre 2026
+
+Périmètre : Adaptation de l'interface de lecture pour les environnements distants (staging.africatv.sn) et fiabilisation des flux web.
+
+### PROD-030 — UX de lecture distante et délai de démarrage web
+
+Statut : terminé.
+
+1. **Délai de démarrage web allongé et fiabilisé** :
+   - Le délai limite de démarrage `PLAYBACK_START_TIMEOUT_MS` a été porté de 8 000 ms à 15 000 ms dans `src/components/Player.tsx` pour permettre aux CDN distants et aux flux HLS de charger leur manifeste et leurs premiers segments sans basculer prématurément vers VLC, tout en conservant une réactivité optimale.
+   - Ajout d'une récupération automatique sur erreur réseau Hls.js (`hls.startLoad()`, jusqu'à 2 tentatives) avant d'échouer la tentative courante.
+   - Ajout de statuts de progression en direct lors de la mise en mémoire tampon ("Connexion au direct…", "Mise en mémoire tampon du flux…", "Chargement des segments vidéo…") pour informer l'utilisateur.
+
+2. **UX de lecture externe distante (staging/production)** :
+   - Suppression de l'appel local inopérant `POST /api/open-vlc` sur les environnements distants (`LOCAL_AUTOMATIC_PLAYBACK=false`).
+   - Résolution automatique de l'URL directe du flux via `POST /api/playback/resolutions` avec la destination `vlc-mobile`.
+   - Affichage de l'URL directe avec bouton de copie sécurisé en un clic ("Copier l'adresse du flux (M3U8)") utilisant `navigator.clipboard.writeText` avec confirmation visuelle immédiate ("Copié !").
+   - Instructions pas-à-pas claires pour ordinateur (VLC > Média > Ouvrir un flux réseau / Ctrl+N) et lien intent pour appareils mobiles Android/iOS.
+   - Conservation intégrale du comportement local MVP pour le poste de travail utilisateur (`LOCAL_AUTOMATIC_PLAYBACK=true`).
+
+3. **Validation et sécurité** :
+   - Scan Snyk SAST (`snyk_code_scan`) : 0 vulnérabilité détectée.
+   - `npm test` : 127 pass, 0 fail, 4 skipped.
+   - `npm run test:integration` : 4 pass, 0 fail.
+   - `npx tsc --noEmit --incremental false` : 0 erreur.
+   - `npm run lint` : 0 erreur, 2 avertissements préexistants dans `SeparatePlayerPage.tsx`.
+
+## Journal du Lot 3 — Re-qualification réelle du catalogue Railway (PROD-033) — 24 septembre 2026
+
+Périmètre : Synchronisation transactionnelle du catalogue vers PostgreSQL Railway et scan exhaustif des 12 396 flux avec contrôle CORS réel pour l'origine de staging (https://staging.africatv.sn).
+
+### PROD-033 — Re-qualification réelle du catalogue et actualisation des flux Railway
+
+Statut : terminé.
+
+1. **Synchronisation préalable du catalogue** :
+   - Synchronisation transactionnelle depuis `africa_live_dev` vers Railway via `sync-catalog-to-railway.ts` : catalogue aligné à 11 778 chaînes et 12 396 sources.
+   - Préservation stricte des 2 utilisateurs enregistrés et des favoris.
+   - Réinitialisation propre de tous les flux actifs à `UNTESTED` / `NEVER_CHECKED` (neutralisation des faux statuts).
+
+2. **Exécution du scan intégral sur Railway** :
+   - Commande exécutée : `npx tsx src/scripts/verify-streams.ts --all --concurrency 15` avec persistance par lots de 100 flux et réessai automatique (`writeSingleBatchWithRetry`).
+   - Origine de test : `https://staging.africatv.sn`.
+   - Durée d'exécution : **2 946,4 s (49,1 minutes)** avec 15 workers parallèles.
+   - Volume total : 12 396 sources traitées (11 819 contrôles réseau réels de manifestes, segments, redirections et CORS ; 577 décisions de sécurité statiques sans requête réseau).
+
+3. **Résultats réels mesurés sur PostgreSQL Railway** :
+   - Flux sains certifiés (`HEALTHY`) : **6 825 flux** (avec horodatage de succès frais du 24 septembre 2026 entre 20:33 et 21:12 UTC).
+     - `BROWSER_OK` (`PUBLIC_DIRECT_WEB`) : **4 385 flux** (CORS staging validé, segments vérifiés, 0 mixed content).
+     - `VLC_ONLY` (`PUBLIC_DIRECT_VLC`) : **2 440 flux** (flux HLS valides mais nécessitant un lecteur externe / HTTP).
+   - Flux en échec temporaire protégés (`UNTESTED` / `TEMPORARY_FAILURE` / `REVIEW_REQUIRED`) : **4 994 flux** (erreurs temporaires réseau, 404, timeouts, conservés pour re-contrôle conformément à la politique anti-dégradation).
+   - Flux en revue statique (`UNTESTED` / `NEVER_CHECKED` / `REVIEW_REQUIRED`) : **577 flux** (queries sensibles, fenêtres temporelles, domaines non supportés).
+   - Flux hors-ligne (`OFFLINE`) : **0 flux** (la politique impose des échecs répétés et espacés avant confirmation définitive hors-ligne).
+
+5. **Activation exclusive des flux certifiés dans l'application** :
+   - Conformément aux exigences UX de production, seuls les **6 825 flux sains certifiés** (4 385 BROWSER_OK et 2 440 VLC_ONLY) sont activés pour le rendu dans l'application sur les **6 396 chaînes** correspondantes.
+   - Les 5 571 flux en revue ou échec temporaire sont conservés en base (désactivés du catalogue actif) pour les cycles de recontrôle ultérieurs sans polluer l'expérience utilisateur.
+   - Les routes API `/api/channels` et `/api/filters` filtrent strictement sur `verification_state = 'HEALTHY'` et l'éligibilité directe publique.
+
+4. **Couverture catalogue et UX** :
+   - **4 339 chaînes distinctes** disposent d'au moins un flux direct web opérationnel.
+   - **2 103 chaînes distinctes** disposent d'un flux externe VLC.
+   - **Règle UX confirmée** : Aucun badge technique (`BROWSER_OK`, `VLC_ONLY`, `OFFLINE`) n'est affiché sur les cartes de chaînes. Le sélecteur technique « Statut » a été retiré de l'interface publique (`FilterSidebar.tsx`).
+
+

@@ -21,7 +21,7 @@ import {
 } from '@/lib/api-contracts';
 import { formatCountryName, formatLanguageName } from '@/lib/format';
 import { LatestRequestController } from '@/lib/latest-request';
-import { STREAM_STATUSES, type ChannelFilters, type StreamStatus } from '@/types/channel';
+import type { ChannelFilters } from '@/types/channel';
 
 interface FilterSidebarProps {
   onFilterChange: (filters: ChannelFilters) => void;
@@ -30,18 +30,6 @@ interface FilterSidebarProps {
   isOpenMobile?: boolean;
   onCloseMobile?: () => void;
 }
-const statusLabels: Partial<Record<StreamStatus, string>> = {
-  BROWSER_OK: 'Lecture web',
-  VLC_ONLY: 'VLC conseillé',
-  UNTESTED: 'À tester',
-};
-
-function toFilterStatus(value: string): ChannelFilters['status'] {
-  return value === '' || STREAM_STATUSES.includes(value as StreamStatus)
-    ? (value as ChannelFilters['status'])
-    : '';
-}
-
 export default function FilterSidebar({
   onFilterChange,
   showFavoritesOnly,
@@ -53,11 +41,9 @@ export default function FilterSidebar({
   const [country, setCountry] = useState('');
   const [group, setGroup] = useState('');
   const [language, setLanguage] = useState('');
-  const [status, setStatus] = useState<ChannelFilters['status']>('');
   const [countries, setCountries] = useState<string[]>([]);
   const [groups, setGroups] = useState<string[]>([]);
   const [languages, setLanguages] = useState<string[]>([]);
-  const [statuses, setStatuses] = useState<StreamStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const filterRequestsRef = useRef<LatestRequestController | null>(null);
@@ -74,7 +60,6 @@ export default function FilterSidebar({
       setCountries(data.countries);
       setGroups(data.groups);
       setLanguages(data.languages);
-      setStatuses(data.statuses.filter((availableStatus) => availableStatus !== 'OFFLINE'));
     } catch (requestError) {
       if (request.signal.aborted || !filterRequestsRef.current!.isCurrent(request.id)) return;
       setError(messageForApiError(requestError, 'Impossible de charger les options de filtre.'));
@@ -99,10 +84,10 @@ export default function FilterSidebar({
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      onFilterChange({ search, country, group, language, status });
+      onFilterChange({ search, country, group, language, status: '' });
     }, 300);
     return () => window.clearTimeout(timeoutId);
-  }, [onFilterChange, search, country, group, language, status]);
+  }, [onFilterChange, search, country, group, language]);
 
   useEffect(() => {
     if (!isOpenMobile) return;
@@ -125,7 +110,7 @@ export default function FilterSidebar({
           </h2>
         </div>
         <div className="flex items-center gap-2">
-          {(search || country || group || language || status || showFavoritesOnly) && (
+          {(search || country || group || language || showFavoritesOnly) && (
             <button
               type="button"
               onClick={() => {
@@ -133,7 +118,6 @@ export default function FilterSidebar({
                 setCountry('');
                 setGroup('');
                 setLanguage('');
-                setStatus('');
                 setShowFavoritesOnly(false);
               }}
               className="text-xs font-bold text-amber-400 hover:text-amber-300 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded px-1"
@@ -276,25 +260,6 @@ export default function FilterSidebar({
               .map(({ code, name }) => <option key={code} value={code} className="bg-zinc-950 text-zinc-100">{name}</option>)}
           </select>
           <LanguageIcon className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-zinc-400" aria-hidden="true" />
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <label htmlFor="catalog-status" className="text-xs font-bold uppercase tracking-wider text-zinc-400">Compatibilité</label>
-        <div className="relative">
-          <select
-            id="catalog-status"
-            value={status}
-            onChange={(event) => setStatus(toFilterStatus(event.target.value))}
-            disabled={loading && statuses.length === 0}
-            className="w-full appearance-none rounded-xl border border-zinc-800 bg-zinc-900/70 py-2.5 pl-10 pr-8 text-sm text-zinc-100 transition focus-visible:border-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/30"
-          >
-            <option value="">Tous les statuts</option>
-            {statuses.map((availableStatus) => (
-              <option key={availableStatus} value={availableStatus} className="bg-zinc-950 text-zinc-100">{statusLabels[availableStatus] ?? availableStatus}</option>
-            ))}
-          </select>
-          <FilterIcon className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-zinc-400" aria-hidden="true" />
         </div>
       </div>
 

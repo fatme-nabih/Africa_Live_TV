@@ -67,6 +67,11 @@ export function classifyHlsFailure({
 }
 
 export type MediaRecoveryAction = 'recover' | 'swap-and-recover' | 'fail';
+export type NetworkRecoveryAction = 'retry' | 'fail';
+
+export function nextNetworkRecoveryAction(recoveryCount: number): NetworkRecoveryAction {
+  return recoveryCount < 2 ? 'retry' : 'fail';
+}
 
 export function nextMediaRecoveryAction(recoveryCount: number): MediaRecoveryAction {
   if (recoveryCount === 0) return 'recover';

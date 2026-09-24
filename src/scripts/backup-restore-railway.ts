@@ -23,6 +23,10 @@ function postgresBinary(name: 'pg_dump' | 'pg_restore') {
   return path.join(directory, process.platform === 'win32' ? `${name}.exe` : name);
 }
 
+function isRailwaySshToolingEnabled() {
+  return process.env.RAILWAY_BACKUP_USE_SSH === 'true';
+}
+
 function assertRailwayBackupEnvironment() {
   let database: URL;
   try {
@@ -51,6 +55,9 @@ function assertRailwayBackupEnvironment() {
     throw new Error('RAILWAY_BACKUP_DATABASE_URL_INVALID');
   }
 
+  const privateSshTunnel = isRailwaySshToolingEnabled() &&
+    ['localhost', '127.0.0.1', '[::1]'].includes(database.hostname);
+
   if (
     process.env.RAILWAY_BACKUP_CONFIRMED_ROLE !== 'staging' ||
     !process.env.RAILWAY_PROJECT_ID ||
@@ -58,7 +65,7 @@ function assertRailwayBackupEnvironment() {
     !process.env.RAILWAY_ENVIRONMENT_ID ||
     !process.env.RAILWAY_SERVICE_ID ||
     !['postgres:', 'postgresql:'].includes(database.protocol) ||
-    ['localhost', '127.0.0.1', '[::1]'].includes(database.hostname) ||
+    (!privateSshTunnel && ['localhost', '127.0.0.1', '[::1]'].includes(database.hostname)) ||
     database.pathname !== '/railway'
   ) {
     throw new Error('RAILWAY_BACKUP_ENVIRONMENT_REFUSED');
@@ -100,6 +107,56 @@ function runBinary(file: string, args: string[], env: NodeJS.ProcessEnv) {
       else reject(new Error(`POSTGRES_TOOL_EXIT_${code}: ${redactedError(errorOutput)}`));
     });
   });
+}
+
+async function runRailwayPostgresTool(
+  name: 'pg_dump' | 'pg_restore',
+  args: string[],
+  options: { inputFile?: string; outputFile?: string } = {},
+) {
+  const service = process.env.RAILWAY_BACKUP_SSH_SERVICE ?? 'Postgres';
+  const railwayExecutable = process.platform === 'win32' ? process.execPath : 'railway';
+  const railwayArguments = process.platform === 'win32'
+    ? [
+        path.join(
+          process.env.APPDATA ?? '',
+          'npm',
+          'node_modules',
+          '@railway',
+          'cli',
+          'bin',
+          'railway.js',
+        ),
+      ]
+    : [];
+  const child = spawn(
+    railwayExecutable,
+    [...railwayArguments, 'ssh', '--service', service, '--', name, ...args],
+    {
+      env: process.env,
+      stdio: [options.inputFile ? 'pipe' : 'ignore', options.outputFile ? 'pipe' : 'ignore', 'pipe'],
+      windowsHide: true,
+    },
+  );
+  let errorOutput = '';
+  child.stderr?.on('data', chunk => {
+    errorOutput += String(chunk).slice(0, 2_000);
+  });
+
+  const input = options.inputFile && child.stdin
+    ? pipeline(createReadStream(options.inputFile), child.stdin)
+    : Promise.resolve();
+  const output = options.outputFile && child.stdout
+    ? pipeline(child.stdout, createWriteStream(options.outputFile, { flags: 'wx' }))
+    : Promise.resolve();
+  const code = await new Promise<number | null>((resolve, reject) => {
+    child.once('error', reject);
+    child.once('exit', resolve);
+  });
+  await Promise.all([input, output]);
+  if (code !== 0) {
+    throw new Error(`RAILWAY_${name.toUpperCase()}_EXIT_${code}: ${redactedError(errorOutput)}`);
+  }
 }
 
 function runPowerShell(script: string, input: string) {
@@ -209,11 +266,19 @@ async function run() {
 
   try {
     const source = await inventory(sourcePool);
-    await runBinary(
-      postgresBinary('pg_dump'),
-      ['--format=custom', '--no-owner', '--no-acl', '--file', plainDumpPath],
-      postgresEnvironment(database, 'railway'),
-    );
+    if (isRailwaySshToolingEnabled()) {
+      await runRailwayPostgresTool(
+        'pg_dump',
+        ['--format=custom', '--no-owner', '--no-acl', '--dbname=railway'],
+        { outputFile: plainDumpPath },
+      );
+    } else {
+      await runBinary(
+        postgresBinary('pg_dump'),
+        ['--format=custom', '--no-owner', '--no-acl', '--file', plainDumpPath],
+        postgresEnvironment(database, 'railway'),
+      );
+    }
 
     const plainDigest = await sha256(plainDumpPath);
     const key = randomBytes(32);
@@ -234,11 +299,19 @@ async function run() {
 
     await adminPool.query(`create database "${scratchName}"`);
     scratchCreated = true;
-    await runBinary(
-      postgresBinary('pg_restore'),
-      ['--dbname', scratchName, '--no-owner', '--no-acl', '--exit-on-error', restoredDumpPath],
-      postgresEnvironment(database, scratchName),
-    );
+    if (isRailwaySshToolingEnabled()) {
+      await runRailwayPostgresTool(
+        'pg_restore',
+        ['--dbname', scratchName, '--no-owner', '--no-acl', '--exit-on-error'],
+        { inputFile: restoredDumpPath },
+      );
+    } else {
+      await runBinary(
+        postgresBinary('pg_restore'),
+        ['--dbname', scratchName, '--no-owner', '--no-acl', '--exit-on-error', restoredDumpPath],
+        postgresEnvironment(database, scratchName),
+      );
+    }
 
     scratchPool = new Pool({
       connectionString: databaseUrl(database, scratchName).toString(),
@@ -258,6 +331,7 @@ async function run() {
       createdAt: now.toISOString(),
       algorithm: 'aes-256-gcm',
       keyProtection: 'windows-dpapi-current-user',
+      transport: isRailwaySshToolingEnabled() ? 'railway-ssh-private-tunnel' : 'postgres-public-proxy',
       iv: iv.toString('base64'),
       authTag: authTag.toString('base64'),
       plainSha256: plainDigest,

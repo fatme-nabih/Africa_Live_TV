@@ -3,6 +3,7 @@ import {
   asc,
   eq,
   gt,
+  gte,
   inArray,
   or,
   sql,
@@ -157,10 +158,14 @@ export async function POST(request: Request) {
       .where(
         and(
           eq(streams.active, true),
+          eq(streams.verificationState, 'HEALTHY'),
+          inArray(streams.status, PLAYABLE_STATUSES),
+          inArray(streams.directEligibility, PUBLIC_DIRECT_ELIGIBILITIES),
+          gte(streams.lastSuccessAt, freshnessCutoffDate.toISOString()),
           status ? eq(streams.status, status) : undefined,
         ),
       );
-    if (status) conditions.push(inArray(channels.id, matchingChannelIds));
+    conditions.push(inArray(channels.id, matchingChannelIds));
 
     const baseWhere = and(...conditions);
     const scanBatchSize = Math.max(limit * 4, 120);
@@ -207,6 +212,10 @@ export async function POST(request: Request) {
         .where(
           and(
             eq(streams.active, true),
+            eq(streams.verificationState, 'HEALTHY'),
+            inArray(streams.status, PLAYABLE_STATUSES),
+            inArray(streams.directEligibility, PUBLIC_DIRECT_ELIGIBILITIES),
+            gte(streams.lastSuccessAt, freshnessCutoffDate.toISOString()),
             inArray(streams.channelId, channelIds),
             status ? eq(streams.status, status) : undefined,
           ),
@@ -221,11 +230,12 @@ export async function POST(request: Request) {
 
       for (const channel of rows) {
         const channelStreams = streamsByChannelId.get(channel.id) ?? [];
+        if (channelStreams.length === 0) continue;
         const availabilityStatus = resolveChannelAvailability(
           channelStreams,
           freshnessCutoffDate,
         );
-        if (availabilityStatus === 'OFFLINE') continue;
+        if (availabilityStatus !== 'READY') continue;
 
         const freshPublicStreams = channelStreams.filter((stream) => {
           const lastSuccessAt = stream.lastSuccessAt

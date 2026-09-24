@@ -60,3 +60,12 @@ test('the client cannot manufacture or download an M3U playlist', () => {
     }
   }
 });
+
+test('the public catalogue does not expose technical stream-status filters', () => {
+  const sidebar = readFileSync(
+    join(sourceRoot, 'components', 'FilterSidebar.tsx'),
+    'utf8',
+  );
+
+  assert.doesNotMatch(sidebar, /catalog-status|BROWSER_OK|VLC_ONLY|OFFLINE|UNTESTED/);
+});
