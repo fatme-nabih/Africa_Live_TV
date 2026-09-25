@@ -659,7 +659,7 @@ export const subscriptions = pgTable(
     providerCustomerId: text('provider_customer_id'),
     providerSubscriptionId: text('provider_subscription_id'),
     providerPriceId: text('provider_price_id'),
-    planCode: text('plan_code').notNull().default('lumina_all_access_monthly'),
+    planCode: text('plan_code').notNull().default('lumina_all_access_monthly', 'lumina_all_access_annual'),
     status: text('status').notNull(),
     currentPeriodStart: timestampWithTimezone('current_period_start'),
     currentPeriodEnd: timestampWithTimezone('current_period_end'),
@@ -691,11 +691,11 @@ export const subscriptions = pgTable(
     index('subscriptions_user_status_idx').on(table.userId, table.status),
     check(
       'subscriptions_provider_check',
-      sql`${table.provider} in ('paddle', 'clerk_billing')`,
+      sql`${table.provider} in ('paddle', 'clerk_billing', 'naboopay')`,
     ),
     check(
       'subscriptions_plan_code_check',
-      sql`${table.planCode} in ('lumina_all_access_monthly')`,
+      sql`${table.planCode} in ('lumina_all_access_monthly', 'lumina_all_access_annual')`,
     ),
     check(
       'subscriptions_status_check',
@@ -915,3 +915,21 @@ export const paddleCustomersRelations = relations(paddleCustomers, ({ one }) => 
     references: [users.id],
   }),
 }));
+
+export const naboopayTransactions = pgTable('naboopay_transactions', {
+  orderId: text('order_id').primaryKey(),
+  userId: text('user_id').notNull(),
+  planCode: text('plan_code').notNull(),
+  amount: integer('amount').notNull(),
+  status: text('status').notNull(),
+  payload: jsonb('payload').notNull(),
+  createdAt: timestampWithTimezone('created_at').notNull().defaultNow(),
+  updatedAt: timestampWithTimezone('updated_at').notNull().defaultNow(),
+}, (table) => [
+  foreignKey({
+    name: 'naboopay_transactions_user_id_fkey',
+    columns: [table.userId],
+    foreignColumns: [users.id],
+  }).onDelete('cascade'),
+]);
+

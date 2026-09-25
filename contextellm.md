@@ -399,3 +399,14 @@ Commandes ou actions à ne pas exécuter sans l'étape et l'autorisation adéqua
 - [x] Interface publique épurée : retrait du filtre technique de statut dans `FilterSidebar.tsx` ; aucun badge technique brut exposé publiquement.
 - [x] Parcours complet de lecture web et VLC validé avec succès sur ordinateur (PC) et téléphone mobile.
 - [x] Déploiement Railway Staging `ddc78ef6-f449-4b46-a23f-b725b5ae8271` réussi (commit `3a325ab`), migrations Drizzle appliquées et healthcheck HTTP 200 vérifié.
+
+### Clôture de la Phase Lot 2 — Identités, Abonnements et Paiements NabooPay (25 septembre 2026)
+
+- [x] Pivot stratégique : remplacement de Clerk Billing par **NabooPay** pour supporter les paiements locaux (Orange Money, Wave) et internationaux (Visa/Mastercard).
+- [x] PROD-020 : Intégration de l'API NabooPay v2 et gestion idempotente des Webhooks (HMAC SHA256) via la table 
+aboopay_transactions.
+- [x] PROD-021 : Synchronisation du cycle de vie des identités Clerk (suppression d'utilisateur expresse marquant les abonnements existants comme \xpired\).
+- [x] PROD-022 : Création de la page \/pricing\ moderne proposant les forfaits Mensuel (990 FCFA) et Annuel (9 900 FCFA), avec redirection sécurisée vers NabooPay Checkout.
+- [x] Code mort et logique propre à Clerk Billing supprimés de la base de données (ajout de la contrainte provider \
+aboopay\) et du code source.
+

@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { and, eq, isNull, lte, or } from 'drizzle-orm';
 
 import { db } from '@/db';
-import { sessions, users } from '@/db/schema';
+import { sessions, subscriptions, users } from '@/db/schema';
 
 import { TRIAL_DURATION_DAYS } from './access-policy';
 
@@ -106,15 +106,28 @@ export async function ensureInternalUser(clerkUserId: string) {
 
 export async function markClerkUserDeleted(clerkUserId: string) {
   const now = new Date().toISOString();
-  return db
-    .update(users)
-    .set({
-      status: 'deleted',
-      email: null,
-      updatedAt: now,
-      clerkSyncedAt: now,
-    })
-    .where(eq(users.clerkUserId, clerkUserId));
+  await db.transaction(async (tx) => {
+    const [user] = await tx
+      .update(users)
+      .set({
+        status: 'deleted',
+        email: null,
+        updatedAt: now,
+        clerkSyncedAt: now,
+      })
+      .where(eq(users.clerkUserId, clerkUserId))
+      .returning();
+
+    if (user) {
+      await tx
+        .update(subscriptions)
+        .set({
+          status: 'expired',
+          updatedAt: now,
+        })
+        .where(eq(subscriptions.userId, user.id));
+    }
+  });
 }
 
 export async function syncClerkSession(input: ClerkSessionInput) {

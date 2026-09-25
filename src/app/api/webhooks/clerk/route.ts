@@ -7,11 +7,6 @@ import {
   syncClerkSession,
   syncClerkUser,
 } from '@/lib/identity';
-import { CLERK_BILLING_EVENT_TYPES } from '@/lib/clerk-billing';
-import {
-  processVerifiedClerkBillingEvent,
-  UnknownBillingUserError,
-} from '@/lib/clerk-billing-sync';
 import { structuredLog } from '@/lib/structured-log';
 
 export const runtime = 'nodejs';
@@ -85,47 +80,7 @@ export async function POST(request: NextRequest) {
       expiresAt: event.data.expire_at ? new Date(event.data.expire_at) : null,
       endedAt: status === 'created' ? null : new Date(event.data.updated_at),
     });
-  } else if (
-    CLERK_BILLING_EVENT_TYPES.includes(
-      event.type as (typeof CLERK_BILLING_EVENT_TYPES)[number],
-    )
-  ) {
-    const messageId = request.headers.get('svix-id');
-    if (!messageId) {
-      return NextResponse.json({ error: 'Missing webhook message identifier' }, { status: 400 });
-    }
-    try {
-      const result = await processVerifiedClerkBillingEvent({ messageId, event });
-      structuredLog('info', 'billing.clerk.webhook_processed', {
-        messageId,
-        eventType: event.type,
-        duplicate: result.duplicate,
-        status: result.status,
-        reason: result.reason,
-      });
-      return NextResponse.json(
-        { ok: true, duplicate: result.duplicate, status: result.status },
-        { status: result.status === 'ignored' ? 202 : 200 },
-      );
-    } catch (error) {
-      if (error instanceof UnknownBillingUserError) {
-        structuredLog('warn', 'billing.clerk.user_not_ready', {
-          messageId,
-          eventType: event.type,
-        });
-        return NextResponse.json(
-          { error: 'Billing user is not synchronized yet' },
-          { status: 503, headers: { 'Retry-After': '30' } },
-        );
-      }
-      structuredLog('error', 'billing.clerk.webhook_failed', {
-        messageId,
-        eventType: event.type,
-        errorName: error instanceof Error ? error.name : 'UnknownError',
-      });
-      return NextResponse.json({ error: 'Billing webhook processing failed' }, { status: 500 });
-    }
   }
-
+  
   return NextResponse.json({ ok: true });
 }
