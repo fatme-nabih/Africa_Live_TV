@@ -81,6 +81,7 @@ test('a failed browser source is replaced before falling back to VLC', async ({ 
 });
 
 test('three failed web sources trigger one automatic VLC launch', async ({ page }) => {
+  await page.clock.install();
   const intents = await mockVlc(page);
   let attempts = 0;
   await page.route('**/api/playback/resolutions', route => {
@@ -89,7 +90,8 @@ test('three failed web sources trigger one automatic VLC launch', async ({ page 
   });
   await page.route('https://failure.fixture.test/**', route => route.fulfill({ status: 404 }));
   await page.goto('/player/test-fallback');
-  await expect(page.getByRole('heading', { name: 'VLC lancé' })).toBeVisible({ timeout: 20_000 });
+  await page.clock.fastForward(60_000);
+  await expect(page.getByRole('heading', { name: 'VLC lancé' })).toBeVisible();
   expect(attempts).toBe(3);
   expect(intents).toHaveLength(1);
 });
