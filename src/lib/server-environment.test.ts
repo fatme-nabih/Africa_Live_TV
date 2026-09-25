@@ -10,7 +10,7 @@ function validProduction(): Record<string, string> {
     LOCAL_DEV_MODE: 'false', NEXT_PUBLIC_LOCAL_DEV_MODE: 'false', ENABLE_LOCAL_VLC: 'false',
     NEXT_PUBLIC_APP_URL: 'https://tv.africa-live.test', PLAYBACK_ELIGIBILITY_READY: 'false',
     ABUSE_HASH_SECRET: randomBytes(32).toString('hex'), CATALOG_CURSOR_SECRET: randomBytes(32).toString('hex'),
-    ABUSE_TRUSTED_PROXY_HEADER: 'disabled',
+    ABUSE_TRUSTED_PROXY_HEADER: 'x-forwarded-for',
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: `pk_live_${Buffer.from('clerk.africa-live.test$').toString('base64')}`,
     CLERK_SECRET_KEY: `sk_live_${randomBytes(24).toString('hex')}`,
     CLERK_WEBHOOK_SIGNING_SECRET: `whsec_${randomBytes(24).toString('base64')}`,
@@ -43,7 +43,7 @@ test('production permits a closed playback gate but rejects unsafe configuration
     { CATALOG_CURSOR_SECRET: valid.ABUSE_HASH_SECRET }, { CLERK_SECRET_KEY: 'sk_test_local-placeholder' },
     { NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: 'pk_live_Y2ktdGVzdC5jb20k' },
     { CLERK_WEBHOOK_SIGNING_SECRET: undefined }, { CLERK_BILLING_PLAN_SLUG: undefined },
-    { ABUSE_TRUSTED_PROXY_HEADER: 'arbitrary' }, { INTEGRATION_TEST_DATABASE: 'africa_live_dev' },
+    { ABUSE_TRUSTED_PROXY_HEADER: 'arbitrary' }, { ABUSE_TRUSTED_PROXY_HEADER: 'disabled' }, { INTEGRATION_TEST_DATABASE: 'africa_live_dev' },
     { L3_INTEGRATION_TEST: '1' }, { DEPLOYMENT_ENV: 'local' },
   ]) assert.throws(() => validateServerEnvironment({ ...valid, ...overrides }), EnvironmentValidationError);
 });

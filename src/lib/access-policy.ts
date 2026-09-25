@@ -1,4 +1,4 @@
-export const TRIAL_DURATION_DAYS = 14;
+export const TRIAL_DURATION_DAYS = 5;
 export const PAYMENT_GRACE_DAYS = 3;
 
 export type AccessStatus =
