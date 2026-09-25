@@ -1,0 +1,76 @@
+config:
+  target: "http://localhost:3001"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      rampTo: 20
+      name: "Ramp up to 20 req/s"
+    - duration: 1740
+      arrivalRate: 20
+      name: "Sustained load at 20 req/s for 29 mins"
+  environments:
+    staging:
+      target: "https://staging.africatv.sn"
+  http:
+    timeout: 10
+  ensure:
+    p95: 1000
+    maxErrorRate: 1
+  payload:
+    # A CSV or something if needed. We don't have one, we'll just hit the endpoints.
+
+scenarios:
+  - name: "Catalogue navigation and stream resolution"
+    weight: 10
+    flow:
+      # Step 1: Healthcheck (lightweight)
+      - get:
+          url: "/api/health"
+
+      # Step 2: Fetch the catalogue
+      - post:
+          url: "/api/channels"
+          json:
+            search: ""
+            country: ""
+            group: ""
+            language: ""
+            status: ""
+            favoritesOnly: false
+            cursor: null
+            limit: 30
+          capture:
+            - json: "$.channels[0].id"
+              as: "firstChannelId"
+            - json: "$.channels[1].id"
+              as: "secondChannelId"
+
+      - think: 2
+
+      # Step 3: Fetch filters
+      - get:
+          url: "/api/filters"
+
+      - think: 3
+
+      # Step 4: Resolve a stream without fetching media
+      - post:
+          url: "/api/playback/resolutions"
+          ifTrue: "firstChannelId"
+          json:
+            channelId: "{{ firstChannelId }}"
+            destination: "web"
+            playbackSessionId: null
+            previousAttemptId: null
+
+      - think: 5
+
+      # Step 5: Resolve another stream
+      - post:
+          url: "/api/playback/resolutions"
+          ifTrue: "secondChannelId"
+          json:
+            channelId: "{{ secondChannelId }}"
+            destination: "vlc-mobile"
+            playbackSessionId: null
+            previousAttemptId: null

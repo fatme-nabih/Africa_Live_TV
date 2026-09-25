@@ -2,8 +2,8 @@ import { expect, test } from '@playwright/test';
 
 test('landing page offers sign-in and sign-up without exposing the catalogue', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: /Votre prochain rendez-vous/ })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Créer mon compte' })).toHaveAttribute('href', '/sign-up');
+  await expect(page.getByRole('heading', { name: /L’Afrique et le monde/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Commencer', exact: true })).toHaveAttribute('href', '/sign-up');
   await expect(page.getByRole('link', { name: 'Se connecter' }).first()).toHaveAttribute('href', '/sign-in');
   await expect(page.getByRole('link', { name: 'Administration', exact: true })).toHaveCount(0);
   await expect(page.locator('#catalogue')).toHaveCount(0);

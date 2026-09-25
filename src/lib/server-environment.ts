@@ -56,6 +56,7 @@ export function validateServerEnvironment(env: Environment) {
   }
 
   if (productionRuntime) {
+    if (proxy === 'disabled') issues.push('ABUSE_TRUSTED_PROXY_HEADER must be configured in deployed environments (e.g., x-forwarded-for).');
     if (!['production', 'staging'].includes(deployment)) issues.push('DEPLOYMENT_ENV must be production or staging.');
     for (const name of ['LOCAL_DEV_MODE', 'NEXT_PUBLIC_LOCAL_DEV_MODE', 'ENABLE_LOCAL_VLC']) {
       if (env[name] !== 'false') issues.push(`${name} must explicitly be false in a deployed server.`);

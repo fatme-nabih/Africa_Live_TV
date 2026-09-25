@@ -8,6 +8,7 @@ import {
   lt,
   lte,
   or,
+  sql,
   type SQL,
 } from 'drizzle-orm';
 
@@ -20,6 +21,7 @@ import {
 } from '../lib/direct-eligibility';
 import { STREAM_FRESHNESS_TTL_MS } from '../lib/stream-freshness';
 import { failedVerificationTransition } from '../lib/stream-verification-policy';
+import { structuredLog } from '../lib/structured-log';
 import { STREAM_STATUSES, type StreamStatus } from '../types/channel';
 
 const DEFAULT_CONCURRENCY = 10;
@@ -48,6 +50,7 @@ type VerifyOptions = {
   repair: boolean;
   reviewMode: 'cookie-independent' | 'generic-query' | 'time-window-query' | null;
   dryRun: boolean;
+  worker: boolean;
 };
 
 type TargetStream = {
@@ -130,6 +133,7 @@ Options:
   --retries <n>        Relances après erreur temporaire. Défaut: ${DEFAULT_RETRIES}.
   --recheck-days <n>   Force une validité historique basée sur last_checked_at.
   --dry-run            Vérifie sans écrire en base.
+  --worker             Exécute avec un verrou exclusif, enregistre un rapport d'exécution (CRON).
   --help               Affiche cette aide.
 `);
 }
@@ -149,6 +153,7 @@ export function parseVerifyArgs(args: string[]): VerifyOptions {
     repair: false,
     reviewMode: null,
     dryRun: false,
+    worker: false,
   };
 
   for (let index = 0; index < args.length; index += 1) {
@@ -162,6 +167,9 @@ export function parseVerifyArgs(args: string[]): VerifyOptions {
         process.exit(0);
       case '--dry-run':
         options.dryRun = true;
+        break;
+      case '--worker':
+        options.worker = true;
         break;
       case '--revalidate-direct':
         options.revalidateDirect = true;
@@ -444,6 +452,17 @@ async function run() {
   const options = parseVerifyArgs(process.argv.slice(2));
   const now = new Date();
 
+  if (options.worker) {
+    const lockResult = await db.execute<{ locked: boolean }>(
+      sql`select pg_try_advisory_lock(hashtext('worker_verify_streams')) as locked`
+    );
+    if (!lockResult.rows[0]?.locked) {
+      console.log('Un autre worker est déjà en cours d\'exécution. Arrêt.');
+      return;
+    }
+    console.log('Verrou worker_verify_streams acquis.');
+  }
+
   async function selectTargets() {
     const conditions: SQL[] = [eq(streams.active, true), eq(channels.active, true)];
     if (options.revalidateDirect) {
@@ -686,6 +705,20 @@ async function run() {
   console.log(`Motifs de contrôle: ${JSON.stringify(failureReasonCounts)}`);
   console.log(`Écritures: ${options.dryRun ? 'aucune (dry-run)' : `lots de ${UPDATE_BATCH_SIZE}`}`);
   console.log(`Durée: ${((Date.now() - startedAt) / 1000).toFixed(1)}s`);
+
+  if (options.worker) {
+    structuredLog('info', 'stream.verification.worker.completed', {
+      durationSeconds: (Date.now() - startedAt) / 1000,
+      checked: targets.length,
+      healthy,
+      temporary,
+      confirmed,
+      redirects,
+      cookies,
+      eligibilityCounts: JSON.stringify(eligibilityCounts),
+      dryRun: options.dryRun,
+    });
+  }
 }
 
 if (process.env.NODE_ENV !== 'test') {

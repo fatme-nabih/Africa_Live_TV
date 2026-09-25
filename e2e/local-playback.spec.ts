@@ -100,7 +100,7 @@ test('missing VLC displays an error and an explicit retry creates a new intent',
   await page.goto('/player/test-missing');
   await expect(page.getByText(/VLC est introuvable/)).toBeVisible();
   expect(intents).toHaveLength(1);
-  await page.getByRole('button', { name: 'VLC', exact: true }).click();
+  await page.getByRole('button', { name: /lancer vlc/i }).click();
   await expect.poll(() => intents.length).toBe(2);
   expect(intents[0].launchId).not.toBe(intents[1].launchId);
 });

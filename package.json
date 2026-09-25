@@ -38,9 +38,10 @@
     "inventory:media": "tsx src/scripts/inventory-secure-media.ts",
     "poc:media": "tsx src/scripts/poc-secure-media-transport.ts",
     "capacity:media": "tsx src/scripts/estimate-media-capacity.ts",
-    "telemetry:retention": "tsx src/scripts/retain-playback-telemetry.ts",
-    "abuse:cleanup": "tsx src/scripts/cleanup-abuse-counters.ts",
+    "worker:maintenance": "tsx src/scripts/run-maintenance.ts",
     "verify:streams": "tsx src/scripts/verify-streams.ts",
+    "worker:verify": "tsx src/scripts/verify-streams.ts --worker",
+    "simulate:incident": "tsx src/scripts/simulate-incident.ts",
     "diagnose:local": "tsx src/scripts/diagnose-local.ts",
     "setup:local": "tsx src/scripts/setup-local.ts"
   },

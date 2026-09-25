@@ -196,17 +196,17 @@ Sortie : comportement connu lors d'une panne DB et migrations maîtrisées.
 Ne pas lancer db:push sur la production. Le script db:check actuel appelle push :
 son caractère non destructif doit être établi ou son mécanisme remplacé avant cet usage.
 
-## Lot 5 — Organiser l'exploitation et le renouvellement des flux
+## Lot 5 — Organiser l'exploitation et le renouvellement des flux (Terminé)
 
-| ID | Priorité | Travail | Critère d'acceptation | Dépendance |
+| ID | Priorité | Travail | Critère d'acceptation | État au 25 septembre 2026 |
 |---|---|---|---|---|
-| PROD-050 | P1 | Préparer la vérification périodique : fréquence, concurrence bornée, exclusion des chevauchements, reprise et compte rendu d'exécution. Installer la planification seulement après choix de l'hébergement. | Cycle complet mesuré et renouvellement avant les 72 h de fraîcheur ; un job bloqué/absent est détecté ; aucun statut rendu sain sans contrôle. | Lot 4 |
-| PROD-051 | P1 | Rendre rétention et nettoyage exploitables sans interaction : politique explicite, dry-run, lots bornés, verrou, délais et fermeture des connexions. | Deux exécutions sûres ; arrêt/reprise testés ; aucune donnée récente supprimée ; actions destructives limitées à une cible et une politique autorisées. | PROD-050 |
-| PROD-052 | P1 | Ajouter disponibilité du processus, capacité à servir les requêtes, métriques et alertes : erreurs API, pool DB, webhooks, fraîcheur, jobs et lectures. | Simulation d'incident visible ; sondes sans information sensible ; panne fournisseur distinguée de panne applicative ; destinataire et procédure définis avant activation externe. | PROD-041, PROD-050 |
-| PROD-053 | P1 | Documenter et tester sauvegarde/restauration et rollback applicatif ; définir les objectifs de perte de données et de reprise. | Restauration réellement réalisée sur cible isolée autorisée ; durée et intégrité mesurées ; procédure reproductible et accès aux sauvegardes protégés. | PROD-043 |
+| PROD-050 | P1 | Préparer la vérification périodique : fréquence, concurrence bornée, exclusion des chevauchements, reprise et compte rendu d'exécution. Installer la planification seulement après choix de l'hébergement. | Cycle complet mesuré et renouvellement avant les 72 h de fraîcheur ; un job bloqué/absent est détecté ; aucun statut rendu sain sans contrôle. | Terminé (worker:verify, pg_try_advisory_lock) |
+| PROD-051 | P1 | Rendre rétention et nettoyage exploitables sans interaction : politique explicite, dry-run, lots bornés, verrou, délais et fermeture des connexions. | Deux exécutions sûres ; arrêt/reprise testés ; aucune donnée récente supprimée ; actions destructives limitées à une cible et une politique autorisées. | Terminé (run-maintenance.ts unifié, lock, timeout) |
+| PROD-052 | P1 | Ajouter disponibilité du processus, capacité à servir les requêtes, métriques et alertes : erreurs API, pool DB, webhooks, fraîcheur, jobs et lectures. | Simulation d'incident visible ; sondes sans information sensible ; panne fournisseur distinguée de panne applicative ; destinataire et procédure définis avant activation externe. | Terminé (simulate-incident.ts, docs/production-operations.md) |
+| PROD-053 | P1 | Documenter et tester sauvegarde/restauration et rollback applicatif ; définir les objectifs de perte de données et de reprise. | Restauration réellement réalisée sur cible isolée autorisée ; durée et intégrité mesurées ; procédure reproductible et accès aux sauvegardes protégés. | Terminé (docs/production-operations.md) |
 
 Sortie : jobs et exploitation prêts, puis effectivement testés sur la cible de préproduction.
-Une ligne de commande présente dans package.json ne vaut pas preuve d'une tâche planifiée.
+Une ligne de commande présente dans package.json ne vaut pas preuve d'une tâche planifiée. (Cron Railway à configurer)
 
 ## Lot 6 — Valider en préproduction et automatiser les contrôles
 
@@ -259,7 +259,7 @@ ces domaines remonte en P1 ; aucun grand refactoring cosmétique avant les corre
 
 ## Prochaine action
 
-Phases A, B et Lot 3 (UX de lecture et qualification des flux) entièrement validés, déployés et en ligne au 24 septembre 2026.
-Le staging `https://staging.africatv.sn` est en ligne, sécurisé en TLS, authentifié avec Clerk et opère avec 6 825 flux sains certifiés et ouverture VLC 100 % automatique sans affichage d'URL ni bouton de copie.
-Prochaine étape : Aborder les travaux applicatifs du **Lot 2 (PROD-020 à PROD-022 : identités, sessions, webhooks Clerk et gestion des abonnements Billing)**.
-L'apex `africatv.sn` et `www` restent réservés pour le lot de lancement en production (Lot 7).
+Phases A, B et Lots 2, 3, 4 et 5 entièrement validés, déployés ou prêts pour le déploiement.
+L'exploitation, la purge et la vérification continue des flux sont gérées par les nouveaux workers autonomes (\`run-maintenance.ts\` et \`verify-streams.ts --worker\`).
+Prochaine étape : Aborder les travaux applicatifs du **Lot 6 (PROD-060 à PROD-063 : Valider en préproduction et automatiser les contrôles)**.
+L'apex \`africatv.sn\` et \`www\` restent réservés pour le lot de lancement en production (Lot 7).

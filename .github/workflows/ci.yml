@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: africa_live_dev
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: africa_live_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://africa_live_dev:password@localhost:5432/africa_live_dev
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
+      CLERK_SECRET_KEY: sk_test_123456789
+      DEPLOYMENT_ENV: local
+      NABOOPAY_CLIENT_ID: fake_client
+      NABOOPAY_CLIENT_SECRET: fake_secret
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Check Linting
+      run: npm run lint
+
+    - name: Check Types
+      run: npx tsc --noEmit --incremental false
+
+    - name: Apply Database Schema
+      run: npx drizzle-kit push
+
+    - name: Unit Tests
+      run: npm test
+
+    - name: Integration Tests
+      run: npm run test:integration
+
+    - name: Build
+      run: npm run build
+
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps chromium
+
+    - name: E2E Tests
+      run: npx playwright test e2e/auth-entry.spec.ts e2e/catalogue.spec.ts
+      env:
+        E2E_EXTERNAL_SERVER: 'false'

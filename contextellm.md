@@ -419,3 +419,10 @@ aboopay\) et du code source.
 - [x] PROD-042 : Ajout et validation des index composites (channels_active_name_id_idx et streams_availability_idx) limitant le temps de réponse du catalogue à ~10ms via Bitmap Index Scan.
 - [x] PROD-043 : Remplacement du mécanisme destructif de dérive par drizzle-kit generate (script db:check non destructif) et validation de l'environnement explicite pour le push des migrations.
 
+
+### Clôture de la Phase Lot 5 - Vérification périodique et jobs (25 septembre 2026)
+
+- [x] PROD-050 : Ajout du worker de vérification avec concurrence bornée, verrou consultatif et reprise automatisée.
+- [x] PROD-051 : Consolidation du nettoyage (télémétrie/abus) dans un script \un-maintenance.ts\ autonome avec lots de suppression, verrou exclusif et sécurité des connexions.
+- [x] PROD-052 & PROD-053 : Simulation d'incidents (simulate-incident.ts) pour valider l'observabilité externe des métriques. Ajout des objectifs de sauvegarde/restauration.
+

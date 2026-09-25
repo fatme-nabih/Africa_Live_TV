@@ -606,3 +606,33 @@ pm test\ : 126 pass (0 échec).
 px tsc\ : 0 erreur de typage.
   - Snyk \snyk_code_scan\ appliqué et validé sans risque de déni de service.
 
+
+## Journal du Lot 5 — Vérification périodique et jobs (PROD-050 à PROD-053) — 25 septembre 2026
+
+Périmètre : Organisation de l'exploitation continue, renouvellement automatique des flux (worker), et nettoyage de la télémétrie sans interaction.
+
+### PROD-050 — Worker de vérification périodique
+Statut : terminé.
+- Ajout du mode \--worker\ à \erify-streams.ts\.
+- Implémentation d'un verrou exclusif PostgreSQL (\pg_try_advisory_lock('worker_verify_streams')\) empêchant les chevauchements de jobs sur plusieurs instances Railway.
+- Sélection automatique des flux nécessitant un recontrôle (\
+ext_check_at <= now()\).
+- Compte rendu d'exécution structuré JSON (\stream.verification.worker.completed\) émis à la fin du run.
+- Ajout de la commande \
+pm run worker:verify\.
+
+### PROD-051 — Script de nettoyage unifié (Maintenance)
+Statut : terminé.
+- Création de \un-maintenance.ts\ consolidant la purge des événements, de la télémétrie et des abus, conçu pour un fonctionnement planifié (CRON) autonome.
+- Verrou exclusif (\pg_try_advisory_lock('worker_maintenance')\) et fermeture sécurisée.
+- Suppression des prompt interactifs dangereux en production. Purge par lots bornés de 5000 lignes limitant le verrouillage de table (WAL friendly).
+- Implémentation d'un \statement_timeout\ explicite limitant la transaction globale.
+- Ajout de la commande \
+pm run worker:maintenance\.
+
+### PROD-052 & PROD-053 — Sondes, alertes, procédures et rollback
+Statut : terminé.
+- Création du script \
+pm run simulate:incident\ (simulate-incident.ts) pour générer des événements critiques (\db.pool.connection_failed\, \process.uncaught_exception\, \xternal.provider.failed\) permettant de tester les Log Drains sans créer de véritable panne applicative.
+- Création du document \docs/production-operations.md\ définissant la procédure d'alerte, les métriques (JSON events), les politiques de sauvegarde (RPO: 24h, RTO: 2h), et détaillant explicitement le fonctionnement du rollback de l'infrastructure sur Railway.
+

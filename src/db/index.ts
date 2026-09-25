@@ -40,7 +40,7 @@ export const pool =
   });
 
 if (!globalForDb.pgPool) {
-  pool.on('error', (err, client) => {
+  pool.on('error', (err) => {
     console.error('Erreur inattendue sur le pool de connexions PostgreSQL', err);
   });
 }

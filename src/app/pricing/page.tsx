@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Show } from '@clerk/nextjs';
 import { Check } from 'lucide-react';
 
@@ -56,7 +55,7 @@ export default function PricingPage() {
               href="/app"
               className="rounded-lg bg-yellow-400 px-4 py-2 text-sm font-black text-black transition hover:bg-yellow-300"
             >
-              Ouvrir l'app
+              Ouvrir l&apos;app
             </Link>
           </Show>
         </nav>
@@ -65,10 +64,10 @@ export default function PricingPage() {
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-yellow-300">Offre unique</p>
             <h1 className="mt-4 text-4xl font-black leading-tight text-white sm:text-5xl">
-              Un seul accès pour toute l'app.
+              Un seul accès pour toute l&apos;app.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-zinc-400">
-              Profitez d'Africa Live TV sans limites. Payez facilement, rapidement et en toute sécurité via Orange Money, Wave, ou par carte bancaire.
+              Profitez d&apos;Africa Live TV sans limites. Payez facilement, rapidement et en toute sécurité via Orange Money, Wave, ou par carte bancaire.
             </p>
 
             <ul className="mt-7 space-y-3">
@@ -104,7 +103,7 @@ export default function PricingPage() {
                 Le plus économique
               </div>
               <h3 className="text-xl font-bold text-white">Abonnement Annuel</h3>
-              <p className="mt-2 text-sm text-zinc-400 flex-1">12 mois d'accès au prix de 10 mois. La meilleure offre pour en profiter toute l'année.</p>
+              <p className="mt-2 text-sm text-zinc-400 flex-1">12 mois d&apos;accès au prix de 10 mois. La meilleure offre pour en profiter toute l&apos;année.</p>
               <div className="mt-4 flex items-baseline text-4xl font-black text-white">
                 9 900 <span className="ml-1 text-lg font-medium text-zinc-500">FCFA</span>
               </div>
