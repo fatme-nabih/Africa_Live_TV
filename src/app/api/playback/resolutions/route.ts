@@ -4,7 +4,7 @@ import {
   playbackResolutionRequestSchema,
   playbackResolutionResponseSchema,
 } from '@/lib/api-contracts';
-import { BoundedJsonError, readBoundedJson } from '@/lib/bounded-json';
+import { readBoundedJson } from '@/lib/bounded-json';
 import { consumePlaybackResolutionQuota } from '@/lib/playback-quota';
 import {
   PlaybackResolutionError,
@@ -12,6 +12,7 @@ import {
 } from '@/lib/playback-resolution';
 import { authorizeAppRequest } from '@/lib/require-app-access';
 import { structuredLog } from '@/lib/structured-log';
+import { ApiError, BadRequestError, RateLimitError, withApiErrorHandler } from '@/lib/api-errors';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -25,11 +26,12 @@ function privateJson(body: Record<string, unknown>, status = 200) {
   return NextResponse.json(body, { status, headers: PRIVATE_HEADERS });
 }
 
-export async function POST(request: Request) {
+export const POST = withApiErrorHandler(async (request: Request) => {
   const authorization = await authorizeAppRequest({
     bucket: 'playback.resolve.entry',
     limit: 60,
   }, request);
+  
   if (!authorization.ok) {
     for (const [name, value] of Object.entries(PRIVATE_HEADERS)) {
       authorization.response.headers.set(name, value);
@@ -37,28 +39,10 @@ export async function POST(request: Request) {
     return authorization.response;
   }
 
-  let input: unknown;
-  try {
-    input = await readBoundedJson(request, 8 * 1_024);
-  } catch (error) {
-    return privateJson(
-      {
-        error:
-          error instanceof BoundedJsonError && error.code === 'BODY_TOO_LARGE'
-            ? 'Le corps JSON est trop volumineux.'
-            : 'Le corps JSON est invalide.',
-        code:
-          error instanceof BoundedJsonError ? error.code : 'INVALID_JSON',
-      },
-      error instanceof BoundedJsonError && error.code === 'BODY_TOO_LARGE' ? 413 : 400,
-    );
-  }
+  const input = await readBoundedJson(request, 8 * 1_024);
   const parsed = playbackResolutionRequestSchema.safeParse(input);
   if (!parsed.success) {
-    return privateJson(
-      { error: 'La demande de lecture est invalide.', code: 'INVALID_PLAYBACK_RESOLUTION' },
-      400,
-    );
+    throw new BadRequestError('La demande de lecture est invalide.', 'INVALID_PLAYBACK_RESOLUTION');
   }
 
   const resolutionQuota = await consumePlaybackResolutionQuota({
@@ -69,24 +53,14 @@ export async function POST(request: Request) {
     destination: parsed.data.destination,
     tier: authorization.quotaTier,
   });
+
   if (!resolutionQuota.allowed) {
-    const response = privateJson(
-      {
-        error: 'Trop de résolutions. Réessayez dans quelques instants.',
-        code: 'RATE_LIMITED',
-      },
-      429,
-    );
-    response.headers.set(
-      'Retry-After',
-      String(resolutionQuota.denied?.retryAfterSeconds ?? 60),
-    );
-    response.headers.set(
-      'X-RateLimit-Limit',
-      String(resolutionQuota.denied?.limit ?? 0),
-    );
-    response.headers.set('X-RateLimit-Remaining', '0');
-    return response;
+    throw new RateLimitError('Trop de résolutions. Réessayez dans quelques instants.', 'RATE_LIMITED', {
+      ...PRIVATE_HEADERS,
+      'Retry-After': String(resolutionQuota.denied?.retryAfterSeconds ?? 60),
+      'X-RateLimit-Limit': String(resolutionQuota.denied?.limit ?? 0),
+      'X-RateLimit-Remaining': '0',
+    });
   }
 
   try {
@@ -113,18 +87,10 @@ export async function POST(request: Request) {
         destination: parsed.data.destination,
         code: error.code,
       });
-      return privateJson({ error: error.message, code: error.code }, error.status);
+      throw new ApiError(error.message, error.status, error.code, PRIVATE_HEADERS);
     }
-
-    structuredLog('error', 'playback.resolution.failed', {
-      userId: authorization.user.id,
-      channelId: parsed.data.channelId,
-      destination: parsed.data.destination,
-      errorName: error instanceof Error ? error.name : 'UnknownError',
-    });
-    return privateJson(
-      { error: 'La résolution de lecture est indisponible.', code: 'PLAYBACK_RESOLUTION_UNAVAILABLE' },
-      503,
-    );
+    
+    // Si c'est une autre erreur inattendue, le withApiErrorHandler va l'intercepter
+    throw error;
   }
-}
+});

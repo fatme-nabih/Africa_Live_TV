@@ -1,5 +1,4 @@
 import { randomUUID } from 'node:crypto';
-
 import { and, eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 
@@ -10,13 +9,14 @@ import {
   playbackEventResponseSchema,
 } from '@/lib/api-contracts';
 import { BoundedJsonError, readBoundedJson } from '@/lib/bounded-json';
-import { consumeRateLimit, type RateLimitResult } from '@/lib/rate-limit';
+import { consumeRateLimit } from '@/lib/rate-limit';
 import { authorizeAppRequest } from '@/lib/require-app-access';
 import { structuredLog } from '@/lib/structured-log';
 import {
   validateTelemetryTimestamp,
   validRequestId,
 } from '@/lib/telemetry-policy';
+import { ApiError, BadRequestError, RateLimitError, withApiErrorHandler } from '@/lib/api-errors';
 
 export const runtime = 'nodejs';
 
@@ -25,119 +25,102 @@ const PRIVATE_HEADERS = {
   'Referrer-Policy': 'no-referrer',
 };
 
-class TelemetryHttpError extends Error {
-  constructor(readonly status: number, readonly code: string, message: string) {
-    super(message);
+class TelemetryHttpError extends ApiError {
+  constructor(status: number, code: string, message: string, headers?: HeadersInit) {
+    super(message, status, code, headers);
+    this.name = 'TelemetryHttpError';
   }
 }
 
-function jsonWithRequestId(
-  requestId: string,
-  body: Record<string, unknown>,
-  status: number,
-  headers: Record<string, string> = {},
-) {
-  return NextResponse.json(body, {
-    status,
-    headers: { ...PRIVATE_HEADERS, ...headers, 'X-Request-Id': requestId },
-  });
-}
-
-function rateLimitResponse(requestId: string, result: RateLimitResult) {
-  return jsonWithRequestId(
-    requestId,
-    { error: 'Trop d’événements de lecture. Réessayez plus tard.', code: 'RATE_LIMITED' },
-    429,
-    {
-      'Retry-After': String(result.retryAfterSeconds),
-      'X-RateLimit-Limit': String(result.limit),
-      'X-RateLimit-Remaining': '0',
-    },
-  );
-}
-
-export async function POST(request: Request) {
+export const POST = withApiErrorHandler(async (request: Request) => {
   const startedAt = Date.now();
   const requestId = validRequestId(request.headers.get('x-request-id')) ?? randomUUID();
   let userId: string | null = null;
   let sessionId: string | null = null;
 
+  const baseHeaders = { ...PRIVATE_HEADERS, 'X-Request-Id': requestId };
+
+  const authorization = await authorizeAppRequest({
+    bucket: 'playback-events.write',
+    limit: 60,
+  }, request);
+  
+  if (!authorization.ok) {
+    for (const [name, value] of Object.entries(baseHeaders)) {
+      authorization.response.headers.set(name, value);
+    }
+    return authorization.response;
+  }
+  
+  userId = authorization.user.id;
+  const authorizedUserId = authorization.user.id;
+
+  let body: unknown;
   try {
-    const authorization = await authorizeAppRequest({
-      bucket: 'playback-events.write',
-      limit: 60,
-    }, request);
-    if (!authorization.ok) {
-      authorization.response.headers.set('X-Request-Id', requestId);
-      for (const [name, value] of Object.entries(PRIVATE_HEADERS)) {
-        authorization.response.headers.set(name, value);
-      }
-      return authorization.response;
-    }
-    userId = authorization.user.id;
-    const authorizedUserId = authorization.user.id;
+    body = await readBoundedJson(request, 16 * 1_024);
+  } catch (error: unknown) {
+    throw new BadRequestError(
+      error instanceof BoundedJsonError && error.code === 'BODY_TOO_LARGE' ? 'Le corps JSON est trop volumineux.' : 'Le corps JSON est invalide.',
+      error instanceof BoundedJsonError ? error.code : 'INVALID_JSON',
+      baseHeaders
+    );
+  }
+  const parsed = playbackEventRequestSchema.safeParse(body);
+  
+  if (!parsed.success) {
+    throw new BadRequestError('L’événement de lecture est invalide.', 'INVALID_PLAYBACK_EVENT', baseHeaders);
+  }
+  
+  const event = parsed.data;
+  sessionId = event.playbackSessionId;
 
-    let body: unknown;
-    try {
-      body = await readBoundedJson(request, 16 * 1_024);
-    } catch (error) {
-      return jsonWithRequestId(
-        requestId,
-        {
-          error:
-            error instanceof BoundedJsonError && error.code === 'BODY_TOO_LARGE'
-              ? 'Le corps JSON est trop volumineux.'
-              : 'Le corps JSON est invalide.',
-          code:
-            error instanceof BoundedJsonError ? error.code : 'INVALID_JSON',
-        },
-        error instanceof BoundedJsonError && error.code === 'BODY_TOO_LARGE' ? 413 : 400,
-      );
-    }
+  const timestampError = validateTelemetryTimestamp(event.timestamp);
+  if (timestampError) {
+    throw new BadRequestError(
+      timestampError === 'EVENT_TOO_OLD'
+        ? 'La date de l’événement est trop ancienne.'
+        : 'La date de l’événement est trop éloignée dans le futur.',
+      timestampError,
+      baseHeaders
+    );
+  }
 
-    const parsed = playbackEventRequestSchema.safeParse(body);
-    if (!parsed.success) {
-      return jsonWithRequestId(
-        requestId,
-        { error: 'L’événement de lecture est invalide.', code: 'INVALID_PLAYBACK_EVENT' },
-        400,
-      );
-    }
-    const event = parsed.data;
-    sessionId = event.playbackSessionId;
-
-    const timestampError = validateTelemetryTimestamp(event.timestamp);
-    if (timestampError) {
-      return jsonWithRequestId(
-        requestId,
-        {
-          error: timestampError === 'EVENT_TOO_OLD'
-            ? 'La date de l’événement est trop ancienne.'
-            : 'La date de l’événement est trop éloignée dans le futur.',
-          code: timestampError,
-        },
-        400,
-      );
-    }
-
-    const dailyLimit = await consumeRateLimit({
-      userId: authorizedUserId,
-      bucket: 'playback-events.daily',
-      limit: 2_000,
-      windowSeconds: 24 * 60 * 60,
+  const dailyLimit = await consumeRateLimit({
+    userId: authorizedUserId,
+    bucket: 'playback-events.daily',
+    limit: 2_000,
+    windowSeconds: 24 * 60 * 60,
+  });
+  
+  if (!dailyLimit.allowed) {
+    throw new RateLimitError('Trop d’événements de lecture. Réessayez plus tard.', 'RATE_LIMITED', {
+      ...baseHeaders,
+      'Retry-After': String(dailyLimit.retryAfterSeconds ?? 60),
+      'X-RateLimit-Limit': String(dailyLimit.limit ?? 2000),
+      'X-RateLimit-Remaining': '0',
     });
-    if (!dailyLimit.allowed) return rateLimitResponse(requestId, dailyLimit);
+  }
 
-    const sessionLimit = await consumeRateLimit({
-      userId: authorizedUserId,
-      bucket: `playback-events.session:${event.playbackSessionId}`,
-      limit: 300,
-      windowSeconds: 6 * 60 * 60,
+  const sessionLimit = await consumeRateLimit({
+    userId: authorizedUserId,
+    bucket: `playback-events.session:${event.playbackSessionId}`,
+    limit: 300,
+    windowSeconds: 6 * 60 * 60,
+  });
+  
+  if (!sessionLimit.allowed) {
+    throw new RateLimitError('Trop d’événements de lecture. Réessayez plus tard.', 'RATE_LIMITED', {
+      ...baseHeaders,
+      'Retry-After': String(sessionLimit.retryAfterSeconds ?? 60),
+      'X-RateLimit-Limit': String(sessionLimit.limit ?? 300),
+      'X-RateLimit-Remaining': '0',
     });
-    if (!sessionLimit.allowed) return rateLimitResponse(requestId, sessionLimit);
+  }
 
-    const now = new Date();
-    const receivedAt = now.toISOString();
+  const now = new Date();
+  const receivedAt = now.toISOString();
+
+  try {
     const result = await db.transaction(async (tx) => {
       const [existingSession] = await tx
         .select()
@@ -146,16 +129,16 @@ export async function POST(request: Request) {
         .limit(1);
 
       if (!existingSession || existingSession.userId !== authorizedUserId) {
-        throw new TelemetryHttpError(404, 'SESSION_NOT_FOUND', 'Cette session de lecture est introuvable.');
+        throw new TelemetryHttpError(404, 'SESSION_NOT_FOUND', 'Cette session de lecture est introuvable.', baseHeaders);
       }
       if (existingSession.channelId !== event.channelId) {
-        throw new TelemetryHttpError(409, 'SESSION_CHANNEL_MISMATCH', 'Cette session est liée à une autre chaîne.');
+        throw new TelemetryHttpError(409, 'SESSION_CHANNEL_MISMATCH', 'Cette session est liée à une autre chaîne.', baseHeaders);
       }
       if (new Date(existingSession.expiresAt).getTime() <= now.getTime()) {
-        throw new TelemetryHttpError(409, 'SESSION_EXPIRED', 'Cette session de lecture a expiré.');
+        throw new TelemetryHttpError(409, 'SESSION_EXPIRED', 'Cette session de lecture a expiré.', baseHeaders);
       }
       if (existingSession.status !== 'active' && event.event !== 'stopped') {
-        throw new TelemetryHttpError(409, 'SESSION_CLOSED', 'Cette session de lecture est terminée.');
+        throw new TelemetryHttpError(409, 'SESSION_CLOSED', 'Cette session de lecture est terminée.', baseHeaders);
       }
 
       const [attempt] = await tx
@@ -170,11 +153,12 @@ export async function POST(request: Request) {
           eq(playbackAttempts.playbackSessionId, event.playbackSessionId),
         ))
         .limit(1);
+        
       if (!attempt) {
-        throw new TelemetryHttpError(404, 'ATTEMPT_NOT_FOUND', 'Cette tentative de lecture est introuvable.');
+        throw new TelemetryHttpError(404, 'ATTEMPT_NOT_FOUND', 'Cette tentative de lecture est introuvable.', baseHeaders);
       }
       if (new Date(attempt.expiresAt).getTime() <= now.getTime()) {
-        throw new TelemetryHttpError(409, 'ATTEMPT_EXPIRED', 'Cette tentative de lecture a expiré.');
+        throw new TelemetryHttpError(409, 'ATTEMPT_EXPIRED', 'Cette tentative de lecture a expiré.', baseHeaders);
       }
 
       await tx
@@ -229,10 +213,9 @@ export async function POST(request: Request) {
       durationMs: Date.now() - startedAt,
     });
 
-    return jsonWithRequestId(
-      requestId,
+    return NextResponse.json(
       playbackEventResponseSchema.parse({ ok: true, id: result, deduplicated: result == null }),
-      result ? 201 : 200,
+      { status: result ? 201 : 200, headers: baseHeaders }
     );
   } catch (error) {
     if (error instanceof TelemetryHttpError) {
@@ -243,20 +226,9 @@ export async function POST(request: Request) {
         code: error.code,
         durationMs: Date.now() - startedAt,
       });
-      return jsonWithRequestId(requestId, { error: error.message, code: error.code }, error.status);
+      // Il sera attrapé par withApiErrorHandler et correctement formaté
+      throw error;
     }
-
-    structuredLog('error', 'telemetry.database_unavailable', {
-      requestId,
-      userId,
-      playbackSessionId: sessionId,
-      errorName: error instanceof Error ? error.name : 'UnknownError',
-      durationMs: Date.now() - startedAt,
-    });
-    return jsonWithRequestId(
-      requestId,
-      { error: 'La télémétrie est temporairement indisponible.', code: 'TELEMETRY_UNAVAILABLE' },
-      503,
-    );
+    throw error;
   }
-}
+});

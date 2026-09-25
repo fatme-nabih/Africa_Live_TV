@@ -25,13 +25,25 @@ const globalForDb = globalThis as typeof globalThis & {
   pgPool?: Pool;
 };
 
+const maxConnections = process.env.DATABASE_MAX_CONNECTIONS
+  ? parseInt(process.env.DATABASE_MAX_CONNECTIONS, 10)
+  : 10;
+
 export const pool =
   globalForDb.pgPool ??
   new Pool({
     connectionString,
-    // No public fallback: a missing test table must fail, never reach local data.
+    max: maxConnections,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
     ...(testSchema ? { options: `-c search_path=${testSchema}` } : {}),
   });
+
+if (!globalForDb.pgPool) {
+  pool.on('error', (err, client) => {
+    console.error('Erreur inattendue sur le pool de connexions PostgreSQL', err);
+  });
+}
 
 if (process.env.NODE_ENV !== 'production') {
   globalForDb.pgPool = pool;

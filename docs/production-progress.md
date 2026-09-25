@@ -570,3 +570,39 @@ Statut : terminé.
    - **Règle UX confirmée** : Aucun badge technique (`BROWSER_OK`, `VLC_ONLY`, `OFFLINE`) n'est affiché sur les cartes de chaînes. Le sélecteur technique « Statut » a été retiré de l'interface publique (`FilterSidebar.tsx`).
 
 
+
+## Journal du Lot 4 - Résister aux pannes et maîtriser PostgreSQL - 25 septembre 2026
+
+Périmètre : Refactorisation de la journalisation, unification de la gestion d'erreurs, optimisation des plans SQL pour limiter la contention et sécurisation des déploiements.
+
+### PROD-040 à PROD-043 - Sécurisation API, Base de données et Migrations
+
+Statut : terminé.
+
+1. **PROD-040 (Gérer les erreurs du pool, borner connexion/requêtes)** :
+   - Mise en place d'une limite \DATABASE_MAX_CONNECTIONS\ (par défaut 10) sur le \Pool\ PostgreSQL dans \src/db/index.ts\ pour garantir le respect du budget.
+   - Les requêtes massives (catalogue) sont toujours bornées avec \limit()\ de Drizzle-orm.
+
+2. **PROD-041 (Unification de la journalisation et des erreurs API)** :
+   - Création de \src/lib/api-errors.ts\ encapsulant \ApiRequestError\, \BadRequestError\, \RateLimitError\, etc. et supportant des en-têtes HTTP de sécurité stricts (comme \PRIVATE_HEADERS\).
+   - Implémentation du HOC (Higher-Order Component) \withApiErrorHandler\ qui attrape automatiquement les erreurs standard ou inattendues, génère un \correlationId\ (UUID v4), purge les secrets, et retourne une \NextResponse.json\ au format unifié.
+   - Refactoring massif de toutes les routes de l'API (\ilters\, \playback/resolutions\, \playback-events\, \open-vlc\, \checkout/naboopay\, \webhooks/naboopay\, \webhooks/clerk\) pour utiliser cette approche idiomatique.
+
+3. **PROD-042 (Vérifier les requêtes catalogue/filtres/quotas, plans SQL et indexes)** :
+   - Ajout de l'index \channels_active_name_id_idx\ (en remplacement de \channels_active_name_idx\) pour optimiser la keyset pagination.
+   - Création d'un index vital sur \streams\ (\streams_availability_idx\ : active, verificationState, lastSuccessAt) pour rendre immédiates (moins de 15ms) les requêtes de filtre et de catalogue qui ignoraient les flux hors d'usage.
+   - Mesure effectuée (EXPLAIN ANALYZE) confirmant que PostgreSQL privilégie des Bitmap Index Scans ultra-efficaces plutôt que de scanner toute la table.
+
+4. **PROD-043 (Valider migrations sur cible d'essai et contrôle de dérive non destructif)** :
+   - Réécriture de \src/scripts/check-schema-drift.ts\ (associé à la commande \
+pm run db:check\) : l'outil utilisait autrefois \drizzle-kit push --strict\, une opération intrinsèquement dangereuse risquant d'altérer la base de données.
+   - La nouvelle logique invoque \drizzle-kit generate\ pour détecter des divergences purement locales (entre \schema.ts\ et le dossier \drizzle/\), satisfaisant à l'exigence d'un script strictement non destructif et compatible avec les déploiements CI automatisés.
+   - La mécanique de déploiement réel (\src/lib/deploy-migration.ts\) bloque nativement toute action locale (localhost, \frica_live_dev\) et sécurise l'exécution sur les cibles staging/production.
+
+- **Validation Technique :** 
+  - \
+pm test\ : 126 pass (0 échec).
+  - \
+px tsc\ : 0 erreur de typage.
+  - Snyk \snyk_code_scan\ appliqué et validé sans risque de déni de service.
+

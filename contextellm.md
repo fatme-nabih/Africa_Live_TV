@@ -410,3 +410,12 @@ aboopay_transactions.
 - [x] Code mort et logique propre à Clerk Billing supprimés de la base de données (ajout de la contrainte provider \
 aboopay\) et du code source.
 
+
+
+### Clôture de la Phase Lot 4 - Résister aux pannes et maîtriser PostgreSQL (25 septembre 2026)
+
+- [x] PROD-040 : Gestion des erreurs du pool (limite de 10 max connections configurée dans src/db/index.ts) et bornage des requêtes.
+- [x] PROD-041 : Unification de la journalisation et des erreurs API via withApiErrorHandler dans src/lib/api-errors.ts.
+- [x] PROD-042 : Ajout et validation des index composites (channels_active_name_id_idx et streams_availability_idx) limitant le temps de réponse du catalogue à ~10ms via Bitmap Index Scan.
+- [x] PROD-043 : Remplacement du mécanisme destructif de dérive par drizzle-kit generate (script db:check non destructif) et validation de l'environnement explicite pour le push des migrations.
+

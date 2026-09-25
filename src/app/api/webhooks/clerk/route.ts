@@ -8,6 +8,7 @@ import {
   syncClerkUser,
 } from '@/lib/identity';
 import { structuredLog } from '@/lib/structured-log';
+import { BadRequestError, withApiErrorHandler } from '@/lib/api-errors';
 
 export const runtime = 'nodejs';
 
@@ -38,13 +39,15 @@ async function syncWebhookUser(user: ClerkUserPayload) {
   });
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withApiErrorHandler(async (request: NextRequest) => {
   let event: Awaited<ReturnType<typeof verifyWebhook>>;
   try {
     event = await verifyWebhook(request);
   } catch (error) {
-    console.warn('Webhook Clerk rejeté : signature invalide.', error);
-    return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 400 });
+    structuredLog('warn', 'clerk.webhook.invalid_signature', {
+      errorName: error instanceof Error ? error.name : 'UnknownError',
+    });
+    throw new BadRequestError('Invalid webhook signature', 'INVALID_SIGNATURE');
   }
 
   if (event.type === 'user.created' || event.type === 'user.updated') {
@@ -62,7 +65,10 @@ export async function POST(request: NextRequest) {
       : await findInternalUserByClerkId(event.data.user_id);
 
     if (!internalUser) {
-      console.warn(`Session Clerk ${event.data.id} ignorée : utilisateur inconnu.`);
+      structuredLog('warn', 'clerk.webhook.ignored_session', {
+        sessionId: event.data.id,
+        reason: 'unknown_user',
+      });
       return NextResponse.json({ ok: true, ignored: 'unknown_user' }, { status: 202 });
     }
 
@@ -83,4 +89,4 @@ export async function POST(request: NextRequest) {
   }
   
   return NextResponse.json({ ok: true });
-}
+});

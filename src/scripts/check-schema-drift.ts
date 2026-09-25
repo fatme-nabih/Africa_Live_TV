@@ -12,9 +12,7 @@ const result = spawnSync(
   process.execPath,
   [
     drizzleCli,
-    'push',
-    '--strict',
-    '--verbose',
+    'generate',
     '--config',
     path.resolve('drizzle.config.ts'),
   ],
@@ -22,7 +20,6 @@ const result = spawnSync(
     cwd: process.cwd(),
     env: process.env,
     encoding: 'utf8',
-    input: 'n\n',
     timeout: 120_000,
     windowsHide: true,
   },
@@ -37,11 +34,11 @@ const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`.replace(
   '',
 );
 
-if (result.status === 0 && output.includes('No changes detected')) {
-  console.log('Aucune dérive détectée entre src/db/schema.ts et PostgreSQL.');
+if (result.status === 0 && (output.includes('No schema changes') || output.includes('No changes'))) {
+  console.log('Aucune dérive détectée entre src/db/schema.ts et les migrations existantes.');
   process.exit(0);
 }
 
-console.error('Dérive détectée entre src/db/schema.ts et PostgreSQL.');
+console.error('Dérive détectée : src/db/schema.ts a été modifié mais de nouvelles migrations doivent être générées.');
 console.error(output.trim());
 process.exit(1);

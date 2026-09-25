@@ -171,6 +171,7 @@ export const favoriteMutationSchema = z
 export const apiErrorSchema = z.object({
   error: z.string(),
   code: z.string().optional(),
+  correlationId: z.string().optional(),
 });
 
 export type CatalogRequest = z.infer<typeof catalogRequestSchema>;

@@ -6,6 +6,7 @@ import { channels, userFavorites } from '@/db/schema';
 import { favoriteMutationSchema, favoritesResponseSchema } from '@/lib/api-contracts';
 import { readBoundedJson } from '@/lib/bounded-json';
 import { authorizeAppRequest } from '@/lib/require-app-access';
+import { BadRequestError, withApiErrorHandler } from '@/lib/api-errors';
 
 async function listFavorites(userId: string) {
   const rows = await db
@@ -49,12 +50,12 @@ async function mutateFavorites(userId: string, add: string[], remove: string[]) 
 async function parseObjectBody(request: Request) {
   const body: unknown = await readBoundedJson(request, 32 * 1_024);
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    throw new Error('Invalid JSON body');
+    throw new BadRequestError('Le corps JSON est invalide.', 'INVALID_JSON');
   }
   return body as Record<string, unknown>;
 }
 
-export async function GET(request: Request) {
+export const GET = withApiErrorHandler(async (request: Request) => {
   const authorization = await authorizeAppRequest(
     { bucket: 'favorites.read', limit: 120 },
     request,
@@ -63,129 +64,72 @@ export async function GET(request: Request) {
   return NextResponse.json(
     favoritesResponseSchema.parse({ favorites: await listFavorites(authorization.user.id) }),
   );
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = withApiErrorHandler(async (request: Request) => {
   const authorization = await authorizeAppRequest(
     { bucket: 'favorites.write', limit: 60 },
     request,
   );
   if (!authorization.ok) return authorization.response;
 
-  let body: Record<string, unknown>;
-  try {
-    body = await parseObjectBody(request);
-  } catch {
-    return NextResponse.json(
-      { error: 'Le corps JSON est invalide.', code: 'INVALID_JSON' },
-      { status: 400 },
-    );
-  }
+  const body = await parseObjectBody(request);
   const mutation = favoriteMutationSchema.safeParse(body);
   if (!mutation.success) {
-    return NextResponse.json(
-      { error: 'La modification de favoris est invalide.', code: 'INVALID_FAVORITE_MUTATION' },
-      { status: 400 },
-    );
+    throw new BadRequestError('La modification de favoris est invalide.', 'INVALID_FAVORITE_MUTATION');
   }
-  try {
-    return NextResponse.json(
-      favoritesResponseSchema.parse({
-        favorites: await mutateFavorites(
-          authorization.user.id,
-          mutation.data.add,
-          mutation.data.remove,
-        ),
-      }),
-    );
-  } catch (error) {
-    console.error('Erreur API favoris PATCH:', error);
-    return NextResponse.json(
-      { error: 'Impossible de mettre à jour les favoris.', code: 'FAVORITES_UNAVAILABLE' },
-      { status: 500 },
-    );
-  }
-}
+  return NextResponse.json(
+    favoritesResponseSchema.parse({
+      favorites: await mutateFavorites(
+        authorization.user.id,
+        mutation.data.add,
+        mutation.data.remove,
+      ),
+    }),
+  );
+});
 
-export async function POST(request: Request) {
+export const POST = withApiErrorHandler(async (request: Request) => {
   const authorization = await authorizeAppRequest(
     { bucket: 'favorites.write', limit: 60 },
     request,
   );
   if (!authorization.ok) return authorization.response;
 
-  let body: Record<string, unknown>;
-  try {
-    body = await parseObjectBody(request);
-  } catch {
-    return NextResponse.json(
-      { error: 'Le corps JSON est invalide.', code: 'INVALID_JSON' },
-      { status: 400 },
-    );
-  }
+  const body = await parseObjectBody(request);
   const mutation = favoriteMutationSchema.safeParse({
     add: body.channelIds ?? [body.channelId],
     remove: [],
   });
   if (!mutation.success) {
-    return NextResponse.json(
-      { error: 'Un identifiant de chaîne valide est requis.', code: 'INVALID_FAVORITE_MUTATION' },
-      { status: 400 },
-    );
+    throw new BadRequestError('Un identifiant de chaîne valide est requis.', 'INVALID_FAVORITE_MUTATION');
   }
-  try {
-    return NextResponse.json(
-      favoritesResponseSchema.parse({
-        favorites: await mutateFavorites(authorization.user.id, mutation.data.add, []),
-      }),
-      { status: 201 },
-    );
-  } catch (error) {
-    console.error('Erreur API favoris POST:', error);
-    return NextResponse.json(
-      { error: 'Impossible de mettre à jour les favoris.', code: 'FAVORITES_UNAVAILABLE' },
-      { status: 500 },
-    );
-  }
-}
+  return NextResponse.json(
+    favoritesResponseSchema.parse({
+      favorites: await mutateFavorites(authorization.user.id, mutation.data.add, []),
+    }),
+    { status: 201 },
+  );
+});
 
-export async function DELETE(request: Request) {
+export const DELETE = withApiErrorHandler(async (request: Request) => {
   const authorization = await authorizeAppRequest(
     { bucket: 'favorites.write', limit: 60 },
     request,
   );
   if (!authorization.ok) return authorization.response;
 
-  let body: Record<string, unknown>;
-  try {
-    body = await parseObjectBody(request);
-  } catch {
-    return NextResponse.json(
-      { error: 'Le corps JSON est invalide.', code: 'INVALID_JSON' },
-      { status: 400 },
-    );
-  }
+  const body = await parseObjectBody(request);
   const mutation = favoriteMutationSchema.safeParse({
     add: [],
     remove: body.channelIds ?? [body.channelId],
   });
   if (!mutation.success) {
-    return NextResponse.json(
-      { error: 'Un identifiant de chaîne valide est requis.', code: 'INVALID_FAVORITE_MUTATION' },
-      { status: 400 },
-    );
+    throw new BadRequestError('Un identifiant de chaîne valide est requis.', 'INVALID_FAVORITE_MUTATION');
   }
-  try {
-    return NextResponse.json(
-      favoritesResponseSchema.parse({
-        favorites: await mutateFavorites(authorization.user.id, [], mutation.data.remove),
-      }),
-    );
-  } catch (error) {
-    console.error('Erreur API favoris DELETE:', error);
-    return NextResponse.json(
-      { error: 'Impossible de mettre à jour les favoris.', code: 'FAVORITES_UNAVAILABLE' },
-      { status: 500 },
-    );
-  }
-}
+  return NextResponse.json(
+    favoritesResponseSchema.parse({
+      favorites: await mutateFavorites(authorization.user.id, [], mutation.data.remove),
+    }),
+  );
+});
