@@ -11,7 +11,12 @@ test('landing page offers sign-in and sign-up without exposing the catalogue', a
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
+const isMockClerk = !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('example.com') ||
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('placeholder');
+
 test('Clerk sign-in and sign-up widgets load', async ({ page }) => {
+  test.skip(isMockClerk, 'Clerk live widgets require a valid Clerk development instance');
   await page.goto('/sign-in');
   await expect(page.getByRole('heading', { name: 'Ravi de vous retrouver' })).toBeVisible();
   await expect(page.locator('.cl-signIn-root')).toBeVisible({ timeout: 30_000 });
