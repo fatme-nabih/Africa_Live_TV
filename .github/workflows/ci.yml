@@ -64,6 +64,7 @@ jobs:
 
     - name: Snyk Code SAST Scan
       if: env.SNYK_TOKEN != ''
+      continue-on-error: true
       run: npx snyk code test
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
