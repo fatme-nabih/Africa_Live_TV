@@ -34,11 +34,16 @@ export interface NabooPayTransactionRequest {
   method_of_payment: NabooPayMethod[];
   products: {
     name: string;
-    category: string;
-    amount: number;
+    price: number;
     quantity: number;
     description: string;
   }[];
+  customer: {
+    first_name: string;
+    last_name: string;
+    phone: string;
+    created_at: string | Date;
+  };
   success_url: string;
   error_url: string;
   is_escrow?: boolean;
@@ -54,34 +59,43 @@ export interface NabooPayTransactionResponse {
 /**
  * Creates a transaction in NabooPay API v2
  */
-export async function createNabooPayTransaction(request: NabooPayTransactionRequest): Promise<NabooPayTransactionResponse> {
+export async function createNabooPayTransaction(request: NabooPayTransactionRequest, checkoutAttemptId?: string): Promise<NabooPayTransactionResponse> {
   const apiKey = process.env.NABOOPAY_API_KEY;
   if (!apiKey) {
     throw new Error('NABOOPAY_API_KEY is not defined in environment variables');
   }
 
-  const response = await fetch('https://api.naboopay.com/api/v2/transactions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-    body: JSON.stringify({
-      ...request,
-      is_escrow: request.is_escrow ?? false,
-      is_merchant: request.is_merchant ?? false,
-      fees_customer_side: request.fees_customer_side ?? true,
-    }),
-  });
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(() => abortController.abort(), 10000);
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('NabooPay API Error:', errorText);
-    throw new Error(`Failed to create NabooPay transaction: ${response.status} ${response.statusText}`);
+  try {
+    const response = await fetch('https://api.naboopay.com/api/v2/transactions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        ...request,
+        order_id: checkoutAttemptId,
+        is_escrow: request.is_escrow ?? false,
+        is_merchant: request.is_merchant ?? false,
+        fees_customer_side: request.fees_customer_side ?? true,
+      }),
+      signal: abortController.signal,
+    });
+
+    if (!response.ok) {
+      // Don't log full response text to avoid leaking secrets/PII
+      console.error(`NabooPay API Error: ${response.status} ${response.statusText}`);
+      throw new Error(`Failed to create NabooPay transaction: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  return response.json();
 }
 
 /**

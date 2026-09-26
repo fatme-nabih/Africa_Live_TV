@@ -14,7 +14,7 @@ function validProduction(): Record<string, string> {
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: `pk_live_${Buffer.from('clerk.africa-live.test$').toString('base64')}`,
     CLERK_SECRET_KEY: `sk_live_${randomBytes(24).toString('hex')}`,
     CLERK_WEBHOOK_SIGNING_SECRET: `whsec_${randomBytes(24).toString('base64')}`,
-    CLERK_BILLING_PLAN_SLUG: 'africa-live',
+    NABOOPAY_API_KEY: 'nbp_real_api_key_valid_for_tests',
   };
 }
 
@@ -42,7 +42,7 @@ test('production permits a closed playback gate but rejects unsafe configuration
     { ABUSE_HASH_SECRET: 'replace_with_at_least_32_random_characters' },
     { CATALOG_CURSOR_SECRET: valid.ABUSE_HASH_SECRET }, { CLERK_SECRET_KEY: 'sk_test_local-placeholder' },
     { NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: 'pk_live_Y2ktdGVzdC5jb20k' },
-    { CLERK_WEBHOOK_SIGNING_SECRET: undefined }, { CLERK_BILLING_PLAN_SLUG: undefined },
+    { CLERK_WEBHOOK_SIGNING_SECRET: undefined }, { NABOOPAY_API_KEY: undefined },
     { ABUSE_TRUSTED_PROXY_HEADER: 'arbitrary' }, { ABUSE_TRUSTED_PROXY_HEADER: 'disabled' }, { INTEGRATION_TEST_DATABASE: 'africa_live_dev' },
     { L3_INTEGRATION_TEST: '1' }, { DEPLOYMENT_ENV: 'local' },
   ]) assert.throws(() => validateServerEnvironment({ ...valid, ...overrides }), EnvironmentValidationError);

@@ -103,8 +103,8 @@ export function validateServerEnvironment(env: Environment) {
     if (!/^whsec_[A-Za-z0-9+/=_-]{20,}$/.test(signingSecret) || placeholder(signingSecret)) {
       issues.push('CLERK_WEBHOOK_SIGNING_SECRET must be configured with a real signing secret.');
     }
-    if (!env.CLERK_BILLING_PLAN_SLUG?.trim() && !env.CLERK_BILLING_PLAN_ID?.trim()) {
-      issues.push('CLERK_BILLING_PLAN_SLUG or CLERK_BILLING_PLAN_ID must explicitly identify the configured plan.');
+    if (!env.NABOOPAY_API_KEY?.trim() || placeholder(env.NABOOPAY_API_KEY)) {
+      issues.push('NABOOPAY_API_KEY must be configured with a real API key.');
     }
   }
   if (issues.length) throw new EnvironmentValidationError(issues);

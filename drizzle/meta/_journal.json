@@ -85,6 +85,20 @@
       "when": 1790366046175,
       "tag": "0011_known_reavers",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790442388698,
+      "tag": "0012_calm_tigra",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790443510599,
+      "tag": "0013_neat_quasimodo",
+      "breakpoints": true
     }
   ]
 }

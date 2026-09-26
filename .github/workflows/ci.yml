@@ -30,8 +30,7 @@ jobs:
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
       CLERK_SECRET_KEY: sk_test_123456789
       DEPLOYMENT_ENV: local
-      NABOOPAY_CLIENT_ID: fake_client
-      NABOOPAY_CLIENT_SECRET: fake_secret
+      NABOOPAY_API_KEY: fake_api_key
 
     steps:
     - uses: actions/checkout@v4
@@ -52,7 +51,7 @@ jobs:
       run: npx tsc --noEmit --incremental false
 
     - name: Apply Database Schema
-      run: npx drizzle-kit push
+      run: npm run db:migrate
 
     - name: Unit Tests
       run: npm test

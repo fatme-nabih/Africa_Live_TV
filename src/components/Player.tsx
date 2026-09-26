@@ -4,13 +4,18 @@ import React, { useCallback, useEffect, useReducer, useRef } from 'react';
 import Hls from 'hls.js';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  AlertCircle,
   ExternalLink,
   LoaderCircle,
-  Play,
-  RefreshCw,
   Tv,
 } from 'lucide-react';
+import {
+  LoadingOverlay,
+  AwaitingUserOverlay,
+  FailureOverlay,
+  ExternalOpeningOverlay,
+  ExternalOpenedOverlay,
+  ExternalSuggestedOverlay,
+} from './player/PlayerOverlays';
 
 import {
   buildMobileVlcUrl,
@@ -781,147 +786,33 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
     >
       <div className="group/player relative flex aspect-video w-full items-center justify-center bg-black">
         <AnimatePresence>
-          {loading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/70 text-zinc-200"
-            >
-              <LoaderCircle className="h-10 w-10 animate-spin text-amber-400" />
-              <span className="mt-3 text-sm font-bold">
-                {state.phase === 'resolving'
-                  ? 'Connexion au direct…'
-                  : state.phase === 'external-opening'
-                    ? (LOCAL_AUTOMATIC_PLAYBACK ? 'Ouverture de VLC…' : 'Préparation du flux externe…')
-                    : 'Mise en mémoire tampon du flux…'}
-              </span>
-              <span className="mt-1 text-xs text-zinc-400">
-                {state.phase === 'loading'
-                  ? 'Chargement des segments vidéo…'
-                  : 'Veuillez patienter…'}
-              </span>
-            </motion.div>
-          )}
-
-          {waitingForUser && (
-            <motion.button
-              type="button"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => startPlayback(true)}
-              className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/70 text-white transition hover:bg-black/60"
-            >
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black shadow-lg shadow-amber-500/30">
-                <Play className="h-7 w-7 fill-current" />
-              </span>
-              <span className="mt-4 text-sm font-bold">
-                {state.phase === 'awaiting-user' ? 'Touchez pour autoriser la lecture' : 'Lire maintenant'}
-              </span>
-              {state.failure?.category === 'autoplay' && (
-                <span className="mt-2 max-w-md px-4 text-xs text-zinc-300">Aucun lecteur externe ne sera lancé sans votre choix.</span>
-              )}
-            </motion.button>
-          )}
-
-          {visibleFailure && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/85 p-6 text-center"
-            >
-              <AlertCircle className="mb-4 h-14 w-14 text-amber-400" />
-              <h4 className="text-xl font-bold text-zinc-100">{failureLabels[visibleFailure.category]}</h4>
-              <p className="mt-2 max-w-lg text-sm text-zinc-300">{visibleFailure.message}</p>
-              {state.attemptId && (
-                <button
-                  type="button"
-                  onClick={state.engine === 'vlc' ? () => openExternalPlayer(true) : tryAnotherSource}
-                  className="mt-5 inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-5 py-3 text-sm font-bold text-zinc-100 transition hover:border-amber-400/60"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                  {state.engine === 'vlc' ? 'Réessayer VLC' : 'Essayer une autre source'}
-                </button>
-              )}
-            </motion.div>
-          )}
-
-          {state.phase === 'external-opening' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/85 p-6 text-center"
-            >
-              <LoaderCircle className="mb-4 h-12 w-12 text-amber-400 animate-spin" />
-              <h4 className="text-xl font-bold text-zinc-100">Ouverture de VLC…</h4>
-              <p className="mt-2 max-w-lg text-sm text-zinc-300">
-                Transmission automatique du flux vers votre lecteur VLC.
-              </p>
-            </motion.div>
-          )}
-
-          {externalOpened && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/85 p-6 text-center"
-            >
-              <ExternalLink className="mb-4 h-14 w-14 text-amber-400" />
-              <h4 className="text-xl font-bold text-zinc-100">VLC lancé</h4>
-              <p className="mt-2 max-w-lg text-sm text-zinc-300">
-                Le flux vidéo a été transmis automatiquement à VLC. La lecture démarre dans votre lecteur.
-              </p>
-              <button
-                type="button"
-                onClick={() => openExternalPlayer(true)}
-                className="mt-5 inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-800/80 px-5 py-2.5 text-xs sm:text-sm font-bold text-zinc-200 transition hover:border-amber-400/60 hover:text-white"
-              >
-                <RefreshCw className="h-3.5 w-3.5" />
-                Relancer VLC
-              </button>
-            </motion.div>
-          )}
-
-          {externalSuggested && !externalOpened && state.phase !== 'external-opening' && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/85 p-6 text-center"
-            >
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-400/30">
-                <ExternalLink className="h-8 w-8" />
-              </span>
-              <h4 className="mt-5 text-xl font-bold text-zinc-100">Lecteur VLC requis</h4>
-              <p className="mt-2 max-w-lg text-sm leading-6 text-zinc-300">
-                Cette chaîne se lit directement dans le lecteur VLC.
-              </p>
-              <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-                {state.attemptId && (
-                  <button
-                    type="button"
-                    onClick={tryAnotherSource}
-                    className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-5 py-3 text-sm font-bold text-zinc-100 transition hover:border-amber-400/60"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                    Autre source web
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => openExternalPlayer(true)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 px-5 py-3 text-sm font-extrabold text-black shadow-lg shadow-amber-500/25 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Lancer VLC
-                </button>
-              </div>
-            </motion.div>
-          )}
+          <LoadingOverlay loading={loading} waitingForUser={waitingForUser} />
+          <AwaitingUserOverlay 
+            waitingForUser={waitingForUser} 
+            phase={state.phase} 
+            failureCategory={state.failure?.category} 
+            onPlay={() => startPlayback(true)} 
+          />
+          <FailureOverlay 
+            visibleFailure={visibleFailure} 
+            attemptId={state.attemptId} 
+            engine={state.engine} 
+            openExternalPlayer={openExternalPlayer} 
+            tryAnotherSource={tryAnotherSource} 
+          />
+          <ExternalOpeningOverlay phase={state.phase} />
+          <ExternalOpenedOverlay 
+            externalOpened={externalOpened} 
+            openExternalPlayer={openExternalPlayer} 
+          />
+          <ExternalSuggestedOverlay 
+            externalSuggested={externalSuggested} 
+            externalOpened={externalOpened} 
+            phase={state.phase} 
+            attemptId={state.attemptId} 
+            tryAnotherSource={tryAnotherSource} 
+            openExternalPlayer={openExternalPlayer} 
+          />
         </AnimatePresence>
 
         <video

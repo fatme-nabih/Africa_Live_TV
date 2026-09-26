@@ -33,6 +33,8 @@ function ChannelLogo({ channel, compact = false }: { channel: Channel; compact?:
         <img
           src={channel.logoUrl}
           alt=""
+          loading="lazy"
+          referrerPolicy="no-referrer"
           className={compact ? 'h-full w-full object-contain p-1.5' : 'h-[72%] w-[72%] object-contain'}
           onError={(event) => {
             event.currentTarget.style.display = 'none';

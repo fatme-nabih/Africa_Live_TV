@@ -36,6 +36,7 @@ export const pool =
     max: maxConnections,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 10000,
+    statement_timeout: 10000,
     ...(testSchema ? { options: `-c search_path=${testSchema}` } : {}),
   });
 

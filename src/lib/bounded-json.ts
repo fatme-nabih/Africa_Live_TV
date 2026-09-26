@@ -8,10 +8,10 @@ export class BoundedJsonError extends Error {
   }
 }
 
-export async function readBoundedJson(
+export async function readBoundedJsonText(
   request: Request,
   maximumBytes = 32 * 1_024,
-): Promise<unknown> {
+): Promise<string> {
   if (!Number.isSafeInteger(maximumBytes) || maximumBytes < 1) {
     throw new TypeError('maximumBytes must be a positive safe integer.');
   }
@@ -57,7 +57,19 @@ export async function readBoundedJson(
     offset += chunk.byteLength;
   }
   try {
-    return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch {
+    throw new BoundedJsonError('INVALID_JSON', 'The body could not be decoded as utf-8.');
+  }
+}
+
+export async function readBoundedJson(
+  request: Request,
+  maximumBytes = 32 * 1_024,
+): Promise<unknown> {
+  const text = await readBoundedJsonText(request, maximumBytes);
+  try {
+    return JSON.parse(text);
   } catch {
     throw new BoundedJsonError('INVALID_JSON', 'The JSON body is invalid.');
   }

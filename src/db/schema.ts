@@ -709,80 +709,12 @@ export const subscriptions = pgTable(
   ],
 );
 
-export const clerkBillingEvents = pgTable(
-  'clerk_billing_events',
-  {
-    messageId: text('message_id').primaryKey(),
-    eventType: text('event_type').notNull(),
-    resourceId: text('resource_id'),
-    payloadDigest: text('payload_digest').notNull(),
-    status: text('status').notNull(),
-    reason: text('reason'),
-    receivedAt: timestampWithTimezone('received_at').notNull().defaultNow(),
-    processedAt: timestampWithTimezone('processed_at').notNull().defaultNow(),
-  },
-  (table) => [
-    index('clerk_billing_events_type_processed_idx').on(
-      table.eventType,
-      table.processedAt.desc().nullsFirst(),
-    ),
-    check(
-      'clerk_billing_events_status_check',
-      sql`${table.status} in ('processed', 'ignored', 'failed')`,
-    ),
-    check(
-      'clerk_billing_events_message_id_length_check',
-      sql`char_length(${table.messageId}) between 1 and 256`,
-    ),
-    check(
-      'clerk_billing_events_digest_length_check',
-      sql`char_length(${table.payloadDigest}) = 64`,
-    ),
-  ],
-);
-
-export const paddleCustomers = pgTable(
-  'paddle_customers',
-  {
-    userId: text('user_id').primaryKey(),
-    paddleCustomerId: text('paddle_customer_id').notNull(),
-    email: text('email'),
-    createdAt: timestampWithTimezone('created_at').notNull().defaultNow(),
-    updatedAt: timestampWithTimezone('updated_at').notNull().defaultNow(),
-  },
-  (table) => [
-    foreignKey({
-      name: 'paddle_customers_user_id_fkey',
-      columns: [table.userId],
-      foreignColumns: [users.id],
-    }).onDelete('cascade'),
-    unique('paddle_customers_paddle_customer_id_key').on(table.paddleCustomerId),
-  ],
-);
-
-export const paddleEvents = pgTable(
-  'paddle_events',
-  {
-    eventId: text('event_id').primaryKey(),
-    eventType: text('event_type').notNull(),
-    occurredAt: timestampWithTimezone('occurred_at'),
-    processedAt: timestampWithTimezone('processed_at').notNull().defaultNow(),
-    payload: jsonb('payload').$type<Record<string, unknown>>().notNull(),
-  },
-  (table) => [
-    index('paddle_events_type_processed_idx').on(
-      table.eventType,
-      table.processedAt.desc().nullsFirst(),
-    ),
-  ],
-);
-
 export const schemaMigrations = pgTable('schema_migrations', {
   id: text('id').primaryKey(),
   appliedAt: timestampWithTimezone('applied_at').notNull().defaultNow(),
 });
 
-export const usersRelations = relations(users, ({ many, one }) => ({
+export const usersRelations = relations(users, ({ many }) => ({
   sessions: many(sessions),
   devices: many(devices),
   favorites: many(userFavorites),
@@ -791,7 +723,6 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   subscriptions: many(subscriptions),
   abuseCases: many(apiAbuseCases),
   abuseEvents: many(apiAbuseEvents),
-  paddleCustomer: one(paddleCustomers),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -914,18 +845,15 @@ export const apiAbuseEventsRelations = relations(apiAbuseEvents, ({ one }) => ({
   }),
 }));
 
-export const paddleCustomersRelations = relations(paddleCustomers, ({ one }) => ({
-  user: one(users, {
-    fields: [paddleCustomers.userId],
-    references: [users.id],
-  }),
-}));
+
 
 export const naboopayTransactions = pgTable('naboopay_transactions', {
   orderId: text('order_id').primaryKey(),
+  checkoutAttemptId: text('checkout_attempt_id').notNull(),
   userId: text('user_id').notNull(),
   planCode: text('plan_code').notNull(),
   amount: integer('amount').notNull(),
+  currency: text('currency').notNull().default('XOF'),
   status: text('status').notNull(),
   payload: jsonb('payload').notNull(),
   createdAt: timestampWithTimezone('created_at').notNull().defaultNow(),
@@ -936,5 +864,6 @@ export const naboopayTransactions = pgTable('naboopay_transactions', {
     columns: [table.userId],
     foreignColumns: [users.id],
   }).onDelete('cascade'),
+  check('naboopay_transactions_amount_check', sql`${table.amount} > 0`),
 ]);
 

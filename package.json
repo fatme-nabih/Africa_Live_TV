@@ -28,7 +28,7 @@
     "db:migrate:deploy": "tsx src/scripts/migrate-deploy.ts",
     "db:check": "tsx src/scripts/check-schema-drift.ts",
     "db:check:migrations": "drizzle-kit check",
-    "db:push": "drizzle-kit push",
+    "db:push": "tsx src/scripts/db-push-safe.ts",
     "db:studio": "drizzle-kit studio",
     "import:m3u": "tsx src/scripts/import-m3u.ts",
     "backfill:languages": "tsx src/scripts/backfill-channel-languages.ts",

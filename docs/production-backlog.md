@@ -106,6 +106,9 @@ d'erreur ni délais explicites ; réponse simulée E2E catalogue incompatible av
 L'absence de configuration d'exploitation dans le dépôt ne prouve pas l'absence
 d'une configuration externe : elle sera vérifiée avant de créer quoi que ce soit.
 
+**Audit Cybersécurité Gpt5.6-sol (26 septembre 2026)** : Un audit approfondi a identifié des défauts bloquants (P0) sur l'intégration NabooPay, des risques élevés (P1) concernant les webhooks et la configuration, ainsi qu'une dérive entre main et staging. Le déploiement du paiement est bloqué jusqu'à résolution.
+Voir les détails et le plan de correction en 5 phases dans : [audit-gpt5.6-sol.md](audit-gpt5.6-sol.md).
+
 ## Règles d'exécution
 
 Statuts : À faire → En cours → À valider → Terminé ; Bloqué indique une dépendance précise.
