@@ -3,21 +3,19 @@ import { db } from '@/db';
 import { naboopayTransactions } from '@/db/schema';
 import { createNabooPayTransaction, NabooPayApiError } from '@/lib/naboopay';
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import crypto from 'crypto';
 import { eq, and } from 'drizzle-orm';
 import { readBoundedJson } from '@/lib/bounded-json';
 import { BadRequestError, UnauthorizedError, ServiceUnavailableError, RateLimitError, withApiErrorHandler } from '@/lib/api-errors';
 import { ensureInternalUser } from '@/lib/identity';
 import { consumeRateLimit } from '@/lib/rate-limit';
-
-const checkoutSchema = z.object({
-  planCode: z.enum(['lumina_all_access_monthly', 'lumina_all_access_annual']),
-  phone: z.string().regex(/^\+[1-9]\d{1,14}$/, "Numéro de téléphone non conforme E.164"),
-  idempotencyKey: z.string().min(1),
-}).strict();
+import { NABOOPAY_PLANS } from '@/lib/naboopay-payment';
+import { checkoutRequestSchema } from '@/lib/payment-contracts';
 
 export const POST = withApiErrorHandler(async (request: Request) => {
+  if (process.env.PAYMENTS_ENABLED !== 'true') {
+    throw new ServiceUnavailableError('Le paiement est temporairement indisponible.', 'PAYMENTS_DISABLED');
+  }
   const { userId } = await auth();
   if (!userId) {
     throw new UnauthorizedError('Authentification requise.');
@@ -28,28 +26,15 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     throw new UnauthorizedError('Utilisateur bloqué ou supprimé.');
   }
 
-  const rateLimit = await consumeRateLimit({
-    bucket: 'naboopay_checkout',
-    userId: internalUser.id,
-    limit: 5,
-    windowSeconds: 600,
-  });
-
-  if (!rateLimit.allowed) {
-    throw new RateLimitError('Trop de tentatives de paiement. Réessayez dans quelques instants.', 'RATE_LIMITED', {
-      'X-RateLimit-Limit': String(rateLimit.limit),
-      'X-RateLimit-Remaining': '0',
-    });
-  }
-
   const body = await readBoundedJson(request, 8 * 1_024);
-  const parsed = checkoutSchema.safeParse(body);
+  const parsed = checkoutRequestSchema.safeParse(body);
   if (!parsed.success) {
     throw new BadRequestError('Données de paiement invalides.', 'INVALID_PAYLOAD');
   }
 
-  const { planCode, phone, idempotencyKey } = parsed.data;
-  const amount = planCode === 'lumina_all_access_annual' ? 9900 : 990;
+  const { planCode, firstName, lastName, phone, idempotencyKey } = parsed.data;
+  const plan = NABOOPAY_PLANS[planCode];
+  const amount = plan.amount;
 
   // Implémenter l’idempotence locale
   const existingTx = await db.query.naboopayTransactions.findFirst({
@@ -67,6 +52,21 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     return NextResponse.json({
       checkout_url: existingTx.checkoutUrl || null,
       status: existingTx.status,
+      checkout_attempt_id: existingTx.checkoutAttemptId,
+    });
+  }
+
+  const rateLimit = await consumeRateLimit({
+    bucket: 'naboopay_checkout',
+    userId: internalUser.id,
+    limit: 5,
+    windowSeconds: 600,
+  });
+
+  if (!rateLimit.allowed) {
+    throw new RateLimitError('Trop de tentatives de paiement. Réessayez dans quelques instants.', 'RATE_LIMITED', {
+      'X-RateLimit-Limit': String(rateLimit.limit),
+      'X-RateLimit-Remaining': '0',
     });
   }
 
@@ -77,8 +77,8 @@ export const POST = withApiErrorHandler(async (request: Request) => {
   const successUrl = `${origin}/pricing/success?order_id=${checkoutAttemptId}`;
   const errorUrl = `${origin}/pricing/error?order_id=${checkoutAttemptId}`;
 
-  // Create local intention
-  await db.insert(naboopayTransactions).values({
+  // The unique (user, idempotency key) constraint arbitrates concurrent requests.
+  const [created] = await db.insert(naboopayTransactions).values({
     id,
     checkoutAttemptId,
     idempotencyKey,
@@ -88,7 +88,25 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     currency: 'XOF',
     status: 'creating',
     payload: {},
-  });
+  }).onConflictDoNothing().returning({ id: naboopayTransactions.id });
+
+  if (!created) {
+    const winner = await db.query.naboopayTransactions.findFirst({
+      where: and(
+        eq(naboopayTransactions.userId, internalUser.id),
+        eq(naboopayTransactions.idempotencyKey, idempotencyKey),
+      ),
+    });
+    if (!winner) throw new ServiceUnavailableError('Tentative de paiement indisponible.', 'CHECKOUT_CONFLICT');
+    if (winner.planCode !== planCode) {
+      throw new BadRequestError('Une tentative avec cette clé existe déjà pour un forfait différent.', 'IDEMPOTENCY_CONFLICT');
+    }
+    return NextResponse.json({
+      checkout_url: winner.checkoutUrl,
+      status: winner.status,
+      checkout_attempt_id: winner.checkoutAttemptId,
+    });
+  }
 
   let nbpResponse;
   try {
@@ -96,16 +114,16 @@ export const POST = withApiErrorHandler(async (request: Request) => {
       method_of_payment: ['wave', 'orange_money', 'visa', 'mastercard'],
       products: [
         {
-          name: `Abonnement ${planCode === 'lumina_all_access_annual' ? 'Annuel' : 'Mensuel'} Africa Live`,
+          name: plan.productName,
           price: amount,
           quantity: 1,
           description: 'Accès illimité aux chaînes Africa Live TV',
         },
       ],
       customer: {
-        first_name: internalUser.email?.split('@')[0] || 'Client',
-        last_name: 'AfricaLive',
-        phone: phone, 
+        first_name: firstName,
+        last_name: lastName,
+        phone,
         created_at: internalUser.createdAt
       },
       success_url: successUrl,
@@ -135,6 +153,7 @@ export const POST = withApiErrorHandler(async (request: Request) => {
 
   return NextResponse.json({
     checkout_url: nbpResponse.checkout_url,
-    status: 'pending'
+    status: 'pending',
+    checkout_attempt_id: checkoutAttemptId,
   });
 });

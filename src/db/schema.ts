@@ -864,6 +864,7 @@ export const naboopayTransactions = pgTable('naboopay_transactions', {
   updatedAt: timestampWithTimezone('updated_at').notNull().defaultNow(),
   providerCreatedAt: timestampWithTimezone('provider_created_at'),
   paidAt: timestampWithTimezone('paid_at'),
+  fulfilledAt: timestampWithTimezone('fulfilled_at'),
   orderId: text('order_id'),
 }, (table) => [
   foreignKey({

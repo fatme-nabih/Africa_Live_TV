@@ -26,7 +26,7 @@ export function validateServerEnvironment(env: Environment) {
   if (!database || !['postgres:', 'postgresql:'].includes(database.protocol) || database.pathname.length < 2) {
     issues.push('DATABASE_URL must be a PostgreSQL connection URL with a database name.');
   }
-  for (const name of ['LOCAL_DEV_MODE', 'NEXT_PUBLIC_LOCAL_DEV_MODE', 'NEXT_PUBLIC_LOCAL_PLAYBACK', 'ENABLE_LOCAL_VLC', 'PLAYBACK_ELIGIBILITY_READY']) {
+  for (const name of ['LOCAL_DEV_MODE', 'NEXT_PUBLIC_LOCAL_DEV_MODE', 'NEXT_PUBLIC_LOCAL_PLAYBACK', 'ENABLE_LOCAL_VLC', 'PLAYBACK_ELIGIBILITY_READY', 'PAYMENTS_ENABLED']) {
     if (env[name] !== undefined && !['true', 'false'].includes(env[name]!)) issues.push(`${name} must be true or false.`);
   }
   if (local) {
@@ -105,12 +105,29 @@ export function validateServerEnvironment(env: Environment) {
     }
   }
 
-  // NabooPay secrets are required in all environments
-  if (!env.NABOOPAY_API_KEY?.trim() || placeholder(env.NABOOPAY_API_KEY)) {
-    issues.push('NABOOPAY_API_KEY must be configured with a real API key.');
-  }
-  if (!env.NABOOPAY_WEBHOOK_SECRET?.trim() || placeholder(env.NABOOPAY_WEBHOOK_SECRET)) {
-    issues.push('NABOOPAY_WEBHOOK_SECRET must be configured with a real webhook secret.');
+  // Payment is intentionally unavailable in local development unless both
+  // credentials are explicitly configured. Deployed runtimes must always
+  // provide both values so a partially configured checkout cannot start.
+  const paymentEnabled = env.PAYMENTS_ENABLED === 'true';
+  const paymentConfigured = Boolean(env.NABOOPAY_API_KEY || env.NABOOPAY_WEBHOOK_SECRET);
+  if (paymentEnabled || paymentConfigured) {
+    if (!env.NABOOPAY_API_KEY?.trim() || placeholder(env.NABOOPAY_API_KEY)) {
+      issues.push('NABOOPAY_API_KEY must be configured with a real API key.');
+    }
+    if (!env.NABOOPAY_WEBHOOK_SECRET?.trim() || placeholder(env.NABOOPAY_WEBHOOK_SECRET)) {
+      issues.push('NABOOPAY_WEBHOOK_SECRET must be configured with a real webhook secret.');
+    }
+    if (productionRuntime && paymentEnabled) {
+      for (const name of ['INNGEST_SIGNING_KEY', 'INNGEST_EVENT_KEY']) {
+        const value = env[name] ?? '';
+        if (value.length < 20 || placeholder(value)) {
+          issues.push(`${name} must be configured before payments are enabled.`);
+        }
+      }
+      if (!env.INNGEST_ENV?.trim() || placeholder(env.INNGEST_ENV)) {
+        issues.push('INNGEST_ENV must identify the deployed environment before payments are enabled.');
+      }
+    }
   }
 
   if (issues.length) throw new EnvironmentValidationError(issues);

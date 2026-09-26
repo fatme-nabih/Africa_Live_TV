@@ -30,7 +30,19 @@ jobs:
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
       CLERK_SECRET_KEY: sk_test_123456789
       DEPLOYMENT_ENV: local
-      NABOOPAY_API_KEY: fake_api_key
+      LOCAL_DEV_MODE: 'true'
+      NEXT_PUBLIC_LOCAL_DEV_MODE: 'true'
+      NEXT_PUBLIC_LOCAL_PLAYBACK: 'false'
+      ENABLE_LOCAL_VLC: 'false'
+      PLAYBACK_ELIGIBILITY_READY: 'false'
+      PAYMENTS_ENABLED: 'false'
+      NEXT_PUBLIC_APP_URL: http://localhost:3001
+      BROWSER_TEST_ORIGIN: http://localhost:3001
+      # CI-only non-production credentials — not used unless PAYMENTS_ENABLED=true.
+      # The validator only checks these when payment is enabled or partially configured.
+      NABOOPAY_API_KEY: ''
+      NABOOPAY_WEBHOOK_SECRET: ''
+
 
     steps:
     - uses: actions/checkout@v4
@@ -49,6 +61,12 @@ jobs:
 
     - name: Check Types
       run: npx tsc --noEmit --incremental false
+
+    - name: Snyk Code SAST Scan
+      if: env.SNYK_TOKEN != ''
+      run: npx snyk code test
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
     - name: Apply Database Schema
       run: npm run db:migrate

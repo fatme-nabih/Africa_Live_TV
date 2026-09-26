@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useReducer, useRef } from 'react';
 import Hls from 'hls.js';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
   ExternalLink,
   LoaderCircle,
 } from 'lucide-react';

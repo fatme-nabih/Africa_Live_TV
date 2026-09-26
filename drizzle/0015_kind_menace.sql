@@ -1,0 +1,1 @@
+ALTER TABLE "naboopay_transactions" ADD COLUMN "fulfilled_at" timestamp with time zone;

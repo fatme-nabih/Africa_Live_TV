@@ -1,136 +1,166 @@
 'use client';
 
+import { useEffect, useReducer } from 'react';
 import Link from 'next/link';
-import { CheckCircle, Clock, XCircle, RefreshCw } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
+import { CheckCircle, Clock, RefreshCw, XCircle } from 'lucide-react';
+
+import { checkoutStatusResponseSchema } from '@/lib/payment-contracts';
+
+const MAX_ATTEMPTS = 12;
+const POLL_DELAY_MS = 3_000;
+
+type TerminalStatus = 'completed' | 'failed' | 'canceled' | 'timeout' | 'error';
+
+type State =
+  | { tag: 'polling'; attempt: number }
+  | { tag: 'done'; status: TerminalStatus };
+
+type Action =
+  | { type: 'terminal'; status: TerminalStatus }
+  | { type: 'retry' }
+  | { type: 'manual_retry' };
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case 'terminal':
+      return { tag: 'done', status: action.status };
+    case 'retry':
+      if (state.tag !== 'polling') return state;
+      return { tag: 'polling', attempt: state.attempt + 1 };
+    case 'manual_retry':
+      return { tag: 'polling', attempt: 0 };
+    default:
+      return state;
+  }
+}
+
+function init(orderId: string | null): State {
+  return orderId ? { tag: 'polling', attempt: 0 } : { tag: 'done', status: 'error' };
+}
 
 export default function SuccessClient() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('order_id');
 
-  const [status, setStatus] = useState<string>('pending');
-  const [retries, setRetries] = useState(0);
-  const maxRetries = 10;
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  const checkStatus = async () => {
-    if (!orderId) return;
-    try {
-      const res = await fetch(`/api/checkout/status?checkout_attempt_id=${orderId}`);
-      if (!res.ok) {
-        if (res.status === 401 || res.status === 404) {
-          setStatus('error'); // stop polling
-          return;
-        }
-        throw new Error('Server error');
-      }
-      const data = await res.json();
-      setStatus(data.status);
-      
-      if (data.status === 'completed' || data.status === 'failed' || data.status === 'canceled') {
-        // Final state reached
-        return;
-      }
-      
-      // Still pending/creating
-      if (retries < maxRetries) {
-        setRetries(r => r + 1);
-        const nextDelay = Math.pow(2, retries) * 1000;
-        timerRef.current = setTimeout(checkStatus, nextDelay);
-      } else {
-        setStatus('timeout');
-      }
-    } catch {
-      if (retries < maxRetries) {
-        setRetries(r => r + 1);
-        const nextDelay = Math.pow(2, retries) * 1000;
-        timerRef.current = setTimeout(checkStatus, nextDelay);
-      } else {
-        setStatus('timeout');
-      }
-    }
-  };
+  const [state, dispatch] = useReducer(reducer, orderId, init);
 
   useEffect(() => {
-    if (orderId && (status === 'pending' || status === 'creating')) {
-      checkStatus();
-    }
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderId]); // Only run once on mount
+    if (state.tag !== 'polling') return;
+    const { attempt } = state;
+    const controller = new AbortController();
 
-  if (!orderId) {
+    const timer = setTimeout(() => {
+      void fetch(
+        `/api/checkout/status?checkout_attempt_id=${encodeURIComponent(orderId ?? '')}`,
+        { cache: 'no-store', signal: controller.signal },
+      ).then(async (response) => {
+        if (controller.signal.aborted) return;
+        if (!response.ok) {
+          dispatch({ type: 'terminal', status: 'error' });
+          return;
+        }
+        const parsed = checkoutStatusResponseSchema.safeParse(await response.json());
+        if (controller.signal.aborted) return;
+        if (!parsed.success) {
+          dispatch({ type: 'terminal', status: 'error' });
+          return;
+        }
+        const s = parsed.data.status;
+        if (s === 'completed' || s === 'failed' || s === 'canceled') {
+          dispatch({ type: 'terminal', status: s });
+          return;
+        }
+        if (attempt + 1 >= MAX_ATTEMPTS) {
+          dispatch({ type: 'terminal', status: 'timeout' });
+          return;
+        }
+        dispatch({ type: 'retry' });
+      }).catch(() => {
+        if (controller.signal.aborted) return;
+        if (attempt + 1 >= MAX_ATTEMPTS) {
+          dispatch({ type: 'terminal', status: 'timeout' });
+        } else {
+          dispatch({ type: 'retry' });
+        }
+      });
+    }, attempt === 0 ? 0 : POLL_DELAY_MS);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  // Re-run each time a new polling attempt starts.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.tag === 'polling' ? state.attempt : -1, orderId]);
+
+  const displayStatus = state.tag === 'done' ? state.status : 'pending';
+
+  if (!orderId || displayStatus === 'error') {
     return (
       <div className="mx-auto max-w-md text-center">
-        <h1 className="text-3xl font-black text-white mb-4">Erreur</h1>
-        <p className="text-zinc-400 mb-8 leading-relaxed">Identifiant de commande manquant.</p>
-        <Link href="/pricing" className="inline-block rounded-lg bg-zinc-800 px-6 py-3 text-sm font-bold text-white transition hover:bg-zinc-700">
+        <XCircle className="mx-auto mb-6 h-16 w-16 text-red-500" />
+        <h1 className="mb-4 text-3xl font-black text-white">Statut indisponible</h1>
+        <p className="mb-8 leading-relaxed text-zinc-400">
+          Cette transaction ne peut pas être affichée depuis votre compte.
+        </p>
+        <Link href="/pricing" className="inline-block rounded-lg bg-zinc-800 px-6 py-3 text-sm font-bold text-white">
           Retour aux offres
         </Link>
       </div>
     );
   }
 
-  if (status === 'completed') {
+  if (displayStatus === 'completed') {
     return (
       <div className="mx-auto max-w-md text-center">
-        <CheckCircle className="mx-auto h-16 w-16 text-yellow-400 mb-6" />
-        <h1 className="text-3xl font-black text-white mb-4">Paiement Réussi !</h1>
-        <p className="text-zinc-400 mb-8 leading-relaxed">
-          Merci pour votre achat. Votre abonnement a bien été activé. Vous avez désormais un accès illimité à Africa Live TV.
-        </p>
-        <Link href="/app" className="inline-block rounded-lg bg-yellow-400 px-6 py-3 text-sm font-black text-black transition hover:bg-yellow-300 shadow-[0_0_20px_rgba(250,204,21,0.2)]">
+        <CheckCircle className="mx-auto mb-6 h-16 w-16 text-yellow-400" />
+        <h1 className="mb-4 text-3xl font-black text-white">Paiement réussi</h1>
+        <p className="mb-8 leading-relaxed text-zinc-400">Votre abonnement est actif.</p>
+        <Link href="/app" className="inline-block rounded-lg bg-yellow-400 px-6 py-3 text-sm font-black text-black">
           Ouvrir l&apos;application
         </Link>
       </div>
     );
   }
 
-  if (status === 'failed' || status === 'canceled') {
+  if (displayStatus === 'failed' || displayStatus === 'canceled') {
     return (
       <div className="mx-auto max-w-md text-center">
-        <XCircle className="mx-auto h-16 w-16 text-red-500 mb-6" />
-        <h1 className="text-3xl font-black text-white mb-4">Paiement Échoué</h1>
-        <p className="text-zinc-400 mb-8 leading-relaxed">
-          Votre paiement n&apos;a pas abouti ou a été annulé.
-        </p>
-        <Link href="/pricing" className="inline-block rounded-lg bg-yellow-400 px-6 py-3 text-sm font-black text-black transition hover:bg-yellow-300 shadow-[0_0_20px_rgba(250,204,21,0.2)]">
+        <XCircle className="mx-auto mb-6 h-16 w-16 text-red-500" />
+        <h1 className="mb-4 text-3xl font-black text-white">Paiement non abouti</h1>
+        <p className="mb-8 leading-relaxed text-zinc-400">Le paiement a échoué ou a été annulé.</p>
+        <Link href="/pricing" className="inline-block rounded-lg bg-yellow-400 px-6 py-3 text-sm font-black text-black">
           Retour aux offres
         </Link>
       </div>
     );
   }
 
-  if (status === 'timeout') {
+  if (displayStatus === 'timeout') {
     return (
       <div className="mx-auto max-w-md text-center">
-        <Clock className="mx-auto h-16 w-16 text-yellow-400 mb-6" />
-        <h1 className="text-3xl font-black text-white mb-4">En attente de confirmation</h1>
-        <p className="text-zinc-400 mb-8 leading-relaxed">
-          Votre paiement prend plus de temps que prévu à être confirmé par l&apos;opérateur. Ne vous inquiétez pas, il sera validé automatiquement.
+        <Clock className="mx-auto mb-6 h-16 w-16 text-yellow-400" />
+        <h1 className="mb-4 text-3xl font-black text-white">Confirmation en attente</h1>
+        <p className="mb-8 leading-relaxed text-zinc-400">
+          Ne recommencez pas le paiement. La vérification automatique continue en arrière-plan.
         </p>
         <button
-          onClick={() => { setRetries(0); setStatus('pending'); checkStatus(); }}
-          className="inline-flex items-center rounded-lg bg-zinc-800 px-6 py-3 text-sm font-bold text-white transition hover:bg-zinc-700 mb-4"
+          onClick={() => dispatch({ type: 'manual_retry' })}
+          className="inline-flex items-center rounded-lg bg-zinc-800 px-6 py-3 text-sm font-bold text-white"
         >
           <RefreshCw className="mr-2 h-4 w-4" />
-          Rafraîchir manuellement
+          Vérifier maintenant
         </button>
       </div>
     );
   }
 
-  // pending / creating / error
   return (
     <div className="mx-auto max-w-md text-center">
-      <Clock className="mx-auto h-16 w-16 text-yellow-400 mb-6 animate-pulse" />
-      <h1 className="text-3xl font-black text-white mb-4">Paiement en cours</h1>
-      <p className="text-zinc-400 mb-8 leading-relaxed">
-        Votre paiement est en cours de validation. L&apos;accès à votre abonnement sera débloqué d&apos;ici quelques instants.
-      </p>
+      <Clock className="mx-auto mb-6 h-16 w-16 animate-pulse text-yellow-400" />
+      <h1 className="mb-4 text-3xl font-black text-white">Paiement en cours</h1>
+      <p className="mb-8 leading-relaxed text-zinc-400">La confirmation est en cours de vérification.</p>
     </div>
   );
 }

@@ -25,8 +25,19 @@ const globalForDb = globalThis as typeof globalThis & {
   pgPool?: Pool;
 };
 
-const parsedMax = process.env.DATABASE_MAX_CONNECTIONS ? parseInt(process.env.DATABASE_MAX_CONNECTIONS, 10) : 10;
-const maxConnections = Math.max(2, Math.min(10, parsedMax));
+export function parseDatabaseMaxConnections(value: string | undefined) {
+  if (value === undefined || value === '') return 10;
+  if (!/^\d+$/.test(value)) {
+    throw new Error('DATABASE_MAX_CONNECTIONS must be an integer between 2 and 10.');
+  }
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 2 || parsed > 10) {
+    throw new Error('DATABASE_MAX_CONNECTIONS must be an integer between 2 and 10.');
+  }
+  return parsed;
+}
+
+const maxConnections = parseDatabaseMaxConnections(process.env.DATABASE_MAX_CONNECTIONS);
 
 export const pool =
   globalForDb.pgPool ??

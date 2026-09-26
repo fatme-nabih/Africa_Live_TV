@@ -4,6 +4,7 @@ import { db } from '@/db';
 import { naboopayTransactions } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { auth } from '@clerk/nextjs/server';
+import { ensureInternalUser } from '@/lib/identity';
 
 export default async function PricingErrorPage(props: { searchParams: Promise<{ order_id?: string }> }) {
   const { userId } = await auth();
@@ -13,10 +14,11 @@ export default async function PricingErrorPage(props: { searchParams: Promise<{ 
   let errorMessage = "Une erreur est survenue lors de votre paiement. Veuillez réessayer.";
 
   if (orderId && userId) {
+    const internalUser = await ensureInternalUser(userId);
     const [tx] = await db.select().from(naboopayTransactions).where(
       and(
         eq(naboopayTransactions.checkoutAttemptId, orderId),
-        eq(naboopayTransactions.userId, userId)
+        eq(naboopayTransactions.userId, internalUser.id)
       )
     );
     if (tx && tx.status === 'canceled') {

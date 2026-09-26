@@ -15,7 +15,6 @@ const cspHeader = `
   connect-src 'self' https://*.clerk.accounts.dev https://api.clerk.com wss://*.clerk.accounts.dev https: http:;
   media-src 'self' blob: https: http:;
   worker-src 'self' blob:;
-  upgrade-insecure-requests;
 `.replace(/\s{2,}/g, ' ').trim();
 
 const nextConfig: NextConfig = {

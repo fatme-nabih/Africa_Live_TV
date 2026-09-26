@@ -15,6 +15,7 @@ function validProduction(): Record<string, string> {
     CLERK_SECRET_KEY: `sk_live_${randomBytes(24).toString('hex')}`,
     CLERK_WEBHOOK_SIGNING_SECRET: `whsec_${randomBytes(24).toString('base64')}`,
     NABOOPAY_API_KEY: 'nbp_real_api_key_valid_for_tests',
+    NABOOPAY_WEBHOOK_SECRET: randomBytes(32).toString('hex'),
   };
 }
 
@@ -43,6 +44,7 @@ test('production permits a closed playback gate but rejects unsafe configuration
     { CATALOG_CURSOR_SECRET: valid.ABUSE_HASH_SECRET }, { CLERK_SECRET_KEY: 'sk_test_local-placeholder' },
     { NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: 'pk_live_Y2ktdGVzdC5jb20k' },
     { CLERK_WEBHOOK_SIGNING_SECRET: undefined }, { NABOOPAY_API_KEY: undefined },
+    { NABOOPAY_WEBHOOK_SECRET: undefined },
     { ABUSE_TRUSTED_PROXY_HEADER: 'arbitrary' }, { ABUSE_TRUSTED_PROXY_HEADER: 'disabled' }, { INTEGRATION_TEST_DATABASE: 'africa_live_dev' },
     { L3_INTEGRATION_TEST: '1' }, { DEPLOYMENT_ENV: 'local' },
   ]) assert.throws(() => validateServerEnvironment({ ...valid, ...overrides }), EnvironmentValidationError);

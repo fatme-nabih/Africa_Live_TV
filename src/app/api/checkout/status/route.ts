@@ -4,12 +4,14 @@ import { naboopayTransactions } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { UnauthorizedError, NotFoundError, withApiErrorHandler } from '@/lib/api-errors';
+import { ensureInternalUser } from '@/lib/identity';
 
 export const GET = withApiErrorHandler(async (request: Request) => {
   const { userId } = await auth();
   if (!userId) {
     throw new UnauthorizedError('Authentification requise.');
   }
+  const internalUser = await ensureInternalUser(userId);
 
   const { searchParams } = new URL(request.url);
   const checkoutAttemptId = searchParams.get('checkout_attempt_id');
@@ -22,7 +24,7 @@ export const GET = withApiErrorHandler(async (request: Request) => {
     where: and(
       eq(naboopayTransactions.checkoutAttemptId, checkoutAttemptId),
       // Prevent users from querying other users' transactions
-      eq(naboopayTransactions.userId, userId)
+      eq(naboopayTransactions.userId, internalUser.id)
     ),
     columns: {
       status: true,

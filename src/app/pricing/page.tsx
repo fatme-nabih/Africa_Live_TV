@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { Show } from '@clerk/nextjs';
 import { Check } from 'lucide-react';
+import { checkoutRequestSchema, checkoutResponseSchema } from '@/lib/payment-contracts';
 
 const features = [
   'Accès complet au catalogue Africa Live',
@@ -14,30 +15,76 @@ const features = [
 
 export default function PricingPage() {
   const [loading, setLoading] = useState<'lumina_all_access_monthly' | 'lumina_all_access_annual' | null>(null);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [message, setMessage] = useState<string | null>(null);
+  const attemptKeys = useRef(new Map<string, string>());
 
   const handleSubscribe = async (planCode: 'lumina_all_access_monthly' | 'lumina_all_access_annual') => {
     try {
       setLoading(planCode);
+      setMessage(null);
+      const idempotencyKey = attemptKeys.current.get(planCode) ?? crypto.randomUUID();
+      attemptKeys.current.set(planCode, idempotencyKey);
+      const request = checkoutRequestSchema.safeParse({
+        planCode, firstName, lastName, phone, idempotencyKey,
+      });
+      if (!request.success) {
+        setMessage('Renseignez votre nom et un numéro au format international, par exemple +221771234567.');
+        return;
+      }
       const res = await fetch('/api/checkout/naboopay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planCode }),
+        body: JSON.stringify(request.data),
       });
 
-      const data = await res.json();
+      const rawData: unknown = await res.json();
       if (!res.ok) {
         if (res.status === 401) {
-          alert('Veuillez vous connecter pour vous abonner.');
+          setMessage('Veuillez vous connecter pour vous abonner.');
           return;
         }
-        throw new Error(data.error || 'Erreur lors de la création de la transaction');
+        setMessage('La tentative de paiement n’a pas pu être créée. Réessayez avec la même tentative.');
+        return;
       }
 
-      // Redirection vers NabooPay Checkout
-      window.location.href = data.checkout_url;
-    } catch (error) {
-      console.error('Erreur checkout:', error);
-      alert('Une erreur est survenue lors de la création de votre transaction. Veuillez réessayer.');
+      const data = checkoutResponseSchema.safeParse(rawData);
+      if (!data.success) {
+        setMessage('Réponse de paiement invalide. Aucune redirection n’a été effectuée.');
+        return;
+      }
+      if (!data.data.checkout_url) {
+        if (data.data.status === 'failed' || data.data.status === 'canceled') {
+          attemptKeys.current.delete(planCode);
+          setMessage('Cette tentative est terminée. Cliquez à nouveau pour créer une nouvelle tentative.');
+        } else {
+          setMessage('La création est en cours de vérification. N’effectuez pas un second paiement.');
+        }
+        return;
+      }
+      let parsed: URL;
+      try {
+        parsed = new URL(data.data.checkout_url);
+      } catch {
+        setMessage('URL de paiement invalide.');
+        return;
+      }
+      if (parsed.protocol !== 'https:' || !(parsed.hostname === 'checkout.naboopay.com' || parsed.hostname.endsWith('.naboopay.com'))) {
+        setMessage('Destination de paiement non autorisée.');
+        return;
+      }
+      const safeCheckoutUrl = `https://${encodeURIComponent(parsed.hostname)}${parsed.pathname}${parsed.search}`;
+      const link = document.createElement('a');
+      link.setAttribute('href', safeCheckoutUrl);
+      link.setAttribute('rel', 'noopener noreferrer');
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch {
+      setMessage('Connexion interrompue. Réessayez : la même clé de tentative sera conservée.');
     } finally {
       setLoading(null);
     }
@@ -81,6 +128,21 @@ export default function PricingPage() {
           </div>
 
           <div className="flex flex-col gap-6">
+            <div className="grid gap-4 rounded-lg border border-zinc-800 bg-zinc-950 p-6 sm:grid-cols-2">
+              <label className="text-sm text-zinc-300">
+                Prénom
+                <input value={firstName} onChange={(event) => setFirstName(event.target.value)} autoComplete="given-name" maxLength={50} className="mt-2 w-full rounded-md border border-zinc-700 bg-black px-3 py-2 text-white" />
+              </label>
+              <label className="text-sm text-zinc-300">
+                Nom
+                <input value={lastName} onChange={(event) => setLastName(event.target.value)} autoComplete="family-name" maxLength={50} className="mt-2 w-full rounded-md border border-zinc-700 bg-black px-3 py-2 text-white" />
+              </label>
+              <label className="text-sm text-zinc-300 sm:col-span-2">
+                Téléphone au format international
+                <input value={phone} onChange={(event) => setPhone(event.target.value.trim())} autoComplete="tel" inputMode="tel" placeholder="+221771234567" maxLength={16} className="mt-2 w-full rounded-md border border-zinc-700 bg-black px-3 py-2 text-white" />
+              </label>
+              {message ? <p role="alert" className="text-sm text-amber-300 sm:col-span-2">{message}</p> : null}
+            </div>
             {/* Mensuel */}
             <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-6 shadow-2xl transition hover:border-zinc-700 flex flex-col">
               <h3 className="text-xl font-bold text-white">Abonnement Mensuel</h3>

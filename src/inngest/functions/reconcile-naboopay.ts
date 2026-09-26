@@ -1,75 +1,57 @@
-import { inngest } from "../client";
-import { db } from "@/db";
-import { naboopayTransactions } from "@/db/schema";
-import { eq, or, and, lt } from "drizzle-orm";
-import { structuredLog } from "@/lib/structured-log";
+import { and, eq, isNull, lt, or } from 'drizzle-orm';
+
+import { db } from '@/db';
+import { naboopayTransactions } from '@/db/schema';
+import { getNabooPayTransaction } from '@/lib/naboopay';
+import { applyVerifiedNabooPayPayment } from '@/lib/naboopay-payment';
+import { structuredLog } from '@/lib/structured-log';
+
+import { inngest } from '../client';
+
+const RECONCILIATION_BATCH_SIZE = 100;
 
 export const reconcileNaboopay = inngest.createFunction(
-  { id: "reconcile-naboopay", triggers: [{ cron: "*/15 * * * *" }] },
-  async ({ step }) => {
-    return await step.run("scan-and-reconcile", async () => {
-      const now = new Date();
-      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  { id: 'reconcile-naboopay', triggers: [{ cron: '*/15 * * * *' }] },
+  async ({ step }) => step.run('scan-and-reconcile', async () => {
+    if (process.env.PAYMENTS_ENABLED !== 'true') {
+      return { disabled: true, reconciled: 0, errors: 0, ambiguousCreations: 0 };
+    }
 
-      const transactionsToReconcile = await db.query.naboopayTransactions.findMany({
-        where: or(
-          eq(naboopayTransactions.status, 'reconciliation_required'),
-          and(
-            eq(naboopayTransactions.status, 'pending'),
-            lt(naboopayTransactions.updatedAt, oneHourAgo)
-          )
-        )
-      });
-
-      const results = { reconciled: 0, failed: 0, errors: 0 };
-
-      for (const tx of transactionsToReconcile) {
-        if (!tx.providerOrderId) continue;
-
-        try {
-          const apiKey = process.env.NABOOPAY_API_KEY;
-          if (!apiKey) throw new Error("NABOOPAY_API_KEY missing");
-
-          const response = await fetch(`https://api.naboopay.com/api/v2/transactions/${tx.providerOrderId}`, {
-            headers: {
-              'Authorization': `Bearer ${apiKey}`,
-              'Accept': 'application/json',
-            }
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            // Data will contain transaction_status
-            const status = data.transaction_status;
-            
-            // If API returns final state, update our DB
-            if (status === 'completed' || status === 'canceled' || status === 'failed') {
-              await db.update(naboopayTransactions)
-                .set({ status: status, updatedAt: now.toISOString() })
-                .where(eq(naboopayTransactions.id, tx.id));
-              results.reconciled++;
-              structuredLog('info', 'naboopay.reconciliation.success', { orderId: tx.providerOrderId, status });
-              continue;
-            }
-          }
-
-          // If still not reconciled and older than 24h, mark as failed
-          if (tx.createdAt < twentyFourHoursAgo) {
-            await db.update(naboopayTransactions)
-              .set({ status: 'failed', updatedAt: now.toISOString() })
-              .where(eq(naboopayTransactions.id, tx.id));
-            results.failed++;
-            structuredLog('warn', 'naboopay.reconciliation.timeout_failed', { orderId: tx.providerOrderId });
-          }
-
-        } catch (error) {
-          results.errors++;
-          structuredLog('error', 'naboopay.reconciliation.error', { orderId: tx.providerOrderId, error: String(error) });
-        }
-      }
-
-      return results;
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1_000).toISOString();
+    const candidates = await db.query.naboopayTransactions.findMany({
+      where: or(
+        eq(naboopayTransactions.status, 'reconciliation_required'),
+        and(eq(naboopayTransactions.status, 'pending'), lt(naboopayTransactions.updatedAt, oneHourAgo)),
+        and(eq(naboopayTransactions.status, 'completed'), isNull(naboopayTransactions.fulfilledAt)),
+      ),
+      limit: RECONCILIATION_BATCH_SIZE,
     });
-  }
+
+    const results = { disabled: false, reconciled: 0, errors: 0, ambiguousCreations: 0 };
+    for (const transaction of candidates) {
+      if (!transaction.providerOrderId) {
+        // The documented v2 lookup requires provider order_id. A timed-out
+        // creation without it is ambiguous and must never be retried blindly.
+        results.ambiguousCreations += 1;
+        continue;
+      }
+      try {
+        const providerTransaction = await getNabooPayTransaction(transaction.providerOrderId);
+        const result = await applyVerifiedNabooPayPayment(providerTransaction);
+        if (result.outcome !== 'unknown_order') results.reconciled += 1;
+      } catch (error) {
+        results.errors += 1;
+        structuredLog('error', 'naboopay.reconciliation.error', {
+          errorName: error instanceof Error ? error.name : 'UnknownError',
+        });
+      }
+    }
+
+    if (results.ambiguousCreations > 0) {
+      structuredLog('warn', 'naboopay.reconciliation.ambiguous_creations', {
+        count: results.ambiguousCreations,
+      });
+    }
+    return results;
+  }),
 );
