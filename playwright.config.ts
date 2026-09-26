@@ -1,5 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
+import { loadEnvConfig } from '@next/env';
+import { validateServerEnvironment } from './src/lib/server-environment';
 
+loadEnvConfig(process.cwd());
+validateServerEnvironment(process.env as Record<string, string | undefined>);
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,

@@ -103,9 +103,15 @@ export function validateServerEnvironment(env: Environment) {
     if (!/^whsec_[A-Za-z0-9+/=_-]{20,}$/.test(signingSecret) || placeholder(signingSecret)) {
       issues.push('CLERK_WEBHOOK_SIGNING_SECRET must be configured with a real signing secret.');
     }
-    if (!env.NABOOPAY_API_KEY?.trim() || placeholder(env.NABOOPAY_API_KEY)) {
-      issues.push('NABOOPAY_API_KEY must be configured with a real API key.');
-    }
   }
+
+  // NabooPay secrets are required in all environments
+  if (!env.NABOOPAY_API_KEY?.trim() || placeholder(env.NABOOPAY_API_KEY)) {
+    issues.push('NABOOPAY_API_KEY must be configured with a real API key.');
+  }
+  if (!env.NABOOPAY_WEBHOOK_SECRET?.trim() || placeholder(env.NABOOPAY_WEBHOOK_SECRET)) {
+    issues.push('NABOOPAY_WEBHOOK_SECRET must be configured with a real webhook secret.');
+  }
+
   if (issues.length) throw new EnvironmentValidationError(issues);
 }

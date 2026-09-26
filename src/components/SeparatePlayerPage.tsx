@@ -3,15 +3,19 @@
 import Image from 'next/image';
 import { ArrowLeft, X } from 'lucide-react';
 
+import { useRouter } from 'next/navigation';
+
 import Player from '@/components/Player';
 
 export default function SeparatePlayerPage({ channelId }: { channelId: string }) {
+  const router = useRouter();
+
   const showCatalog = () => {
     if (window.opener && !window.opener.closed) {
       window.opener.focus();
       return;
     }
-    window.location.assign('/app');
+    router.push('/app');
   };
 
   const closePlayer = () => {
@@ -19,7 +23,7 @@ export default function SeparatePlayerPage({ channelId }: { channelId: string })
       window.close();
       return;
     }
-    window.location.assign('/app');
+    router.push('/app');
   };
 
   return (

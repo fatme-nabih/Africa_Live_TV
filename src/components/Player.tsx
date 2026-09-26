@@ -3,10 +3,8 @@
 import React, { useCallback, useEffect, useReducer, useRef } from 'react';
 import Hls from 'hls.js';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
   ExternalLink,
   LoaderCircle,
-  Tv,
 } from 'lucide-react';
 import {
   LoadingOverlay,
@@ -16,6 +14,7 @@ import {
   ExternalOpenedOverlay,
   ExternalSuggestedOverlay,
 } from './player/PlayerOverlays';
+import { EmptyChannelState } from './player/EmptyChannelState';
 
 import {
   buildMobileVlcUrl,
@@ -66,17 +65,7 @@ type ActiveAttempt = {
   startedAt: number;
 };
 
-const failureLabels: Record<PlaybackFailure['category'], string> = {
-  network: 'Erreur réseau',
-  cors: 'Accès CORS refusé',
-  codec: 'Codec incompatible',
-  geoblocked: 'Flux géobloqué',
-  autoplay: 'Action utilisateur requise',
-  media: 'Erreur média',
-  unsupported: 'Lecture non prise en charge',
-  'mixed-content': 'Contenu mixte bloqué',
-  unknown: 'Lecture impossible',
-};
+
 
 function telemetryEngine(engine: PlayerEngine | null | undefined): TelemetryPlayerEngine | null {
   return engine && engine !== 'browser'
@@ -751,13 +740,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
   }, [channelId, openExternalPlayer, source, state.attemptId, state.channelId, state.engine, state.failure?.category, state.phase, tryAnotherSource]);
 
   if (!channelId) {
-    return (
-      <div className="flex aspect-video h-full flex-col items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950/80 p-6 text-zinc-400">
-        <Tv className="mb-4 h-16 w-16 text-yellow-500/50" />
-        <p className="text-lg font-medium text-zinc-200">Aucune chaîne sélectionnée</p>
-        <p className="mt-1 text-center text-sm text-zinc-500">Choisissez une chaîne dans la grille pour démarrer la lecture.</p>
-      </div>
-    );
+    return <EmptyChannelState />;
   }
 
   const loading = state.phase === 'resolving' || state.phase === 'loading' || state.phase === 'external-opening';

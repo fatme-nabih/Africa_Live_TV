@@ -25,9 +25,8 @@ const globalForDb = globalThis as typeof globalThis & {
   pgPool?: Pool;
 };
 
-const maxConnections = process.env.DATABASE_MAX_CONNECTIONS
-  ? parseInt(process.env.DATABASE_MAX_CONNECTIONS, 10)
-  : 10;
+const parsedMax = process.env.DATABASE_MAX_CONNECTIONS ? parseInt(process.env.DATABASE_MAX_CONNECTIONS, 10) : 10;
+const maxConnections = Math.max(2, Math.min(10, parsedMax));
 
 export const pool =
   globalForDb.pgPool ??

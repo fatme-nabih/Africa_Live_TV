@@ -14,7 +14,7 @@ async function run() {
 
   // Acquérir un verrou PostgreSQL pour empêcher des exécutions multiples simultanées
   const lockResult = await db.execute<{ locked: boolean }>(
-    sql`select pg_try_advisory_lock(hashtext('worker_maintenance')) as locked`,
+    sql`select pg_try_advisory_lock(123456) as locked`,
   );
   if (!lockResult.rows[0]?.locked) {
     console.log('Un autre worker de maintenance est déjà en cours. Arrêt.');
@@ -139,7 +139,7 @@ async function run() {
     });
     console.log('Maintenance terminée avec succès.');
   } finally {
-    await db.execute(sql`select pg_advisory_unlock(hashtext('worker_maintenance'))`);
+    await db.execute(sql`select pg_advisory_unlock(123456)`);
   }
 }
 

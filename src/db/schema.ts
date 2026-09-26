@@ -848,16 +848,23 @@ export const apiAbuseEventsRelations = relations(apiAbuseEvents, ({ one }) => ({
 
 
 export const naboopayTransactions = pgTable('naboopay_transactions', {
-  orderId: text('order_id').primaryKey(),
+  id: text('id').primaryKey(),
   checkoutAttemptId: text('checkout_attempt_id').notNull(),
+  providerOrderId: text('provider_order_id'),
+  idempotencyKey: text('idempotency_key').notNull(),
   userId: text('user_id').notNull(),
   planCode: text('plan_code').notNull(),
   amount: integer('amount').notNull(),
   currency: text('currency').notNull().default('XOF'),
   status: text('status').notNull(),
-  payload: jsonb('payload').notNull(),
+  providerStatus: text('provider_status'),
+  checkoutUrl: text('checkout_url'),
+  payload: jsonb('payload').notNull().default({}),
   createdAt: timestampWithTimezone('created_at').notNull().defaultNow(),
   updatedAt: timestampWithTimezone('updated_at').notNull().defaultNow(),
+  providerCreatedAt: timestampWithTimezone('provider_created_at'),
+  paidAt: timestampWithTimezone('paid_at'),
+  orderId: text('order_id'),
 }, (table) => [
   foreignKey({
     name: 'naboopay_transactions_user_id_fkey',
@@ -865,5 +872,35 @@ export const naboopayTransactions = pgTable('naboopay_transactions', {
     foreignColumns: [users.id],
   }).onDelete('cascade'),
   check('naboopay_transactions_amount_check', sql`${table.amount} > 0`),
+  check('naboopay_transactions_currency_check', sql`${table.currency} = 'XOF'`),
+  check('naboopay_transactions_plan_code_check', sql`${table.planCode} in ('lumina_all_access_monthly', 'lumina_all_access_annual')`),
+  check('naboopay_transactions_status_check', sql`${table.status} in ('creating', 'pending', 'completed', 'failed', 'canceled', 'reconciliation_required')`),
+  unique('naboopay_transactions_checkout_attempt_uidx').on(table.checkoutAttemptId),
+  uniqueIndex('naboopay_transactions_provider_order_uidx').on(table.providerOrderId).where(sql`${table.providerOrderId} IS NOT NULL`),
+  unique('naboopay_transactions_user_idempotency_uidx').on(table.userId, table.idempotencyKey),
+  index('naboopay_transactions_provider_order_id_idx').on(table.providerOrderId),
+  index('naboopay_transactions_user_checkout_idx').on(table.userId, table.checkoutAttemptId),
+  index('naboopay_transactions_status_updated_idx').on(table.status, table.updatedAt),
+  index('naboopay_transactions_user_created_idx').on(table.userId, table.createdAt.desc()),
 ]);
 
+
+
+
+
+export const naboopayWebhookEvents = pgTable('naboopay_webhook_events', {
+  id: text('id').primaryKey(),
+  providerOrderId: text('provider_order_id').notNull(),
+  payloadDigest: text('payload_digest').notNull(),
+  providerStatus: text('provider_status').notNull(),
+  providerCreatedAt: timestampWithTimezone('provider_created_at'),
+  receivedAt: timestampWithTimezone('received_at').notNull().defaultNow(),
+  state: text('state').notNull().default('received'),
+  errorCode: text('error_code'),
+  sanitizedPayload: jsonb('sanitized_payload').notNull().default({}),
+}, (table) => [
+  unique('naboopay_webhook_events_digest_uidx').on(table.payloadDigest),
+  index('naboopay_webhook_events_provider_order_idx').on(table.providerOrderId),
+  index('naboopay_webhook_events_state_received_idx').on(table.state, table.receivedAt),
+  check('naboopay_webhook_events_state_check', sql`${table.state} in ('received', 'processed', 'rejected', 'failed')`),
+]);

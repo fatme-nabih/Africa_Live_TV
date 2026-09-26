@@ -1,5 +1,5 @@
 {
-  "id": "6ec5af1b-0e23-4f09-b0fb-2862d0c3c948",
+  "id": "6fa5767c-9a8a-45c6-8c73-b6809e709c0c",
   "prevId": "99bd8a26-95e5-4c4f-858d-4b5b84808b99",
   "version": "7",
   "dialect": "postgresql",
@@ -1077,14 +1077,6 @@
         "clerk_billing_events_status_check": {
           "name": "clerk_billing_events_status_check",
           "value": "\"clerk_billing_events\".\"status\" in ('processed', 'ignored', 'failed')"
-        },
-        "clerk_billing_events_message_id_length_check": {
-          "name": "clerk_billing_events_message_id_length_check",
-          "value": "char_length(\"clerk_billing_events\".\"message_id\") between 1 and 256"
-        },
-        "clerk_billing_events_digest_length_check": {
-          "name": "clerk_billing_events_digest_length_check",
-          "value": "char_length(\"clerk_billing_events\".\"payload_digest\") = 64"
         }
       },
       "isRLSEnabled": false
@@ -1204,14 +1196,26 @@
       "name": "naboopay_transactions",
       "schema": "",
       "columns": {
-        "order_id": {
-          "name": "order_id",
+        "id": {
+          "name": "id",
           "type": "text",
           "primaryKey": true,
           "notNull": true
         },
         "checkout_attempt_id": {
           "name": "checkout_attempt_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_order_id": {
+          "name": "provider_order_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "idempotency_key": {
+          "name": "idempotency_key",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -1247,11 +1251,24 @@
           "primaryKey": false,
           "notNull": true
         },
+        "provider_status": {
+          "name": "provider_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "checkout_url": {
+          "name": "checkout_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "payload": {
           "name": "payload",
           "type": "jsonb",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "'{}'::jsonb"
         },
         "created_at": {
           "name": "created_at",
@@ -1266,9 +1283,122 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "provider_created_at": {
+          "name": "provider_created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "paid_at": {
+          "name": "paid_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "order_id": {
+          "name": "order_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "naboopay_transactions_provider_order_uidx": {
+          "name": "naboopay_transactions_provider_order_uidx",
+          "columns": [
+            {
+              "expression": "provider_order_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"naboopay_transactions\".\"provider_order_id\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "naboopay_transactions_provider_order_id_idx": {
+          "name": "naboopay_transactions_provider_order_id_idx",
+          "columns": [
+            {
+              "expression": "provider_order_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "naboopay_transactions_user_checkout_idx": {
+          "name": "naboopay_transactions_user_checkout_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "checkout_attempt_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "naboopay_transactions_status_updated_idx": {
+          "name": "naboopay_transactions_status_updated_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "naboopay_transactions_user_created_idx": {
+          "name": "naboopay_transactions_user_created_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "naboopay_transactions_user_id_fkey": {
           "name": "naboopay_transactions_user_id_fkey",
@@ -1285,12 +1415,40 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "naboopay_transactions_checkout_attempt_uidx": {
+          "name": "naboopay_transactions_checkout_attempt_uidx",
+          "nullsNotDistinct": false,
+          "columns": [
+            "checkout_attempt_id"
+          ]
+        },
+        "naboopay_transactions_user_idempotency_uidx": {
+          "name": "naboopay_transactions_user_idempotency_uidx",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_id",
+            "idempotency_key"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {
         "naboopay_transactions_amount_check": {
           "name": "naboopay_transactions_amount_check",
           "value": "\"naboopay_transactions\".\"amount\" > 0"
+        },
+        "naboopay_transactions_currency_check": {
+          "name": "naboopay_transactions_currency_check",
+          "value": "\"naboopay_transactions\".\"currency\" = 'XOF'"
+        },
+        "naboopay_transactions_plan_code_check": {
+          "name": "naboopay_transactions_plan_code_check",
+          "value": "\"naboopay_transactions\".\"plan_code\" in ('lumina_all_access_monthly', 'lumina_all_access_annual')"
+        },
+        "naboopay_transactions_status_check": {
+          "name": "naboopay_transactions_status_check",
+          "value": "\"naboopay_transactions\".\"status\" in ('creating', 'pending', 'completed', 'failed', 'canceled', 'reconciliation_required')"
         }
       },
       "isRLSEnabled": false

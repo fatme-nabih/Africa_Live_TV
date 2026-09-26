@@ -1,6 +1,6 @@
 {
-  "id": "879973e3-d0ee-40ea-90b8-323a8f157fb0",
-  "prevId": "6fa5767c-9a8a-45c6-8c73-b6809e709c0c",
+  "id": "6963df41-8015-47ba-978f-4f6c9846bc95",
+  "prevId": "879973e3-d0ee-40ea-90b8-323a8f157fb0",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1359,6 +1359,126 @@
         "naboopay_transactions_status_check": {
           "name": "naboopay_transactions_status_check",
           "value": "\"naboopay_transactions\".\"status\" in ('creating', 'pending', 'completed', 'failed', 'canceled', 'reconciliation_required')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.naboopay_webhook_events": {
+      "name": "naboopay_webhook_events",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "provider_order_id": {
+          "name": "provider_order_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload_digest": {
+          "name": "payload_digest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_status": {
+          "name": "provider_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_created_at": {
+          "name": "provider_created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "received_at": {
+          "name": "received_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'received'"
+        },
+        "error_code": {
+          "name": "error_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sanitized_payload": {
+          "name": "sanitized_payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        }
+      },
+      "indexes": {
+        "naboopay_webhook_events_provider_order_idx": {
+          "name": "naboopay_webhook_events_provider_order_idx",
+          "columns": [
+            {
+              "expression": "provider_order_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "naboopay_webhook_events_state_received_idx": {
+          "name": "naboopay_webhook_events_state_received_idx",
+          "columns": [
+            {
+              "expression": "state",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "received_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "naboopay_webhook_events_digest_uidx": {
+          "name": "naboopay_webhook_events_digest_uidx",
+          "nullsNotDistinct": false,
+          "columns": [
+            "payload_digest"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "naboopay_webhook_events_state_check": {
+          "name": "naboopay_webhook_events_state_check",
+          "value": "\"naboopay_webhook_events\".\"state\" in ('received', 'processed', 'rejected', 'failed')"
         }
       },
       "isRLSEnabled": false

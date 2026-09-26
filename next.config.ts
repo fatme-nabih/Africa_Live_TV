@@ -4,17 +4,18 @@ const isDev = process.env.NODE_ENV !== 'production';
 
 const cspHeader = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ""} https://clerk.com https://*.clerk.accounts.dev;
+  script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ""} https://clerk.com https://*.clerk.accounts.dev https://api.clerk.com;
   style-src 'self' 'unsafe-inline';
-  img-src 'self' blob: data: https://img.clerk.com *;
+  img-src 'self' blob: data: https: http:;
   font-src 'self' data:;
   object-src 'none';
   base-uri 'self';
   form-action 'self';
   frame-ancestors 'none';
-  connect-src 'self' https://*.clerk.accounts.dev *;
-  media-src 'self' blob: *;
+  connect-src 'self' https://*.clerk.accounts.dev https://api.clerk.com wss://*.clerk.accounts.dev https: http:;
+  media-src 'self' blob: https: http:;
   worker-src 'self' blob:;
+  upgrade-insecure-requests;
 `.replace(/\s{2,}/g, ' ').trim();
 
 const nextConfig: NextConfig = {
@@ -36,9 +37,21 @@ const nextConfig: NextConfig = {
             value: 'nosniff',
           },
           {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+          {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
           },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), vr=()',
+          }
         ],
       },
     ];

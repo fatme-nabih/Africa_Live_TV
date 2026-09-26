@@ -1,100 +1,162 @@
-export type NabooPayMethod = 'wave' | 'orange_money' | 'free_money' | 'visa' | 'mastercard';
+import { z } from 'zod';
+import crypto from 'crypto';
 
-export interface NabooPayTransactionPayload {
-  order_id: string;
-  method_of_payment: NabooPayMethod[];
-  selected_payment_method?: string;
-  amount: number;
-  fees: number;
-  currency: string;
-  customer: {
-    first_name: string;
-    last_name: string;
-    phone: string;
-    created_at: string;
-  };
-  transaction_status: 'pending' | 'completed' | 'failed' | 'canceled';
-  products?: {
-    name: string;
-    price: number;
-    quantity: number;
-    description?: string;
-  }[];
-  is_escrow: boolean;
-  is_merchant: boolean;
-  fees_customer_side: boolean;
-  success_url: string;
-  error_url: string;
-  created_at: string;
-  updated_at: string;
-  paid_at?: string;
-}
+export const NabooPayMethodSchema = z.enum(['wave', 'orange_money', 'free_money', 'visa', 'mastercard']);
+export type NabooPayMethod = z.infer<typeof NabooPayMethodSchema>;
 
-export interface NabooPayTransactionRequest {
-  method_of_payment: NabooPayMethod[];
-  products: {
-    name: string;
-    price: number;
-    quantity: number;
-    description: string;
-  }[];
-  customer: {
-    first_name: string;
-    last_name: string;
-    phone: string;
-    created_at: string | Date;
-  };
-  success_url: string;
-  error_url: string;
-  is_escrow?: boolean;
-  is_merchant?: boolean;
-  fees_customer_side?: boolean;
-}
+export const NabooPayStatusSchema = z.enum(['pending', 'completed', 'failed', 'canceled']);
+export type NabooPayStatus = z.infer<typeof NabooPayStatusSchema>;
 
-export interface NabooPayTransactionResponse {
-  checkout_url: string;
-  order_id: string;
+export const NabooPayProductSchema = z.object({
+  name: z.string().min(1).max(100),
+  price: z.number().positive(),
+  quantity: z.number().int().positive(),
+  description: z.string().max(255).optional(),
+}).strict();
+
+export const NabooPayCustomerSchema = z.object({
+  first_name: z.string().min(1).max(50),
+  last_name: z.string().min(1).max(50),
+  phone: z.string().regex(/^\+[1-9]\d{1,14}$/, "Numéro de téléphone non conforme E.164"),
+  created_at: z.union([z.string(), z.date()]).optional(),
+}).strict();
+
+export const NabooPayTransactionRequestSchema = z.object({
+  method_of_payment: z.array(NabooPayMethodSchema).min(1),
+  products: z.array(NabooPayProductSchema).min(1),
+  customer: NabooPayCustomerSchema,
+  success_url: z.string().url(),
+  error_url: z.string().url(),
+  is_escrow: z.boolean().optional(),
+  is_merchant: z.boolean().optional(),
+  fees_customer_side: z.boolean().optional(),
+}).strict();
+
+export type NabooPayTransactionRequest = z.infer<typeof NabooPayTransactionRequestSchema>;
+
+export const NabooPayCheckoutUrlSchema = z.string().url().refine((val) => {
+  try {
+    const u = new URL(val);
+    if (u.protocol !== 'https:') return false;
+    if (u.username || u.password) return false;
+    if (u.port && u.port !== '443' && u.port !== '') return false;
+    return true;
+  } catch {
+    return false;
+  }
+}, { message: "Invalid checkout URL" });
+
+export const NabooPayTransactionResponseSchema = z.object({
+  checkout_url: NabooPayCheckoutUrlSchema,
+  order_id: z.string().min(1),
+}); // default strips unknown fields
+
+export type NabooPayTransactionResponse = z.infer<typeof NabooPayTransactionResponseSchema>;
+
+export const NabooPayTransactionPayloadSchema = z.object({
+  order_id: z.string(),
+  method_of_payment: z.array(NabooPayMethodSchema),
+  selected_payment_method: z.string().optional(),
+  amount: z.number(),
+  fees: z.number(),
+  currency: z.string(),
+  customer: NabooPayCustomerSchema.omit({ created_at: true }).extend({ created_at: z.string() }),
+  transaction_status: NabooPayStatusSchema,
+  products: z.array(NabooPayProductSchema).optional(),
+  is_escrow: z.boolean(),
+  is_merchant: z.boolean(),
+  fees_customer_side: z.boolean(),
+  success_url: z.string().url(),
+  error_url: z.string().url(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  paid_at: z.string().optional(),
+});
+
+export type NabooPayTransactionPayload = z.infer<typeof NabooPayTransactionPayloadSchema>;
+
+export class NabooPayApiError extends Error {
+  constructor(message: string, public status: number, public type: 'timeout' | 'validation' | 'configuration' | 'limitation' | 'indisponibilite' | 'invalide') {
+    super(message);
+    this.name = 'NabooPayApiError';
+  }
 }
 
 /**
  * Creates a transaction in NabooPay API v2
  */
-export async function createNabooPayTransaction(request: NabooPayTransactionRequest, checkoutAttemptId?: string): Promise<NabooPayTransactionResponse> {
+export async function createNabooPayTransaction(request: NabooPayTransactionRequest): Promise<NabooPayTransactionResponse> {
   const apiKey = process.env.NABOOPAY_API_KEY;
   if (!apiKey) {
-    throw new Error('NABOOPAY_API_KEY is not defined in environment variables');
+    throw new NabooPayApiError('NABOOPAY_API_KEY is not defined', 500, 'configuration');
   }
+
+  // Validate the request strictly
+  const parsedRequest = NabooPayTransactionRequestSchema.parse(request);
 
   const abortController = new AbortController();
   const timeoutId = setTimeout(() => abortController.abort(), 10000);
 
+  let response: Response;
   try {
-    const response = await fetch('https://api.naboopay.com/api/v2/transactions', {
+    response = await fetch('https://api.naboopay.com/api/v2/transactions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      body: JSON.stringify({
-        ...request,
-        order_id: checkoutAttemptId,
-        is_escrow: request.is_escrow ?? false,
-        is_merchant: request.is_merchant ?? false,
-        fees_customer_side: request.fees_customer_side ?? true,
-      }),
+      body: JSON.stringify(parsedRequest),
       signal: abortController.signal,
     });
-
-    if (!response.ok) {
-      // Don't log full response text to avoid leaking secrets/PII
-      console.error(`NabooPay API Error: ${response.status} ${response.statusText}`);
-      throw new Error(`Failed to create NabooPay transaction: ${response.status} ${response.statusText}`);
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new NabooPayApiError('NabooPay API timeout', 504, 'timeout');
     }
-
-    return response.json();
+    throw new NabooPayApiError('NabooPay API unreachable', 503, 'indisponibilite');
   } finally {
     clearTimeout(timeoutId);
+  }
+
+  if (!response.ok) {
+    let type: NabooPayApiError['type'] = 'indisponibilite';
+    if (response.status === 400) type = 'validation';
+    else if (response.status === 401 || response.status === 403) type = 'configuration';
+    else if (response.status === 429) type = 'limitation';
+    
+    throw new NabooPayApiError(`NabooPay API Error: ${response.status}`, response.status, type);
+  }
+
+  // Read response with bounded size
+  let text = '';
+  const reader = response.body?.getReader();
+  if (!reader) throw new NabooPayApiError('Empty response from NabooPay', 500, 'invalide');
+  
+  let bytesRead = 0;
+  const maxBytes = 64 * 1024; // 64 Kio
+  
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    bytesRead += value.length;
+    if (bytesRead > maxBytes) {
+      reader.cancel();
+      throw new NabooPayApiError('Response too large', 500, 'invalide');
+    }
+    text += new TextDecoder().decode(value, { stream: true });
+  }
+  
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    throw new NabooPayApiError('Invalid JSON from NabooPay', 500, 'invalide');
+  }
+
+  try {
+    return NabooPayTransactionResponseSchema.parse(json);
+  } catch {
+    throw new NabooPayApiError('Invalid schema from NabooPay', 500, 'invalide');
   }
 }
 
@@ -107,24 +169,16 @@ export async function verifyNabooPayWebhookSignature(payloadStr: string, signatu
     throw new Error('NABOOPAY_WEBHOOK_SECRET is not defined in environment variables');
   }
 
-  // Use SubtleCrypto to verify HMAC SHA256
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw',
-    enc.encode(secretKey),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign', 'verify']
+  if (!signature || signature.length !== 64 || !/^[0-9a-f]{64}$/i.test(signature)) {
+    return false;
+  }
+
+  const expectedSignature = crypto.createHmac('sha256', secretKey)
+    .update(payloadStr)
+    .digest('hex');
+
+  return crypto.timingSafeEqual(
+    Buffer.from(signature, 'hex'),
+    Buffer.from(expectedSignature, 'hex')
   );
-
-  const signatureBytes = await crypto.subtle.sign(
-    'HMAC',
-    key,
-    enc.encode(payloadStr)
-  );
-
-  const hashArray = Array.from(new Uint8Array(signatureBytes));
-  const expectedSignature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-  return signature === expectedSignature;
 }

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { XCircle } from 'lucide-react';
 import { db } from '@/db';
 import { naboopayTransactions } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { auth } from '@clerk/nextjs/server';
 
 export default async function PricingErrorPage(props: { searchParams: Promise<{ order_id?: string }> }) {
@@ -13,7 +13,12 @@ export default async function PricingErrorPage(props: { searchParams: Promise<{ 
   let errorMessage = "Une erreur est survenue lors de votre paiement. Veuillez réessayer.";
 
   if (orderId && userId) {
-    const [tx] = await db.select().from(naboopayTransactions).where(eq(naboopayTransactions.orderId, orderId));
+    const [tx] = await db.select().from(naboopayTransactions).where(
+      and(
+        eq(naboopayTransactions.checkoutAttemptId, orderId),
+        eq(naboopayTransactions.userId, userId)
+      )
+    );
     if (tx && tx.status === 'canceled') {
       errorMessage = "Le paiement a été annulé.";
     } else if (tx && tx.status === 'failed') {
