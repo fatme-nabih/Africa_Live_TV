@@ -3,7 +3,7 @@
 import { useEffect, useReducer } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { CheckCircle, Clock, RefreshCw, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock, RefreshCw, XCircle } from 'lucide-react';
 
 import { checkoutStatusResponseSchema } from '@/lib/payment-contracts';
 
@@ -98,13 +98,15 @@ export default function SuccessClient() {
 
   if (!orderId || displayStatus === 'error') {
     return (
-      <div className="mx-auto max-w-md text-center">
-        <XCircle className="mx-auto mb-6 h-16 w-16 text-red-500" />
-        <h1 className="mb-4 text-3xl font-black text-white">Statut indisponible</h1>
-        <p className="mb-8 leading-relaxed text-zinc-400">
+      <div className="rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-8 text-center shadow-2xl">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-rose-500/20 bg-rose-500/10 text-rose-400">
+          <XCircle className="h-8 w-8" />
+        </div>
+        <h1 className="mb-2 text-2xl font-black text-white">Statut indisponible</h1>
+        <p className="mb-6 text-xs text-zinc-400 leading-relaxed">
           Cette transaction ne peut pas être affichée depuis votre compte.
         </p>
-        <Link href="/pricing" className="inline-block rounded-lg bg-zinc-800 px-6 py-3 text-sm font-bold text-white">
+        <Link href="/pricing" className="inline-block rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] px-5 py-2.5 text-xs font-semibold text-white transition backdrop-blur-md">
           Retour aux offres
         </Link>
       </div>
@@ -113,11 +115,16 @@ export default function SuccessClient() {
 
   if (displayStatus === 'completed') {
     return (
-      <div className="mx-auto max-w-md text-center">
-        <CheckCircle className="mx-auto mb-6 h-16 w-16 text-yellow-400" />
-        <h1 className="mb-4 text-3xl font-black text-white">Paiement réussi</h1>
-        <p className="mb-8 leading-relaxed text-zinc-400">Votre abonnement est actif.</p>
-        <Link href="/app" className="inline-block rounded-lg bg-yellow-400 px-6 py-3 text-sm font-black text-black">
+      <div className="rounded-2xl border border-emerald-500/30 bg-black/40 backdrop-blur-xl p-8 text-center shadow-2xl">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400">
+          <CheckCircle2 className="h-8 w-8" />
+        </div>
+        <h1 className="mb-2 text-2xl font-black text-white">Paiement réussi</h1>
+        <p className="mb-6 text-xs text-zinc-300 leading-relaxed">Votre abonnement Africa Live est désormais actif.</p>
+        <Link
+          href="/app"
+          className="inline-block rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/25 via-amber-400/30 to-rose-500/25 hover:from-emerald-500/35 hover:via-amber-400/40 hover:to-rose-500/35 px-6 py-2.5 text-xs sm:text-sm font-bold text-amber-100 shadow-md backdrop-blur-md transition active:scale-[0.99]"
+        >
           Ouvrir l&apos;application
         </Link>
       </div>
@@ -126,11 +133,16 @@ export default function SuccessClient() {
 
   if (displayStatus === 'failed' || displayStatus === 'canceled') {
     return (
-      <div className="mx-auto max-w-md text-center">
-        <XCircle className="mx-auto mb-6 h-16 w-16 text-red-500" />
-        <h1 className="mb-4 text-3xl font-black text-white">Paiement non abouti</h1>
-        <p className="mb-8 leading-relaxed text-zinc-400">Le paiement a échoué ou a été annulé.</p>
-        <Link href="/pricing" className="inline-block rounded-lg bg-yellow-400 px-6 py-3 text-sm font-black text-black">
+      <div className="rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-8 text-center shadow-2xl">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-rose-500/20 bg-rose-500/10 text-rose-400">
+          <XCircle className="h-8 w-8" />
+        </div>
+        <h1 className="mb-2 text-2xl font-black text-white">Paiement non abouti</h1>
+        <p className="mb-6 text-xs text-zinc-400 leading-relaxed">Le paiement a échoué ou a été annulé.</p>
+        <Link
+          href="/pricing"
+          className="inline-block rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] px-5 py-2.5 text-xs font-semibold text-white transition backdrop-blur-md"
+        >
           Retour aux offres
         </Link>
       </div>
@@ -139,28 +151,32 @@ export default function SuccessClient() {
 
   if (displayStatus === 'timeout') {
     return (
-      <div className="mx-auto max-w-md text-center">
-        <Clock className="mx-auto mb-6 h-16 w-16 text-yellow-400" />
-        <h1 className="mb-4 text-3xl font-black text-white">Confirmation en attente</h1>
-        <p className="mb-8 leading-relaxed text-zinc-400">
+      <div className="rounded-2xl border border-amber-400/30 bg-black/40 backdrop-blur-xl p-8 text-center shadow-2xl">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-400/20 bg-amber-400/10 text-amber-400">
+          <Clock className="h-8 w-8" />
+        </div>
+        <h1 className="mb-2 text-2xl font-black text-white">Confirmation en attente</h1>
+        <p className="mb-6 text-xs text-zinc-400 leading-relaxed">
           Ne recommencez pas le paiement. La vérification automatique continue en arrière-plan.
         </p>
         <button
           onClick={() => dispatch({ type: 'manual_retry' })}
-          className="inline-flex items-center rounded-lg bg-zinc-800 px-6 py-3 text-sm font-bold text-white"
+          className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] px-5 py-2.5 text-xs font-semibold text-white transition backdrop-blur-md"
         >
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Vérifier maintenant
+          <RefreshCw className="h-3.5 w-3.5" />
+          <span>Vérifier maintenant</span>
         </button>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-md text-center">
-      <Clock className="mx-auto mb-6 h-16 w-16 animate-pulse text-yellow-400" />
-      <h1 className="mb-4 text-3xl font-black text-white">Paiement en cours</h1>
-      <p className="mb-8 leading-relaxed text-zinc-400">La confirmation est en cours de vérification.</p>
+    <div className="rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-8 text-center shadow-2xl">
+      <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-400/20 bg-amber-400/10 text-amber-400 animate-pulse">
+        <Clock className="h-8 w-8" />
+      </div>
+      <h1 className="mb-2 text-2xl font-black text-white">Paiement en cours</h1>
+      <p className="text-xs text-zinc-400 leading-relaxed">La confirmation est en cours de vérification automatique...</p>
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import BrandLogo from '@/components/BrandLogo';
+import BrandWatermark from '@/components/BrandWatermark';
 import LocalAccountControls from '@/components/LocalAccountControls';
 import FilterSidebar from '@/components/FilterSidebar';
 import ChannelGrid from '@/components/ChannelGrid';
@@ -442,7 +443,10 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#050608] text-zinc-100 flex flex-col selection:bg-yellow-400/25 selection:text-yellow-100">
+    <main className="relative min-h-screen bg-black text-zinc-100 flex flex-col selection:bg-yellow-400/25 selection:text-yellow-100">
+      {/* Brand transparent background watermark */}
+      <BrandWatermark />
+
       <a
         href="#catalogue"
         className="sr-only z-[100] rounded-lg bg-yellow-300 px-4 py-2 font-bold text-black focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
@@ -451,20 +455,21 @@ export default function Home() {
       </a>
       <h1 className="sr-only">Catalogue Africa Live</h1>
       {/* Entête */}
-      <header className="sticky top-0 z-40 border-b border-white/[0.07] bg-[#050608]/88 px-4 py-2.5 shadow-[0_10px_35px_-30px_rgba(0,0,0,0.9)] backdrop-blur-xl sm:px-6 sm:py-3">
+      <header className="sticky top-0 z-40 border-b border-white/[0.07] bg-black/50 px-4 py-2.5 shadow-2xl backdrop-blur-2xl sm:px-6 sm:py-3">
+        <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-tricolor-bar opacity-80" />
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
           <Link
             href="/"
             aria-label="Retour à la page d’accueil Africa Live"
             className="group flex items-center gap-2.5 rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 sm:gap-3"
           >
-            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-yellow-400/20 to-yellow-600/5 p-1 ring-1 ring-yellow-400/25 transition group-hover:ring-yellow-400/50 sm:h-11 sm:w-11">
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.03] p-1 ring-1 ring-white/10 transition group-hover:ring-amber-400/40 sm:h-11 sm:w-11">
               <BrandLogo className="h-full w-full drop-shadow-[0_2px_8px_rgba(250,204,21,0.25)]" />
             </div>
             <div className="hidden flex-col sm:flex">
               <div className="flex items-center gap-0.5">
                 <span className="text-base font-black tracking-tight text-white sm:text-lg">Africa Live</span>
-                <span className="text-lg font-black text-yellow-400">.</span>
+                <span className="text-lg font-black text-amber-400">.</span>
               </div>
               <span className="-mt-0.5 hidden text-[9px] font-bold uppercase tracking-[0.16em] text-zinc-500 sm:block">
                 Le direct panafricain
@@ -478,7 +483,7 @@ export default function Home() {
               type="button"
               onClick={() => setIsMobileFiltersOpen(true)}
               aria-label="Ouvrir les filtres"
-              className="lg:hidden flex items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/90 px-3 py-2 text-xs font-bold text-zinc-200 shadow-sm transition hover:border-amber-400/50 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+              className="lg:hidden flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] px-3 py-1.5 text-xs font-semibold text-zinc-200 shadow-sm transition hover:border-amber-400/40 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
             >
               <Filter className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" />
               <span>Filtres</span>
@@ -491,13 +496,13 @@ export default function Home() {
 
             <LocalAccountControls />
 
-            <div role="group" aria-label="Mode d’affichage" className="flex items-center gap-1 bg-zinc-950 border border-zinc-800 p-1 rounded-xl">
+            <div role="group" aria-label="Mode d’affichage" className="flex items-center gap-0.5 bg-white/[0.03] border border-white/10 p-0.5 rounded-xl">
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
                 aria-label="Afficher en grille"
                 aria-pressed={viewMode === 'grid'}
-                className={`p-2 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${viewMode === 'grid' ? 'bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black shadow-lg shadow-amber-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
+                className={`p-1.5 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${viewMode === 'grid' ? 'bg-white/15 text-amber-300' : 'text-zinc-400 hover:text-zinc-200'}`}
               >
                 <LayoutGrid aria-hidden="true" className="w-4 h-4" />
               </button>
@@ -506,13 +511,13 @@ export default function Home() {
                 onClick={() => setViewMode('list')}
                 aria-label="Afficher en liste"
                 aria-pressed={viewMode === 'list'}
-                className={`p-2 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${viewMode === 'list' ? 'bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black shadow-lg shadow-amber-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
+                className={`p-1.5 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${viewMode === 'list' ? 'bg-white/15 text-amber-300' : 'text-zinc-400 hover:text-zinc-200'}`}
               >
                 <List aria-hidden="true" className="w-4 h-4" />
               </button>
             </div>
 
-            <div aria-live="polite" className="hidden sm:flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full bg-zinc-950 border border-zinc-800 text-zinc-400">
+            <div aria-live="polite" className="hidden sm:flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/10 text-zinc-400">
               <span aria-hidden="true" className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
               {channels.length} chaînes visibles
             </div>
@@ -521,14 +526,14 @@ export default function Home() {
       </header>
 
       {showVlcNotice && (
-        <section className="border-b border-zinc-900 bg-[#050608] px-4 py-2.5 sm:py-3 md:px-6">
-          <div className="max-w-7xl mx-auto flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-amber-400/25 bg-gradient-to-r from-zinc-950 via-zinc-900/90 to-zinc-950 px-4 py-3 shadow-lg shadow-amber-950/15">
+        <section className="relative z-10 border-b border-white/[0.06] bg-black/40 px-4 py-2.5 sm:py-3 md:px-6 backdrop-blur-xl">
+          <div className="max-w-7xl mx-auto flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-amber-400/20 bg-black/40 px-4 py-3 shadow-xl backdrop-blur-xl">
             <div className="flex min-w-0 items-start gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-400/15 text-amber-300 border border-amber-400/30">
-                <MonitorPlay aria-hidden="true" className="h-5 w-5" />
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-400/10 text-amber-300 border border-amber-400/25">
+                <MonitorPlay aria-hidden="true" className="h-4 w-4" />
               </span>
               <div className="min-w-0">
-                  <p className="text-sm font-bold text-zinc-100">
+                  <p className="text-xs sm:text-sm font-bold text-zinc-100">
                     Certains flux fonctionnent mieux dans VLC
                   </p>
                 <p className="mt-0.5 hidden text-xs leading-5 text-zinc-400 sm:block">
@@ -541,17 +546,17 @@ export default function Home() {
                 href={VLC_DOWNLOAD_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 px-3.5 py-2 text-xs font-extrabold text-black transition hover:brightness-110 shadow-sm shadow-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-amber-400/30 bg-amber-400/10 hover:bg-amber-400/20 px-3 py-1.5 text-xs font-bold text-amber-300 transition hover:border-amber-400/50 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
               >
-                Obtenir VLC
-                <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
+                <span>Obtenir VLC</span>
+                <ExternalLink aria-hidden="true" className="h-3 w-3" />
               </a>
               <button
                 type="button"
                 onClick={dismissVlcNotice}
                 title="Masquer"
                 aria-label="Masquer le rappel VLC"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-800 text-zinc-400 transition hover:border-zinc-700 hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/[0.02] text-zinc-400 transition hover:border-white/20 hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
               >
                 <X aria-hidden="true" className="h-4 w-4" />
               </button>
@@ -585,15 +590,15 @@ export default function Home() {
           />
 
           {/* Contrôleur du lecteur séparé */}
-          <section aria-label="Lecteur" className="relative overflow-hidden rounded-2xl border border-zinc-800/80 bg-[radial-gradient(circle_at_90%_10%,rgba(250,204,21,0.10),transparent_36%),rgba(9,9,11,0.88)] p-4 shadow-xl backdrop-blur-md sm:p-5">
-            <div className="h-0.5 w-full bg-tricolor-bar absolute top-0 left-0 right-0 opacity-80" />
+          <section aria-label="Lecteur" className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 p-4 shadow-2xl backdrop-blur-xl sm:p-5">
+            <div className="h-[2px] w-full bg-tricolor-bar absolute top-0 left-0 right-0 opacity-80" />
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-                <span className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-400/10 text-amber-300 shadow-lg shadow-amber-950/20">
-                  <MonitorPlay aria-hidden="true" className="h-5 w-5 sm:h-6 sm:w-6" />
+                <span className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-400/10 text-amber-300 shadow-lg shadow-black/40">
+                  <MonitorPlay aria-hidden="true" className="h-5 w-5" />
                 </span>
                 <div className="min-w-0">
-                  <h2 className="text-base sm:text-lg font-extrabold text-zinc-100 flex items-center gap-2">
+                  <h2 className="text-base sm:text-lg font-bold text-zinc-100 flex items-center gap-2">
                     {selectedChannel ? selectedChannel.name : 'Prêt pour le direct'}
                     {selectedChannel && (
                       <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -611,31 +616,31 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() => setIsInlinePlayerOpen(true)}
-                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 px-4 py-2.5 text-xs sm:text-sm font-extrabold text-black transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 shadow-lg shadow-amber-500/20"
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/15 via-amber-400/20 to-rose-500/15 hover:from-emerald-500/25 hover:via-amber-400/30 hover:to-rose-500/25 px-3.5 py-2 text-xs sm:text-sm font-bold text-amber-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 shadow-sm backdrop-blur-sm"
                   >
-                    <Play aria-hidden="true" className="h-4 w-4 fill-current" />
-                    Lecture directe
+                    <Play aria-hidden="true" className="h-3.5 w-3.5 fill-current" />
+                    <span>Lecture directe</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => openPlayerForChannel(selectedChannel)}
                     title="Ouvrir dans une fenêtre pop-up séparée"
                     aria-label="Ouvrir dans une fenêtre pop-up séparée"
-                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-zinc-750 bg-zinc-900 px-3 py-2.5 text-xs sm:text-sm font-bold text-zinc-200 transition hover:border-zinc-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20 px-3.5 py-2 text-xs sm:text-sm font-semibold text-zinc-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
                   >
-                    <ExternalLink aria-hidden="true" className="h-4 w-4" />
+                    <ExternalLink aria-hidden="true" className="h-3.5 w-3.5 text-zinc-400" />
                     <span className="hidden sm:inline">Fenêtre séparée</span>
                   </button>
                 </div>
               )}
             </div>
             {playerWindowStatus === 'blocked' && selectedChannel && (
-              <div role="alert" className="mt-4 flex flex-col gap-3 rounded-xl border border-amber-400/40 bg-amber-950/25 p-4 text-sm text-amber-100 sm:flex-row sm:items-center sm:justify-between">
+              <div role="alert" className="mt-4 flex flex-col gap-3 rounded-xl border border-amber-400/30 bg-black/60 p-4 text-xs sm:text-sm text-amber-100 sm:flex-row sm:items-center sm:justify-between">
                 <span>Le navigateur a bloqué la fenêtre pop-up. Autorisez les popups pour Africa Live, puis réessayez.</span>
                 <button
                   type="button"
                   onClick={() => openPlayerForChannel(selectedChannel)}
-                  className="shrink-0 rounded-lg border border-amber-300/40 px-3 py-2 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300"
+                  className="shrink-0 rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
                 >
                   Réessayer
                 </button>
@@ -647,7 +652,7 @@ export default function Home() {
           <section id="catalogue" aria-labelledby="catalog-title" tabIndex={-1} className="flex scroll-mt-28 flex-col gap-4 focus:outline-none">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 id="catalog-title" className="flex items-center gap-2 text-lg font-extrabold text-zinc-100">
+                <h2 id="catalog-title" className="flex items-center gap-2 text-base sm:text-lg font-bold text-zinc-100">
                   <LayoutList aria-hidden="true" className="h-5 w-5 text-amber-400" />
                   {showFavoritesOnly ? 'Mes favoris' : 'Chaînes en direct'}
                 </h2>
@@ -656,14 +661,14 @@ export default function Home() {
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-zinc-400 font-mono bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-lg">
+                <span className="text-xs text-zinc-400 font-mono bg-white/[0.03] border border-white/10 px-2.5 py-1 rounded-lg">
                   {channels.length} chaînes visibles
                 </span>
               </div>
             </div>
 
             {favoriteError && (
-              <div role="alert" className="flex flex-col gap-3 rounded-xl border border-amber-400/40 bg-amber-950/25 p-4 text-sm text-amber-100 sm:flex-row sm:items-center sm:justify-between">
+              <div role="alert" className="flex flex-col gap-3 rounded-xl border border-amber-400/30 bg-black/60 p-4 text-xs sm:text-sm text-amber-100 sm:flex-row sm:items-center sm:justify-between">
                 <span className="flex items-start gap-2">
                   <AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
                   {favoriteError}
@@ -671,25 +676,25 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => void synchronizeFavorites()}
-                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-amber-300/40 px-3 py-2 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                  className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-amber-300/40 bg-amber-400/10 px-3 py-1.5 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
                 >
-                  <RefreshCw aria-hidden="true" className="h-3.5 w-3.5" />
+                  <RefreshCw aria-hidden="true" className="h-3 w-3" />
                   Réessayer
                 </button>
               </div>
             )}
 
             {catalogError && (
-              <div role="alert" className="flex flex-col items-center justify-center rounded-2xl border border-red-500/40 bg-red-950/25 p-8 text-center text-red-100">
-                <AlertCircle aria-hidden="true" className="mb-3 h-10 w-10 text-red-400" />
-                <p className="font-bold">Le catalogue n’a pas pu être chargé.</p>
-                <p className="mt-1 max-w-xl text-sm text-red-200/80">{catalogError}</p>
+              <div role="alert" className="flex flex-col items-center justify-center rounded-2xl border border-red-500/30 bg-black/60 p-8 text-center text-red-100">
+                <AlertCircle aria-hidden="true" className="mb-3 h-8 w-8 text-red-400" />
+                <p className="font-bold text-sm">Le catalogue n’a pas pu être chargé.</p>
+                <p className="mt-1 max-w-xl text-xs text-red-200/80">{catalogError}</p>
                 <button
                   type="button"
                   onClick={retryCatalog}
-                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-red-100 px-4 py-2.5 text-sm font-bold text-red-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-xs font-bold text-red-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
                 >
-                  <RefreshCw aria-hidden="true" className="h-4 w-4" />
+                  <RefreshCw aria-hidden="true" className="h-3.5 w-3.5" />
                   Réessayer
                 </button>
               </div>
@@ -717,13 +722,13 @@ export default function Home() {
         <button
           type="button"
           onClick={() => setIsInlinePlayerOpen(true)}
-          className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2.5 rounded-full border border-amber-400/50 bg-zinc-950/95 px-4 py-3 text-sm font-extrabold text-amber-300 shadow-2xl shadow-amber-950/50 backdrop-blur-md transition hover:border-amber-300 hover:bg-black hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 sm:bottom-8 sm:right-8"
+          className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full border border-amber-400/35 bg-black/80 px-3.5 py-2 text-xs sm:text-sm font-bold text-amber-300 shadow-2xl backdrop-blur-xl transition hover:border-amber-400 hover:bg-black/95 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 sm:bottom-8 sm:right-8"
           title={`Regarder : ${selectedChannelLabel}`}
           aria-label={`Regarder : ${selectedChannelLabel}`}
         >
-          <span className="relative flex h-3 w-3">
+          <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-400"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-400"></span>
           </span>
           <MonitorPlay aria-hidden="true" className="h-4 w-4" />
           <span>Lecteur</span>

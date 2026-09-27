@@ -49,8 +49,8 @@ export default function RootLayout({
             signInFallbackRedirectUrl="/app"
             signUpFallbackRedirectUrl="/app"
             appearance={{ variables: {
-              colorPrimary: '#fde047',
-              colorBackground: '#111319',
+              colorPrimary: '#fbbf24',
+              colorBackground: '#050505',
               colorForeground: '#fafafa',
               colorMutedForeground: '#a1a1aa',
               borderRadius: '0.75rem',

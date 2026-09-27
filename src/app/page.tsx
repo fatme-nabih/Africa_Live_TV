@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import BrandLogo from '@/components/BrandLogo';
+import BrandWatermark from '@/components/BrandWatermark';
 import { isAnonymousE2EMode, isLocalDevMode } from '@/lib/local-dev';
 
 export default async function HomePage() {
@@ -104,23 +105,27 @@ export default async function HomePage() {
   ];
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#020408] text-zinc-100 selection:bg-yellow-400 selection:text-black">
-      {/* Ambient background glows */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[650px] w-[950px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-yellow-500/15 via-emerald-500/10 to-transparent blur-[140px]" />
-      <div className="pointer-events-none absolute top-[40%] right-[-10%] -z-10 h-[500px] w-[500px] rounded-full bg-amber-500/10 blur-[130px]" />
+    <main className="relative min-h-screen overflow-hidden bg-black text-zinc-100 selection:bg-yellow-400 selection:text-black">
+      {/* Brand transparent background watermark */}
+      <BrandWatermark />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      {/* Ambient background glows with tricolor accents */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[650px] w-[950px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-emerald-500/10 via-yellow-400/8 to-red-500/10 blur-[140px]" />
+      <div className="pointer-events-none absolute top-[40%] right-[-10%] -z-10 h-[500px] w-[500px] rounded-full bg-amber-500/5 blur-[130px]" />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Sticky Header */}
-        <header className="sticky top-0 z-50 flex min-h-20 items-center justify-between gap-4 border-b border-white/10 bg-[#020408]/85 backdrop-blur-xl">
+        <header className="sticky top-0 z-50 flex min-h-16 sm:min-h-20 items-center justify-between gap-4 border-b border-white/[0.08] bg-black/60 backdrop-blur-2xl">
+          <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-tricolor-bar opacity-80" />
           <Link href="/" aria-label="Africa Live, accueil" className="group flex items-center gap-3">
-            <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-yellow-400/20 to-yellow-600/10 p-1.5 ring-1 ring-yellow-400/30 transition-transform group-hover:scale-105">
-              <BrandLogo className="h-full w-full drop-shadow-[0_2px_10px_rgba(250,204,21,0.3)]" />
+            <div className="relative flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-white/[0.03] p-1.5 ring-1 ring-white/10 transition-all group-hover:ring-amber-400/40">
+              <BrandLogo className="h-full w-full drop-shadow-[0_2px_10px_rgba(250,204,21,0.25)]" />
             </div>
             <div>
               <span className="text-xl font-black tracking-tight text-white">
-                Africa Live<span className="text-yellow-400">.</span>
+                Africa Live<span className="text-amber-400">.</span>
               </span>
-              <span className="hidden text-[10px] font-semibold tracking-wider text-yellow-400/80 uppercase sm:block">
+              <span className="hidden text-[10px] font-semibold tracking-wider text-amber-400/80 uppercase sm:block">
                 Télévision Panafricaine
               </span>
             </div>
@@ -134,7 +139,7 @@ export default async function HomePage() {
             <Link href="#categories" className="hidden text-zinc-400 transition hover:text-white md:block">
               Catégories
             </Link>
-            <Link href="#pricing" className="text-yellow-400/90 transition hover:text-yellow-300 font-semibold">
+            <Link href="#pricing" className="text-amber-300 transition hover:text-yellow-200 font-semibold">
               Tarifs
             </Link>
             <Link href="#faq" className="hidden text-zinc-400 transition hover:text-white md:block">
@@ -148,30 +153,30 @@ export default async function HomePage() {
                 {sessionClaims?.metadata?.role === 'admin' && (
                   <Link
                     href="/admin"
-                    className="hidden rounded-lg border border-yellow-400/30 bg-yellow-400/10 px-3 py-1.5 text-xs font-bold text-yellow-300 transition hover:bg-yellow-400/20 sm:block"
+                    className="hidden rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-xs font-semibold text-amber-300 transition hover:bg-amber-400/20 sm:block"
                   >
                     Administration
                   </Link>
                 )}
                 <Link
                   href="/app"
-                  className="rounded-xl bg-yellow-400 px-4 py-2 text-xs font-bold text-black shadow-lg shadow-yellow-400/20 transition hover:bg-yellow-300 sm:text-sm sm:px-5"
+                  className="rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/20 via-amber-400/25 to-rose-500/20 hover:from-emerald-500/30 hover:via-amber-400/35 hover:to-rose-500/30 px-4 py-2 text-xs sm:text-sm font-bold text-amber-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 shadow-sm backdrop-blur-sm"
                 >
                   Ouvrir le direct
                 </Link>
                 <UserButton />
               </div>
             ) : (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <Link
                   href="/sign-in"
-                  className="px-3 py-2 text-sm font-medium text-zinc-300 transition hover:text-white"
+                  className="px-3 py-1.5 text-xs sm:text-sm font-medium text-zinc-300 transition hover:text-white"
                 >
                   Se connecter
                 </Link>
                 <Link
                   href="/sign-up"
-                  className="rounded-xl bg-yellow-400 px-4 py-2 text-xs font-bold text-black shadow-lg shadow-yellow-400/20 transition hover:bg-yellow-300 sm:text-sm sm:px-5"
+                  className="rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/20 via-amber-400/25 to-rose-500/20 hover:from-emerald-500/30 hover:via-amber-400/35 hover:to-rose-500/30 px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-amber-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 shadow-sm backdrop-blur-sm"
                 >
                   Commencer
                 </Link>
@@ -184,7 +189,7 @@ export default async function HomePage() {
         <section className="relative grid gap-12 pt-12 pb-20 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:py-24">
           <div>
             {/* Live Pulse Badge */}
-            <div className="inline-flex items-center gap-2.5 rounded-full border border-yellow-400/30 bg-yellow-400/10 px-4 py-1.5 text-xs font-semibold text-yellow-300 backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3.5 py-1 text-xs font-semibold text-amber-300 backdrop-blur-md">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
@@ -199,26 +204,26 @@ export default async function HomePage() {
             </h1>
 
             {/* Subhead */}
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-zinc-300">
+            <p className="mt-6 max-w-xl text-base sm:text-lg leading-relaxed text-zinc-300">
               Accédez à un vaste catalogue télévisuel panafricain. Information en direct,
               sports, divertissement, musiques et cultures régionales réunis dans une interface moderne et fluide.
             </p>
 
             {/* CTAs */}
-            <div className="mt-8 flex flex-wrap items-center gap-4">
+            <div className="mt-8 flex flex-wrap items-center gap-3 sm:gap-4">
               <Link
                 href={userId ? '/app' : '/sign-up'}
-                className="btn-gold inline-flex items-center gap-3 rounded-xl px-7 py-4 text-base font-black transition"
+                className="inline-flex items-center gap-2.5 rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/25 via-amber-400/30 to-rose-500/25 hover:from-emerald-500/35 hover:via-amber-400/40 hover:to-rose-500/35 px-6 py-3.5 text-sm sm:text-base font-bold text-white transition backdrop-blur-md shadow-lg shadow-black/40 hover:scale-[1.01] active:scale-[0.98]"
               >
                 <span>{userId ? 'Accéder au direct' : 'Profiter de 5 jours d’essai gratuit'}</span>
-                <ArrowRight size={18} />
+                <ArrowRight size={17} />
               </Link>
               {!userId && (
                 <Link
                   href="/sign-in"
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-6 py-4 text-base font-semibold text-zinc-200 backdrop-blur-md transition hover:border-white/30 hover:bg-white/10 hover:text-white"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-5 py-3.5 text-sm sm:text-base font-semibold text-zinc-200 backdrop-blur-md transition hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
                 >
-                  <Sparkles size={18} className="text-yellow-400" />
+                  <Sparkles size={16} className="text-amber-400" />
                   <span>J’ai déjà un compte</span>
                 </Link>
               )}
@@ -244,17 +249,17 @@ export default async function HomePage() {
           {/* Player Mockup Visual */}
           <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
             {/* Ambient halo behind mockup */}
-            <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-yellow-500/20 via-emerald-500/10 to-amber-500/20 opacity-70 blur-2xl" />
+            <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-emerald-500/15 via-amber-500/15 to-rose-500/15 opacity-70 blur-2xl pointer-events-none" />
 
-            <div className="glass-panel-gold relative overflow-hidden rounded-2xl border border-yellow-400/30 p-1 shadow-2xl">
+            <div className="glass-panel-subtle relative overflow-hidden rounded-2xl border border-amber-400/30 p-1 shadow-2xl">
               {/* Window Bar */}
-              <div className="flex items-center justify-between border-b border-white/10 bg-[#0c0d14] px-4 py-3">
+              <div className="flex items-center justify-between border-b border-white/[0.08] bg-black/50 backdrop-blur-md px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-red-500/80" />
-                  <div className="h-3 w-3 rounded-full bg-yellow-500/80" />
-                  <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-rose-500/80" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-amber-400/80" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" />
                 </div>
-                <div className="flex items-center gap-2 rounded-md bg-white/5 px-3 py-1 text-[11px] font-mono text-zinc-400">
+                <div className="flex items-center gap-2 rounded-md bg-white/[0.04] border border-white/[0.06] px-3 py-1 text-[11px] font-mono text-zinc-400">
                   <Radio size={12} className="text-emerald-400 animate-pulse" />
                   <span>CRTV News • 1080p HLS Direct</span>
                 </div>
@@ -262,29 +267,29 @@ export default async function HomePage() {
               </div>
 
               {/* Mock Screen Content */}
-              <div className="relative flex aspect-video w-full flex-col justify-between overflow-hidden rounded-b-xl bg-gradient-to-b from-zinc-900 to-black p-5">
-                {/* Background Art with African Pattern Vibe */}
-                <div className="absolute inset-0 opacity-20 [background:radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-yellow-500/40 via-transparent to-black" />
+              <div className="relative flex aspect-video w-full flex-col justify-between overflow-hidden rounded-b-xl bg-gradient-to-b from-black/60 to-black/90 p-5">
+                {/* Background Art with Subtle Tricolor Glow */}
+                <div className="absolute inset-0 opacity-20 [background:radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-amber-500/30 via-emerald-500/20 to-black pointer-events-none" />
 
                 {/* Top Player Badges */}
                 <div className="relative z-10 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1 rounded bg-red-600 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
+                    <span className="inline-flex items-center gap-1 rounded bg-rose-600/90 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
                       ● LIVE
                     </span>
-                    <span className="rounded bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-zinc-300 backdrop-blur-md">
+                    <span className="rounded bg-black/60 border border-white/[0.08] px-2 py-0.5 text-[10px] font-semibold text-zinc-300 backdrop-blur-md">
                       SOURCE DIRECTE
                     </span>
                   </div>
-                  <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-medium text-yellow-300 backdrop-blur-md">
+                  <span className="rounded-full bg-white/[0.06] border border-white/[0.08] px-2.5 py-1 text-[10px] font-medium text-amber-300 backdrop-blur-md">
                     🇨🇲 Cameroun
                   </span>
                 </div>
 
                 {/* Center Play Button Graphic */}
                 <div className="relative z-10 flex flex-col items-center justify-center gap-3">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-yellow-400 text-black shadow-xl shadow-yellow-400/30 transition hover:scale-105">
-                    <Play size={26} className="fill-current translate-x-0.5" />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full border border-amber-400/50 bg-gradient-to-r from-emerald-500/30 via-amber-400/40 to-rose-500/30 text-amber-200 shadow-lg shadow-black/50 backdrop-blur-md transition hover:scale-105">
+                    <Play size={22} className="fill-current translate-x-0.5" />
                   </div>
                   <p className="text-xs font-medium tracking-wide text-zinc-300 drop-shadow">
                     Cliquez pour lancer le zapping
@@ -292,9 +297,9 @@ export default async function HomePage() {
                 </div>
 
                 {/* Bottom Mock Channel Strip */}
-                <div className="relative z-10 flex items-center justify-between rounded-lg bg-black/60 px-3 py-2 text-xs backdrop-blur-md border border-white/5">
+                <div className="relative z-10 flex items-center justify-between rounded-lg bg-black/60 px-3 py-2 text-xs backdrop-blur-md border border-white/[0.08]">
                   <div className="flex items-center gap-2.5">
-                    <div className="h-6 w-6 rounded bg-yellow-400/20 p-1 flex items-center justify-center">
+                    <div className="h-6 w-6 rounded bg-amber-400/10 border border-amber-400/20 p-1 flex items-center justify-center">
                       <BrandLogo className="h-full w-full" />
                     </div>
                     <div>
@@ -313,18 +318,18 @@ export default async function HomePage() {
         </section>
 
         {/* Live Metrics Grid */}
-        <section aria-label="Statistiques" className="border-y border-white/10 py-10 my-4">
+        <section aria-label="Statistiques" className="border-y border-white/[0.08] py-10 my-4">
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
             {metrics.map(({ label, value, icon: Icon, detail }) => (
               <div
                 key={label}
-                className="group relative rounded-2xl border border-white/5 bg-white/[0.02] p-5 transition-all hover:border-yellow-400/30 hover:bg-white/[0.04]"
+                className="group relative rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-5 transition-all hover:border-amber-400/30 hover:bg-white/[0.02]"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl font-black tracking-tight text-yellow-400 sm:text-4xl">
+                  <span className="text-2xl font-black tracking-tight text-gradient-gold sm:text-4xl">
                     {value}
                   </span>
-                  <div className="rounded-lg bg-yellow-400/10 p-2 text-yellow-400 group-hover:scale-110 transition-transform">
+                  <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 p-2 text-amber-300 group-hover:scale-110 transition-transform">
                     <Icon size={20} />
                   </div>
                 </div>
@@ -338,7 +343,7 @@ export default async function HomePage() {
         {/* Thematic Categories Explorer */}
         <section id="categories" className="py-20">
           <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-yellow-400">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-amber-400">
               Un catalogue infini
             </h2>
             <p className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
@@ -353,13 +358,13 @@ export default async function HomePage() {
             {categories.map(({ name, icon: Icon, count, desc }) => (
               <div
                 key={name}
-                className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#090b10] p-6 transition-all duration-300 hover:border-yellow-400/50 hover:shadow-xl hover:shadow-yellow-500/5 hover:-translate-y-1"
+                className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-6 transition-all duration-300 hover:border-amber-400/40 hover:bg-white/[0.02] hover:-translate-y-1 shadow-lg shadow-black/40"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-yellow-400/10 text-yellow-400 ring-1 ring-yellow-400/20 group-hover:bg-yellow-400 group-hover:text-black transition-colors">
-                  <Icon size={24} />
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-amber-400/20 bg-amber-400/10 text-amber-300 transition-colors group-hover:bg-amber-400/20 group-hover:text-amber-200">
+                  <Icon size={22} />
                 </div>
                 <h3 className="mt-5 text-lg font-bold text-white">{name}</h3>
-                <p className="text-xs font-semibold text-yellow-400/90 mt-1">{count}</p>
+                <p className="text-xs font-semibold text-amber-300/90 mt-1">{count}</p>
                 <p className="mt-3 text-xs leading-5 text-zinc-400">{desc}</p>
               </div>
             ))}
@@ -367,9 +372,9 @@ export default async function HomePage() {
         </section>
 
         {/* Feature Highlights Grid */}
-        <section id="features" className="py-20 border-t border-white/10">
+        <section id="features" className="py-20 border-t border-white/[0.08]">
           <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-yellow-400">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-amber-400">
               Technologies & Ergonomie
             </h2>
             <p className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
@@ -384,13 +389,13 @@ export default async function HomePage() {
             {features.map(({ icon: Icon, title, description, badge }) => (
               <div
                 key={title}
-                className="relative rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent p-7 transition hover:border-white/20"
+                className="relative rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-7 transition hover:border-white/20 hover:bg-white/[0.02]"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-yellow-400/15 text-yellow-400">
-                    <Icon size={24} />
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-amber-400/20 bg-amber-400/10 text-amber-300">
+                    <Icon size={22} />
                   </div>
-                  <span className="rounded-full bg-white/5 px-3 py-1 text-[11px] font-semibold text-zinc-400 border border-white/10">
+                  <span className="rounded-full bg-white/[0.04] px-3 py-1 text-[11px] font-semibold text-zinc-300 border border-white/[0.08]">
                     {badge}
                   </span>
                 </div>
@@ -403,10 +408,13 @@ export default async function HomePage() {
 
         {/* Dual Player Spotlight (Web + VLC) */}
         <section className="py-16">
-          <div className="relative overflow-hidden rounded-3xl border border-yellow-400/30 bg-gradient-to-r from-yellow-500/10 via-[#0d1017] to-amber-500/10 p-8 sm:p-12">
-            <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
+          <div className="relative overflow-hidden rounded-3xl border border-white/[0.1] bg-black/40 backdrop-blur-2xl p-8 sm:p-12 shadow-2xl">
+            {/* Ambient accent halo */}
+            <div className="absolute -inset-10 bg-gradient-to-r from-emerald-500/10 via-amber-500/10 to-rose-500/10 opacity-50 blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 grid gap-8 lg:grid-cols-2 lg:items-center">
               <div>
-                <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-yellow-400">
+                <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-300">
                   <MonitorPlay size={16} /> Flexibilité Absolue
                 </span>
                 <h2 className="mt-3 text-3xl font-black text-white sm:text-4xl">
@@ -417,39 +425,39 @@ export default async function HomePage() {
                   lisez instantanément dans votre navigateur via notre lecteur HLS haute performance, ou d’un clic,
                   ouvrez le flux natif dans VLC Player pour profiter de votre configuration home-cinéma.
                 </p>
-                <div className="mt-6 flex flex-wrap gap-4">
-                  <div className="flex items-center gap-2 rounded-xl bg-black/40 px-4 py-2.5 text-xs font-medium text-zinc-300 border border-white/10">
-                    <CheckCircle2 size={16} className="text-emerald-400" />
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <div className="flex items-center gap-2 rounded-xl bg-black/50 px-3.5 py-2 text-xs font-medium text-zinc-300 border border-white/[0.08] backdrop-blur-md">
+                    <CheckCircle2 size={15} className="text-emerald-400" />
                     Lecteur Web HLS intégré
                   </div>
-                  <div className="flex items-center gap-2 rounded-xl bg-black/40 px-4 py-2.5 text-xs font-medium text-zinc-300 border border-white/10">
-                    <CheckCircle2 size={16} className="text-emerald-400" />
+                  <div className="flex items-center gap-2 rounded-xl bg-black/50 px-3.5 py-2 text-xs font-medium text-zinc-300 border border-white/[0.08] backdrop-blur-md">
+                    <CheckCircle2 size={15} className="text-emerald-400" />
                     Lancement VLC 1-clic direct
                   </div>
-                  <div className="flex items-center gap-2 rounded-xl bg-black/40 px-4 py-2.5 text-xs font-medium text-zinc-300 border border-white/10">
-                    <CheckCircle2 size={16} className="text-emerald-400" />
+                  <div className="flex items-center gap-2 rounded-xl bg-black/50 px-3.5 py-2 text-xs font-medium text-zinc-300 border border-white/[0.08] backdrop-blur-md">
+                    <CheckCircle2 size={15} className="text-emerald-400" />
                     Zéro publicité injectée
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-black/60 p-6 backdrop-blur-xl">
-                <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex flex-col gap-4 rounded-2xl border border-white/[0.08] bg-black/50 p-6 backdrop-blur-xl">
+                <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
                   <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Options de visionnage</span>
-                  <span className="text-[10px] rounded bg-emerald-500/20 text-emerald-400 px-2 py-0.5 font-bold">100% direct</span>
+                  <span className="text-[10px] rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 font-bold">100% direct</span>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-yellow-400/40 bg-yellow-400/10 p-4 text-center">
-                    <Tv size={28} className="mx-auto text-yellow-400" />
+                  <div className="rounded-xl border border-amber-400/30 bg-amber-400/10 p-4 text-center backdrop-blur-md">
+                    <Tv size={26} className="mx-auto text-amber-300" />
                     <p className="mt-2 text-sm font-bold text-white">Lecteur Navigateur</p>
                     <p className="mt-1 text-[11px] text-zinc-400">Instantané, aucun réglage</p>
                   </div>
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-center">
-                    <ExternalLink size={28} className="mx-auto text-zinc-300" />
+                  <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 text-center backdrop-blur-md hover:border-white/20 transition">
+                    <ExternalLink size={26} className="mx-auto text-zinc-300" />
                     <p className="mt-2 text-sm font-bold text-white">VLC Media Player</p>
                     <p className="mt-1 text-[11px] text-zinc-400">1-clic vers l’app desktop</p>
                   </div>
                 </div>
-                <p className="text-[11px] text-center text-zinc-500">
+                <p className="text-[11px] text-center text-zinc-400">
                   Lecture web selon le format du flux, avec VLC conseillé sur ordinateur lorsque nécessaire.
                 </p>
               </div>
@@ -458,9 +466,9 @@ export default async function HomePage() {
         </section>
 
         {/* Pricing & Subscription Section */}
-        <section id="pricing" className="py-20 border-t border-white/10">
+        <section id="pricing" className="py-20 border-t border-white/[0.08]">
           <div className="text-center max-w-2xl mx-auto">
-            <div className="inline-flex items-center gap-2 rounded-full border border-yellow-400/30 bg-yellow-400/10 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-yellow-300">
+            <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-amber-300 backdrop-blur-md">
               <Sparkles size={14} /> Tarifs Clairs & Sans Surprise
             </div>
             <h2 className="mt-3 text-3xl font-black text-white sm:text-4xl">
@@ -472,7 +480,7 @@ export default async function HomePage() {
             </p>
 
             {/* Payment Methods Badges Bar */}
-            <div className="mt-6 inline-flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-2.5 text-xs text-zinc-300 backdrop-blur-md">
+            <div className="mt-6 inline-flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-white/[0.08] bg-black/40 px-5 py-2.5 text-xs text-zinc-300 backdrop-blur-xl">
               <span className="font-semibold text-zinc-400">Moyens de paiement acceptés :</span>
               <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#1da1f2]/10 border border-[#1da1f2]/30 px-2.5 py-1 text-[11px] font-bold text-[#38bdf8]">
                 <Smartphone size={13} /> Wave
@@ -489,9 +497,9 @@ export default async function HomePage() {
             </div>
 
             {/* Trial Offer Callout */}
-            <div className="mt-8 mx-auto max-w-2xl rounded-2xl border border-yellow-400/40 bg-gradient-to-r from-yellow-500/10 via-amber-500/10 to-yellow-500/10 p-5 text-center shadow-lg shadow-yellow-500/5">
-              <div className="flex items-center justify-center gap-2 text-sm font-black text-yellow-300">
-                <Gift size={18} className="text-yellow-400 shrink-0" />
+            <div className="mt-8 mx-auto max-w-2xl rounded-2xl border border-amber-400/30 bg-gradient-to-r from-emerald-500/10 via-amber-500/10 to-rose-500/10 p-5 text-center shadow-lg shadow-black/40 backdrop-blur-xl">
+              <div className="flex items-center justify-center gap-2 text-sm font-black text-amber-300">
+                <Gift size={18} className="text-amber-400 shrink-0" />
                 <span>Profitez de 5 jours d’essai sans engagement !</span>
               </div>
               <p className="mt-2 text-xs leading-relaxed text-zinc-300">
@@ -502,10 +510,10 @@ export default async function HomePage() {
 
           <div className="mt-14 grid gap-8 max-w-4xl mx-auto md:grid-cols-2 items-stretch">
             {/* Forfait Mensuel */}
-            <div className="relative flex flex-col justify-between rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-black/60 p-8 transition duration-200 hover:border-white/20 shadow-xl">
+            <div className="relative flex flex-col justify-between rounded-3xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-8 transition duration-200 hover:border-white/20 shadow-xl">
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs font-semibold text-zinc-300">
+                  <span className="rounded-full bg-white/[0.04] border border-white/[0.08] px-3 py-1 text-xs font-semibold text-zinc-300">
                     Formule Découverte
                   </span>
                   <span className="text-xs text-zinc-500 font-mono">Sans engagement</span>
@@ -517,11 +525,11 @@ export default async function HomePage() {
 
                 <div className="mt-6 flex items-baseline gap-2">
                   <span className="text-4xl sm:text-5xl font-black text-white">990</span>
-                  <span className="text-lg font-bold text-yellow-400">FCFA</span>
+                  <span className="text-lg font-bold text-amber-400">FCFA</span>
                   <span className="text-xs text-zinc-500 font-medium">/ mois (30 jours)</span>
                 </div>
 
-                <div className="mt-8 border-t border-white/10 pt-6 space-y-3.5 text-xs text-zinc-300">
+                <div className="mt-8 border-t border-white/[0.08] pt-6 space-y-3.5 text-xs text-zinc-300">
                   <div className="flex items-center gap-2.5">
                     <Check size={16} className="text-emerald-400 shrink-0" />
                     <span><strong>11 700+ chaînes</strong> en accès illimité</span>
@@ -548,10 +556,10 @@ export default async function HomePage() {
               <div className="mt-8 pt-4">
                 <Link
                   href="/pricing"
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-800 border border-zinc-700 py-3.5 text-sm font-bold text-white transition hover:bg-zinc-700 hover:border-zinc-600"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/25 py-3 text-sm font-semibold text-white transition backdrop-blur-md active:scale-[0.99]"
                 >
                   <span>Souscrire au Mensuel (990 FCFA)</span>
-                  <ArrowRight size={16} />
+                  <ArrowRight size={15} />
                 </Link>
                 <p className="mt-2 text-center text-[10px] text-zinc-500">
                   Paiement instantané Wave, Orange Money ou CB
@@ -560,15 +568,15 @@ export default async function HomePage() {
             </div>
 
             {/* Forfait Annuel */}
-            <div className="relative flex flex-col justify-between rounded-3xl border-2 border-yellow-400 bg-gradient-to-b from-yellow-500/10 via-zinc-950 to-black p-8 shadow-2xl shadow-yellow-500/10 transition duration-200 hover:shadow-yellow-500/20">
+            <div className="relative flex flex-col justify-between rounded-3xl border border-amber-400/40 bg-black/50 backdrop-blur-2xl p-8 shadow-2xl shadow-black/50 transition duration-200 hover:border-amber-400/60">
               {/* Highlight ribbon */}
-              <div className="absolute -top-3.5 right-6 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 px-4 py-1 text-[11px] font-black uppercase tracking-wider text-black shadow-lg">
+              <div className="absolute -top-3.5 right-6 rounded-full border border-amber-400/40 bg-gradient-to-r from-emerald-500/40 via-amber-400/50 to-rose-500/40 px-4 py-1 text-[11px] font-black uppercase tracking-wider text-amber-100 shadow-lg backdrop-blur-md">
                 ★ 2 Mois Offerts • Plus Économique
               </div>
 
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="rounded-full bg-yellow-400/20 border border-yellow-400/40 px-3 py-1 text-xs font-bold text-yellow-300">
+                  <span className="rounded-full bg-amber-400/10 border border-amber-400/30 px-3 py-1 text-xs font-bold text-amber-300">
                     Bouquet Annuel Privilège
                   </span>
                 </div>
@@ -579,29 +587,29 @@ export default async function HomePage() {
 
                 <div className="mt-6 flex items-baseline gap-2">
                   <span className="text-4xl sm:text-5xl font-black text-white">9 900</span>
-                  <span className="text-lg font-bold text-yellow-400">FCFA</span>
+                  <span className="text-lg font-bold text-amber-400">FCFA</span>
                   <span className="text-xs text-zinc-400 font-medium">/ an (12 mois)</span>
                 </div>
 
-                <div className="mt-8 border-t border-yellow-400/20 pt-6 space-y-3.5 text-xs text-zinc-200">
+                <div className="mt-8 border-t border-amber-400/20 pt-6 space-y-3.5 text-xs text-zinc-200">
                   <div className="flex items-center gap-2.5">
-                    <Check size={16} className="text-yellow-400 shrink-0" />
+                    <Check size={16} className="text-amber-400 shrink-0" />
                     <span><strong>Tout le catalogue 11 700+ chaînes</strong> sans restriction</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <Check size={16} className="text-yellow-400 shrink-0" />
+                    <Check size={16} className="text-amber-400 shrink-0" />
                     <span><strong>Économisez 1 980 FCFA</strong> par rapport au forfait mensuel</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <Check size={16} className="text-yellow-400 shrink-0" />
+                    <Check size={16} className="text-amber-400 shrink-0" />
                     <span>Compatibilité PC, Mac, Smartphone et Tablettes</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <Check size={16} className="text-yellow-400 shrink-0" />
+                    <Check size={16} className="text-amber-400 shrink-0" />
                     <span>Priorité réseau et support client dédié</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <Check size={16} className="text-yellow-400 shrink-0" />
+                    <Check size={16} className="text-amber-400 shrink-0" />
                     <span>Paiement sécurisé unique sans prélèvement imprévu</span>
                   </div>
                 </div>
@@ -610,12 +618,12 @@ export default async function HomePage() {
               <div className="mt-8 pt-4">
                 <Link
                   href="/pricing"
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-yellow-400 py-3.5 text-sm font-black text-black shadow-lg shadow-yellow-400/25 transition hover:bg-yellow-300 active:scale-[0.99]"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/25 via-amber-400/30 to-rose-500/25 hover:from-emerald-500/35 hover:via-amber-400/40 hover:to-rose-500/35 py-3 text-sm font-bold text-amber-100 shadow-lg shadow-black/40 transition active:scale-[0.99] backdrop-blur-md"
                 >
                   <span>Souscrire à l&apos;Annuel (9 900 FCFA)</span>
-                  <ArrowRight size={16} />
+                  <ArrowRight size={15} />
                 </Link>
-                <p className="mt-2 text-center text-[10px] text-yellow-400/80 font-medium">
+                <p className="mt-2 text-center text-[10px] text-amber-300/80 font-medium">
                   Réglez facilement en quelques secondes via NabooPay
                 </p>
               </div>
@@ -623,8 +631,8 @@ export default async function HomePage() {
           </div>
 
           {/* How payment works banner */}
-          <div className="mt-12 max-w-4xl mx-auto rounded-2xl border border-white/10 bg-white/[0.02] p-6 sm:p-8">
-            <h4 className="text-sm font-bold uppercase tracking-wider text-yellow-400 text-center sm:text-left flex items-center gap-2 justify-center sm:justify-start">
+          <div className="mt-12 max-w-4xl mx-auto rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-6 sm:p-8">
+            <h4 className="text-sm font-bold uppercase tracking-wider text-amber-400 text-center sm:text-left flex items-center gap-2 justify-center sm:justify-start">
               <ShieldCheck size={18} /> Comment fonctionne le règlement ?
             </h4>
             <div className="mt-5 grid gap-6 sm:grid-cols-3 text-xs text-zinc-400">
@@ -645,9 +653,9 @@ export default async function HomePage() {
         </section>
 
         {/* FAQ Accordion Section */}
-        <section id="faq" className="py-20 border-t border-white/10">
+        <section id="faq" className="py-20 border-t border-white/[0.08]">
           <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-yellow-400">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-amber-400">
               Questions Fréquentes
             </h2>
             <p className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
@@ -659,11 +667,11 @@ export default async function HomePage() {
             {faqs.map(({ q, a }, idx) => (
               <details
                 key={idx}
-                className="group rounded-2xl border border-white/10 bg-white/[0.02] p-6 [&_summary::-webkit-details-marker]:none transition hover:border-yellow-400/30"
+                className="group rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-6 [&_summary::-webkit-details-marker]:none transition hover:border-amber-400/30"
               >
                 <summary className="flex cursor-pointer items-center justify-between gap-4 font-bold text-white select-none">
                   <span className="text-base sm:text-lg">{q}</span>
-                  <span className="rounded-full bg-white/5 p-1.5 text-zinc-400 group-open:rotate-180 group-open:text-yellow-400 transition-transform duration-200">
+                  <span className="rounded-full bg-white/[0.04] p-1.5 text-zinc-400 group-open:rotate-180 group-open:text-amber-400 transition-transform duration-200">
                     <ChevronDown size={18} />
                   </span>
                 </summary>
@@ -675,22 +683,27 @@ export default async function HomePage() {
 
         {/* Bottom CTA Banner */}
         <section className="py-16">
-          <div className="relative overflow-hidden rounded-3xl border border-yellow-400/40 bg-gradient-to-b from-yellow-400/15 via-[#0b0d14] to-black p-10 text-center sm:py-16">
-            <BrandLogo className="mx-auto h-20 w-20 drop-shadow-[0_4px_15px_rgba(250,204,21,0.4)]" />
-            <h2 className="mt-6 text-3xl font-black text-white sm:text-5xl">
-              Prêt à vivre la télévision autrement ?
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-base text-zinc-300">
-              Rejoignez Africa Live et explorez plus de 11 700 chaînes réunies dans un catalogue simple à parcourir.
-            </p>
-            <div className="mt-8 flex justify-center">
-              <Link
-                href={userId ? '/app' : '/sign-up'}
-                className="btn-gold inline-flex items-center gap-3 rounded-xl px-8 py-4 text-base font-black transition"
-              >
-                <span>{userId ? 'Ouvrir mon catalogue' : 'Commencer maintenant'}</span>
-                <ArrowRight size={18} />
-              </Link>
+          <div className="relative overflow-hidden rounded-3xl border border-amber-400/30 bg-black/50 backdrop-blur-2xl p-10 text-center sm:py-16 shadow-2xl">
+            {/* Tricolor ambient glow */}
+            <div className="absolute -inset-10 bg-gradient-to-r from-emerald-500/10 via-amber-500/10 to-rose-500/10 opacity-60 blur-3xl pointer-events-none" />
+
+            <div className="relative z-10">
+              <BrandLogo className="mx-auto h-20 w-20 drop-shadow-[0_4px_15px_rgba(250,204,21,0.25)]" />
+              <h2 className="mt-6 text-3xl font-black text-white sm:text-5xl">
+                Prêt à vivre la télévision autrement ?
+              </h2>
+              <p className="mx-auto mt-4 max-w-xl text-base text-zinc-300">
+                Rejoignez Africa Live et explorez plus de 11 700 chaînes réunies dans un catalogue simple à parcourir.
+              </p>
+              <div className="mt-8 flex justify-center">
+                <Link
+                  href={userId ? '/app' : '/sign-up'}
+                  className="inline-flex items-center gap-3 rounded-xl border border-amber-400/50 bg-gradient-to-r from-emerald-500/25 via-amber-400/30 to-rose-500/25 hover:from-emerald-500/35 hover:via-amber-400/40 hover:to-rose-500/35 px-7 py-3 text-base font-bold text-white shadow-lg shadow-black/40 backdrop-blur-md transition hover:scale-[1.01] active:scale-[0.98]"
+                >
+                  <span>{userId ? 'Ouvrir mon catalogue' : 'Commencer maintenant'}</span>
+                  <ArrowRight size={17} />
+                </Link>
+              </div>
             </div>
           </div>
         </section>

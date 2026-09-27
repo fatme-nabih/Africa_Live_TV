@@ -766,7 +766,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl"
+      className="flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-black/60 shadow-2xl backdrop-blur-xl"
     >
       <div className="group/player relative flex aspect-video w-full items-center justify-center bg-black">
         <AnimatePresence>
@@ -811,10 +811,17 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
         />
       </div>
 
-      <div className="flex flex-col gap-4 bg-zinc-950/80 p-5 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3.5 border-t border-white/[0.07] bg-white/[0.02] p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400">En direct</span>
-          <h3 className="truncate text-xl font-extrabold tracking-tight text-zinc-100">{displayedChannelName}</h3>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="inline-flex items-center gap-1 rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-red-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+              DIRECT
+            </span>
+            <span className="text-[11px] text-zinc-500">•</span>
+            <span className="text-xs text-zinc-400 font-medium">Mode : {mode}</span>
+          </div>
+          <h3 className="truncate text-lg sm:text-xl font-bold tracking-tight text-white">{displayedChannelName}</h3>
           <p className="mt-2 truncate text-xs text-zinc-400">
             {source ? 'Source sélectionnée' : 'Source indisponible'}
           </p>
@@ -827,7 +834,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
               type="button"
               onClick={() => openExternalPlayer(true)}
               disabled={state.phase === 'external-opening'}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 px-5 py-2.5 text-sm font-extrabold text-black shadow-lg shadow-amber-500/20 transition hover:brightness-110 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-amber-400/40 bg-amber-400/15 hover:bg-amber-400/25 px-4 py-2 text-xs sm:text-sm font-bold text-amber-300 shadow-sm transition disabled:opacity-50"
             >
               {state.phase === 'external-opening' ? (
                 <LoaderCircle className="h-4 w-4 animate-spin" />

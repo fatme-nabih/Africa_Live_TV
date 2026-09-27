@@ -99,17 +99,17 @@ export default function InlinePlayerModal({
             aria-modal="true"
             aria-labelledby="inline-player-title"
             aria-describedby="inline-player-description"
-            className="relative z-10 flex flex-col w-full h-full sm:h-auto max-w-5xl overflow-hidden rounded-none sm:rounded-3xl border-0 sm:border border-amber-500/25 bg-zinc-950 shadow-2xl shadow-amber-950/30 justify-between sm:justify-start"
+            className="relative z-10 flex flex-col w-full h-full sm:h-auto max-w-5xl overflow-hidden rounded-none sm:rounded-3xl border-0 sm:border border-white/[0.1] bg-black/85 shadow-2xl backdrop-blur-2xl justify-between sm:justify-start"
           >
             {/* Header */}
-            <div className="relative flex items-center justify-between border-b border-zinc-800 bg-zinc-900/90 px-4 sm:px-5 py-3 sm:py-3.5 backdrop-blur shrink-0">
-              <div className="h-0.5 w-full bg-tricolor-bar absolute top-0 left-0 right-0 opacity-80" />
+            <div className="relative flex items-center justify-between border-b border-white/[0.08] bg-black/50 px-4 sm:px-5 py-3 sm:py-3.5 backdrop-blur-xl shrink-0">
+              <div className="h-[2px] w-full bg-tricolor-bar absolute top-0 left-0 right-0 opacity-80" />
               <div className="flex items-center gap-3 min-w-0 pr-2">
                 <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-400/10 text-amber-300">
-                  <Tv className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <Tv className="h-4 w-4 sm:h-5 w-5" />
                 </div>
                 <div className="min-w-0">
-                  <h2 id="inline-player-title" className="text-sm sm:text-base font-extrabold text-white truncate">
+                  <h2 id="inline-player-title" className="text-xs sm:text-base font-bold text-white truncate">
                     {channel.name}
                   </h2>
                   <div className="flex items-center gap-2 text-[11px] sm:text-xs text-zinc-400">
@@ -139,7 +139,7 @@ export default function InlinePlayerModal({
                   onClick={onOpenPopoutWindow}
                   title="Ouvrir dans une fenêtre séparée"
                   aria-label="Ouvrir dans une fenêtre séparée"
-                  className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-800 px-3.5 py-2 text-xs font-bold text-zinc-200 transition hover:border-amber-400/50 hover:bg-zinc-700 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                  className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-zinc-200 transition hover:border-amber-400/40 hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
                 >
                   <ExternalLink className="h-3.5 w-3.5 text-amber-300" />
                   <span>Fenêtre séparée</span>
@@ -150,15 +150,15 @@ export default function InlinePlayerModal({
                   onClick={onClose}
                   aria-label="Fermer le lecteur"
                   title="Fermer le lecteur"
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-400 transition hover:border-zinc-700 hover:bg-zinc-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                  className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-zinc-400 transition hover:border-white/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-4 w-4" />
                 </button>
               </div>
             </div>
 
             {/* Video Player Container */}
-            <div className="p-2 sm:p-5 bg-black flex-1 flex flex-col justify-center">
+            <div className="p-2 sm:p-5 bg-black/60 flex-1 flex flex-col justify-center">
               <Player channelId={channel.id} channelName={channel.name} />
             </div>
           </motion.div>

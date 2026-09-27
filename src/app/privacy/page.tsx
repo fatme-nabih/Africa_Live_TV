@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { ArrowLeft, ShieldCheck, Lock, Database, UserCheck, EyeOff } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
+import BrandWatermark from '@/components/BrandWatermark';
 
 export const metadata: Metadata = {
   title: 'Politique de Confidentialité — Africa Live',
@@ -10,53 +11,50 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-[#020408] text-zinc-100 selection:bg-yellow-400 selection:text-black">
-      {/* Background glow accents */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[500px] w-[800px] -translate-x-1/2 rounded-full bg-yellow-500/10 blur-[130px]" />
+    <main className="relative min-h-screen bg-black text-zinc-100 selection:bg-amber-400 selection:text-black overflow-hidden">
+      <BrandWatermark />
 
-      <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
         {/* Navigation Bar */}
-        <nav className="mb-10 flex items-center justify-between border-b border-white/10 pb-6">
+        <nav className="mb-10 flex items-center justify-between border-b border-white/[0.08] pb-5">
           <Link href="/" className="group flex items-center gap-3">
-            <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-400/20 p-1 ring-1 ring-yellow-400/30">
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400/10 border border-amber-400/25 p-1">
               <BrandLogo className="h-full w-full" />
             </div>
-            <div>
-              <span className="text-lg font-black tracking-tight text-white">
-                Africa Live<span className="text-yellow-400">.</span>
-              </span>
-            </div>
+            <span className="text-base font-bold tracking-tight text-white group-hover:text-amber-300 transition">
+              Africa Live
+            </span>
           </Link>
 
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-semibold text-zinc-300 transition hover:border-yellow-400/40 hover:text-white"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-semibold text-zinc-300 transition hover:border-white/20 hover:bg-white/[0.08] hover:text-white backdrop-blur-sm"
           >
             <ArrowLeft size={14} />
-            <span>Retour à l&apos;accueil</span>
+            <span>Accueil</span>
           </Link>
         </nav>
 
         {/* Header */}
-        <header className="mb-12">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-xs font-semibold text-emerald-300">
+        <header className="mb-10">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 backdrop-blur-md">
             <ShieldCheck size={14} />
             <span>Protection des données personnelles</span>
           </div>
           <h1 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl">
             Politique de Confidentialité
           </h1>
-          <p className="mt-3 text-sm text-zinc-400">
+          <p className="mt-3 text-xs sm:text-sm text-zinc-400">
             Dernière mise à jour : 27 septembre 2026 • africatv.sn
           </p>
         </header>
 
         {/* Content sections */}
-        <article className="space-y-10 text-sm leading-relaxed text-zinc-300">
+        <article className="space-y-8 text-xs sm:text-sm leading-relaxed text-zinc-300">
           {/* Section 1 */}
-          <section className="rounded-2xl border border-white/10 bg-zinc-950/70 p-6 sm:p-8">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2.5">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-yellow-400 text-xs font-black text-black">1</span>
+          <section className="rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-6 sm:p-8 shadow-xl shadow-black/40">
+            <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2.5">
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg border border-amber-400/30 bg-amber-400/20 text-xs font-bold text-amber-300">1</span>
               Engagement de transparence
             </h2>
             <p className="mt-3">
@@ -68,15 +66,15 @@ export default function PrivacyPage() {
           </section>
 
           {/* Section 2 */}
-          <section className="rounded-2xl border border-white/10 bg-zinc-950/70 p-6 sm:p-8">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2.5">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-yellow-400 text-xs font-black text-black">2</span>
+          <section className="rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-6 sm:p-8 shadow-xl shadow-black/40">
+            <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2.5">
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg border border-amber-400/30 bg-amber-400/20 text-xs font-bold text-amber-300">2</span>
               Données traitées et Finalités
             </h2>
-            <div className="mt-4 space-y-4">
-              <div className="rounded-xl border border-white/5 bg-black/40 p-4">
+            <div className="mt-4 space-y-3">
+              <div className="rounded-xl border border-white/[0.08] bg-black/50 p-4">
                 <p className="font-semibold text-white flex items-center gap-2">
-                  <UserCheck size={16} className="text-yellow-400" /> Données de compte & authentification
+                  <UserCheck size={16} className="text-amber-400" /> Données de compte & authentification
                 </p>
                 <p className="mt-1 text-xs text-zinc-400">
                   Votre adresse e-mail, prénom et nom sont gérés de façon sécurisée par notre tiers d&apos;authentification <strong>Clerk</strong>.
@@ -84,9 +82,9 @@ export default function PrivacyPage() {
                 </p>
               </div>
 
-              <div className="rounded-xl border border-white/5 bg-black/40 p-4">
+              <div className="rounded-xl border border-white/[0.08] bg-black/50 p-4">
                 <p className="font-semibold text-white flex items-center gap-2">
-                  <Lock size={16} className="text-yellow-400" /> Données de facturation et de paiement
+                  <Lock size={16} className="text-amber-400" /> Données de facturation et de paiement
                 </p>
                 <p className="mt-1 text-xs text-zinc-400">
                   Lors de votre souscription via <strong>NabooPay</strong>, votre numéro de téléphone (utilisé pour les règlements
@@ -95,9 +93,9 @@ export default function PrivacyPage() {
                 </p>
               </div>
 
-              <div className="rounded-xl border border-white/5 bg-black/40 p-4">
+              <div className="rounded-xl border border-white/[0.08] bg-black/50 p-4">
                 <p className="font-semibold text-white flex items-center gap-2">
-                  <Database size={16} className="text-yellow-400" /> Données techniques et de navigation
+                  <Database size={16} className="text-amber-400" /> Données techniques et de navigation
                 </p>
                 <p className="mt-1 text-xs text-zinc-400">
                   Votre adresse IP et votre User-Agent sont temporairement analysés pour assurer la protection contre les requêtes abusives
@@ -108,9 +106,9 @@ export default function PrivacyPage() {
           </section>
 
           {/* Section 3 */}
-          <section className="rounded-2xl border border-white/10 bg-zinc-950/70 p-6 sm:p-8">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2.5">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-yellow-400 text-xs font-black text-black">3</span>
+          <section className="rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-6 sm:p-8 shadow-xl shadow-black/40">
+            <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2.5">
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg border border-amber-400/30 bg-amber-400/20 text-xs font-bold text-amber-300">3</span>
               Zéro pistage publicitaire & Stockage local
             </h2>
             <div className="flex items-start gap-3 text-emerald-300">
@@ -126,9 +124,9 @@ export default function PrivacyPage() {
           </section>
 
           {/* Section 4 */}
-          <section className="rounded-2xl border border-white/10 bg-zinc-950/70 p-6 sm:p-8">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2.5">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-yellow-400 text-xs font-black text-black">4</span>
+          <section className="rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-6 sm:p-8 shadow-xl shadow-black/40">
+            <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2.5">
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg border border-amber-400/30 bg-amber-400/20 text-xs font-bold text-amber-300">4</span>
               Vos droits
             </h2>
             <p className="mt-3">
@@ -136,23 +134,23 @@ export default function PrivacyPage() {
               Vous pouvez à tout moment :
             </p>
             <ul className="mt-3 list-disc pl-5 space-y-1 text-xs text-zinc-400">
-              <li>Modifier votre profil et vos informations depuis votre espace <Link href="/account" className="text-yellow-400 underline">Mon compte</Link>.</li>
+              <li>Modifier votre profil et vos informations depuis votre espace <Link href="/account" className="text-amber-400 underline">Mon compte</Link>.</li>
               <li>Demander l&apos;effacement complet de votre compte et de son historique en écrivant à <strong>privacy@africatv.sn</strong>.</li>
               <li>Consulter le journal de vos paiements via la référence de commande fournie lors de chaque transaction NabooPay.</li>
             </ul>
           </section>
 
           {/* Section 5 */}
-          <section className="rounded-2xl border border-white/10 bg-zinc-950/70 p-6 sm:p-8">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2.5">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-yellow-400 text-xs font-black text-black">5</span>
+          <section className="rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-6 sm:p-8 shadow-xl shadow-black/40">
+            <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2.5">
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg border border-amber-400/30 bg-amber-400/20 text-xs font-bold text-amber-300">5</span>
               Contact pour la protection des données
             </h2>
             <p className="mt-3">
               Pour toute question relative à cette politique ou pour exercer vos droits, contactez notre équipe :
             </p>
             <p className="mt-3 font-semibold text-white">
-              E-mail : <a href="mailto:privacy@africatv.sn" className="text-yellow-400 hover:underline">privacy@africatv.sn</a>
+              E-mail : <a href="mailto:privacy@africatv.sn" className="text-amber-400 hover:underline">privacy@africatv.sn</a>
             </p>
             <p className="mt-1 text-xs text-zinc-400">
               Adresse : Plateforme Africa Live • Domaine africatv.sn • Dakar, Sénégal
@@ -161,7 +159,7 @@ export default function PrivacyPage() {
         </article>
 
         {/* Footer link */}
-        <div className="mt-12 border-t border-white/10 pt-6 text-center text-xs text-zinc-500">
+        <div className="mt-12 border-t border-white/[0.08] pt-6 text-center text-xs text-zinc-500">
           <p>© {new Date().getFullYear()} Africa Live (africatv.sn) • Tous droits réservés.</p>
         </div>
       </div>

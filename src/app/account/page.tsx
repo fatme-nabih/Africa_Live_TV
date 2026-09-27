@@ -5,6 +5,8 @@ import { auth } from '@clerk/nextjs/server';
 import { CreditCard, ShieldCheck } from 'lucide-react';
 
 import { getCurrentAccessDecision } from '@/lib/access-control';
+import BrandLogo from '@/components/BrandLogo';
+import BrandWatermark from '@/components/BrandWatermark';
 
 function formatStatus(status: string) {
   const labels: Record<string, string> = {
@@ -30,50 +32,60 @@ export default async function AccountPage() {
   const currentSubscription = subscriptions[0];
 
   return (
-    <main className="min-h-screen bg-black px-5 py-8 text-zinc-100">
-      <div className="mx-auto max-w-6xl">
-        <nav className="mb-8 flex items-center justify-between gap-4">
-          <Link href="/" className="text-sm font-bold text-zinc-300 transition hover:text-yellow-200">
-            Africa Live
+    <main className="relative min-h-screen bg-black px-5 py-8 text-zinc-100 overflow-hidden">
+      <BrandWatermark />
+
+      <div className="relative z-10 mx-auto max-w-6xl">
+        <nav className="mb-8 flex items-center justify-between gap-4 border-b border-white/[0.08] pb-5">
+          <Link href="/" className="group flex items-center gap-3">
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400/10 border border-amber-400/25 p-1">
+              <BrandLogo className="h-full w-full" />
+            </div>
+            <span className="text-base font-bold tracking-tight text-white group-hover:text-amber-300 transition">
+              Africa Live
+            </span>
           </Link>
           <Link
             href="/app"
-            className="rounded-lg bg-yellow-400 px-4 py-2 text-sm font-black text-black transition hover:bg-yellow-300"
+            className="rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/20 via-amber-400/25 to-rose-500/20 hover:from-emerald-500/30 hover:via-amber-400/35 hover:to-rose-500/30 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-amber-200 transition backdrop-blur-md shadow-sm"
           >
-            Ouvrir l app
+            Ouvrir l&apos;application
           </Link>
         </nav>
 
         <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
-          <section className="rounded-lg border border-zinc-800 bg-zinc-950 p-6">
+          <section className="rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-6 shadow-xl shadow-black/40">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-yellow-300">Compte</p>
-                <h1 className="mt-3 text-3xl font-black text-white">Mon acces</h1>
+                <p className="text-xs font-semibold uppercase tracking-widest text-amber-300">Compte</p>
+                <h1 className="mt-2 text-2xl font-black text-white">Mon accès</h1>
               </div>
-              <ShieldCheck className="h-7 w-7 text-yellow-300" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-400/20 bg-amber-400/10 text-amber-400">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
             </div>
 
-            <dl className="mt-8 space-y-5">
+            <dl className="mt-6 space-y-4">
               <div>
-                <dt className="text-xs font-bold uppercase tracking-[0.14em] text-zinc-500">Statut</dt>
-                <dd className="mt-2">
-                  <span className={`rounded-full px-3 py-1 text-sm font-bold ${decision.hasAccess ? 'bg-green-400/10 text-green-300' : 'bg-red-400/10 text-red-300'}`}>
+                <dt className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Statut</dt>
+                <dd className="mt-1.5">
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-semibold ${decision.hasAccess ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300' : 'bg-rose-500/15 border border-rose-500/30 text-rose-300'}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${decision.hasAccess ? 'bg-emerald-400' : 'bg-rose-400'}`} />
                     {formatStatus(decision.status)}
                   </span>
                 </dd>
               </div>
               <div>
-                <dt className="text-xs font-bold uppercase tracking-[0.14em] text-zinc-500">Plan</dt>
-                <dd className="mt-2 text-sm font-semibold text-zinc-200">{currentSubscription?.planCode ?? 'all_access'}</dd>
+                <dt className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Plan</dt>
+                <dd className="mt-1 text-xs font-medium text-zinc-200">{currentSubscription?.planCode ?? 'all_access'}</dd>
               </div>
               <div>
-                <dt className="text-xs font-bold uppercase tracking-[0.14em] text-zinc-500">Email</dt>
-                <dd className="mt-2 text-sm font-semibold text-zinc-200">{user?.email ?? 'Non renseigné'}</dd>
+                <dt className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Email</dt>
+                <dd className="mt-1 text-xs font-medium text-zinc-200">{user?.email ?? 'Non renseigné'}</dd>
               </div>
               <div>
-                <dt className="text-xs font-bold uppercase tracking-[0.14em] text-zinc-500">Échéance</dt>
-                <dd className="mt-2 text-sm font-semibold text-zinc-200">
+                <dt className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Échéance</dt>
+                <dd className="mt-1 text-xs font-medium text-zinc-200">
                   {decision.expiresAt
                     ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(new Date(decision.expiresAt))
                     : 'Sans échéance connue'}
@@ -81,17 +93,17 @@ export default async function AccountPage() {
               </div>
             </dl>
 
-            <div className="mt-8 rounded-lg border border-zinc-800 bg-black p-4">
+            <div className="mt-8 rounded-xl border border-white/[0.08] bg-black/50 p-4">
               <div className="flex gap-3">
-                <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-yellow-300" />
-                <p className="text-sm leading-6 text-zinc-400">
+                <CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                <p className="text-xs leading-relaxed text-zinc-400">
                   Votre abonnement est géré de manière sécurisée via NabooPay. L&apos;accès Africa Live est mis à jour instantanément après votre paiement.
                 </p>
               </div>
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 p-2">
+          <section className="overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-3 shadow-xl shadow-black/40">
             <UserProfile routing="hash" />
           </section>
         </div>
