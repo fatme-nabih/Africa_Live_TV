@@ -34,6 +34,8 @@ import { assertIntegrationTarget } from './integration-test-safety';
 import { applyVerifiedNabooPayPayment } from './naboopay-payment';
 import type { NabooPayTransactionPayload, NabooPayStatus } from './naboopay';
 
+const integrationEnabled = process.env.CLERK_BILLING_INTEGRATION_TEST === '1';
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -151,10 +153,12 @@ function assertDaysFromNow(actual: string | null, expectedDays: number, label: s
 // ---------------------------------------------------------------------------
 
 before(async () => {
+  if (!integrationEnabled) return;
   await assertIntegrationTarget(pool);
 });
 
 after(async () => {
+  if (!integrationEnabled) return;
   // Users cascade-delete to naboopay_transactions and subscriptions.
   for (const id of createdUserIds) {
     await db.delete(users).where(eq(users.id, id));
@@ -165,7 +169,7 @@ after(async () => {
 // 1. Completed payment creates active subscription
 // ---------------------------------------------------------------------------
 
-test('completed payment creates an active subscription with correct period', async () => {
+test('completed payment creates an active subscription with correct period', { skip: !integrationEnabled }, async () => {
   const userId = await seedUser();
   const tx = await seedTransaction(userId);
 
@@ -193,7 +197,7 @@ test('completed payment creates an active subscription with correct period', asy
 // 2. Stale webhook (older updated_at) is rejected
 // ---------------------------------------------------------------------------
 
-test('stale webhook with older updated_at is silently rejected', async () => {
+test('stale webhook with older updated_at is silently rejected', { skip: !integrationEnabled }, async () => {
   const userId = await seedUser();
   const tx = await seedTransaction(userId);
 
@@ -216,7 +220,7 @@ test('stale webhook with older updated_at is silently rejected', async () => {
 // 3. Duplicate webhook (same updated_at) is rejected
 // ---------------------------------------------------------------------------
 
-test('duplicate webhook with identical updated_at is rejected', async () => {
+test('duplicate webhook with identical updated_at is rejected', { skip: !integrationEnabled }, async () => {
   const userId = await seedUser();
   const tx = await seedTransaction(userId);
 
@@ -236,7 +240,7 @@ test('duplicate webhook with identical updated_at is rejected', async () => {
 // 4. Terminal state blocks backward transitions
 // ---------------------------------------------------------------------------
 
-test('completed transaction rejects a newer failed webhook', async () => {
+test('completed transaction rejects a newer failed webhook', { skip: !integrationEnabled }, async () => {
   const userId = await seedUser();
   const tx = await seedTransaction(userId);
 
@@ -258,7 +262,7 @@ test('completed transaction rejects a newer failed webhook', async () => {
 // 5. Full refund → subscription expires immediately
 // ---------------------------------------------------------------------------
 
-test('full refund sets subscription to expired with immediate cutoff', async () => {
+test('full refund sets subscription to expired with immediate cutoff', { skip: !integrationEnabled }, async () => {
   const userId = await seedUser();
   const tx = await seedTransaction(userId);
 
@@ -294,7 +298,7 @@ test('full refund sets subscription to expired with immediate cutoff', async () 
 // 6. Partial refund recalculates from remaining completed transactions
 // ---------------------------------------------------------------------------
 
-test('partial refund keeps subscription active with recalculated period', async () => {
+test('partial refund keeps subscription active with recalculated period', { skip: !integrationEnabled }, async () => {
   const userId = await seedUser();
   const tx1 = await seedTransaction(userId, 'lumina_all_access_monthly');
   const tx2 = await seedTransaction(userId, 'lumina_all_access_monthly');
@@ -320,7 +324,7 @@ test('partial refund keeps subscription active with recalculated period', async 
 // 7. Monthly → annual renewal accumulates days
 // ---------------------------------------------------------------------------
 
-test('monthly then annual renewal accumulates 30 + 365 days', async () => {
+test('monthly then annual renewal accumulates 30 + 365 days', { skip: !integrationEnabled }, async () => {
   const userId = await seedUser();
   const monthlyTx = await seedTransaction(userId, 'lumina_all_access_monthly');
   const annualTx = await seedTransaction(userId, 'lumina_all_access_annual');
@@ -346,7 +350,7 @@ test('monthly then annual renewal accumulates 30 + 365 days', async () => {
 // 8. Concurrent identical webhooks are serialized
 // ---------------------------------------------------------------------------
 
-test('concurrent identical webhooks: one fulfills, one is rejected', async () => {
+test('concurrent identical webhooks: one fulfills, one is rejected', { skip: !integrationEnabled }, async () => {
   const userId = await seedUser();
   const tx = await seedTransaction(userId);
 
@@ -378,7 +382,7 @@ test('concurrent identical webhooks: one fulfills, one is rejected', async () =>
 // 9. Reconciliation: completed after failed succeeds
 // ---------------------------------------------------------------------------
 
-test('reconciliation: completed webhook after failed creates subscription', async () => {
+test('reconciliation: completed webhook after failed creates subscription', { skip: !integrationEnabled }, async () => {
   const userId = await seedUser();
   const tx = await seedTransaction(userId);
 

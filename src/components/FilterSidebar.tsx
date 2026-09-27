@@ -161,10 +161,14 @@ export default function FilterSidebar({
         whileTap={{ scale: 0.98 }}
         onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
         aria-pressed={showFavoritesOnly}
-        className={\lex w-full items-center justify-between rounded-lg border px-3 py-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 \\}
+        className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+          showFavoritesOnly
+            ? 'border-amber-400/50 bg-amber-400/15 text-amber-200 shadow-lg shadow-amber-950/30 font-bold'
+            : 'border-zinc-800 bg-zinc-900/60 text-zinc-300 hover:border-zinc-750 hover:bg-zinc-900'
+        }`}
       >
         <span className="flex items-center gap-2">
-          <StarIcon className={\h-3.5 w-3.5 \\} aria-hidden="true" />
+          <StarIcon className={`h-3.5 w-3.5 ${showFavoritesOnly ? 'fill-current text-amber-400' : 'text-zinc-400'}`} aria-hidden="true" />
           <span className="text-xs font-semibold">Mes favoris</span>
         </span>
         {showFavoritesOnly && (

@@ -58,9 +58,9 @@ export default async function HomePage() {
     },
     {
       icon: Zap,
-      title: 'Statuts de Compatibilité Clairs',
-      description: 'Chaque chaîne affiche son dernier statut connu : lecture web, VLC conseillé, à tester ou indisponible.',
-      badge: 'Lecture transparente',
+      title: 'Sélection de flux certifiés et qualifiés en direct',
+      description: 'Chaque flux est testé et validé pour garantir une disponibilité optimale, avec bascule fluide vers VLC si nécessaire.',
+      badge: 'Flux qualifiés',
     },
   ];
 
@@ -120,6 +120,9 @@ export default async function HomePage() {
             </Link>
             <Link href="#categories" className="hidden text-zinc-400 transition hover:text-white md:block">
               Catégories
+            </Link>
+            <Link href="/pricing" className="text-yellow-400/90 transition hover:text-yellow-300 font-semibold">
+              Tarifs
             </Link>
             <Link href="#faq" className="hidden text-zinc-400 transition hover:text-white md:block">
               FAQ
@@ -405,7 +408,7 @@ export default async function HomePage() {
                   </div>
                   <div className="flex items-center gap-2 rounded-xl bg-black/40 px-4 py-2.5 text-xs font-medium text-zinc-300 border border-white/10">
                     <CheckCircle2 size={16} className="text-emerald-400" />
-                    Export M3U & lien VLC 1-clic
+                    Lancement VLC 1-clic direct
                   </div>
                   <div className="flex items-center gap-2 rounded-xl bg-black/40 px-4 py-2.5 text-xs font-medium text-zinc-300 border border-white/10">
                     <CheckCircle2 size={16} className="text-emerald-400" />
@@ -497,10 +500,14 @@ export default async function HomePage() {
               <span className="text-sm font-bold text-zinc-300">Africa Live</span>
               <span>— La télévision sans frontières.</span>
             </div>
-            <div className="flex flex-wrap gap-6 text-zinc-400">
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-zinc-400">
               <Link href="#features" className="hover:text-white transition">Fonctionnalités</Link>
               <Link href="#categories" className="hover:text-white transition">Catégories</Link>
+              <Link href="/pricing" className="hover:text-yellow-400 transition font-medium">Tarifs</Link>
               <Link href="#faq" className="hover:text-white transition">FAQ</Link>
+              <Link href="/contact" className="hover:text-white transition">Contact</Link>
+              <Link href="/cgu" className="hover:text-white transition">CGU & Vente</Link>
+              <Link href="/privacy" className="hover:text-white transition">Confidentialité</Link>
               <Link href={userId ? '/account' : '/sign-in'} className="hover:text-yellow-400 transition">
                 {userId ? 'Mon compte' : 'Se connecter'}
               </Link>
