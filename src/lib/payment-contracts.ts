@@ -10,12 +10,12 @@ export const checkoutRequestSchema = z.object({
 
 export const checkoutResponseSchema = z.object({
   checkout_url: z.string().url().nullable(),
-  status: z.enum(['creating', 'pending', 'completed', 'failed', 'canceled', 'reconciliation_required']),
+  status: z.enum(['creating', 'pending', 'completed', 'failed', 'canceled', 'refunded', 'reconciliation_required']),
   checkout_attempt_id: z.string().min(1),
 }).strict();
 
 export const checkoutStatusResponseSchema = z.object({
-  status: z.enum(['creating', 'pending', 'completed', 'failed', 'canceled', 'reconciliation_required']),
+  status: z.enum(['creating', 'pending', 'completed', 'failed', 'canceled', 'refunded', 'reconciliation_required']),
   checkout_attempt_id: z.string().min(1),
   plan: z.enum(['lumina_all_access_monthly', 'lumina_all_access_annual']),
   amount: z.number().int().positive(),

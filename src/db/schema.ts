@@ -30,7 +30,7 @@ export const users = pgTable(
     trialStartedAt: timestampWithTimezone('trial_started_at').notNull().defaultNow(),
     trialEndsAt: timestampWithTimezone('trial_ends_at')
       .notNull()
-      .default(sql`(now() + '14 days'::interval)`),
+      .default(sql`(now() + '5 days'::interval)`),
     clerkSyncedAt: timestampWithTimezone('clerk_synced_at'),
   },
   (table) => [
@@ -863,6 +863,7 @@ export const naboopayTransactions = pgTable('naboopay_transactions', {
   createdAt: timestampWithTimezone('created_at').notNull().defaultNow(),
   updatedAt: timestampWithTimezone('updated_at').notNull().defaultNow(),
   providerCreatedAt: timestampWithTimezone('provider_created_at'),
+    providerUpdatedAt: timestampWithTimezone('provider_updated_at'),
   paidAt: timestampWithTimezone('paid_at'),
   fulfilledAt: timestampWithTimezone('fulfilled_at'),
   orderId: text('order_id'),
@@ -875,7 +876,7 @@ export const naboopayTransactions = pgTable('naboopay_transactions', {
   check('naboopay_transactions_amount_check', sql`${table.amount} > 0`),
   check('naboopay_transactions_currency_check', sql`${table.currency} = 'XOF'`),
   check('naboopay_transactions_plan_code_check', sql`${table.planCode} in ('lumina_all_access_monthly', 'lumina_all_access_annual')`),
-  check('naboopay_transactions_status_check', sql`${table.status} in ('creating', 'pending', 'completed', 'failed', 'canceled', 'reconciliation_required')`),
+  check('naboopay_transactions_status_check', sql`${table.status} in ('creating', 'pending', 'completed', 'failed', 'canceled', 'refunded', 'reconciliation_required')`),
   unique('naboopay_transactions_checkout_attempt_uidx').on(table.checkoutAttemptId),
   uniqueIndex('naboopay_transactions_provider_order_uidx').on(table.providerOrderId).where(sql`${table.providerOrderId} IS NOT NULL`),
   unique('naboopay_transactions_user_idempotency_uidx').on(table.userId, table.idempotencyKey),
@@ -895,6 +896,7 @@ export const naboopayWebhookEvents = pgTable('naboopay_webhook_events', {
   payloadDigest: text('payload_digest').notNull(),
   providerStatus: text('provider_status').notNull(),
   providerCreatedAt: timestampWithTimezone('provider_created_at'),
+    providerUpdatedAt: timestampWithTimezone('provider_updated_at'),
   receivedAt: timestampWithTimezone('received_at').notNull().defaultNow(),
   state: text('state').notNull().default('received'),
   errorCode: text('error_code'),

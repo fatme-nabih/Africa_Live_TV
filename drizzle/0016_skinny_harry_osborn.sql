@@ -1,0 +1,1 @@
+ALTER TABLE "users" ALTER COLUMN "trial_ends_at" SET DEFAULT (now() + '5 days'::interval);

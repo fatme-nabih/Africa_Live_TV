@@ -85,9 +85,7 @@ export default async function AccountPage() {
               <div className="flex gap-3">
                 <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-yellow-300" />
                 <p className="text-sm leading-6 text-zinc-400">
-                  L abonnement est géré dans le profil Clerk ci-contre. Les achats de cette
-                  instance utilisent le mode test ; l accès Lumina est mis à jour par des
-                  webhooks signés.
+                  Votre abonnement est géré de manière sécurisée via NabooPay. L&apos;accès Africa Live est mis à jour instantanément après votre paiement.
                 </p>
               </div>
             </div>

@@ -11,7 +11,7 @@ export const NabooPayMethodSchema = z.enum([
 ]);
 export type NabooPayMethod = z.infer<typeof NabooPayMethodSchema>;
 
-export const NabooPayStatusSchema = z.enum(['pending', 'completed', 'failed', 'canceled']);
+export const NabooPayStatusSchema = z.enum(['pending', 'completed', 'failed', 'canceled', 'refunded']);
 export type NabooPayStatus = z.infer<typeof NabooPayStatusSchema>;
 
 export const NabooPayProductSchema = z.object({
