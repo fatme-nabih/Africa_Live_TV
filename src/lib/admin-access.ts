@@ -5,12 +5,21 @@ import { authorizeAdministrator } from './admin-authorization';
 import { ensureInternalUser } from './identity';
 import { isLocalDevMode } from './local-dev';
 
+import type { AppRole } from '@/types/globals';
+
 export function getAdministratorAccess() {
   return authorizeAdministrator({
     localMode: isLocalDevMode(),
     getIdentity: async () => {
       const { userId, sessionClaims } = await auth();
-      return { userId, sessionRole: sessionClaims?.metadata?.role };
+      let sessionRole = sessionClaims?.metadata?.role;
+      if (!sessionRole && userId) {
+        const providerUser = await currentUser();
+        if (providerUser && typeof providerUser.publicMetadata?.role === 'string') {
+          sessionRole = providerUser.publicMetadata.role as AppRole;
+        }
+      }
+      return { userId, sessionRole };
     },
     getProviderUser: currentUser,
     getInternalUser: ensureInternalUser,

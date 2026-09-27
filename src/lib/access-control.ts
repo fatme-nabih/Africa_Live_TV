@@ -8,6 +8,7 @@ import type { AccessDecision } from './access-policy';
 
 import { evaluateAccess } from './access-policy';
 import { ensureInternalUser } from './identity';
+import { getAdministratorAccess } from './admin-access';
 
 export async function getCurrentAccessDecision() {
   if (isLocalDevMode()) {
@@ -35,10 +36,36 @@ export async function getCurrentAccessDecision() {
     .where(eq(subscriptions.userId, user.id))
     .orderBy(desc(subscriptions.createdAt));
 
+  const standardDecision = evaluateAccess(user, userSubscriptions);
+  if (standardDecision.hasAccess) {
+    return {
+      user,
+      clerkSessionId,
+      subscriptions: userSubscriptions,
+      decision: standardDecision,
+    };
+  }
+
+  // Active administrators maintain full platform access
+  const admin = await getAdministratorAccess();
+  if (admin.allowed) {
+    return {
+      user,
+      clerkSessionId,
+      subscriptions: userSubscriptions,
+      decision: {
+        status: 'active',
+        hasAccess: true,
+        expiresAt: null,
+        reason: 'administrator_access',
+      } satisfies AccessDecision,
+    };
+  }
+
   return {
     user,
     clerkSessionId,
     subscriptions: userSubscriptions,
-    decision: evaluateAccess(user, userSubscriptions),
+    decision: standardDecision,
   };
 }

@@ -2,13 +2,14 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { UserProfile } from '@clerk/nextjs';
 import { auth } from '@clerk/nextjs/server';
-import { CreditCard, ShieldCheck } from 'lucide-react';
+import { CreditCard, ShieldCheck, ArrowRight, AlertCircle, Sparkles } from 'lucide-react';
 
 import { getCurrentAccessDecision } from '@/lib/access-control';
 import BrandLogo from '@/components/BrandLogo';
 import BrandWatermark from '@/components/BrandWatermark';
 
-function formatStatus(status: string) {
+function formatStatus(status: string, reason?: string) {
+  if (reason === 'administrator_access') return 'Actif (Administrateur)';
   const labels: Record<string, string> = {
     active: 'Actif',
     trial: 'Essai actif',
@@ -21,15 +22,21 @@ function formatStatus(status: string) {
   return labels[status] ?? status;
 }
 
-export default async function AccountPage() {
+export default async function AccountPage(props: {
+  searchParams?: Promise<{ access?: string }>;
+}) {
   const { userId } = await auth();
 
   if (!userId) {
     redirect('/sign-in?redirect_url=/account');
   }
 
+  const searchParams = props.searchParams ? await props.searchParams : {};
+  const isAccessRequired = searchParams.access === 'required';
+
   const { user, decision, subscriptions } = await getCurrentAccessDecision();
   const currentSubscription = subscriptions[0];
+  const isAdmin = decision.reason === 'administrator_access';
 
   return (
     <main className="relative min-h-screen bg-black px-5 py-8 text-zinc-100 overflow-hidden">
@@ -45,13 +52,52 @@ export default async function AccountPage() {
               Africa Live
             </span>
           </Link>
-          <Link
-            href="/app"
-            className="rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/20 via-amber-400/25 to-rose-500/20 hover:from-emerald-500/30 hover:via-amber-400/35 hover:to-rose-500/30 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-amber-200 transition backdrop-blur-md shadow-sm"
-          >
-            Ouvrir l&apos;application
-          </Link>
+          <div className="flex items-center gap-3">
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="text-xs font-semibold text-amber-300 hover:text-amber-200 transition"
+              >
+                Administration
+              </Link>
+            )}
+            {decision.hasAccess ? (
+              <Link
+                href="/app"
+                className="rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/20 via-amber-400/25 to-rose-500/20 hover:from-emerald-500/30 hover:via-amber-400/35 hover:to-rose-500/30 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-amber-200 transition backdrop-blur-md shadow-sm"
+              >
+                Ouvrir l&apos;application
+              </Link>
+            ) : (
+              <Link
+                href="/pricing"
+                className="rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/20 via-amber-400/25 to-rose-500/20 hover:from-emerald-500/30 hover:via-amber-400/35 hover:to-rose-500/30 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-amber-200 transition backdrop-blur-md shadow-sm"
+              >
+                Voir les offres
+              </Link>
+            )}
+          </div>
         </nav>
+
+        {/* Access required notice banner */}
+        {isAccessRequired && !decision.hasAccess && (
+          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-xs text-amber-200 backdrop-blur-xl">
+            <AlertCircle size={18} className="text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-sm text-white">Abonnement ou période d&apos;essai requis</p>
+              <p className="mt-1 leading-relaxed text-zinc-300">
+                Votre période d&apos;essai de 5 jours est arrivée à échéance. Pour accéder aux flux en direct et à l&apos;intégralité du bouquet TV, veuillez choisir une formule d&apos;abonnement.
+              </p>
+              <Link
+                href="/pricing"
+                className="mt-3 inline-flex items-center gap-1.5 font-bold text-amber-300 hover:text-white transition"
+              >
+                <span>Souscrire dès 990 FCFA (Wave, Orange Money & CB)</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
           <section className="rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-6 shadow-xl shadow-black/40">
@@ -71,13 +117,17 @@ export default async function AccountPage() {
                 <dd className="mt-1.5">
                   <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-semibold ${decision.hasAccess ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300' : 'bg-rose-500/15 border border-rose-500/30 text-rose-300'}`}>
                     <span className={`h-1.5 w-1.5 rounded-full ${decision.hasAccess ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                    {formatStatus(decision.status)}
+                    {formatStatus(decision.status, decision.reason)}
                   </span>
                 </dd>
               </div>
               <div>
                 <dt className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Plan</dt>
-                <dd className="mt-1 text-xs font-medium text-zinc-200">{currentSubscription?.planCode ?? 'all_access'}</dd>
+                <dd className="mt-1 text-xs font-medium text-zinc-200">
+                  {isAdmin
+                    ? 'Accès Administrateur Illimité'
+                    : (currentSubscription?.planCode ?? 'all_access')}
+                </dd>
               </div>
               <div>
                 <dt className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Email</dt>
@@ -86,12 +136,27 @@ export default async function AccountPage() {
               <div>
                 <dt className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Échéance</dt>
                 <dd className="mt-1 text-xs font-medium text-zinc-200">
-                  {decision.expiresAt
-                    ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(new Date(decision.expiresAt))
-                    : 'Sans échéance connue'}
+                  {isAdmin
+                    ? 'Accès permanent'
+                    : decision.expiresAt
+                      ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(new Date(decision.expiresAt))
+                      : 'Sans échéance connue'}
                 </dd>
               </div>
             </dl>
+
+            {!decision.hasAccess && (
+              <div className="mt-6">
+                <Link
+                  href="/pricing"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/25 via-amber-400/30 to-rose-500/25 hover:from-emerald-500/35 hover:via-amber-400/40 hover:to-rose-500/35 py-2.5 text-xs sm:text-sm font-bold text-amber-100 shadow-md backdrop-blur-md transition active:scale-[0.99]"
+                >
+                  <Sparkles size={14} className="text-amber-300" />
+                  <span>Activer mon abonnement (dès 990 FCFA)</span>
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
+            )}
 
             <div className="mt-8 rounded-xl border border-white/[0.08] bg-black/50 p-4">
               <div className="flex gap-3">
