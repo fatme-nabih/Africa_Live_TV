@@ -23,6 +23,7 @@ import {
   Smartphone,
   ShieldCheck,
   Check,
+  Gift,
 } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import BrandLogo from '@/components/BrandLogo';
@@ -87,6 +88,10 @@ export default async function HomePage() {
     {
       q: 'Comment fonctionne la lecture directe ?',
       a: 'Africa Live respecte strictement la transmission directe : votre navigateur ou VLC se connecte directement à la source officielle du diffuseur. Aucun intermédiaire ni transcodage serveur n’est imposé, garantissant une latence minimale et une authenticité totale.',
+    },
+    {
+      q: 'Comment fonctionne l’essai gratuit de 5 jours ?',
+      a: 'Dès la création de votre compte, vous profitez automatiquement de 5 jours d’essai sans engagement ni obligation d’achat. Aucune carte bancaire ni information de paiement n’est requise à l’inscription. Durant ces 5 jours, vous accédez librement à l’ensemble des 11 700+ chaînes, sur le web et sur VLC. À la fin des 5 jours, vous choisissez d’activer le forfait de votre choix (990 FCFA/mois ou 9 900 FCFA/an) par Wave, Orange Money ou CB. Si vous ne souscrivez pas, aucun montant n’est débité.',
     },
     {
       q: 'Quels sont les tarifs d’abonnement et comment puis-je payer ?',
@@ -184,7 +189,7 @@ export default async function HomePage() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
               </span>
-              <span>DIRECT • 11 700+ chaînes référencées</span>
+              <span>DIRECT • 11 700+ chaînes • 5 jours d’essai sans engagement</span>
             </div>
 
             {/* Headline */}
@@ -205,7 +210,7 @@ export default async function HomePage() {
                 href={userId ? '/app' : '/sign-up'}
                 className="btn-gold inline-flex items-center gap-3 rounded-xl px-7 py-4 text-base font-black transition"
               >
-                <span>{userId ? 'Accéder au direct' : 'Découvrir le catalogue'}</span>
+                <span>{userId ? 'Accéder au direct' : 'Profiter de 5 jours d’essai gratuit'}</span>
                 <ArrowRight size={18} />
               </Link>
               {!userId && (
@@ -221,8 +226,11 @@ export default async function HomePage() {
 
             {/* Reassurance pills */}
             <div className="mt-8 flex flex-wrap items-center gap-y-2.5 gap-x-6 text-xs text-zinc-300">
+              <span className="flex items-center gap-1.5 font-bold text-yellow-300">
+                <Gift size={15} className="text-yellow-400 shrink-0" /> Profitez de 5 jours d’essai sans engagement
+              </span>
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={15} className="text-yellow-400" /> Dès 990 FCFA/mois sans engagement
+                <CheckCircle2 size={15} className="text-yellow-400" /> Dès 990 FCFA/mois sans prélèvement auto
               </span>
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 size={15} className="text-emerald-400" /> Wave, Orange Money & CB
@@ -478,6 +486,17 @@ export default async function HomePage() {
               <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-zinc-500">
                 • Sécurisé par NabooPay
               </span>
+            </div>
+
+            {/* Trial Offer Callout */}
+            <div className="mt-8 mx-auto max-w-2xl rounded-2xl border border-yellow-400/40 bg-gradient-to-r from-yellow-500/10 via-amber-500/10 to-yellow-500/10 p-5 text-center shadow-lg shadow-yellow-500/5">
+              <div className="flex items-center justify-center gap-2 text-sm font-black text-yellow-300">
+                <Gift size={18} className="text-yellow-400 shrink-0" />
+                <span>Profitez de 5 jours d’essai sans engagement !</span>
+              </div>
+              <p className="mt-2 text-xs leading-relaxed text-zinc-300">
+                Créez votre compte en 30 secondes sans renseigner de carte bancaire. Vous bénéficiez d&apos;un accès complet et immédiat pendant 5 jours. Vous ne réglez votre forfait qu&apos;une fois totalement convaincu.
+              </p>
             </div>
           </div>
 

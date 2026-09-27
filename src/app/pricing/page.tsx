@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { Show } from '@clerk/nextjs';
-import { Check } from 'lucide-react';
+import { Check, Gift } from 'lucide-react';
 import { checkoutRequestSchema, checkoutResponseSchema } from '@/lib/payment-contracts';
 
 const features = [
@@ -125,6 +125,15 @@ export default function PricingPage() {
                 </li>
               ))}
             </ul>
+
+            <div className="mt-8 rounded-xl border border-yellow-400/30 bg-yellow-400/10 p-4 text-xs text-yellow-200">
+              <p className="font-bold flex items-center gap-2">
+                <Gift size={16} className="text-yellow-400 shrink-0" /> Profitez de 5 jours d’essai sans engagement !
+              </p>
+              <p className="mt-1.5 leading-relaxed text-zinc-300">
+                Nouveau sur Africa Live ? Votre compte inclut automatiquement 5 jours d&apos;accès complet dès l&apos;inscription, sans carte bancaire requise. Vous pouvez également souscrire dès à présent pour pérenniser votre accès.
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-col gap-6">

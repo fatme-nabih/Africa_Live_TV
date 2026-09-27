@@ -88,6 +88,14 @@ export default function CguPage() {
               partenaire <strong>Clerk</strong>. L&apos;utilisateur s&apos;engage à fournir des informations véridiques et à préserver
               la stricte confidentialité de ses identifiants.
             </p>
+            <div className="mt-4 rounded-xl border border-yellow-400/20 bg-yellow-400/5 p-4 text-xs text-yellow-200">
+              <p className="font-semibold flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-yellow-400" /> Période d&apos;essai gratuit de 5 jours
+              </p>
+              <p className="mt-1 text-zinc-300">
+                Tout nouvel utilisateur bénéficie automatiquement dès son inscription d&apos;une période d&apos;essai sans engagement de cinq (5) jours consécutifs, sans obligation de renseigner un moyen de paiement. À l&apos;expiration de ces 5 jours, l&apos;accès aux flux directs requiert la souscription de l&apos;un des forfaits prévus à l&apos;article 3.
+              </p>
+            </div>
           </section>
 
           {/* Section 3 */}
