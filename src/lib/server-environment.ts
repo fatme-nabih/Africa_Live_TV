@@ -16,38 +16,53 @@ function parsedUrl(value: string | undefined) {
   try { return new URL(value ?? ''); } catch { return null; }
 }
 
+function isLoopback(hostname: string) {
+  return ['localhost', '127.0.0.1', '[::1]'].includes(hostname);
+}
+
 /** Pure validation, shared by startup and CLI. No secrets returned or logged. */
 export function validateServerEnvironment(env: Environment) {
   const issues: string[] = [];
   const productionRuntime = env.NODE_ENV === 'production';
-  const deployment = env.DEPLOYMENT_ENV ?? 'production';
-  const local = env.LOCAL_DEV_MODE === 'true' && !productionRuntime;
+  const deployment = env.DEPLOYMENT_ENV ?? (productionRuntime ? 'production' : 'local');
+  const deployed = deployment === 'production' || deployment === 'staging';
+  const local = env.LOCAL_DEV_MODE === 'true' && deployment === 'local';
   const database = parsedUrl(env.DATABASE_URL);
+  if (!['local', 'staging', 'production'].includes(deployment)) {
+    issues.push('DEPLOYMENT_ENV must be local, staging or production.');
+  }
   if (!database || !['postgres:', 'postgresql:'].includes(database.protocol) || database.pathname.length < 2) {
     issues.push('DATABASE_URL must be a PostgreSQL connection URL with a database name.');
   }
-  for (const name of ['LOCAL_DEV_MODE', 'NEXT_PUBLIC_LOCAL_DEV_MODE', 'NEXT_PUBLIC_LOCAL_PLAYBACK', 'ENABLE_LOCAL_VLC', 'PLAYBACK_ELIGIBILITY_READY', 'PAYMENTS_ENABLED']) {
+  for (const name of ['LOCAL_DEV_MODE', 'NEXT_PUBLIC_LOCAL_DEV_MODE', 'NEXT_PUBLIC_LOCAL_PLAYBACK', 'ENABLE_LOCAL_VLC', 'PLAYBACK_ELIGIBILITY_READY', 'PAYMENTS_ENABLED', 'E2E_ANONYMOUS_MODE']) {
     if (env[name] !== undefined && !['true', 'false'].includes(env[name]!)) issues.push(`${name} must be true or false.`);
   }
+  if (env.E2E_ANONYMOUS_MODE === 'true' && (env.CI !== 'true' || deployment !== 'local')) {
+    issues.push('E2E_ANONYMOUS_MODE is restricted to local CI.');
+  }
+  if (deployment === 'local') {
+    if (database?.pathname !== '/africa_live_dev' || !database || !isLoopback(database.hostname)) {
+      issues.push('DATABASE_URL must target local africa_live_dev in local mode.');
+    }
+  }
   if (local) {
-    if (database?.pathname !== '/africa_live_dev') issues.push('DATABASE_URL must target africa_live_dev in local mode.');
     if (env.NEXT_PUBLIC_LOCAL_DEV_MODE !== 'true') issues.push('NEXT_PUBLIC_LOCAL_DEV_MODE must match LOCAL_DEV_MODE.');
-  } else if (!productionRuntime && env.NEXT_PUBLIC_LOCAL_DEV_MODE === 'true') {
+  } else if (!deployed && env.NEXT_PUBLIC_LOCAL_DEV_MODE === 'true') {
     issues.push('NEXT_PUBLIC_LOCAL_DEV_MODE must match LOCAL_DEV_MODE.');
   }
 
   const app = parsedUrl(env.NEXT_PUBLIC_APP_URL);
   if (env.NEXT_PUBLIC_LOCAL_PLAYBACK === 'true') {
-    if (productionRuntime) issues.push('NEXT_PUBLIC_LOCAL_PLAYBACK is forbidden in a deployed server.');
+    if (deployed) issues.push('NEXT_PUBLIC_LOCAL_PLAYBACK is forbidden in a deployed server.');
     if (database?.pathname !== '/africa_live_dev') issues.push('Local playback requires africa_live_dev.');
-    if (!app || !['localhost', '127.0.0.1', '[::1]'].includes(app.hostname) || app.port !== '3001' || app.protocol !== 'http:') {
+    if (!app || !isLoopback(app.hostname) || app.port !== '3001' || app.protocol !== 'http:') {
       issues.push('Local playback requires http://localhost:3001.');
     }
   }
   if (!app || !['http:', 'https:'].includes(app.protocol) || app.username || app.password || app.search || app.hash || app.pathname !== '/') {
     issues.push('NEXT_PUBLIC_APP_URL must be an HTTP(S) origin without credentials, path or query.');
   }
-  if (local && app && (!['localhost', '127.0.0.1', '[::1]'].includes(app.hostname) || app.port !== '3001' || app.protocol !== 'http:')) {
+  if (deployment === 'local' && app && (!isLoopback(app.hostname) || app.port !== '3001' || app.protocol !== 'http:')) {
     issues.push('NEXT_PUBLIC_APP_URL must use localhost:3001 in local mode.');
   }
   const proxy = env.ABUSE_TRUSTED_PROXY_HEADER ?? 'disabled';
@@ -55,9 +70,9 @@ export function validateServerEnvironment(env: Environment) {
     issues.push('ABUSE_TRUSTED_PROXY_HEADER is unsupported.');
   }
 
-  if (productionRuntime) {
+  if (deployed) {
+    if (!productionRuntime) issues.push('NODE_ENV must be production in deployed environments.');
     if (proxy === 'disabled') issues.push('ABUSE_TRUSTED_PROXY_HEADER must be configured in deployed environments (e.g., x-forwarded-for).');
-    if (!['production', 'staging'].includes(deployment)) issues.push('DEPLOYMENT_ENV must be production or staging.');
     for (const name of ['LOCAL_DEV_MODE', 'NEXT_PUBLIC_LOCAL_DEV_MODE', 'ENABLE_LOCAL_VLC']) {
       if (env[name] !== 'false') issues.push(`${name} must explicitly be false in a deployed server.`);
     }
@@ -66,7 +81,7 @@ export function validateServerEnvironment(env: Environment) {
     }
     if (database?.pathname === '/africa_live_dev') issues.push('DATABASE_URL must not target the local development database in a deployed server.');
     if (database && placeholder(database.password)) issues.push('DATABASE_URL contains a placeholder password.');
-    if (app && (app.protocol !== 'https:' || ['localhost', '127.0.0.1', '[::1]'].includes(app.hostname))) {
+    if (app && (app.protocol !== 'https:' || isLoopback(app.hostname))) {
       issues.push('NEXT_PUBLIC_APP_URL must be a public HTTPS origin.');
     }
     if (env.BROWSER_TEST_ORIGIN && env.BROWSER_TEST_ORIGIN !== app?.origin) {
@@ -117,7 +132,7 @@ export function validateServerEnvironment(env: Environment) {
     if (!env.NABOOPAY_WEBHOOK_SECRET?.trim() || placeholder(env.NABOOPAY_WEBHOOK_SECRET)) {
       issues.push('NABOOPAY_WEBHOOK_SECRET must be configured with a real webhook secret.');
     }
-    if (productionRuntime && paymentEnabled) {
+    if (deployed && paymentEnabled) {
       for (const name of ['INNGEST_SIGNING_KEY', 'INNGEST_EVENT_KEY']) {
         const value = env[name] ?? '';
         if (value.length < 20 || placeholder(value)) {

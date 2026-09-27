@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest, type NextFetchEvent } from 'next/server';
-import { isLocalDevMode, isLocalDevRequest } from './lib/local-dev';
+import { isAnonymousE2EMode, isLocalDevMode, isLocalDevRequest } from './lib/local-dev';
 import { isLoopbackAddress } from './lib/local-request';
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
@@ -23,7 +23,27 @@ const authenticatedProxy = clerkMiddleware(async (auth, req) => {
   }
 });
 
+function isLoopbackTarget(req: NextRequest) {
+  const host = req.headers.get('host');
+  if (!host || !isLoopbackAddress(req.nextUrl.hostname)) return false;
+  try {
+    return isLoopbackAddress(new URL(`http://${host}`).hostname);
+  } catch {
+    return false;
+  }
+}
+
 export default async function proxy(req: NextRequest, event: NextFetchEvent) {
+  if (isAnonymousE2EMode()) {
+    if (!isLoopbackTarget(req)) return NextResponse.json({ error: 'Accès local uniquement.' }, { status: 403 });
+    if (isProtectedRoute(req)) {
+      if (req.nextUrl.pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Authentification requise.' }, { status: 401 });
+      }
+      return NextResponse.redirect(new URL('/sign-in', req.url));
+    }
+    return NextResponse.next();
+  }
   if (isLocalDevMode()) {
     if (!isLocalDevRequest(req)) return NextResponse.json({ error: 'Accès local uniquement.' }, { status: 403 });
     if (/^\/(admin|api\/admin)(\/|$)/.test(req.nextUrl.pathname)) {

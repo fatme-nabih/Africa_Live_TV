@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { isLocalDevMode, isLocalDevRequest } from './local-dev';
+import { isAnonymousE2EMode, isLocalDevMode, isLocalDevRequest } from './local-dev';
 
 test('local requests reject external hosts and cross-origin writes', () => {
   const url = 'http://localhost:3001/api/channels';
@@ -27,5 +27,30 @@ test('local access cannot activate in production', () => {
     else env.LOCAL_DEV_MODE = previousMode;
     if (previousEnvironment === undefined) delete env.NODE_ENV;
     else env.NODE_ENV = previousEnvironment;
+  }
+});
+
+test('anonymous E2E auth mode is restricted to local CI', () => {
+  const env: Record<string, string | undefined> = process.env;
+  const previous = {
+    CI: env.CI,
+    DEPLOYMENT_ENV: env.DEPLOYMENT_ENV,
+    E2E_ANONYMOUS_MODE: env.E2E_ANONYMOUS_MODE,
+  };
+  try {
+    env.CI = 'true';
+    env.DEPLOYMENT_ENV = 'local';
+    env.E2E_ANONYMOUS_MODE = 'true';
+    assert.equal(isAnonymousE2EMode(), true);
+    env.DEPLOYMENT_ENV = 'staging';
+    assert.equal(isAnonymousE2EMode(), false);
+    env.DEPLOYMENT_ENV = 'local';
+    env.CI = 'false';
+    assert.equal(isAnonymousE2EMode(), false);
+  } finally {
+    for (const [name, value] of Object.entries(previous)) {
+      if (value === undefined) delete env[name];
+      else env[name] = value;
+    }
   }
 });

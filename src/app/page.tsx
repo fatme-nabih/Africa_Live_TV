@@ -22,11 +22,13 @@ import {
 } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import BrandLogo from '@/components/BrandLogo';
-import { isLocalDevMode } from '@/lib/local-dev';
+import { isAnonymousE2EMode, isLocalDevMode } from '@/lib/local-dev';
 
 export default async function HomePage() {
   if (isLocalDevMode()) redirect('/app');
-  const { userId, sessionClaims } = await auth();
+  const { userId, sessionClaims } = isAnonymousE2EMode()
+    ? { userId: null, sessionClaims: null }
+    : await auth();
 
   const metrics = [
     { label: 'Chaînes référencées', value: '11 700+', icon: Tv, detail: 'Catalogue international' },

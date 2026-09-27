@@ -11,9 +11,14 @@ test('landing page offers sign-in and sign-up without exposing the catalogue', a
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
-const isMockClerk = !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
-  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('example.com') ||
-  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('placeholder');
+function isMockClerkKey(value: string | undefined) {
+  if (!value) return true;
+  const encodedDomain = value.replace(/^pk_(?:test|live)_/, '');
+  const decodedDomain = Buffer.from(encodedDomain, 'base64').toString('utf8');
+  return /example\.com|placeholder/i.test(`${value} ${decodedDomain}`);
+}
+
+const isMockClerk = isMockClerkKey(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
 test('Clerk sign-in and sign-up widgets load', async ({ page }) => {
   test.skip(isMockClerk, 'Clerk live widgets require a valid Clerk development instance');

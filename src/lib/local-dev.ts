@@ -6,6 +6,12 @@ export function isLocalDevMode() {
   return process.env.LOCAL_DEV_MODE === 'true' && process.env.NODE_ENV !== 'production';
 }
 
+export function isAnonymousE2EMode() {
+  return process.env.E2E_ANONYMOUS_MODE === 'true' &&
+    process.env.CI === 'true' &&
+    process.env.DEPLOYMENT_ENV === 'local';
+}
+
 export function isLocalDevRequest(request: Request) {
   try {
     const url = new URL(request.url);

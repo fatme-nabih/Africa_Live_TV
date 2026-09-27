@@ -21,12 +21,29 @@ function validProduction(): Record<string, string> {
 
 test('local mode accepts its dedicated DB without requiring Clerk credentials', () => {
   const local = {
-    NODE_ENV: 'development', LOCAL_DEV_MODE: 'true', NEXT_PUBLIC_LOCAL_DEV_MODE: 'true',
+    NODE_ENV: 'development', DEPLOYMENT_ENV: 'local', LOCAL_DEV_MODE: 'true', NEXT_PUBLIC_LOCAL_DEV_MODE: 'true',
     DATABASE_URL: 'postgres://localhost/africa_live_dev', NEXT_PUBLIC_APP_URL: 'http://localhost:3001',
   };
   assert.doesNotThrow(() => validateServerEnvironment(local));
   assert.throws(() => validateServerEnvironment({ ...local, DATABASE_URL: 'postgres://localhost/iptv' }), EnvironmentValidationError);
   assert.throws(() => validateServerEnvironment({ ...local, NEXT_PUBLIC_LOCAL_DEV_MODE: 'false' }), EnvironmentValidationError);
+});
+
+test('a local production build remains local without weakening deployed validation', () => {
+  const localBuild = {
+    NODE_ENV: 'production', DEPLOYMENT_ENV: 'local',
+    LOCAL_DEV_MODE: 'false', NEXT_PUBLIC_LOCAL_DEV_MODE: 'false',
+    NEXT_PUBLIC_LOCAL_PLAYBACK: 'false', ENABLE_LOCAL_VLC: 'false',
+    DATABASE_URL: 'postgres://localhost/africa_live_dev',
+    NEXT_PUBLIC_APP_URL: 'http://localhost:3001', PLAYBACK_ELIGIBILITY_READY: 'false',
+    PAYMENTS_ENABLED: 'false', CI: 'true', E2E_ANONYMOUS_MODE: 'true',
+  };
+  assert.doesNotThrow(() => validateServerEnvironment(localBuild));
+  assert.throws(() => validateServerEnvironment({ ...localBuild, DATABASE_URL: 'postgres://db.internal/africa_live_dev' }), EnvironmentValidationError);
+  assert.throws(() => validateServerEnvironment({ ...localBuild, NEXT_PUBLIC_APP_URL: 'https://tv.africa-live.test' }), EnvironmentValidationError);
+  assert.throws(() => validateServerEnvironment({ ...localBuild, DEPLOYMENT_ENV: 'preview' }), EnvironmentValidationError);
+  assert.throws(() => validateServerEnvironment({ ...localBuild, CI: 'false' }), EnvironmentValidationError);
+  assert.throws(() => validateServerEnvironment({ ...localBuild, DEPLOYMENT_ENV: 'staging' }), EnvironmentValidationError);
 });
 
 test('production permits a closed playback gate but rejects unsafe configuration', () => {
@@ -61,11 +78,12 @@ test('staging accepts matching test keys without weakening production', () => {
 
 test('independent local playback is restricted to the development database and origin', () => {
   const env = { ...validProduction(), NODE_ENV: 'development',
+    DEPLOYMENT_ENV: 'local',
     NEXT_PUBLIC_LOCAL_PLAYBACK: 'true', DATABASE_URL: 'postgres://localhost/africa_live_dev',
     NEXT_PUBLIC_APP_URL: 'http://localhost:3001' };
   assert.doesNotThrow(() => validateServerEnvironment(env));
   for (const overrides of [
-    { NODE_ENV: 'production' },
+    { NODE_ENV: 'production', DEPLOYMENT_ENV: 'staging' },
     { DATABASE_URL: 'postgres://localhost/iptv' },
     { NEXT_PUBLIC_APP_URL: 'https://tv.africa-live.test' },
   ]) assert.throws(() => validateServerEnvironment({ ...env, ...overrides }), EnvironmentValidationError);
