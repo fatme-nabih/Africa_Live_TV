@@ -77,8 +77,8 @@ test('resolution rejects stale, credentialed and sensitive-query sources', () =>
   );
 });
 
-test('verification and playback freshness remain aligned on 72 hours', () => {
-  assert.equal(STREAM_FRESHNESS_TTL_HOURS, 72);
+test('verification and playback freshness remain aligned on 7 days (168 hours)', () => {
+  assert.equal(STREAM_FRESHNESS_TTL_HOURS, 168);
   assert.equal(PLAYBACK_SOURCE_FRESHNESS_MS, STREAM_FRESHNESS_TTL_MS);
   assert.equal(
     isPlaybackSourceEligible(source({
