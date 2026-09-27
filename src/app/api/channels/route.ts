@@ -3,7 +3,6 @@ import {
   asc,
   eq,
   gt,
-  gte,
   inArray,
   or,
   sql,
@@ -32,11 +31,7 @@ import { consumeAdditionalRequestQuota } from '@/lib/request-quota';
 import type { Channel } from '@/types/channel';
 import { BadRequestError, RateLimitError, withApiErrorHandler } from '@/lib/api-errors';
 
-const PLAYABLE_STATUSES = ['BROWSER_OK', 'VLC_ONLY'] as const;
-const PUBLIC_DIRECT_ELIGIBILITIES = [
-  'PUBLIC_DIRECT_WEB',
-  'PUBLIC_DIRECT_VLC',
-] as const;
+const VISIBLE_STREAM_STATUSES = ['BROWSER_OK', 'VLC_ONLY', 'UNTESTED'] as const;
 
 export const POST = withApiErrorHandler(async (request: Request) => {
   const authorization = await authorizeAppRequest(
@@ -129,10 +124,9 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     .where(
       and(
         eq(streams.active, true),
-        eq(streams.verificationState, 'HEALTHY'),
-        inArray(streams.status, PLAYABLE_STATUSES),
-        inArray(streams.directEligibility, PUBLIC_DIRECT_ELIGIBILITIES),
-        gte(streams.lastSuccessAt, freshnessCutoffDate.toISOString()),
+        inArray(streams.status, VISIBLE_STREAM_STATUSES),
+        sql`${streams.status} != 'OFFLINE'`,
+        sql`${streams.directEligibility} != 'OFFLINE'`,
         status ? eq(streams.status, status) : undefined,
       ),
     );
@@ -174,6 +168,7 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     const allStreams = await db
       .select({
         channelId: streams.channelId,
+        url: streams.url,
         status: streams.status,
         verificationState: streams.verificationState,
         directEligibility: streams.directEligibility,
@@ -183,10 +178,9 @@ export const POST = withApiErrorHandler(async (request: Request) => {
       .where(
         and(
           eq(streams.active, true),
-          eq(streams.verificationState, 'HEALTHY'),
-          inArray(streams.status, PLAYABLE_STATUSES),
-          inArray(streams.directEligibility, PUBLIC_DIRECT_ELIGIBILITIES),
-          gte(streams.lastSuccessAt, freshnessCutoffDate.toISOString()),
+          inArray(streams.status, VISIBLE_STREAM_STATUSES),
+          sql`${streams.status} != 'OFFLINE'`,
+          sql`${streams.directEligibility} != 'OFFLINE'`,
           inArray(streams.channelId, channelIds),
           status ? eq(streams.status, status) : undefined,
         ),
@@ -206,25 +200,8 @@ export const POST = withApiErrorHandler(async (request: Request) => {
         channelStreams,
         freshnessCutoffDate,
       );
-      if (availabilityStatus !== 'READY') continue;
+      if (availabilityStatus === 'OFFLINE') continue;
 
-      const freshPublicStreams = channelStreams.filter((stream) => {
-        const lastSuccessAt = stream.lastSuccessAt
-          ? new Date(stream.lastSuccessAt).getTime()
-          : Number.NaN;
-        return (
-          Number.isFinite(lastSuccessAt) &&
-          lastSuccessAt >= freshnessCutoffDate.getTime() &&
-          PLAYABLE_STATUSES.includes(
-            stream.status as (typeof PLAYABLE_STATUSES)[number],
-          ) &&
-          PUBLIC_DIRECT_ELIGIBILITIES.includes(
-            stream.directEligibility as (
-              typeof PUBLIC_DIRECT_ELIGIBILITIES
-            )[number],
-          )
-        );
-      });
       visibleRows.push({
         source: channel,
         channel: {
@@ -233,7 +210,7 @@ export const POST = withApiErrorHandler(async (request: Request) => {
           logoUrl: channel.logoUrl,
           groupTitle: channel.groupTitle,
           countryCode: channel.countryCode,
-          playbackMode: resolvePlaybackMode(freshPublicStreams),
+          playbackMode: resolvePlaybackMode(channelStreams),
           availabilityStatus,
         },
       });
