@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { isLocalDevMode, isLocalDevRequest } from './local-dev';
 
 import { getCurrentAccessDecision } from '@/lib/access-control';
+import { canBrowseCatalog } from '@/lib/access-policy';
 import {
   getActiveAbuseSuspension,
   recordRateLimitAlert,
@@ -17,9 +18,10 @@ type AuthorizationOptions = {
   windowSeconds?: number;
 };
 
-export async function authorizeAppRequest(
+async function authorizeRequest(
   options: AuthorizationOptions,
   request?: Request,
+  requireSubscription = true,
 ) {
   if (isLocalDevMode() && request && !isLocalDevRequest(request)) {
     return { ok: false as const, response: NextResponse.json({ error: 'Accès local uniquement.' }, { status: 403 }) };
@@ -40,7 +42,17 @@ export async function authorizeAppRequest(
     };
   }
 
-  if (!access.decision.hasAccess) {
+  if (access.decision.status === 'blocked' || (!requireSubscription && !canBrowseCatalog(access.decision))) {
+    return {
+      ok: false as const,
+      response: NextResponse.json(
+        { error: 'Ce compte ne peut pas accéder à l’application.', code: 'ACCOUNT_BLOCKED' },
+        { status: 403 },
+      ),
+    };
+  }
+
+  if (requireSubscription && !access.decision.hasAccess) {
     return {
       ok: false as const,
       response: NextResponse.json(
@@ -116,7 +128,28 @@ export async function authorizeAppRequest(
     ok: true as const,
     ...access,
     abuseContext,
-    quotaTier: quotaTierForAccess(access.decision),
+    quotaTier: access.decision.hasAccess ? quotaTierForAccess(access.decision) : null,
     rateLimit,
   };
+}
+
+type AuthorizedAppRequest = Exclude<Awaited<ReturnType<typeof authorizeRequest>>, { ok: false }> & {
+  quotaTier: NonNullable<Exclude<Awaited<ReturnType<typeof authorizeRequest>>, { ok: false }>['quotaTier']>;
+};
+
+export async function authorizeAppRequest(
+  options: AuthorizationOptions,
+  request?: Request,
+) {
+  const result = await authorizeRequest(options, request, true);
+  if (!result.ok) return result;
+  if (!result.quotaTier) throw new Error('An active application entitlement must have a quota tier.');
+  return { ...result, quotaTier: result.quotaTier } satisfies AuthorizedAppRequest;
+}
+
+export function authorizeCatalogRequest(
+  options: AuthorizationOptions,
+  request?: Request,
+) {
+  return authorizeRequest(options, request, false);
 }

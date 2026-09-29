@@ -7,7 +7,7 @@ import { filterOptionsResponseSchema } from '@/lib/api-contracts';
 import { parseLanguageCodes } from '@/lib/channel-language';
 import { PLAYBACK_SOURCE_FRESHNESS_MS } from '@/lib/playback-resolution-policy';
 import { publicCatalogChannelCondition } from '@/lib/public-catalog-visibility';
-import { authorizeAppRequest } from '@/lib/require-app-access';
+import { authorizeCatalogRequest } from '@/lib/require-app-access';
 import { withApiErrorHandler } from '@/lib/api-errors';
 
 const PLAYABLE_STATUSES = ['BROWSER_OK', 'VLC_ONLY'] as const;
@@ -17,7 +17,7 @@ const PUBLIC_DIRECT_ELIGIBILITIES = [
 ] as const;
 
 export const GET = withApiErrorHandler(async (request: Request) => {
-  const authorization = await authorizeAppRequest(
+  const authorization = await authorizeCatalogRequest(
     { bucket: 'filters.read', limit: 60 },
     request,
   );

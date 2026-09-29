@@ -252,7 +252,7 @@ une migration destructive. Suivre la procédure de restauration validée.
 | Hébergement, région, budget, domaine et proxy | Choisir une plateforme après avoir établi les besoins Node, PostgreSQL et jobs. Aucun achat présumé. | Avant installation PROD-050 et lot 6 |
 | Cibles DB d'essai/préproduction | Isoler les essais ; conserver africa_live_dev pour le développement autorisé. | Avant toute création de cible supplémentaire et PROD-043 |
 | Charge attendue et objectifs de reprise | Confirmer trafic de lancement, perte de données acceptable et délai de rétablissement. | Avant PROD-053 et PROD-063 |
-| Périmètre du catalogue public | Identifier les sources autorisées et éligibles ; conserver la distinction entre catalogue et lecture disponible. | Avant activation de la lecture publique |
+| Périmètre du catalogue public | Établir les droits source par source, le registre, la procédure de retrait et la revue juridique ; la disponibilité technique ne prouve pas l'autorisation. Voir [positionnement technique et juridique](positionnement-technique-et-juridique.md). | Avant activation commerciale de la lecture publique |
 | Responsable des alertes et plateforme CI | Désigner une destination existante et autorisée. | Avant activation PROD-052 et PROD-061 |
 
 ## Après le lancement

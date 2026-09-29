@@ -72,8 +72,12 @@ personnalisée, définir `VLC_PATH` dans `.env.local`. Le mode local active
 une nouvelle tentative après une erreur. Un lancement réussi confirme la
 transmission du lien au lecteur, pas la disponibilité du diffuseur.
 
-Les sources restent téléchargées directement par le navigateur ou VLC.
-Africa Live ne télécharge pas les vidéos et ne convertit aucun flux.
+Pendant la lecture, le navigateur ou VLC reçoit le flux directement depuis la source amont.
+Africa Live ne relaie ni ne stocke le programme et ne convertit aucun flux.
+Les sondes techniques serveur lisent les manifestes et demandent une petite
+plage d’octets d’un segment HLS pour vérifier la compatibilité ; elles ne
+reconstituent ni ne distribuent le programme. Voir le
+[positionnement technique et juridique](docs/positionnement-technique-et-juridique.md).
 
 ## Installation initiale sur une autre copie
 
@@ -115,6 +119,9 @@ dans [deployment-configuration.md](docs/deployment-configuration.md).
 Le suivi des lots figure dans [production-progress.md](docs/production-progress.md).
 L'exploitation de la préproduction est décrite dans
 [railway-preproduction-runbook.md](docs/railway-preproduction-runbook.md).
+Les limites de l’argument « lecture directe » et les éléments à réunir avant
+l’ouverture publique sont détaillés dans
+[la note de positionnement technique et juridique](docs/positionnement-technique-et-juridique.md).
 
 ```powershell
 npm test

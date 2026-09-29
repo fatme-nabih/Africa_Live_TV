@@ -9,9 +9,11 @@ import {
   catalogImports,
   catalogImportStreams,
   channels,
+  supportRequests,
   streams,
 } from '@/db/schema';
 import { serializeLanguageCodes } from '@/lib/channel-language';
+import { canonicalizeStreamUrl } from '@/lib/support-request-contracts';
 
 const BATCH_SIZE = 500;
 const MAX_REPORTED_ERRORS = 100;
@@ -382,6 +384,26 @@ export async function runCatalogDraftImport({
           .where(eq(catalogImportStreams.importId, importId)),
       ]);
 
+      const disabledReports = await tx.select({
+        channelName: supportRequests.channelName,
+        sourceUrl: supportRequests.sourceUrl,
+      }).from(supportRequests).where(and(
+        eq(supportRequests.subject, 'removal'),
+        eq(supportRequests.status, 'sources_disabled'),
+      ));
+      const normalizedNamesByChannelId = new Map(
+        stagedChannels.map((channel) => [channel.channelId, channel.normalizedName]),
+      );
+      const suppressedStreamIds = new Set(stagedStreams.filter((stream) => {
+        const channelName = normalizedNamesByChannelId.get(stream.channelId);
+        if (!channelName) return false;
+        const sourceUrl = canonicalizeStreamUrl(stream.url);
+        return disabledReports.some((report) =>
+          report.channelName?.normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim() === channelName &&
+          (!report.sourceUrl || canonicalizeStreamUrl(report.sourceUrl) === sourceUrl),
+        );
+      }).map((stream) => stream.streamId));
+
       await insertInBatches(stagedChannels, (batch) =>
         tx
           .insert(channels)
@@ -429,6 +451,7 @@ export async function runCatalogDraftImport({
           .values(
             batch.map((stream) => {
               const initial = initialStreamStates.get(stream.streamId);
+              const suppressed = suppressedStreamIds.has(stream.streamId);
               const healthy =
                 initial?.status === 'BROWSER_OK' || initial?.status === 'VLC_ONLY';
               const offline = initial?.status === 'OFFLINE';
@@ -442,17 +465,17 @@ export async function runCatalogDraftImport({
                 httpStatus: initial?.httpStatus ?? null,
                 lastCheckedAt: initial?.lastCheckedAt ?? null,
                 failureReason: initial?.failureReason ?? null,
-                active: true,
+                active: !suppressed,
                 firstSeenImportId: importId,
                 lastSeenImportId: importId,
-                inactiveAt: null,
+                inactiveAt: suppressed ? startedAt : null,
                 verificationState: healthy
                   ? 'HEALTHY'
                   : offline
                     ? 'CONFIRMED_FAILURE'
                     : 'NEVER_CHECKED',
                 directEligibility: 'REVIEW_REQUIRED',
-                eligibilityReason: 'NOT_REVALIDATED',
+                eligibilityReason: suppressed ? 'TAKEDOWN_REQUEST' : 'NOT_REVALIDATED',
                 eligibilityCheckedAt: null,
                 consecutiveFailures: offline ? 3 : 0,
                 lastSuccessAt: healthy ? initial.lastCheckedAt : null,
@@ -468,13 +491,13 @@ export async function runCatalogDraftImport({
               channelId: sql`excluded.channel_id`,
               url: sql`excluded.url`,
               mixedContent: sql`excluded.mixed_content`,
-              active: true,
+              active: sql`excluded.active`,
               firstSeenImportId: sql`coalesce(${streams.firstSeenImportId}, excluded.first_seen_import_id)`,
               lastSeenImportId: importId,
-              inactiveAt: null,
-              directEligibility: sql`case when ${streams.active} = false then 'REVIEW_REQUIRED' else ${streams.directEligibility} end`,
-              eligibilityReason: sql`case when ${streams.active} = false then 'REACTIVATED_SOURCE' else ${streams.eligibilityReason} end`,
-              eligibilityCheckedAt: sql`case when ${streams.active} = false then null else ${streams.eligibilityCheckedAt} end`,
+              inactiveAt: sql`case when excluded.active = false then coalesce(${streams.inactiveAt}, excluded.inactive_at) when ${streams.active} = false then null else ${streams.inactiveAt} end`,
+              directEligibility: sql`case when excluded.active = false then ${streams.directEligibility} when ${streams.active} = false then 'REVIEW_REQUIRED' else ${streams.directEligibility} end`,
+              eligibilityReason: sql`case when excluded.active = false then 'TAKEDOWN_REQUEST' when ${streams.active} = false then 'REACTIVATED_SOURCE' else ${streams.eligibilityReason} end`,
+              eligibilityCheckedAt: sql`case when excluded.active = false then ${streams.eligibilityCheckedAt} when ${streams.active} = false then null else ${streams.eligibilityCheckedAt} end`,
               updatedAt: startedAt,
             },
           }),

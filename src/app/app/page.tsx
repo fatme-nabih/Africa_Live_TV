@@ -20,7 +20,7 @@ import {
 import { LatestRequestController, SingleFlightGate } from '@/lib/latest-request';
 import { launchPlayer, type PlayerWindowHandle } from '@/lib/player-window';
 import type { Channel, ChannelFilters } from '@/types/channel';
-import { AlertCircle, ExternalLink, Filter, LayoutGrid, LayoutList, List, MonitorPlay, Play, RefreshCw, X } from 'lucide-react';
+import { AlertCircle, ExternalLink, Filter, LayoutGrid, LayoutList, List, MonitorPlay, Play, Radar, RefreshCw, X } from 'lucide-react';
 
 
 const VLC_NOTICE_STORAGE_KEY = 'iptv_vlc_notice_dismissed';
@@ -120,6 +120,7 @@ export default function Home() {
   if (catalogRequestsRef.current === null) catalogRequestsRef.current = new LatestRequestController();
   if (favoriteSyncRequestsRef.current === null) favoriteSyncRequestsRef.current = new LatestRequestController();
   const [channels, setChannels] = useState<Channel[]>([]);
+  const [canPlay, setCanPlay] = useState(true);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [isInlinePlayerOpen, setIsInlinePlayerOpen] = useState(false);
   const [activePresetId, setActivePresetId] = useState('all');
@@ -325,6 +326,7 @@ export default function Home() {
       });
       const data = await readApiResponse(response, catalogResponseSchema);
       if (!catalogRequestsRef.current!.isCurrent(request.id)) return;
+      setCanPlay(data.canPlay);
       const visibleChannels = data.channels.filter(
         (channel) => channel.availabilityStatus !== 'OFFLINE',
       );
@@ -494,6 +496,14 @@ export default function Home() {
               )}
             </button>
 
+            <Link
+              href="/app/live"
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-emerald-300/20 bg-emerald-300/[0.07] px-2.5 py-1.5 text-xs font-bold text-emerald-100 transition hover:border-emerald-300/40 hover:bg-emerald-300/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:px-3"
+            >
+              <Radar aria-hidden="true" className="h-3.5 w-3.5" />
+              <span>Radar Live</span>
+            </Link>
+
             <LocalAccountControls />
 
             <div role="group" aria-label="Mode d’affichage" className="flex items-center gap-0.5 bg-white/[0.03] border border-white/10 p-0.5 rounded-xl">
@@ -611,7 +621,7 @@ export default function Home() {
                   </p>
                 </div>
               </div>
-              {selectedChannel && (
+              {selectedChannel && canPlay && (
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     type="button"
@@ -632,6 +642,11 @@ export default function Home() {
                     <span className="hidden sm:inline">Fenêtre séparée</span>
                   </button>
                 </div>
+              )}
+              {selectedChannel && !canPlay && (
+                <Link href="/pricing" className="inline-flex shrink-0 items-center justify-center rounded-xl border border-amber-400/40 bg-amber-400/10 px-3.5 py-2 text-xs font-bold text-amber-100 hover:bg-amber-400/20">
+                  Abonnement requis pour lire
+                </Link>
               )}
             </div>
             {playerWindowStatus === 'blocked' && selectedChannel && (

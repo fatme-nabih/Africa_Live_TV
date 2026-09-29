@@ -117,7 +117,7 @@ export const POST = withApiErrorHandler(async (request: Request) => {
           name: plan.productName,
           price: amount,
           quantity: 1,
-          description: 'Accès illimité aux chaînes Africa Live TV',
+          description: 'Abonnement Africa Live : accès à l’application et au lancement des sources compatibles pendant la période souscrite.',
         },
       ],
       customer: {

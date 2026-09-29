@@ -4,6 +4,7 @@ import { UserButton } from '@clerk/nextjs';
 import { getAdministratorAccess } from '@/lib/admin-access';
 import BrandLogo from '@/components/BrandLogo';
 import BrandWatermark from '@/components/BrandWatermark';
+import AdminSupportQueue from '@/components/AdminSupportQueue';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,8 +40,7 @@ export default async function AdminPage() {
             Votre rôle administrateur est confirmé par Clerk. Cet espace est réservé aux comptes administrateurs actifs.
           </p>
           <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-            Les outils de gestion du catalogue et des utilisateurs seront ajoutés ici.
-            L’accès aux chaînes conserve les règles d’abonnement de l’application.
+            Les demandes du formulaire Contact sont conservées ici. Les décisions de traitement et les désactivations de sources sont journalisées.
           </p>
           <Link
             href="/account"
@@ -49,6 +49,7 @@ export default async function AdminPage() {
             Mon compte
           </Link>
         </section>
+        <AdminSupportQueue />
       </div>
     </main>
   );

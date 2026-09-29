@@ -58,18 +58,14 @@ export default function CguPage() {
               Objet du service
             </h2>
             <p className="mt-3">
-              <strong>Africa Live</strong> est une plateforme technologique d’agrégation et d’organisation de programmes
-              audiovisuels linéaires. Elle propose une interface moderne permettant d’accéder directement, depuis un navigateur
-              ou un lecteur externe compatible (tel que VLC Media Player), à des flux télévisuels publics et légitimes émis
-              par leurs diffuseurs d&apos;origine respectifs.
+              <strong>Africa Live</strong> est une application qui organise un catalogue de chaînes et de sources, normalise certaines métadonnées et vérifie des caractéristiques techniques de disponibilité et de compatibilité. Les informations et sources affichées peuvent provenir de tiers; leur présence dans le catalogue ne signifie pas qu&apos;Africa Live est affiliée au diffuseur ni que celui-ci a autorisé leur référencement.
             </p>
             <div className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-xs text-emerald-300 backdrop-blur-md">
               <p className="font-semibold flex items-center gap-2">
                 <CheckCircle2 size={16} /> Transmission directe sans relais
               </p>
               <p className="mt-1 text-zinc-300">
-                Africa Live n&apos;héberge, ne stocke, ne convertit et ne retransmet aucun flux vidéo ou média sur ses serveurs.
-                La connexion s&apos;établit exclusivement entre le terminal de l&apos;utilisateur et la source amont officielle du diffuseur.
+                Pour les sources qui le permettent, le lecteur de votre terminal se connecte directement à la source. Africa Live ne fournit pas de relais vidéo ni de conversion du flux. Les contrôles techniques de disponibilité peuvent toutefois effectuer des requêtes auprès des sources et recevoir des réponses limitées.
               </p>
             </div>
           </section>
@@ -81,8 +77,7 @@ export default function CguPage() {
               Création de compte & Accès
             </h2>
             <p className="mt-3">
-              L&apos;accès au catalogue complet et aux fonctionnalités personnalisées (gestion des favoris, reprise de lecture)
-              nécessite la création d&apos;un compte personnel. L&apos;authentification est opérée de manière sécurisée par notre
+              La consultation du catalogue et les fonctions liées au compte nécessitent la création d&apos;un compte personnel. L&apos;authentification est opérée par notre
               partenaire <strong>Clerk</strong>. L&apos;utilisateur s&apos;engage à fournir des informations véridiques et à préserver
               la stricte confidentialité de ses identifiants.
             </p>
@@ -91,7 +86,7 @@ export default function CguPage() {
                 <CheckCircle2 size={16} className="text-amber-400" /> Période d&apos;essai gratuit de 5 jours
               </p>
               <p className="mt-1 text-zinc-300">
-                Tout nouvel utilisateur bénéficie automatiquement dès son inscription d&apos;une période d&apos;essai sans engagement de cinq (5) jours consécutifs, sans obligation de renseigner un moyen de paiement. À l&apos;expiration de ces 5 jours, l&apos;accès aux flux directs requiert la souscription de l&apos;un des forfaits prévus à l&apos;article 3.
+                Tout nouvel utilisateur bénéficie automatiquement à compter de son inscription d&apos;une période d&apos;essai de cinq (5) jours. Pendant cette période, l&apos;application et la lecture sont accessibles. Après l&apos;essai, le catalogue reste consultable avec un compte, mais un abonnement actif est requis pour lancer une source et utiliser les fonctions de lecture.
               </p>
             </div>
           </section>
@@ -103,18 +98,18 @@ export default function CguPage() {
               Tarifs et Paiements NabooPay
             </h2>
             <p className="mt-3">
-              L&apos;accès à la plateforme est proposé sous forme d&apos;abonnements forfaitaires sans engagement de durée :
+              L&apos;abonnement donne accès à l&apos;application et à ses fonctions pendant la période choisie, notamment au lancement des sources techniquement disponibles et compatibles. Il s&apos;agit d&apos;un abonnement au service Africa Live; l&apos;application ne vend pas les chaînes à l&apos;unité. Le catalogue reste consultable avec un compte même sans abonnement actif, mais le lancement des sources nécessite un abonnement.
             </p>
             <ul className="mt-4 grid gap-3 sm:grid-cols-2">
               <li className="rounded-xl border border-white/[0.08] bg-black/50 p-4">
                 <p className="text-xs font-bold uppercase tracking-wider text-amber-400">Forfait Mensuel</p>
                 <p className="mt-1 text-2xl font-black text-white">990 FCFA <span className="text-xs font-normal text-zinc-400">TTC / 30 jours</span></p>
-                <p className="mt-2 text-xs text-zinc-400">Accès intégral au catalogue et à toutes les fonctionnalités.</p>
+                <p className="mt-2 text-xs text-zinc-400">Accès à l’application et à ses fonctions, y compris la lecture des sources compatibles.</p>
               </li>
               <li className="rounded-xl border border-amber-400/30 bg-amber-400/5 p-4">
                 <p className="text-xs font-bold uppercase tracking-wider text-amber-300">Forfait Annuel</p>
                 <p className="mt-1 text-2xl font-black text-white">9 900 FCFA <span className="text-xs font-normal text-zinc-400">TTC / an</span></p>
-                <p className="mt-2 text-xs text-zinc-400">12 mois d&apos;accès pour le tarif de 10 mois (2 mois offerts).</p>
+                <p className="mt-2 text-xs text-zinc-400">12 mois d&apos;accès à l’application et à la lecture des sources compatibles, pour le tarif de 10 mois (2 mois offerts).</p>
               </li>
             </ul>
             <div className="mt-6 space-y-3">
@@ -137,9 +132,7 @@ export default function CguPage() {
               Droit de rétractation et Résiliation
             </h2>
             <p className="mt-3">
-              Conformément aux règles applicables aux contenus numériques fournis sur support immatériel et exécutés immédiatement
-              après accord du client, l&apos;utilisateur renonce expressément à son droit de rétractation dès la première activation
-              du service suite à la validation du paiement.
+              Les modalités de résiliation, de remboursement et, le cas échéant, de rétractation sont celles présentées au moment de la souscription et du paiement, sous réserve des règles impératives applicables.
             </p>
             <p className="mt-3">
               Chaque période souscrite (mensuelle ou annuelle) est acquise pour sa durée totale. L&apos;abonnement n&apos;est pas
@@ -157,15 +150,11 @@ export default function CguPage() {
             <div className="mt-3 flex items-start gap-3 text-amber-200/90">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
               <p>
-                La disponibilité, la pérennité et la qualité d&apos;image d&apos;un flux dépendent exclusivement de l&apos;infrastructure
-                et des décisions éditoriales du diffuseur d&apos;origine.
+                La disponibilité, la compatibilité et la qualité d&apos;une source tierce peuvent changer sans préavis et dépendent de facteurs qu&apos;Africa Live ne contrôle pas.
               </p>
             </div>
             <p className="mt-3">
-              Africa Live déploie un système continu de surveillance automatisée pour qualifier la santé des flux (compatibilité Web HLS
-              ou lecteur externe VLC). Néanmoins, l&apos;interruption temporaire ou définitive d&apos;une source par son émetteur
-              ne constitue pas un défaut du service Africa Live dès lors que l&apos;infrastructure de catalogage et d&apos;indexation
-              demeure opérationnelle.
+              Africa Live vérifie périodiquement des caractéristiques techniques des sources. Un résultat de contrôle reflète l&apos;état observé au moment du test et ne garantit ni la disponibilité future ni les droits associés à la source. Une source peut être désactivée ou retirée du catalogue après vérification ou signalement.
             </p>
           </section>
 
@@ -189,10 +178,7 @@ export default function CguPage() {
               Droit applicable & Litiges
             </h2>
             <p className="mt-3">
-              Les présentes conditions sont soumises à la législation en vigueur. En cas de réclamation ou de litige, l&apos;utilisateur
-              est invité à contacter en priorité notre assistance à l&apos;adresse <strong>contact@africatv.sn</strong> ou via notre
-              page de <Link href="/contact" className="text-amber-400 underline hover:text-amber-300">support client</Link> afin
-              de rechercher une solution amiable.
+              Les présentes conditions sont soumises au droit applicable. Pour toute question ou demande relative à une chaîne ou une source, utilisez le formulaire de <Link href="/contact" className="text-amber-400 underline hover:text-amber-300">contact et de signalement</Link>. La demande est enregistrée dans un espace privé réservé aux administrateurs actifs; son envoi ne préjuge pas de la décision de traitement.
             </p>
           </section>
         </article>

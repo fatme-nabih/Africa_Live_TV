@@ -27,7 +27,7 @@ import {
 } from '@/lib/channel-selection';
 import { PLAYBACK_SOURCE_FRESHNESS_MS } from '@/lib/playback-resolution-policy';
 import { publicCatalogChannelCondition } from '@/lib/public-catalog-visibility';
-import { authorizeAppRequest } from '@/lib/require-app-access';
+import { authorizeCatalogRequest } from '@/lib/require-app-access';
 import { consumeAdditionalRequestQuota } from '@/lib/request-quota';
 import type { Channel } from '@/types/channel';
 import { BadRequestError, RateLimitError, withApiErrorHandler } from '@/lib/api-errors';
@@ -35,7 +35,7 @@ import { BadRequestError, RateLimitError, withApiErrorHandler } from '@/lib/api-
 const VISIBLE_STREAM_STATUSES = ['BROWSER_OK', 'VLC_ONLY', 'UNTESTED'] as const;
 
 export const POST = withApiErrorHandler(async (request: Request) => {
-  const authorization = await authorizeAppRequest(
+  const authorization = await authorizeCatalogRequest(
     { bucket: 'channels.entry', limit: 120 },
     request,
   );
@@ -228,6 +228,7 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     channels: pageRows.map(({ channel }) => channel),
     hasMore,
     limit,
+    canPlay: authorization.decision.hasAccess,
     nextCursor: hasMore && lastChannel
       ? encodeCatalogCursor(
           { name: lastChannel.name, id: lastChannel.id },

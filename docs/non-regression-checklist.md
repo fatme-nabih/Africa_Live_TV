@@ -35,6 +35,15 @@ dans `production-progress.md`. Ne jamais inscrire de secret ni d'URL média.
 - [ ] Le serveur Africa Live ne relaie, ne convertit et ne stocke aucune playlist, vidéo ou segment.
 - [ ] `ENABLE_LOCAL_VLC=false` dans Railway et dans toute production.
 
+## Contact, retrait et Radar Afrique
+
+- [ ] Une demande de contact/retrait n'est confirmée qu'après son enregistrement ; les abus sont limités par email et, si disponible, par empreinte réseau calculée depuis un en-tête proxy explicitement fiable.
+- [ ] Les routes d'administration des demandes exigent un administrateur actif ; fermer une demande remet une source en révision et ne la rend pas automatiquement éligible à la lecture.
+- [ ] Les demandes actives de retrait continuent de neutraliser les sources concernées après un nouvel import.
+- [ ] `/app/live` et son API restent derrière l'accès authentifié au catalogue ; les liens d'articles ouvrent la publication d'origine.
+- [ ] Le pays du média, l'éditeur de l'article, l'URL d'origine et l'heure d'indexation restent distincts ; l'avertissement indique que le Radar ne vérifie pas les faits.
+- [ ] La panne ou l'indisponibilité de GDELT ne produit pas de faux articles ; aucune couche GDACS, météo, avion ou navire n'est annoncée comme active tant qu'elle n'est pas intégrée et attribuée.
+
 ## Deux modes locaux
 
 - [ ] Mode Clerk : `LOCAL_DEV_MODE=false`, `NEXT_PUBLIC_LOCAL_DEV_MODE=false`, `NEXT_PUBLIC_LOCAL_PLAYBACK=true`.

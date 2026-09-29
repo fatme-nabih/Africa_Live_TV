@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { evaluateAccess, type AccessSubscription, type AccessUser } from './access-policy';
+import { canBrowseCatalog, evaluateAccess, type AccessSubscription, type AccessUser } from './access-policy';
 
 const now = new Date('2026-07-22T12:00:00.000Z');
 const activeUser: AccessUser = {
@@ -90,4 +90,16 @@ test('payment grace remains accessible until graceEndsAt', () => {
   );
   assert.equal(decision.status, 'grace');
   assert.equal(decision.hasAccess, true);
+});
+
+test('catalog browsing remains available after expiry but not to anonymous or blocked users', () => {
+  const expired = evaluateAccess(
+    { ...activeUser, trialEndsAt: '2026-07-01T00:00:00.000Z' },
+    [],
+    now,
+  );
+  assert.equal(expired.hasAccess, false);
+  assert.equal(canBrowseCatalog(expired), true);
+  assert.equal(canBrowseCatalog(evaluateAccess(null, [], now)), false);
+  assert.equal(canBrowseCatalog(evaluateAccess({ ...activeUser, status: 'blocked' }, [], now)), false);
 });

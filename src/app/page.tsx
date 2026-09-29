@@ -80,7 +80,7 @@ export default async function HomePage() {
   const faqs = [
     {
       q: 'Qu’est-ce qu’Africa Live ?',
-      a: 'Africa Live est une plateforme moderne qui centralise et organise des milliers de chaînes de télévision africaines et internationales issues de flux directs publics et légitimes, accessibles directement depuis votre navigateur ou votre lecteur multimédia favori.',
+      a: 'Africa Live organise un catalogue de chaînes et de sources. Lorsqu’une source est compatible et disponible, la lecture s’effectue depuis votre navigateur ou votre lecteur multimédia.',
     },
     {
       q: 'Ai-je besoin d’installer un logiciel pour regarder les chaînes ?',
@@ -577,7 +577,7 @@ export default async function HomePage() {
               <div>
                 <div className="flex items-center justify-between">
                   <span className="rounded-full bg-amber-400/10 border border-amber-400/30 px-3 py-1 text-xs font-bold text-amber-300">
-                    Bouquet Annuel Privilège
+                    Forfait Annuel Africa Live
                   </span>
                 </div>
                 <h3 className="mt-5 text-2xl font-black text-white">Forfait Annuel</h3>
@@ -731,7 +731,7 @@ export default async function HomePage() {
           </div>
           <div className="mt-8 flex flex-col sm:flex-row justify-between gap-2 border-t border-white/5 pt-6 text-[11px] text-zinc-600">
             <p>© {new Date().getFullYear()} Africa Live. Tous droits réservés.</p>
-            <p>Diffusion directe depuis les sources publiques légitimes sans relais serveur.</p>
+            <p>Lecture depuis la source lorsque le flux est disponible et compatible.</p>
           </div>
         </footer>
       </div>

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft,
-  Mail,
   MessageSquare,
   HelpCircle,
   Tv,
@@ -21,18 +20,36 @@ export default function ContactPage() {
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('playback');
   const [message, setMessage] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [channelName, setChannelName] = useState('');
+  const [sourceUrl, setSourceUrl] = useState('');
+  const [website, setWebsite] = useState('');
+  const [submitted, setSubmitted] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !message.trim()) return;
 
     setLoading(true);
-    setTimeout(() => {
+    setSubmitError(null);
+    try {
+      const response = await fetch('/api/contact-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, subject, message, channelName, sourceUrl, website }),
+      });
+      const result = await response.json() as { requestId?: string; error?: string };
+      if (!response.ok) {
+        setSubmitError(result.error ?? 'Votre demande n’a pas pu être enregistrée. Réessayez.');
+        return;
+      }
+      setSubmitted(result.requestId ?? '');
+    } catch {
+      setSubmitError('Connexion interrompue. Vérifiez votre connexion puis réessayez.');
+    } finally {
       setLoading(false);
-      setSubmitted(true);
-    }, 600);
+    }
   };
 
   return (
@@ -70,39 +87,20 @@ export default function ContactPage() {
             Comment pouvons-nous vous aider ?
           </h1>
           <p className="mt-3 text-xs sm:text-sm leading-relaxed text-zinc-400">
-            Une question sur votre abonnement NabooPay, un problème de lecture sur une chaîne, ou une suggestion d&apos;ajout ?
-            Notre équipe vous répond sous 24h ouvrées.
+            Une question, une correction de catalogue ou une demande de retrait ? Envoyez-la ici pour l&apos;enregistrer dans notre file de traitement.
           </p>
         </header>
 
         <div className="grid gap-8 lg:grid-cols-[1fr_1.2fr]">
-          {/* Direct channels & Quick help */}
+            {/* Intake route & Quick help */}
           <div className="space-y-6">
             <div className="rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-6 shadow-xl shadow-black/40">
               <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <Mail size={16} className="text-amber-400" /> Contacts directs
+                <MessageSquare size={16} className="text-amber-400" /> Traitement des demandes
               </h2>
-              <p className="mt-2 text-xs text-zinc-400">
-                Vous pouvez également nous joindre directement par courrier électronique :
+              <p className="mt-2 text-xs leading-relaxed text-zinc-400">
+                Les formulaires envoyés sont enregistrés dans un espace privé accessible aux administrateurs actifs. Pour un retrait, indiquez le nom exact de la chaîne et, si vous la connaissez, l&apos;adresse de la source. Les paramètres temporaires de l&apos;URL sont retirés avant l&apos;enregistrement.
               </p>
-
-              <div className="mt-4 space-y-3 text-xs">
-                <div className="rounded-xl border border-white/[0.08] bg-black/50 p-4">
-                  <p className="font-bold text-white">Support Technique & Streaming</p>
-                  <a href="mailto:support@africatv.sn" className="mt-1 block text-amber-400 hover:underline">
-                    support@africatv.sn
-                  </a>
-                  <p className="mt-1 text-[11px] text-zinc-500">Pour tout souci d&apos;ouverture Web ou VLC</p>
-                </div>
-
-                <div className="rounded-xl border border-white/[0.08] bg-black/50 p-4">
-                  <p className="font-bold text-white">Facturation & Abonnements NabooPay</p>
-                  <a href="mailto:billing@africatv.sn" className="mt-1 block text-amber-400 hover:underline">
-                    billing@africatv.sn
-                  </a>
-                  <p className="mt-1 text-[11px] text-zinc-500">Confirmation de paiement Wave / Orange Money</p>
-                </div>
-              </div>
             </div>
 
             {/* Quick answers pills */}
@@ -143,18 +141,19 @@ export default function ContactPage() {
               Remplissez le formulaire ci-dessous et nous traiterons votre requête dans les meilleurs délais.
             </p>
 
-            {submitted ? (
+            {submitted !== null ? (
               <div className="mt-8 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-center">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                   <CheckCircle2 size={24} />
                 </div>
-                <h3 className="mt-4 text-base font-bold text-white">Message bien reçu !</h3>
+                <h3 className="mt-4 text-base font-bold text-white">Demande enregistrée</h3>
                 <p className="mt-2 text-xs leading-relaxed text-zinc-300">
-                  Merci <strong>{name}</strong>. Votre demande a été enregistrée avec succès. Notre équipe vous répondra à l&apos;adresse <strong>{email}</strong> sous 24h ouvrées.
+                  Merci <strong>{name}</strong>. Votre demande a été enregistrée dans notre file de traitement.
+                  {submitted && <> Référence : <strong>{submitted}</strong>.</>}
                 </p>
                 <button
                   type="button"
-                  onClick={() => { setSubmitted(false); setMessage(''); }}
+                  onClick={() => { setSubmitted(null); setMessage(''); setChannelName(''); setSourceUrl(''); }}
                   className="mt-6 inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] px-4 py-2 text-xs font-semibold text-white transition backdrop-blur-md"
                 >
                   Envoyer un autre message
@@ -207,10 +206,29 @@ export default function ContactPage() {
                     <option value="playback">Problème de lecture ou de lecteur VLC</option>
                     <option value="billing">Question sur un paiement NabooPay (Wave / Orange Money)</option>
                     <option value="channel">Suggestion d&apos;ajout ou de correction de chaîne</option>
+                    <option value="removal">Demande de retrait d&apos;une chaîne ou d&apos;une source</option>
                     <option value="partnership">Partenariat diffuseur ou demande commerciale</option>
                     <option value="other">Autre demande</option>
                   </select>
                 </div>
+
+                {subject === 'removal' && (
+                  <>
+                    <div>
+                      <label htmlFor="channelName" className="block font-medium text-zinc-300">Nom de la chaîne concernée *</label>
+                      <input id="channelName" type="text" required maxLength={200} value={channelName}
+                        onChange={(e) => setChannelName(e.target.value)} placeholder="Nom affiché dans Africa Live"
+                        className="mt-1.5 w-full rounded-xl border border-white/[0.1] bg-white/[0.03] px-3.5 py-2 text-xs text-white placeholder-zinc-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition" />
+                    </div>
+                    <div>
+                      <label htmlFor="sourceUrl" className="block font-medium text-zinc-300">Adresse de la source (facultatif)</label>
+                      <input id="sourceUrl" type="url" maxLength={2048} value={sourceUrl}
+                        onChange={(e) => setSourceUrl(e.target.value)} placeholder="https://…"
+                        className="mt-1.5 w-full rounded-xl border border-white/[0.1] bg-white/[0.03] px-3.5 py-2 text-xs text-white placeholder-zinc-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition" />
+                      <p className="mt-1 text-[11px] text-zinc-500">N&apos;incluez ni mot de passe ni code d&apos;accès. Les paramètres d&apos;URL sont supprimés avant stockage.</p>
+                    </div>
+                  </>
+                )}
 
                 <div>
                   <label htmlFor="message" className="block font-medium text-zinc-300">
@@ -227,10 +245,17 @@ export default function ContactPage() {
                   />
                 </div>
 
+                <div className="hidden" aria-hidden="true">
+                  <label htmlFor="website">Laisser vide</label>
+                  <input id="website" type="text" autoComplete="off" tabIndex={-1} value={website} onChange={(e) => setWebsite(e.target.value)} />
+                </div>
+
                 <div className="flex items-center gap-2 text-[11px] text-zinc-500">
                   <AlertCircle size={13} className="shrink-0" />
-                  <span>Vos données sont strictement utilisées pour répondre à votre demande.</span>
+                  <span>Vos coordonnées et votre message sont enregistrés pour traiter cette demande.</span>
                 </div>
+
+                {submitError && <p role="alert" className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-200">{submitError}</p>}
 
                 <button
                   type="submit"
@@ -247,7 +272,7 @@ export default function ContactPage() {
 
         {/* Footer */}
         <div className="mt-12 border-t border-white/[0.08] pt-6 text-center text-xs text-zinc-500">
-          <p>© {new Date().getFullYear()} Africa Live (africatv.sn) • Service client dédié.</p>
+          <p>© {new Date().getFullYear()} Africa Live (africatv.sn) • Demandes enregistrées dans notre file de traitement.</p>
         </div>
       </div>
     </main>

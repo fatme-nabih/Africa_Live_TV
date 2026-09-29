@@ -1,4 +1,4 @@
-# Matrice des environnements — 22 septembre 2026
+# Matrice des environnements — 29 septembre 2026
 
 Cette matrice décrit les valeurs attendues, sans recopier aucun secret. Le nom
 Railway de l'environnement actuel est `production`, alors que son rôle applicatif
@@ -21,7 +21,7 @@ est bien **staging** grâce à `DEPLOYMENT_ENV=staging`.
 | Webhook Clerk | facultatif pour le catalogue local | non requis | secret réel de l'endpoint staging | secret réel de l'endpoint production |
 | Plan Clerk Billing | facultatif | non requis | slug ou ID staging explicite | slug ou ID production explicite |
 | `ABUSE_HASH_SECRET` / `CATALOG_CURSOR_SECRET` | secrets locaux distincts | secrets locaux distincts | secrets Railway distincts, ≥ 32 caractères | secrets production distincts, ≥ 32 caractères |
-| `ABUSE_TRUSTED_PROXY_HEADER` | `disabled` | `disabled` | seulement l'en-tête garanti par Railway, sinon `disabled` | seulement l'en-tête garanti par l'infrastructure |
+| `ABUSE_TRUSTED_PROXY_HEADER` | `disabled` | `disabled` | `x-real-ip` (Railway documente cet en-tête comme adresse client) | `disabled` jusqu'à vérification de l'en-tête remplacé par l'infrastructure choisie |
 | `PORT` | `3001` via `npm run dev` | `3001` via `npm run dev` | fourni par Railway | fourni par la plateforme |
 | Authentification | obligatoire | contournement local explicite uniquement | obligatoire | obligatoire |
 | Lecture média | navigateur/VLC téléchargent directement depuis l'amont | idem | navigateur direct uniquement ; fermée tant que l'éligibilité n'est pas prête | navigateur direct selon éligibilité validée |

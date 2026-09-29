@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { ArrowLeft, ShieldCheck, Lock, Database, UserCheck, EyeOff } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Lock, Database, UserCheck, EyeOff, MessageSquare } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
 import BrandWatermark from '@/components/BrandWatermark';
 
@@ -59,9 +59,8 @@ export default function PrivacyPage() {
             </h2>
             <p className="mt-3">
               Chez <strong>Africa Live</strong>, la protection de vos données personnelles et le respect de votre vie privée
-              sont au cœur de notre architecture. Notre plateforme privilégie la transmission directe et la minimisation de collecte :
-              nous ne collectons que les informations strictement nécessaires au fonctionnement de votre compte, à la validation
-              de votre abonnement et à la sécurité de l&apos;infrastructure.
+              sont au cœur de notre architecture. Nous traitons les informations nécessaires au fonctionnement de votre compte,
+              à la validation de votre abonnement, à la sécurité de l&apos;infrastructure et au suivi des demandes que vous nous envoyez.
             </p>
           </section>
 
@@ -102,6 +101,14 @@ export default function PrivacyPage() {
                   (Rate Limiting) et pour adapter le lecteur multimédia (détection de compatibilité Web HLS ou lecteur externe VLC).
                 </p>
               </div>
+              <div className="rounded-xl border border-white/[0.08] bg-black/50 p-4">
+                <p className="font-semibold text-white flex items-center gap-2">
+                  <MessageSquare size={16} className="text-amber-400" /> Demandes envoyées via Contact
+                </p>
+                <p className="mt-1 text-xs text-zinc-400">
+                  Votre nom, votre adresse e-mail, le sujet et le contenu de votre demande sont enregistrés dans la base d&apos;Africa Live pour permettre son traitement par les administrateurs actifs. Pour une demande de retrait, le nom de chaîne est également conservé. Si vous fournissez une URL de source, ses paramètres et son fragment sont supprimés avant l&apos;enregistrement.
+                </p>
+              </div>
             </div>
           </section>
 
@@ -135,7 +142,7 @@ export default function PrivacyPage() {
             </p>
             <ul className="mt-3 list-disc pl-5 space-y-1 text-xs text-zinc-400">
               <li>Modifier votre profil et vos informations depuis votre espace <Link href="/account" className="text-amber-400 underline">Mon compte</Link>.</li>
-              <li>Demander l&apos;effacement complet de votre compte et de son historique en écrivant à <strong>privacy@africatv.sn</strong>.</li>
+              <li>Adresser une demande relative à vos données depuis le <Link href="/contact" className="text-amber-400 underline">formulaire de contact</Link>, en choisissant « Autre demande ».</li>
               <li>Consulter le journal de vos paiements via la référence de commande fournie lors de chaque transaction NabooPay.</li>
             </ul>
           </section>
@@ -147,10 +154,7 @@ export default function PrivacyPage() {
               Contact pour la protection des données
             </h2>
             <p className="mt-3">
-              Pour toute question relative à cette politique ou pour exercer vos droits, contactez notre équipe :
-            </p>
-            <p className="mt-3 font-semibold text-white">
-              E-mail : <a href="mailto:privacy@africatv.sn" className="text-amber-400 hover:underline">privacy@africatv.sn</a>
+              Pour toute question relative à cette politique ou pour exercer vos droits, utilisez le formulaire de <Link href="/contact" className="text-amber-400 underline">contact</Link> en précisant votre demande.
             </p>
             <p className="mt-1 text-xs text-zinc-400">
               Adresse : Plateforme Africa Live • Domaine africatv.sn • Dakar, Sénégal

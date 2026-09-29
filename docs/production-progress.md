@@ -1,5 +1,50 @@
 # Progression — préparation production
 
+## DOC-005 — positionnement technique et juridique — 29 septembre 2026
+
+Statut : note interne rédigée dans
+`docs/positionnement-technique-et-juridique.md`, liée depuis le README et le
+backlog. Elle décrit factuellement l’import du catalogue, les contrôles
+techniques, la lecture depuis les sources et les limites de ces éléments comme
+preuve de droits. Elle précise que les imports ne sont pas prouvés comme fournis
+par les diffuseurs. La documentation détaillée reste interne. Les CGU et pages
+publiques ont été ajustées pour décrire l’essai de cinq jours, l’accès au
+catalogue après expiration et l’abonnement nécessaire à la lecture, sans
+présenter l’URL accessible comme une autorisation de diffusion. Une demande de
+retrait est désormais prévue dans le formulaire et la note décrit une revue
+juridique locale avant lancement. Vérification : revue du code d’import, de
+lecture, des sondes et des textes publics. Aucun avis juridique n’est fourni et
+aucun flux individuel n’est validé.
+
+## DOC-006 — accès catalogue, demandes de retrait et textes publics — 29 septembre 2026
+
+Statut : implémenté localement, sans déploiement.
+
+- Les comptes connectés dont l’essai ou l’abonnement a expiré peuvent consulter
+  le catalogue et ses filtres. Les routes de lecture conservent les contrôles
+  d’accès et d’abonnement ; l’interface dirige vers les tarifs au lieu de lancer
+  un flux sans droit d’accès applicatif.
+- Le formulaire enregistre les demandes dans PostgreSQL après validation,
+  limitation des abus et retrait des paramètres sensibles des URL. La
+  confirmation est affichée uniquement après persistance.
+- Une file privée accessible aux administrateurs actifs permet de consulter,
+  suivre et traiter les demandes. Le traitement « désactiver les sources
+  signalées » désactive les correspondances et journalise les identifiants et
+  la décision. Les imports suivants conservent cette désactivation. La clôture
+  sans action réactive la source en mode « révision requise », sans la déclarer
+  éligible à la lecture.
+- Les pages tarif, compte, contact, confidentialité et CGU présentent
+  l’abonnement comme donnant accès à l’application et à ses fonctions, y compris
+  la lecture pendant l’abonnement. La page d’accueil ne qualifie plus les flux
+  de « publics et légitimes ».
+- Migration `0018_support_requests` appliquée uniquement à la base locale
+  `africa_live_dev`. `npm test` (150 réussis, 14 ignorés), les tests ciblés du
+  contrat et de la politique d’accès, les 14 tests d’intégration PostgreSQL,
+  `npm run db:check:migrations`, `npm run lint`, `npx tsc --noEmit
+  --incremental false` et `npm run build` passent. Limite : aucun SLA ni
+  notification de réception par email n’est ajouté ; ce lot ne valide pas les
+  droits des sources et n’est pas un avis juridique.
+
 ## Journal des lots opérationnels 0 et 1 — 22 septembre 2026
 
 Périmètre : documentation de l'état Railway existant et stabilisation des deux

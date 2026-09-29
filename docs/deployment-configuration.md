@@ -24,7 +24,7 @@ pas que les clés sont reconnues par Clerk ni que la connexion DB fonctionne.
 | PLAYBACK_ELIGIBILITY_READY | false autorisé | false explicite jusqu'à validation du catalogue ; true seulement après cette validation |
 | ABUSE_HASH_SECRET | secret local | au moins 32 caractères aléatoires, sans valeur factice |
 | CATALOG_CURSOR_SECRET | secret local | secret distinct, mêmes exigences |
-| ABUSE_TRUSTED_PROXY_HEADER | disabled | disabled par défaut ; cf-connecting-ip, x-real-ip ou x-forwarded-for seulement si l'infrastructure garantit leur remplacement |
+| ABUSE_TRUSTED_PROXY_HEADER | disabled | disabled par défaut ; sur Railway staging, `x-real-ip` est utilisé car Railway documente cet en-tête comme adresse client. Ne pas transposer ce réglage à une autre infrastructure sans vérifier son comportement. [Spécifications réseau Railway](https://docs.railway.com/networking/public-networking/specs-and-limits) |
 | BROWSER_TEST_ORIGIN | http://localhost:3001 | si défini, identique à NEXT_PUBLIC_APP_URL pour la vérification CORS |
 | NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY | factice tolérée, non utilisée en mode local | pk_live en production ; test ou live en staging |
 | CLERK_SECRET_KEY | factice tolérée, non utilisée en mode local | sk du même mode que la clé publique ; aucune valeur factice |

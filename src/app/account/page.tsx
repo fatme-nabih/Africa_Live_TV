@@ -61,21 +61,12 @@ export default async function AccountPage(props: {
                 Administration
               </Link>
             )}
-            {decision.hasAccess ? (
-              <Link
-                href="/app"
-                className="rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/20 via-amber-400/25 to-rose-500/20 hover:from-emerald-500/30 hover:via-amber-400/35 hover:to-rose-500/30 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-amber-200 transition backdrop-blur-md shadow-sm"
-              >
-                Ouvrir l&apos;application
-              </Link>
-            ) : (
-              <Link
-                href="/pricing"
-                className="rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/20 via-amber-400/25 to-rose-500/20 hover:from-emerald-500/30 hover:via-amber-400/35 hover:to-rose-500/30 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-amber-200 transition backdrop-blur-md shadow-sm"
-              >
-                Voir les offres
-              </Link>
-            )}
+            <Link
+              href="/app"
+              className="rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/20 via-amber-400/25 to-rose-500/20 hover:from-emerald-500/30 hover:via-amber-400/35 hover:to-rose-500/35 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-amber-200 transition backdrop-blur-md shadow-sm"
+            >
+              Consulter le catalogue
+            </Link>
           </div>
         </nav>
 
@@ -86,7 +77,7 @@ export default async function AccountPage(props: {
             <div>
               <p className="font-bold text-sm text-white">Abonnement ou période d&apos;essai requis</p>
               <p className="mt-1 leading-relaxed text-zinc-300">
-                Votre période d&apos;essai de 5 jours est arrivée à échéance. Pour accéder aux flux en direct et à l&apos;intégralité du bouquet TV, veuillez choisir une formule d&apos;abonnement.
+                Votre période d&apos;essai de 5 jours est arrivée à échéance. Vous pouvez toujours consulter le catalogue avec votre compte; un abonnement est nécessaire pour lancer une source et utiliser les fonctions de lecture.
               </p>
               <Link
                 href="/pricing"

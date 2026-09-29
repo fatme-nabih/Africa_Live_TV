@@ -9,9 +9,9 @@ import BrandWatermark from '@/components/BrandWatermark';
 import { checkoutRequestSchema, checkoutResponseSchema } from '@/lib/payment-contracts';
 
 const features = [
-  'Accès complet au catalogue Africa Live (11 700+ chaînes)',
-  'Lecteur navigateur haute performance avec bascule 1-clic VLC',
-  'Filtres avancés, recherche instantanée et favoris synchronisés',
+  'Lancement des sources compatibles depuis le lecteur web ou VLC',
+  'Recherche, filtres, catégories et favoris synchronisés',
+  'Accès aux fonctions de l’application pendant la période souscrite',
   'Compte utilisateur sécurisé et sans publicité injectée',
 ];
 
@@ -131,7 +131,7 @@ export default function PricingPage() {
               Un seul accès pour toute l&apos;application.
             </h1>
             <p className="mt-4 max-w-xl text-sm sm:text-base leading-relaxed text-zinc-300">
-              Profitez d&apos;Africa Live TV sans limites. Payez facilement, rapidement et en toute sécurité via Orange Money, Wave, ou par carte bancaire.
+              L&apos;abonnement donne accès aux fonctions d&apos;Africa Live, y compris au lancement des sources disponibles et compatibles. Payez via Orange Money, Wave ou carte bancaire.
             </p>
 
             <ul className="mt-6 space-y-3">
@@ -150,7 +150,7 @@ export default function PricingPage() {
                 <Gift size={16} className="text-amber-400 shrink-0" /> Profitez de 5 jours d’essai sans engagement !
               </p>
               <p className="mt-2 leading-relaxed text-zinc-300">
-                Nouveau sur Africa Live ? Votre compte inclut automatiquement 5 jours d&apos;accès complet dès l&apos;inscription, sans carte bancaire requise. Vous pouvez également souscrire dès à présent pour pérenniser votre accès.
+                Nouveau sur Africa Live ? Votre compte inclut automatiquement 5 jours d&apos;essai avec accès à l&apos;application et à la lecture. Après l&apos;essai, le catalogue reste consultable avec un compte, mais lancer une source requiert un abonnement.
               </p>
             </div>
           </div>
@@ -209,7 +209,7 @@ export default function PricingPage() {
                     Sans engagement
                   </span>
                 </div>
-                <p className="mt-1.5 text-xs text-zinc-400">Accès complet pendant 30 jours. Renouvellement libre.</p>
+                <p className="mt-1.5 text-xs text-zinc-400">Accès aux fonctions de l’application et à la lecture des sources compatibles pendant 30 jours.</p>
                 <div className="mt-4 flex items-baseline gap-1.5 text-3xl font-black text-white">
                   990 <span className="text-base font-bold text-amber-400">FCFA</span>
                   <span className="text-xs font-normal text-zinc-500">/ mois</span>
@@ -235,10 +235,10 @@ export default function PricingPage() {
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-white">Abonnement Annuel</h3>
                   <span className="rounded-full bg-amber-400/10 border border-amber-400/30 px-2.5 py-0.5 text-[11px] font-bold text-amber-300">
-                    Bouquet Annuel
+                    Application annuelle
                   </span>
                 </div>
-                <p className="mt-1.5 text-xs text-zinc-300">12 mois d&apos;accès au prix de 10 mois. La tranquillité totale pour toute l&apos;année.</p>
+                <p className="mt-1.5 text-xs text-zinc-300">12 mois d&apos;accès aux fonctions de l’application et à la lecture des sources compatibles, au prix de 10 mois.</p>
                 <div className="mt-4 flex items-baseline gap-1.5 text-3xl font-black text-white">
                   9 900 <span className="text-base font-bold text-amber-400">FCFA</span>
                   <span className="text-xs font-normal text-zinc-400">/ an</span>

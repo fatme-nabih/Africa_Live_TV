@@ -18,6 +18,7 @@ export function assertLocalE2ETarget(env: Environment, baseURL: string | undefin
 
 export const integrationFlags = [
   'L3_INTEGRATION_TEST', 'CATALOG_INTEGRATION_TEST',
+  'SUPPORT_REQUEST_INTEGRATION_TEST',
   'CLERK_BILLING_INTEGRATION_TEST', 'LOT8_RESOLUTION_INTEGRATION_TEST',
 ] as const;
 

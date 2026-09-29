@@ -29,6 +29,10 @@ export type AccessDecision = {
   reason: string;
 };
 
+export function canBrowseCatalog(decision: AccessDecision) {
+  return decision.status !== 'anonymous' && decision.status !== 'blocked';
+}
+
 function asTime(value: string | null | undefined) {
   if (!value) return null;
   const time = new Date(value).getTime();

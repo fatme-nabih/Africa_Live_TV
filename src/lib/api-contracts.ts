@@ -53,6 +53,7 @@ export const catalogResponseSchema = z.object({
   hasMore: z.boolean(),
   limit: z.number().int().min(1).max(30),
   nextCursor: z.string().nullable(),
+  canPlay: z.boolean().default(true),
 }).strict();
 
 export const playbackResolutionDestinationSchema = z.enum(['web', 'vlc-mobile']);

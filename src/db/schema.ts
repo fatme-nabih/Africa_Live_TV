@@ -907,3 +907,45 @@ export const naboopayWebhookEvents = pgTable('naboopay_webhook_events', {
   index('naboopay_webhook_events_state_received_idx').on(table.state, table.receivedAt),
   check('naboopay_webhook_events_state_check', sql`${table.state} in ('received', 'processed', 'rejected', 'failed')`),
 ]);
+
+export const supportRequests = pgTable('support_requests', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull(),
+  subject: text('subject').notNull(),
+  message: text('message').notNull(),
+  channelName: text('channel_name'),
+  sourceUrl: text('source_url'),
+  status: text('status').notNull().default('new'),
+  resolutionNote: text('resolution_note'),
+  handledByClerkUserId: text('handled_by_clerk_user_id'),
+  createdAt: timestampWithTimezone('created_at').notNull().defaultNow(),
+  updatedAt: timestampWithTimezone('updated_at').notNull().defaultNow(),
+}, (table) => [
+  index('support_requests_status_created_idx').on(table.status, table.createdAt.desc()),
+  index('support_requests_email_created_idx').on(table.email, table.createdAt.desc()),
+  check('support_requests_subject_check', sql`${table.subject} in ('playback', 'billing', 'channel', 'removal', 'partnership', 'other')`),
+  check('support_requests_status_check', sql`${table.status} in ('new', 'in_review', 'sources_disabled', 'closed_no_action')`),
+  check('support_requests_name_length_check', sql`char_length(${table.name}) between 1 and 120`),
+  check('support_requests_email_length_check', sql`char_length(${table.email}) between 3 and 320`),
+  check('support_requests_message_length_check', sql`char_length(${table.message}) between 1 and 5000`),
+]);
+
+export const supportRequestEvents = pgTable('support_request_events', {
+  id: text('id').primaryKey(),
+  requestId: text('request_id').notNull(),
+  eventType: text('event_type').notNull(),
+  actorClerkUserId: text('actor_clerk_user_id'),
+  note: text('note'),
+  affectedStreamIds: jsonb('affected_stream_ids').$type<string[]>().notNull().default([]),
+  createdAt: timestampWithTimezone('created_at').notNull().defaultNow(),
+}, (table) => [
+  foreignKey({
+    name: 'support_request_events_request_id_fkey',
+    columns: [table.requestId],
+    foreignColumns: [supportRequests.id],
+  }).onDelete('cascade'),
+  index('support_request_events_request_created_idx').on(table.requestId, table.createdAt),
+  check('support_request_events_type_check', sql`${table.eventType} in ('submitted', 'in_review', 'sources_disabled', 'closed_no_action')`),
+  check('support_request_events_note_length_check', sql`${table.note} is null or char_length(${table.note}) <= 1000`),
+]);
