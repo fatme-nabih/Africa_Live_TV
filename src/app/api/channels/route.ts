@@ -26,6 +26,7 @@ import {
   resolvePlaybackMode,
 } from '@/lib/channel-selection';
 import { PLAYBACK_SOURCE_FRESHNESS_MS } from '@/lib/playback-resolution-policy';
+import { publicCatalogChannelCondition } from '@/lib/public-catalog-visibility';
 import { authorizeAppRequest } from '@/lib/require-app-access';
 import { consumeAdditionalRequestQuota } from '@/lib/request-quota';
 import type { Channel } from '@/types/channel';
@@ -93,7 +94,10 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     throw new BadRequestError('Le curseur de pagination est invalide.', 'INVALID_CATALOG_CURSOR');
   }
 
-  const conditions: SQL[] = [eq(channels.active, true)];
+  const conditions: SQL[] = [
+    eq(channels.active, true),
+    publicCatalogChannelCondition(),
+  ];
 
   if (favoritesOnly) {
     const favoriteChannelIds = db

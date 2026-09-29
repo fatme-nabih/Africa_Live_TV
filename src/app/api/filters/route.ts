@@ -6,6 +6,7 @@ import { channels, streams } from '@/db/schema';
 import { filterOptionsResponseSchema } from '@/lib/api-contracts';
 import { parseLanguageCodes } from '@/lib/channel-language';
 import { PLAYBACK_SOURCE_FRESHNESS_MS } from '@/lib/playback-resolution-policy';
+import { publicCatalogChannelCondition } from '@/lib/public-catalog-visibility';
 import { authorizeAppRequest } from '@/lib/require-app-access';
 import { withApiErrorHandler } from '@/lib/api-errors';
 
@@ -40,12 +41,12 @@ export const GET = withApiErrorHandler(async (request: Request) => {
       .selectDistinct({ code: channels.countryCode })
       .from(channels)
       .innerJoin(streams, availableJoin)
-      .where(eq(channels.active, true)),
+      .where(and(eq(channels.active, true), publicCatalogChannelCondition())),
     db
       .selectDistinct({ title: channels.groupTitle })
       .from(channels)
       .innerJoin(streams, availableJoin)
-      .where(eq(channels.active, true)),
+      .where(and(eq(channels.active, true), publicCatalogChannelCondition())),
     db
       .selectDistinct({ language: channels.language })
       .from(channels)
@@ -53,6 +54,7 @@ export const GET = withApiErrorHandler(async (request: Request) => {
       .where(
         and(
           eq(channels.active, true),
+          publicCatalogChannelCondition(),
           isNotNull(channels.language),
         ),
       ),
@@ -60,7 +62,7 @@ export const GET = withApiErrorHandler(async (request: Request) => {
       .selectDistinct({ status: streams.status })
       .from(channels)
       .innerJoin(streams, availableJoin)
-      .where(eq(channels.active, true)),
+      .where(and(eq(channels.active, true), publicCatalogChannelCondition())),
   ]);
 
   const response = filterOptionsResponseSchema.parse({
