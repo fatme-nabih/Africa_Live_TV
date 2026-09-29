@@ -49,11 +49,11 @@ une modification Railway exige un nouveau build pour atteindre le navigateur.
 - Projet : `just-compassion`, environnement Railway nommé `production`.
 - Rôle applicatif : staging (`DEPLOYMENT_ENV=staging`).
 - Services : `Africa_Live_TV` et `Postgres`, tous deux en ligne.
-- Déploiement actif : `ddc78ef6-f449-4b46-a23f-b725b5ae8271` (commit `3a325ab`).
+- Déploiement actif : `dfa1da5f-36d2-402f-887a-228d5b1e7e57` (`SUCCESS`, commit `2f19e38`).
 - Runtime observé : Node.js 22.23.3, Railpack 0.40.0, une réplique US West.
 - Pré-déploiement actif et validé : `npm run db:migrate:deploy`, délai 300 s.
 - Healthcheck actif et validé : `/api/health`, délai 120 s (200 OK).
-- PostgreSQL : volume persistant et 21 tables ; sauvegarde/PITR non disponible sur le plan observé.
+- PostgreSQL : volume persistant, 22 tables publiques, 19 migrations, 14 505 chaînes et 15 646 sources après migration `0018_support_requests`. Sauvegarde/PITR natif non disponible sur le plan observé.
 - Lecture : `PLAYBACK_ELIGIBILITY_READY=true` ; 6 825 flux sains certifiés (4 385 flux web direct BROWSER_OK et 2 440 flux VLC_ONLY) sur 12 396 flux. Lancement VLC 100 % automatique sans affichage d'URL ni bouton de copie M3U8. Lecture directe validée sur PC et mobile, sans relais média serveur.
 - Domaine staging : `staging.africatv.sn` actif avec DNS OVHcloud et certificat
   Let's Encrypt validé. Le domaine Railway reste disponible en repli.
@@ -62,5 +62,6 @@ une modification Railway exige un nouveau build pour atteindre le navigateur.
 - Exploitation détaillée :
   [railway-preproduction-runbook.md](railway-preproduction-runbook.md).
 
-Ces constats sont un inventaire, pas une autorisation de déployer ni de modifier
-les variables Railway.
+Ces constats décrivent la préproduction après le déploiement staging autorisé du
+29 septembre 2026. L'environnement visible `production` reste de rôle applicatif
+`staging` ; aucun lancement ou changement de domaine de production n'a eu lieu.

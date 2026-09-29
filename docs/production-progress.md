@@ -18,7 +18,8 @@ aucun flux individuel n’est validé.
 
 ## DOC-006 — accès catalogue, demandes de retrait et textes publics — 29 septembre 2026
 
-Statut : implémenté localement, sans déploiement.
+Statut : déployé et vérifié en préproduction le 29 septembre 2026. Le service
+Railway garde le rôle applicatif `staging` (`DEPLOYMENT_ENV=staging`).
 
 - Les comptes connectés dont l’essai ou l’abonnement a expiré peuvent consulter
   le catalogue et ses filtres. Les routes de lecture conservent les contrôles
@@ -37,13 +38,34 @@ Statut : implémenté localement, sans déploiement.
   l’abonnement comme donnant accès à l’application et à ses fonctions, y compris
   la lecture pendant l’abonnement. La page d’accueil ne qualifie plus les flux
   de « publics et légitimes ».
-- Migration `0018_support_requests` appliquée uniquement à la base locale
-  `africa_live_dev`. `npm test` (150 réussis, 14 ignorés), les tests ciblés du
+- Migration `0018_support_requests` appliquée à la base locale `africa_live_dev`
+  lors de l'implémentation, puis à PostgreSQL staging par le pré-déploiement
+  `npm run db:migrate:deploy`. `npm test` (150 réussis, 14 ignorés), les tests ciblés du
   contrat et de la politique d’accès, les 14 tests d’intégration PostgreSQL,
   `npm run db:check:migrations`, `npm run lint`, `npx tsc --noEmit
   --incremental false` et `npm run build` passent. Limite : aucun SLA ni
   notification de réception par email n’est ajouté ; ce lot ne valide pas les
   droits des sources et n’est pas un avis juridique.
+
+### Publication staging de DOC-006 et du Radar GDELT — 29 septembre 2026
+
+- Commit `2f19e38` poussé sur GitHub `main` : [voir le commit](https://github.com/fatme-nabih/Africa_Live_TV/commit/2f19e38).
+- Déploiement actif : Railway `dfa1da5f-36d2-402f-887a-228d5b1e7e57`, statut `SUCCESS`. Une première requête CLI (`aeeaa462-10df-42e7-908d-cf2ab5b61e15`) a échoué avant le build à cause d'une erreur d'envoi à l'API Railway ; aucun pré-déploiement ne s'y est exécuté. La relance ciblant les IDs explicites du projet, service et environnement staging a réussi.
+- Avant la migration, le dump `backups/railway/railway-2026-09-29T23-01-49-939Z.dump.aes256gcm` a été chiffré en AES-256-GCM ; sa clé est protégée par DPAPI Windows. Le drill a déchiffré le dump, l'a restauré dans une base temporaire isolée et a comparé l'inventaire (20 tables, 18 migrations, 14 505 chaînes, 15 646 sources). La base temporaire a été supprimée ; le dump reste ignoré par Git.
+- Après le pré-déploiement Drizzle : 22 tables publiques, 19 migrations ; `support_requests` et `support_request_events` sont présentes. Le déploiement a terminé avec succès.
+- Vérifications HTTP sans session : `/api/health` retourne 200 avec processus et DB `ok`, `/api/live/news` retourne 401, et `/app/live` redirige (307) vers l'authentification.
+- `npm run build` local et le build Railway réussissent. Aucun jeu de tests n'a été exécuté pendant cette opération de publication. Aucun domaine, service ou environnement de production n'a été modifié.
+- `ABUSE_TRUSTED_PROXY_HEADER=x-real-ip` est configuré sur l'environnement Railway staging ; Railway documente cet en-tête comme adresse client. La production future reste à `disabled` jusqu'à vérification de son infrastructure.
+
+## RAD-00 — première version du Radar Afrique — 29 septembre 2026
+
+Statut : déployée sous `/app/live` dans le même accès authentifié que le
+catalogue. GDELT sert un fil d'articles séparé des événements ; le pays est celui
+du média, l'éditeur, le lien source et l'heure d'indexation restent indiqués, et
+l'interface rappelle que le Radar ne vérifie pas les faits. Le bouton retourne
+à l'application des chaînes. Aucun événement GDACS ni donnée météo n'est activé.
+Le backlog d'implémentation est dans
+[`radar-afrique-roadmap.md`](radar-afrique-roadmap.md).
 
 ## Journal des lots opérationnels 0 et 1 — 22 septembre 2026
 

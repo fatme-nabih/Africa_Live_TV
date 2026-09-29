@@ -1,6 +1,6 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 24 septembre 2026, 22:45 UTC, fuseau Africa/Dakar.
+Dernière mise à jour : 29 septembre 2026, 23:25 UTC, fuseau Africa/Dakar.
 
 Ce document permet à une nouvelle session de reprendre le travail sans
 réinterpréter l'historique. Il ne contient volontairement aucun secret, cookie,
@@ -29,9 +29,10 @@ mot de passe, identifiant de paiement, clé Clerk ou URL de flux média.
 ## 2. Dépôt et règles non négociables
 
 - Workspace : `C:/Users/GAMER PC/Africa_Live_TV`.
-- Branche locale : `main` (synchronisée avec `origin/main`).
-- Branche distante : `main` (commit `3a325ab` déployé).
-- Déploiement Railway actif : `ddc78ef6-f449-4b46-a23f-b725b5ae8271` (SUCCESS, commit `3a325ab`).
+- Branche locale : `main` (synchronisée avec `origin/main` après mise à jour documentaire du déploiement).
+- Dernier commit applicatif poussé sur GitHub `main` : `2f19e38`.
+- Déploiement Railway staging actif : `dfa1da5f-36d2-402f-887a-228d5b1e7e57` (`SUCCESS`, commit applicatif `2f19e38`).
+- Un fichier non suivi, `docs/radar-cockpit-backlog.md`, est apparu pendant cette reprise. Il n'a pas été publié ni validé ; le préserver et traiter ses propositions comme un brouillon à comparer à la feuille de route sourcée `docs/radar-afrique-roadmap.md`.
 - Dépôt distant : `https://github.com/fatme-nabih/Africa_Live_TV.git`.
 - Aucun commit ou push ne doit être créé sans demande explicite de l'utilisateur.
 - Le projet source `C:/Users/GAMER PC/IPTV` doit rester entièrement inchangé.
@@ -62,6 +63,11 @@ Le mode Railway est une préproduction authentifiée. La lecture directe y est
 ouverte avec `PLAYBACK_ELIGIBILITY_READY=true` depuis la validation du catalogue
 du 24 septembre 2026. Le domaine, le healthcheck ou un déploiement réussi ne
 constituent pas, à eux seuls, une validation des droits média.
+
+Depuis le 29 septembre, staging inclut aussi les demandes de contact/retrait
+avec file administrateur privée, la neutralisation persistante des sources
+signalées, et le Radar GDELT sous `/app/live`. Le Radar reste derrière l'accès
+authentifié au catalogue ; GDACS et la météo ne sont pas activés.
 
 État local vérifié :
 
@@ -104,7 +110,19 @@ Recherche, filtre, favori persistant, tentative web et lancement VLC réel ont
 La logique d'erreur client modifiée se trouve dans `src/lib/api-contracts.ts`,
 avec ses tests dans `src/lib/catalog-api.test.ts`.
 
-## 5. Railway : état réel observé (24 septembre 2026)
+## 5. État Railway courant — 29 septembre 2026
+
+- Projet `just-compassion`, environnement visible `production`, rôle applicatif `staging` (`DEPLOYMENT_ENV=staging`).
+- Déploiement applicatif actif : `dfa1da5f-36d2-402f-887a-228d5b1e7e57`, `SUCCESS`, commit `2f19e38` ; domaine `https://staging.africatv.sn`.
+- Publication faite avec `railway up` après le push GitHub : aucun déploiement automatique n'était apparu dans la liste Railway au bout d'environ une minute. Ne pas supposer qu'un push seul publie ; vérifier le service avant de conclure.
+- Une première tentative CLI (`aeeaa462-10df-42e7-908d-cf2ab5b61e15`) a échoué sur l'envoi de la requête Railway avant le build ; elle n'a pas exécuté de migration. La seconde tentative, avec les IDs explicites projet/service/environnement, a réussi.
+- Avant la migration `0018_support_requests`, le dump staging chiffré a été restauré et comparé dans une base temporaire, ensuite supprimée. L'artefact est dans `backups/railway` (ignoré par Git) : `railway-2026-09-29T23-01-49-939Z.dump.aes256gcm`, clé DPAPI Windows, métadonnées `.json`.
+- Après migration : 22 tables publiques, 19 migrations Drizzle, 14 505 chaînes et 15 646 sources ; les tables `support_requests` et `support_request_events` existent.
+- Vérifié après déploiement : `/api/health` HTTP 200 (`process` et `database` ok), GET anonyme `/api/live/news` HTTP 401 et `/app/live` HTTP 307 vers l'authentification.
+- `ABUSE_TRUSTED_PROXY_HEADER=x-real-ip` est défini uniquement dans l'environnement Railway staging. Le réglage de production future reste désactivé jusqu'à vérification de son proxy.
+- Aucun domaine de production, service Railway de production, OVHcloud ou plan n'a été modifié.
+
+### État de staging observé le 24 septembre 2026 (historique)
 
 - Projet : `just-compassion`.
 - Environnement visible Railway : `production`.
@@ -302,8 +320,12 @@ masquer dans le rapport d'une future validation.
 
 ## 10. État Git à préserver
 
-La branche locale `main` est synchronisée avec `origin/main` au commit `3a325ab`.
-L'arbre de travail local est propre (`git status --short` vide hors mises à jour documentaires demandées).
+La branche locale `main` est synchronisée avec `origin/main` après le commit
+documentaire demandé pour cette reprise. Le runtime staging correspond au commit
+applicatif `2f19e38` ; la fiche actuelle et l'ID Railway sont consignés plus haut.
+Le seul élément non suivi laissé hors publication est le brouillon
+`docs/radar-cockpit-backlog.md` apparu le 29 septembre ; ne pas le supprimer et
+valider ses propositions de sources et de droits avant de les reprendre.
 
 Toujours refaire `git status --short` avant une modification. Ne pas restaurer,
 nettoyer ou remplacer les changements existants avec une commande Git

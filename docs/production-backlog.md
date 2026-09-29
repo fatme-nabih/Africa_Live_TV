@@ -1,12 +1,20 @@
 # Africa Live — Plan de préparation à la production
 
-Date de référence : 24 septembre 2026.
+Date de référence : 29 septembre 2026.
 Statut : Railway sert la préproduction officielle sur `https://staging.africatv.sn` ;
 lots opérationnels 0, 1, 2 (Phases A et B) et Lot 3 (UX de lecture et qualification des flux) terminés et validés en ligne.
 Le garde-fou de lecture a été levé (`PLAYBACK_ELIGIBILITY_READY=true`), 6 825 flux sains certifiés
 (4 385 BROWSER_OK et 2 440 VLC_ONLY) sont activés sur PostgreSQL Railway. L'ouverture de VLC
 est 100 % automatique sur PC et mobile sans exposition d'URL, et les langues principales sont inférées.
 Responsable d'exécution : assistant, avec décisions produit et infrastructure du propriétaire.
+
+## État courant — 29 septembre 2026
+
+- La préproduction `staging.africatv.sn` sert le commit `2f19e38` ; le rôle applicatif reste `staging`, malgré le nom Railway `production`.
+- Le lot DOC-006 (demandes de contact/retrait, revue administrateur et accès catalogue après expiration) et la première version du Radar GDELT sont déployés. GDACS et la météo ne sont pas encore intégrés.
+- La migration `0018_support_requests` est appliquée sur staging après sauvegarde chiffrée et restauration de contrôle ; voir [production-progress.md](production-progress.md).
+- La feuille de route détaillée Radar et ses critères de livraison sont dans [radar-afrique-roadmap.md](radar-afrique-roadmap.md).
+- La production réelle sur `africatv.sn` et `www.africatv.sn` n'est ni déployée ni activée.
 
 ## État réel observé le 24 septembre 2026
 
