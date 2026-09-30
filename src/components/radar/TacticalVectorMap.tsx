@@ -8,7 +8,6 @@ import {
   Popup,
   GeoJSONSource,
   type MapLayerMouseEvent,
-  type StyleSpecification,
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { RadarCountry } from '@/lib/live-osint-types';
@@ -38,32 +37,7 @@ const AFRICA_BOUNDS: [[number, number], [number, number]] = [
   [68.0, 42.0],
 ];
 
-const DARK_COMMAND_CENTER_STYLE: StyleSpecification = {
-  version: 8,
-  sources: {
-    'carto-dark': {
-      type: 'raster',
-      tiles: [
-        'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-        'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-        'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-        'https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-      ],
-      tileSize: 256,
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OSM</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
-    },
-  },
-  layers: [
-    {
-      id: 'carto-dark-layer',
-      type: 'raster',
-      source: 'carto-dark',
-      minzoom: 0,
-      maxzoom: 19,
-    },
-  ],
-};
+const DARK_COMMAND_CENTER_STYLE = 'https://tiles.openfreemap.org/styles/dark';
 
 export interface TacticalVectorMapProps {
   countries: RadarCountry[];

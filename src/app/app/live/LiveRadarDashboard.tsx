@@ -370,6 +370,21 @@ export default function LiveRadarDashboard() {
       : currentTabArticles;
   }, [currentTabArticles, selectedCountry]);
 
+  const tabCounts = useMemo(() => {
+    if (!selectedCountry) {
+      return {
+        all: allMergedArticles.length,
+        rss: rssArticles.length,
+        gdelt: gdeltArticles.length,
+      };
+    }
+    return {
+      all: allMergedArticles.filter((a) => a.countryCode === selectedCountry).length,
+      rss: rssArticles.filter((a) => a.countryCode === selectedCountry).length,
+      gdelt: gdeltArticles.filter((a) => a.countryCode === selectedCountry).length,
+    };
+  }, [selectedCountry, allMergedArticles, rssArticles, gdeltArticles]);
+
   const countryCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const article of allMergedArticles) {
@@ -382,7 +397,7 @@ export default function LiveRadarDashboard() {
     return new Set(allMergedArticles.map((article) => article.sourceName || article.domain)).size;
   }, [allMergedArticles]);
 
-  const activeCountry = news?.countries.find((country) => country.code === selectedCountry) ?? null;
+  const activeCountry = AFRICAN_COUNTRIES.find((country) => country.code === selectedCountry) ?? null;
 
   return (
     <main className="min-h-screen bg-[#070a09] text-zinc-100 selection:bg-emerald-300/20 selection:text-emerald-100">
@@ -494,7 +509,7 @@ export default function LiveRadarDashboard() {
 
             <div className="p-2 sm:p-3">
               <TacticalVectorMap
-                countries={news?.countries ?? []}
+                countries={AFRICAN_COUNTRIES}
                 countryCounts={countryCounts}
                 channelsSummary={channelsSummary}
                 selectedCountry={selectedCountry}
@@ -505,7 +520,7 @@ export default function LiveRadarDashboard() {
 
             <div className="border-t border-white/[0.07] bg-black/20 px-4 py-3 text-[11px] leading-5 text-zinc-500 sm:px-5">
               <Info aria-hidden="true" className="mr-1.5 inline h-3.5 w-3.5 align-[-2px] text-amber-300/80" />
-              Fond de carte OpenStreetMap & CartoDB Dark Matter sous licence libre. Les marqueurs situent les médias indexés et les télévisions directes.
+              Fond de carte vectoriel OpenFreeMap & OpenStreetMap sous licence libre. Les marqueurs situent les médias indexés et les télévisions directes.
             </div>
           </article>
 
@@ -669,7 +684,7 @@ export default function LiveRadarDashboard() {
                           : 'text-zinc-400 hover:text-zinc-200'
                       }`}
                     >
-                      Tous ({allMergedArticles.length})
+                      Tous ({tabCounts.all})
                     </button>
                     <button
                       type="button"
@@ -680,7 +695,7 @@ export default function LiveRadarDashboard() {
                           : 'text-zinc-400 hover:text-zinc-200'
                       }`}
                     >
-                      Rédactions ({rssArticles.length})
+                      Rédactions ({tabCounts.rss})
                     </button>
                     <button
                       type="button"
@@ -691,7 +706,7 @@ export default function LiveRadarDashboard() {
                           : 'text-zinc-400 hover:text-zinc-200'
                       }`}
                     >
-                      GDELT ({gdeltArticles.length})
+                      GDELT ({tabCounts.gdelt})
                     </button>
                   </div>
                 </div>
@@ -734,15 +749,32 @@ export default function LiveRadarDashboard() {
                   ) : visibleArticles.length === 0 ? (
                     <div className="p-8 text-center">
                       <Newspaper aria-hidden="true" className="mx-auto h-7 w-7 text-zinc-600" />
-                      <p className="mt-3 text-sm font-bold text-zinc-300">Aucune dépêche dans ce filtre</p>
-                      <p className="mt-1 text-xs text-zinc-500">Essayez une autre source ou effacez la sélection.</p>
+                      <p className="mt-3 text-sm font-bold text-zinc-300">
+                        {activeCountry
+                          ? `Aucune dépêche pour : ${activeCountry.name}`
+                          : 'Aucune dépêche dans ce filtre'}
+                      </p>
+                      <p className="mt-1 text-xs text-zinc-500">
+                        {activeCountry
+                          ? `Ce pays n'a pas de dépêche récente dans le flux sélectionné.`
+                          : 'Essayez une autre source ou effacez la sélection.'}
+                      </p>
+                      {selectedCountry && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedCountry(null)}
+                          className="mt-3.5 inline-flex items-center gap-1.5 rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-300 transition hover:bg-amber-400/20"
+                        >
+                          Afficher toutes les dépêches ({allMergedArticles.length})
+                        </button>
+                      )}
                     </div>
                   ) : (
                     visibleArticles.map((article, index) => (
                       <ArticleRow
                         key={article.url + index}
                         article={article}
-                        country={news?.countries.find((country) => country.code === article.countryCode)}
+                        country={AFRICAN_COUNTRIES.find((country) => country.code === article.countryCode)}
                         channelCount={article.countryCode ? channelsSummary?.countries[article.countryCode]?.channelCount : undefined}
                         onSelectCountryForChannels={handleSelectCountryForChannels}
                         onSelectCountry={(code) => setSelectedCountry(code)}
