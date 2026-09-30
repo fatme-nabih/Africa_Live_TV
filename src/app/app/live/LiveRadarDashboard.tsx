@@ -520,7 +520,7 @@ export default function LiveRadarDashboard() {
 
             <div className="border-t border-white/[0.07] bg-black/20 px-4 py-3 text-[11px] leading-5 text-zinc-500 sm:px-5">
               <Info aria-hidden="true" className="mr-1.5 inline h-3.5 w-3.5 align-[-2px] text-amber-300/80" />
-              Fond de carte vectoriel OpenFreeMap & OpenStreetMap sous licence libre. Les marqueurs situent les médias indexés et les télévisions directes.
+              Fonds de carte Satellite haute résolution (Esri), Topographique (OpenFreeMap) et OpenStreetMap sous licence libre. Les marqueurs situent les médias indexés et les télévisions directes.
             </div>
           </article>
 

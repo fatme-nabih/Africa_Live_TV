@@ -8,6 +8,7 @@ import {
   Popup,
   GeoJSONSource,
   type MapLayerMouseEvent,
+  type StyleSpecification,
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { RadarCountry } from '@/lib/live-osint-types';
@@ -37,7 +38,52 @@ const AFRICA_BOUNDS: [[number, number], [number, number]] = [
   [68.0, 42.0],
 ];
 
-const DARK_COMMAND_CENTER_STYLE = 'https://tiles.openfreemap.org/styles/dark';
+export type BasemapMode = 'satellite' | 'liberty' | 'dark';
+
+const SATELLITE_STYLE: StyleSpecification = {
+  version: 8,
+  sources: {
+    'esri-satellite': {
+      type: 'raster',
+      tiles: [
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      ],
+      tileSize: 256,
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics',
+      maxzoom: 19,
+    },
+    'esri-boundaries': {
+      type: 'raster',
+      tiles: [
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+      ],
+      tileSize: 256,
+      maxzoom: 19,
+    },
+  },
+  layers: [
+    {
+      id: 'esri-satellite-layer',
+      type: 'raster',
+      source: 'esri-satellite',
+      minzoom: 0,
+      maxzoom: 19,
+    },
+    {
+      id: 'esri-boundaries-layer',
+      type: 'raster',
+      source: 'esri-boundaries',
+      minzoom: 0,
+      maxzoom: 19,
+    },
+  ],
+};
+
+const BASEMAP_STYLES: Record<BasemapMode, StyleSpecification | string> = {
+  satellite: SATELLITE_STYLE,
+  liberty: 'https://tiles.openfreemap.org/styles/liberty',
+  dark: 'https://tiles.openfreemap.org/styles/dark',
+};
 
 export interface TacticalVectorMapProps {
   countries: RadarCountry[];
@@ -61,6 +107,15 @@ export default function TacticalVectorMap({
   const markersRef = useRef<Map<string, Marker>>(new Map());
   const [isSupported] = useState(() => isWebGLSupported());
   const [isLoaded, setIsLoaded] = useState(false);
+  const [basemapMode, setBasemapMode] = useState<BasemapMode>('satellite');
+  const [styleRevision, setStyleRevision] = useState(0);
+
+  const handleSwitchBasemap = (mode: BasemapMode) => {
+    if (mode === basemapMode || !mapRef.current) return;
+    setBasemapMode(mode);
+    const map = mapRef.current;
+    map.setStyle(BASEMAP_STYLES[mode]);
+  };
 
   const [showFires, setShowFires] = useState(false);
   const [firmsData, setFirmsData] = useState<FirmsSnapshot | null>(null);
@@ -173,7 +228,7 @@ export default function TacticalVectorMap({
 
     const map = new MapLibreMap({
       container: mapContainerRef.current,
-      style: DARK_COMMAND_CENTER_STYLE,
+      style: BASEMAP_STYLES.satellite,
       center: AFRICA_CENTER,
       zoom: AFRICA_DEFAULT_ZOOM,
       minZoom: 1.5,
@@ -196,6 +251,11 @@ export default function TacticalVectorMap({
 
     map.on('load', () => {
       setIsLoaded(true);
+    });
+
+    map.on('style.load', () => {
+      setIsLoaded(true);
+      setStyleRevision((r) => r + 1);
     });
 
     mapRef.current = map;
@@ -572,7 +632,7 @@ export default function TacticalVectorMap({
       map.off('mouseenter', POINTS_LAYER_ID, handleMouseEnter);
       map.off('mouseleave', POINTS_LAYER_ID, handleMouseLeave);
     };
-  }, [showFires, firmsData, isLoaded]);
+  }, [showFires, firmsData, isLoaded, styleRevision]);
 
   // Manage USGS & GDACS Disasters Layer (RAD-402)
   useEffect(() => {
@@ -727,7 +787,7 @@ export default function TacticalVectorMap({
       map.off('mouseenter', WAVES_LAYER_ID, handleMouseEnter);
       map.off('mouseleave', WAVES_LAYER_ID, handleMouseLeave);
     };
-  }, [showDisasters, disastersData, isLoaded]);
+  }, [showDisasters, disastersData, isLoaded, styleRevision]);
 
   // Recenter map on Africa
   const handleRecenter = () => {
@@ -770,9 +830,44 @@ export default function TacticalVectorMap({
     <div className="relative w-full overflow-hidden rounded-xl border border-white/[0.08] bg-[#070b09]">
       {/* Tactical Header Overlay */}
       <div className="absolute left-3 top-3 z-10 flex flex-wrap items-center gap-2">
-        <div className="pointer-events-none flex items-center gap-2 rounded-lg border border-white/10 bg-black/75 px-2.5 py-1 text-[10px] font-mono tracking-wider text-emerald-300 backdrop-blur-md">
-          <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>{isGlobeMode ? 'GLOBE 3D' : 'PLAN 2D'}</span>
+        {/* Style de fond de carte (Satellite Réel / Relief Couleurs / Sombre) */}
+        <div className="flex items-center rounded-lg border border-white/10 bg-black/85 p-0.5 shadow-xl backdrop-blur-md">
+          <button
+            type="button"
+            onClick={() => handleSwitchBasemap('satellite')}
+            title="Vue Satellite Réelle en couleurs (ESRI World Imagery + Frontières)"
+            className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-bold transition ${
+              basemapMode === 'satellite'
+                ? 'border border-emerald-400/40 bg-emerald-500/30 text-emerald-200 shadow-sm'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <span>🛰️ Satellite</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSwitchBasemap('liberty')}
+            title="Vue Relief & Couleurs vives (OpenFreeMap Topo)"
+            className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-bold transition ${
+              basemapMode === 'liberty'
+                ? 'border border-amber-400/40 bg-amber-500/30 text-amber-200 shadow-sm'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <span>🗺️ Couleurs</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSwitchBasemap('dark')}
+            title="Vue Tactique Sombre nocturne"
+            className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-bold transition ${
+              basemapMode === 'dark'
+                ? 'border border-white/20 bg-zinc-700/50 text-zinc-200 shadow-sm'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <span>🎯 Sombre</span>
+          </button>
         </div>
 
         {/* 3D Globe Projection Toggle */}
