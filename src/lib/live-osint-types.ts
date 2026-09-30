@@ -12,6 +12,9 @@ export type RadarArticle = {
   domain: string;
   indexedAt: string;
   countryCode: string | null;
+  sourceType?: 'gdelt' | 'rss';
+  sourceName?: string;
+  category?: string;
 };
 
 export type RadarNewsSnapshot = {

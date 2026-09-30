@@ -5,10 +5,10 @@ import type {
   RadarNewsSnapshot,
 } from '@/lib/live-osint-types';
 
-type AfricanCountry = RadarCountry & { gdeltCode: string };
+export type AfricanCountry = RadarCountry & { gdeltCode: string };
 type CacheEntry<T> = { value: T; savedAt: number; expiresAt: number };
 
-const AFRICAN_COUNTRIES: AfricanCountry[] = [
+export const AFRICAN_COUNTRIES: AfricanCountry[] = [
   { code: 'DZ', gdeltCode: 'AG', name: 'Algérie', region: 'Afrique du Nord', latitude: 28.0, longitude: 2.6 },
   { code: 'AO', gdeltCode: 'AO', name: 'Angola', region: 'Afrique centrale', latitude: -8.8, longitude: 13.2 },
   { code: 'BJ', gdeltCode: 'BN', name: 'Bénin', region: 'Afrique de l’Ouest', latitude: 6.5, longitude: 2.6 },
@@ -264,4 +264,9 @@ export async function getRadarNews(): Promise<RadarNewsSnapshot> {
     }
     throw new ServiceUnavailableError('Le fil de veille est temporairement indisponible.', 'LIVE_NEWS_UNAVAILABLE');
   }
+}
+
+export function getAfricanCountryByCode(code: string): AfricanCountry | undefined {
+  const normalized = code.trim().toUpperCase();
+  return AFRICAN_COUNTRIES.find((country) => country.code === normalized);
 }

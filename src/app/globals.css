@@ -178,6 +178,26 @@ body {
   box-shadow: 0 0 25px -5px rgba(250, 204, 21, 0.15), 0 0 40px -10px rgba(16, 185, 129, 0.1);
 }
 
+/* Financial & OSINT Ticker Marquee Animation */
+@keyframes ticker-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-ticker-scroll {
+  display: flex;
+  width: max-content;
+  animation: ticker-scroll 55s linear infinite;
+}
+
+.animate-ticker-scroll:hover {
+  animation-play-state: paused;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
