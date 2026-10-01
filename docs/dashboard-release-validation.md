@@ -104,4 +104,6 @@ npx playwright test e2e/radar-reliability.spec.ts e2e/auth-entry.spec.ts e2e/pay
 
 La réception locale L4 est terminée avec les limites ci-dessus consignées.
 Le [dossier de livraison](dashboard-delivery-dossier.md) précise les contrôles
-conditionnels avant de déclarer cette version déployée ou reçue sur staging.
+effectués ensuite sur staging après autorisation et les réserves restantes.
+La [fiche de reprise](dashboard-session-handoff.md) donne le bilan courant et
+la prochaine décision L5, avant L6 briefing.

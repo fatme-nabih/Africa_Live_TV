@@ -25,6 +25,18 @@ administrateur ne valide pas les droits d’un compte ordinaire.
 
 ## Preuves et environnement livré
 
+**Publication de clôture — 1er octobre, 18:44 UTC :** code L0–L4 et dossier
+publiés sur GitHub `main`, commit applicatif `22dea98`. Nouvelle livraison
+Railway staging `4c8a82cc-5b3b-4a0e-86a1-bf922540869a` SUCCESS, santé
+processus/base 200 et API Radar anonyme 401 ; **9 E2E distants repassés**.
+Les 303 fichiers applicatifs sont identiques au snapshot précédemment reçu ;
+paquet de clôture 336 fichiers incluant les Markdown, sans secrets/captures
+privées, SHA-256 `d6a8d7d87f43e5f2cf19542d57d600d74fe795eb6a4c6e35603929971a9e3fd3`.
+Dashboard connecté rechargé ; couverture partielle 14/19 au relevé, GDELT
+indisponible signalé, autres dépêches consultables. [Capture finale](screenshots/session-closure-staging.jpg).
+Un commit documentaire de clôture consigne ensuite ces preuves sur GitHub ;
+aucun changement applicatif supplémentaire à déployer.
+
 - Local : **219 tests unitaires + 14 intégrations PostgreSQL isolées + 57 E2E**
   réussis ; TypeScript, ESLint, build et cohérence des migrations réussis.
   [Réception intégrée](dashboard-release-validation.md).
@@ -37,7 +49,7 @@ administrateur ne valide pas les droits d’un compte ordinaire.
   largeur du document 932 px ; pays au clavier, navigation TV, filtres,
   Échap et retour du focus utilisables. Ne pas confondre cette preuve avec
   le reflow automatisé ni avec un test de zoom natif sur staging.
-- Déploiement staging observé SUCCESS/actif le 1er octobre à 18:09 UTC :
+- Première livraison L0–L4 observée SUCCESS/actif le 1er octobre à 18:09 UTC :
   `b0d52c0c-3bca-4600-8a3e-fb1f2709dada`, sur `https://staging.africatv.sn`,
   projet Railway `just-compassion`, rôle applicatif `DEPLOYMENT_ENV=staging`.
   Snapshot sans commit/push, SHA-256
@@ -62,9 +74,9 @@ Ces réserves sont consignées ; elles ne remettent pas les lots implémentés �
 
 ## Démarrage conseillé pour la nouvelle session
 
-Publication de clôture demandée ensuite par le propriétaire : mettre à jour
-GitHub et Railway staging avec L0–L4 et les documents réconciliés. Le relevé
-final de cette publication sera dans [le journal](production-progress.md).
+Publication de clôture demandée ensuite par le propriétaire et exécutée :
+GitHub et Railway staging mis à jour avec L0–L4 et les documents réconciliés.
+Le relevé final est aussi dans [le journal](production-progress.md).
 Cette autorisation porte sur la publication de clôture ; elle n’autorise pas
 implicitement un déploiement futur de L5/L6.
 

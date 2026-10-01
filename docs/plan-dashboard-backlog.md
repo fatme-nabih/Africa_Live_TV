@@ -6,6 +6,11 @@ autorisation. Réception réelle limitée aux profils/appareils disponibles.
 **Nouvelle session : [bilan, réserves et prochaine étape L5](dashboard-session-handoff.md).**
 L5 reste optionnel et non commencé ; L6 briefing reste différé et désactivé.
 
+Clôture publiée à la demande du propriétaire : GitHub `main`, applicatif
+`22dea98`, et Railway staging `4c8a82cc-5b3b-4a0e-86a1-bf922540869a` SUCCESS
+le 1er octobre à 18:44 UTC ; 9 E2E distants repassés, santé processus/base 200.
+Un commit documentaire final conserve ces preuves ; aucune nouvelle migration.
+
 Mise à jour du 30 septembre 2026 : le propriétaire demande de laisser le bouton
 de briefing inactif et de revenir sur cette fonctionnalité en toute dernière
 implémentation. Cette décision remplace le renommage et la reprise immédiats.
@@ -228,8 +233,9 @@ administrateur staging ; les profils ordinaires restent à recevoir en session r
 - Zones : `TacticalVectorMap.tsx`, configuration Next/CSP selon le diagnostic.
 
 **AL-C05 · P1 · M · Réconcilier documentation, local et déployé**
-- État : validé localement le 1er octobre 2026 ; historique staging distinct,
-  pas de mesure distante nouvelle. Réception L4 ci-dessus.
+- État : validé localement et mis à jour après livraison staging le 1er octobre
+  2026 ; révisions, santé, tests distants et limites réelles consignés. Fiche
+  de reprise ajoutée pour la session suivante ; effectifs staging non réinventoriés.
 - Dépendances : inventaire L0 puis réception des lots livrés.
 - Travail : mettre à jour handoff, roadmap Radar, backlog/progress production,
   matrice et checklist. Référencer ce plan par ses IDs sans dupliquer les tickets.

@@ -13,6 +13,12 @@ Les cases initiales ci-dessous restent le dossier préparatoire. Complément à
 18:29 UTC : zoom natif Edge 200 % local validé, preuves dans le relevé détaillé.
 Les comptes ordinaires demeurent indisponibles et non validés en session réelle.
 
+Clôture publiée ensuite sur GitHub `main` (`22dea98` pour l’applicatif), et
+Railway staging `4c8a82cc-5b3b-4a0e-86a1-bf922540869a` SUCCESS ; neuf E2E
+distants repassés, santé processus/base 200 et Radar anonyme 401 le 1er octobre
+à 18:44 UTC. Un commit documentaire final enregistre les preuves. Runtime
+identique au snapshot reçu ; [bilan courant et empreinte](dashboard-session-handoff.md).
+
 ## Périmètre et fichiers
 
 | Lot / tickets | Principaux fichiers à relire | Réception |

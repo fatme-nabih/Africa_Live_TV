@@ -1,5 +1,24 @@
 # Progression — préparation production
 
+## Clôture et publication GitHub/Railway — 1er octobre 2026, 18:44 UTC
+
+Demande explicite du propriétaire de publier GitHub et Railway. Commit
+applicatif `22dea98` poussé sur `origin/main` avec L0–L4, tests, captures et
+documents de reprise ; puis commit documentaire final pour les preuves ci-dessous.
+Nouvelle livraison staging `4c8a82cc-5b3b-4a0e-86a1-bf922540869a` SUCCESS.
+Les 303 fichiers runtime correspondent au snapshot reçu précédemment ; paquet
+de clôture 336 fichiers, sans secrets ni artefacts privés. SHA-256 :
+`d6a8d7d87f43e5f2cf19542d57d600d74fe795eb6a4c6e35603929971a9e3fd3`.
+Santé processus/base 200, API Radar anonyme 401 et **9 E2E distants repassés**
+(22,9 s, zéro échec). Dashboard administrateur rechargé, briefing désactivé ;
+couverture partielle 14/19 et panne GDELT annoncées, fil consultable.
+Aucune nouvelle migration/variable/plan/DNS ; production non activée.
+Réserves : profils Clerk ordinaires indisponibles, lecteur d’écran/appareils
+physiques/échantillon de lecture et inventaire staging actuel non reçus dans
+cette livraison. Prochaine décision produit **L5 / AL-T05**, puis L6 en dernier.
+[Fiche de reprise](dashboard-session-handoff.md),
+[capture staging finale](screenshots/session-closure-staging.jpg).
+
 **État de clôture et reprise : [travail terminé, réserves et prochain lot L5](dashboard-session-handoff.md).**
 
 Les relevés plus anciens conservent leur date ; ils ne remplacent pas ce bilan courant.

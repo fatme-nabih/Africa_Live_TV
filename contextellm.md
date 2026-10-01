@@ -8,6 +8,13 @@ mot de passe, identifiant de paiement, clé Clerk ou URL de flux média.
 
 ## État de reprise courant — 1er octobre 2026
 
+Clôture publiée à la demande du propriétaire : GitHub `main`, applicatif
+`22dea98`, puis commit documentaire final ; Railway staging
+`4c8a82cc-5b3b-4a0e-86a1-bf922540869a` SUCCESS reçu à 18:44 UTC.
+Santé processus/base 200, Radar anonyme 401, neuf E2E distants repassés.
+Aucun changement de code depuis les preuves L4, ni nouvelle migration,
+variable, DNS, plan ou abonnement. Voir la fiche de reprise pour les empreintes.
+
 **Lire d’abord [la fiche de reprise dashboard](docs/dashboard-session-handoff.md)** :
 L0–L4 terminés et déployés staging ; prochaine décision L5, puis L6 en dernier.
 Les sections anciennes ci-dessous conservent l’historique ; leurs « suite » et
@@ -108,11 +115,11 @@ push ou changement distant. Les parcours Clerk réels du build restent à recevo
 
 - Workspace : `C:/Users/GAMER PC/Africa_Live_TV`.
 - Branche locale : `main` (synchronisée avec `origin/main` après mise à jour documentaire du déploiement).
-- Références GitHub anciennes ci-dessous historiques ; vérifier `git log -1`
-  et `git ls-remote origin refs/heads/main` avant toute nouvelle publication.
-- Dernier staging reçu : `b0d52c0c-3bca-4600-8a3e-fb1f2709dada`, SUCCESS/actif
-  le 1er octobre à 18:09 UTC, snapshot L0–L4 non commité lors de cette livraison.
-  Voir la fiche de reprise pour la publication de clôture demandée ensuite.
+- Applicatif GitHub publié : `22dea98` ; commit documentaire final ensuite.
+  Vérifier `git log -1` et `git ls-remote origin refs/heads/main` à la reprise.
+- Dernier staging reçu : `4c8a82cc-5b3b-4a0e-86a1-bf922540869a`, SUCCESS
+  le 1er octobre à 18:44 UTC ; code identique au premier snapshot L0–L4,
+  documentation de reprise incluse. Les autres identifiants sont historiques.
 - Un fichier non suivi, `docs/radar-cockpit-backlog.md`, est apparu pendant cette reprise. Il n'a pas été publié ni validé ; le préserver et traiter ses propositions comme un brouillon à comparer à la feuille de route sourcée `docs/radar-afrique-roadmap.md`.
 - Dépôt distant : `https://github.com/fatme-nabih/Africa_Live_TV.git`.
 - Aucun commit ou push ne doit être créé sans demande explicite de l'utilisateur.

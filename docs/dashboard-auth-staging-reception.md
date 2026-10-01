@@ -3,6 +3,14 @@
 Relevé du 1er octobre 2026, complément zoom à 18:29 UTC · Africa/Dakar.
 Complète [la réception L4](dashboard-release-validation.md).
 
+Publication de clôture demandée ensuite et reçue à 18:44 UTC : applicatif
+GitHub `22dea98`, Railway staging `4c8a82cc-5b3b-4a0e-86a1-bf922540869a`
+SUCCESS ; santé processus/base 200, API Radar anonyme 401, neuf E2E distants
+repassés. Dashboard connecté rechargé, couverture partielle explicite. Code
+identique au snapshot de 18:09 ; documents de reprise inclus dans le paquet.
+Le [bilan courant et la suite](dashboard-session-handoff.md) font foi pour la
+nouvelle session ; les observations précédentes ci-dessous restent datées.
+
 ## Constats avant la nouvelle livraison
 
 | Contrôle | Environnement | Résultat |
@@ -83,7 +91,7 @@ fixture ni modification CSS de zoom. Après `viewport.reset()` de l’outil,
 - TV : catalogue réel visible, drawer de filtres accessible au breakpoint,
   pays CI conservé, Échap ferme le drawer et rend le focus au bouton Filtres.
   Même absence de débordement (932 ≤ 937).
-- Captures : [dashboard et focus](screenshots/l4-native-zoom-200-dashboard.jpg),
+- Captures : [dashboard revenu sur Sénégal](screenshots/l4-native-zoom-200-dashboard.jpg),
   [filtres TV](screenshots/l4-native-zoom-200-tv-filters.jpg).
 
 Cette preuve couvre le bundle local identique à celui livré sur staging ;
