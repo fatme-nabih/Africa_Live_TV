@@ -243,7 +243,8 @@ export default function FlashBriefingModal({
           {data && (
             <div className="space-y-6">
               {/* Carte Résumé Exécutif */}
-              <div className="relative overflow-hidden rounded-xl border border-emerald-400/20 bg-gradient-to-br from-emerald-950/30 via-[#0a120e] to-[#070b09] p-4 sm:p-5 shadow-lg">
+              <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-black/50 p-4 sm:p-5 shadow-2xl backdrop-blur-xl">
+                <div className="h-[2px] w-full bg-tricolor-bar absolute top-0 left-0 right-0 opacity-80" />
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-xs font-bold text-emerald-300">
                     <Sparkles className="h-4 w-4" />

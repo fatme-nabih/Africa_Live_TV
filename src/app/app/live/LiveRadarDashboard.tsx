@@ -7,14 +7,14 @@ import RadarSourcesPanel from '@/components/radar/RadarSourcesPanel';
 import { radarCountry, radarCountryUrl, sourcePlaceholder, type RadarSourceRow } from '@/lib/radar-workspace';
 import Link from 'next/link';
 import AppNavigation, { AppBrand } from '@/components/AppNavigation';
-import { catalogCountryHref } from '@/lib/catalog-filter-state';
+import BrandWatermark from '@/components/BrandWatermark';
 import LocalAccountControls from '@/components/LocalAccountControls';
 import Player from '@/components/Player';
 import LiveMarketTicker from '@/components/radar/LiveMarketTicker';
 import { canonicalArticleUrl, temporalWindow, formatRadarDate, radarSource } from '@/lib/radar-data';
 import { launchPlayer } from '@/lib/player-window';
 import { AFRICAN_COUNTRIES } from '@/lib/live-osint';
-import type { RadarArticle, RadarCountry, RadarNewsSnapshot } from '@/lib/live-osint-types';
+import type { RadarArticle, RadarCountry } from '@/lib/live-osint-types';
 import type { LiveWeatherSnapshot, WeatherIconType } from '@/lib/live-weather-types';
 import type { RadarRssSnapshot } from '@/lib/rss-collector-types';
 import type { LiveChannelsSummarySnapshot } from '@/lib/live-channels-types';
@@ -50,7 +50,7 @@ const TacticalVectorMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[460px] sm:h-[520px] w-full flex-col items-center justify-center rounded-xl border border-white/[0.08] bg-[#070b09] p-6 text-center text-zinc-500">
+      <div className="flex h-[460px] sm:h-[520px] w-full flex-col items-center justify-center rounded-xl border border-white/[0.08] bg-black/40 backdrop-blur-sm p-6 text-center text-zinc-500">
         <div className="mb-3 h-8 w-8 animate-spin rounded-full border-2 border-emerald-400 border-t-transparent" />
         <p className="text-xs font-bold text-zinc-400">Chargement de la carte vectorielle tactique...</p>
       </div>
@@ -73,11 +73,6 @@ function formatTime(value: string | null | undefined, options: Intl.DateTimeForm
   }).format(date);
 }
 
-function isNewsSnapshot(value: unknown): value is RadarNewsSnapshot {
-  if (!value || typeof value !== 'object') return false;
-  const data = value as Partial<RadarNewsSnapshot>;
-  return Array.isArray(data.articles) && Array.isArray(data.countries) && typeof data.updatedAt === 'string';
-}
 
 function WeatherIconDisplay({
   icon,
@@ -119,7 +114,6 @@ export default function LiveRadarDashboard() {
 }
 
 function RadarWorkspace() {
-  const [news, setNews] = useState<RadarNewsSnapshot | null>(null);
   const [newsError, setNewsError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const searchParams = useSearchParams();
@@ -132,7 +126,6 @@ function RadarWorkspace() {
   const [mapRequested, setMapRequested] = useState(false);
   const [desktopMap, setDesktopMap] = useState(false);
   const [tickerSources, setTickerSources] = useState<RadarSourceRow[]>([]);
-  const [layerSources, setLayerSources] = useState<RadarSourceRow[]>([]);
   const showMap = desktopMap || mapRequested;
   useEffect(() => {
     const media = window.matchMedia('(min-width: 1280px)');
@@ -147,7 +140,6 @@ function RadarWorkspace() {
   const [asOf, setAsOf] = useState(0);
   const [summaryError, setSummaryError] = useState(false);
   const [rss, setRss] = useState<RadarRssSnapshot | null>(null);
-  const [feedTab, setFeedTab] = useState<'all' | 'rss' | 'gdelt'>('all');
 
   const [channelsSummary, setChannelsSummary] = useState<LiveChannelsSummarySnapshot | null>(null);
   const [countryChannels, setCountryChannels] = useState<Channel[]>([]);
@@ -217,27 +209,19 @@ function RadarWorkspace() {
     const load = async () => {
       setRefreshing(true);
       try {
-        const results = await Promise.allSettled(['/api/live/news', '/api/live/rss'].map(async url => {
-          const response = await fetch(url, { signal: controller.signal, cache: 'no-store' });
-          if (!response.ok) throw new Error('Source indisponible');
-          const body: unknown = await response.json();
-          if (!body || typeof body !== 'object' || !Array.isArray((body as RadarNewsSnapshot).articles)) throw new Error('Format invalide');
-          if (url.endsWith('/news') && !isNewsSnapshot(body)) throw new Error('Format GDELT invalide');
-          if (url.endsWith('/rss') && (!Array.isArray((body as RadarRssSnapshot).sources) || typeof (body as RadarRssSnapshot).updatedAt !== 'string')) throw new Error('Format RSS invalide');
-          return body;
-        }));
+        const response = await fetch('/api/live/rss', { signal: controller.signal, cache: 'no-store' });
+        if (!response.ok) throw new Error('Flux RSS des rédactions indisponible');
+        const body: unknown = await response.json();
+        if (!body || typeof body !== 'object' || !Array.isArray((body as RadarRssSnapshot).articles)) throw new Error('Format invalide');
+        if (!Array.isArray((body as RadarRssSnapshot).sources) || typeof (body as RadarRssSnapshot).updatedAt !== 'string') throw new Error('Format RSS invalide');
         if (!active) return;
         setAsOf(Date.now());
-        const [newsResult, rssResult] = results;
-        if (newsResult.status === 'fulfilled' && isNewsSnapshot(newsResult.value)) setNews(newsResult.value);
-        else setNews(previous => previous && Date.now() - Date.parse(previous.updatedAt) <= 45 * 60_000 ? { ...previous, stale: true, availability: previous.availability?.map(source => source.status === 'unavailable' ? source : { ...source, status: 'stale' as const }) } : null);
-        if (rssResult.status === 'fulfilled') setRss(rssResult.value as RadarRssSnapshot);
-        else setRss(previous => previous && Date.now() - Date.parse(previous.updatedAt) <= 45 * 60_000 ? { ...previous, stale: true, availability: previous.availability?.map(source => source.status === 'unavailable' ? source : { ...source, status: 'stale' as const }) } : null);
-        const failures = results.flatMap((result, index) => result.status === 'rejected' ? [index ? 'RSS' : 'GDELT'] : []);
-        setNewsError(failures.length ? `${failures.join(' et ')} indisponible(s). Les autres sources restent consultables.` : null);
+        setRss(body as RadarRssSnapshot);
+        setNewsError(null);
       } catch (error) {
         if (active && !controller.signal.aborted) {
-          setNewsError(error instanceof Error ? error.message : 'Impossible de charger les flux.');
+          setRss(previous => previous && Date.now() - Date.parse(previous.updatedAt) <= 45 * 60_000 ? { ...previous, stale: true } : null);
+          setNewsError(error instanceof Error ? error.message : 'Impossible de charger le fil des dépêches.');
         }
       } finally {
         if (active) setRefreshing(false);
@@ -344,14 +328,6 @@ function RadarWorkspace() {
     setRightPanelTab('channels');
   }, [setSelectedCountry]);
 
-  const gdeltArticles = useMemo<RadarArticle[]>(() => {
-    return [...(news?.articles ?? []), ...(news?.undatedArticles ?? [])].map((a) => ({
-      ...a,
-      sourceType: 'gdelt',
-      sourceName: a.domain,
-    }));
-  }, [news]);
-
   const rssArticles = useMemo<RadarArticle[]>(() => {
     return [...(rss?.articles ?? []), ...(rss?.undatedArticles ?? [])].map((a) => ({
       title: a.title,
@@ -370,7 +346,7 @@ function RadarWorkspace() {
   const allMergedArticles = useMemo<RadarArticle[]>(() => {
     const seen = new Set<string>();
     const merged: RadarArticle[] = [];
-    for (const art of [...rssArticles, ...gdeltArticles]) {
+    for (const art of rssArticles) {
       const key = canonicalArticleUrl(art.url);
       if (key && !seen.has(key)) {
         seen.add(key);
@@ -378,18 +354,40 @@ function RadarWorkspace() {
       }
     }
     return merged.sort((a, b) => (Date.parse(b.indexedAt) || 0) - (Date.parse(a.indexedAt) || 0));
-  }, [rssArticles, gdeltArticles]);
+  }, [rssArticles]);
+
+  const [scopeTab, setScopeTab] = useState<'all' | 'africa' | 'international'>('all');
 
   const windowed = useMemo(() => temporalWindow(allMergedArticles, a => a.indexedAt, asOf), [allMergedArticles, asOf]);
-  const matches = (a: RadarArticle) => (!selectedCountry || a.countryCode === selectedCountry) &&
-    (feedTab === 'all' || a.sourceType === feedTab);
-  const visibleArticles = windowed.recent.filter(matches);
-  const visibleUnknownArticles = windowed.undated.filter(matches);
-  const tabCounts = {
-    all: windowed.recent.filter(a => !selectedCountry || a.countryCode === selectedCountry).length,
-    rss: windowed.recent.filter(a => a.sourceType === 'rss' && (!selectedCountry || a.countryCode === selectedCountry)).length,
-    gdelt: windowed.recent.filter(a => a.sourceType === 'gdelt' && (!selectedCountry || a.countryCode === selectedCountry)).length,
-  };
+  const isInternational = useCallback((a: RadarArticle) => a.category === 'International', []);
+
+  const baseCountryArticles = useMemo(() => {
+    return windowed.recent.filter((a) => !selectedCountry || a.countryCode === selectedCountry);
+  }, [windowed.recent, selectedCountry]);
+
+  const visibleArticles = useMemo(() => {
+    return baseCountryArticles.filter((a) => {
+      if (scopeTab === 'africa') return !isInternational(a);
+      if (scopeTab === 'international') return isInternational(a);
+      return true;
+    });
+  }, [baseCountryArticles, scopeTab, isInternational]);
+
+  const visibleUnknownArticles = useMemo(() => {
+    const base = windowed.undated.filter((a) => !selectedCountry || a.countryCode === selectedCountry);
+    return base.filter((a) => {
+      if (scopeTab === 'africa') return !isInternational(a);
+      if (scopeTab === 'international') return isInternational(a);
+      return true;
+    });
+  }, [windowed.undated, selectedCountry, scopeTab, isInternational]);
+
+  const tabCounts = useMemo(() => ({
+    all: baseCountryArticles.length,
+    africa: baseCountryArticles.filter((a) => !isInternational(a)).length,
+    intl: baseCountryArticles.filter((a) => isInternational(a)).length,
+  }), [baseCountryArticles, isInternational]);
+
   const countryCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const article of windowed.recent) {
@@ -401,33 +399,31 @@ function RadarWorkspace() {
   const domainsCount = new Set(visibleArticles.map(article => article.sourceName || article.domain)).size;
 
   const sourceRows: RadarSourceRow[] = [
-    ...(news?.availability ?? (news ? [radarSource('GDELT', 'Pays du média', Date.parse(news.updatedAt), 5 * 60_000, news.articles.length, { status: news.stale ? 'stale' : undefined, dataAt: news.articles[0]?.indexedAt })] : [sourcePlaceholder('GDELT', 'Afrique · pays du média', newsError?.includes('GDELT') ? 'unavailable' : 'loading')])),
-    ...(rss?.availability ?? (rss ? [radarSource('RSS', 'Afrique · publications', Date.parse(rss.updatedAt), 5 * 60_000, rss.articles.length, { status: rss.stale ? 'stale' : undefined })] : [sourcePlaceholder('RSS', 'Afrique · publications', newsError?.includes('RSS') ? 'unavailable' : 'loading')])),
+    ...(rss?.availability ?? (rss ? [radarSource('RSS', 'Afrique · rédactions', Date.parse(rss.updatedAt), 5 * 60_000, rss.articles.length, { status: rss.stale ? 'stale' : undefined })] : [sourcePlaceholder('RSS', 'Afrique · rédactions', newsError?.includes('RSS') ? 'unavailable' : 'loading')])),
     ...(weather?.availability ?? [sourcePlaceholder('Open-Meteo', activeWeatherCode, weatherError ? 'unavailable' : 'loading')]),
     channelsSummary ? radarSource('Catalogue TV', 'Afrique · références et candidates', Date.parse(channelsSummary.updatedAt), 10 * 60_000, channelsSummary.totalChannels, { status: summaryError || channelsSummary.stale ? 'stale' : undefined, dataAt: channelsSummary.updatedAt }) : sourcePlaceholder('Catalogue TV', 'Afrique', summaryError ? 'unavailable' : 'loading'),
     ...(tickerSources.length ? tickerSources : [sourcePlaceholder('Marchés / bandeau', 'Cotations et événements', 'loading')]),
-    ...(showMap && layerSources.length ? layerSources : [sourcePlaceholder('NASA FIRMS', 'Détections thermiques', 'not_requested'), sourcePlaceholder('USGS / GDACS', 'Lieu des événements', 'not_requested')]),
   ];
 
   const activeCountry = AFRICAN_COUNTRIES.find((country) => country.code === selectedCountry) ?? null;
 
   return (
-    <main className="min-h-screen bg-[#070a09] text-zinc-100 selection:bg-emerald-300/20 selection:text-emerald-100">
-      <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#080b0a]/90 px-4 py-3 backdrop-blur-xl sm:px-6">
-        <div className="absolute inset-x-0 top-0 h-[2px] bg-tricolor-bar opacity-90" />
-        <div className="mx-auto flex max-w-[1480px] flex-wrap items-center justify-between gap-2">
+    <main className="relative min-h-screen bg-black text-zinc-100 flex flex-col selection:bg-yellow-400/25 selection:text-yellow-100">
+      {/* Brand transparent background watermark */}
+      <BrandWatermark />
+
+      <header className="sticky top-0 z-40 border-b border-white/[0.07] bg-black/50 px-4 py-2.5 shadow-2xl backdrop-blur-2xl sm:px-6 sm:py-3">
+        <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-tricolor-bar opacity-80" />
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2">
           <AppBrand />
           <AppNavigation country={selectedCountry} />
 
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-            <div className="hidden items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/[0.06] px-3 py-1.5 text-[11px] font-semibold text-emerald-100 sm:flex">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70" />
-                <span className="relative h-2 w-2 rounded-full bg-emerald-400" />
-              </span>
-              <span>HEURE DE DAKAR</span>
-              <span className="font-mono tabular-nums text-emerald-100/70">{clock || '—'}</span>
-              <span className="text-emerald-100/50">GMT</span>
+            <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-zinc-400 sm:flex">
+              <span aria-hidden="true" className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span className="text-[11px] font-bold tracking-wider uppercase text-zinc-400">HEURE DE DAKAR</span>
+              <span className="font-mono tabular-nums text-zinc-200">{clock || '—'}</span>
+              <span className="text-zinc-500">GMT</span>
             </div>
             <LocalAccountControls />
 
@@ -435,40 +431,95 @@ function RadarWorkspace() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-[1480px] px-3 pb-8 pt-3 sm:px-6">
-        <section className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <div><h1 className="text-xl font-bold tracking-tight sm:text-2xl">Radar Afrique</h1><p className="text-xs text-zinc-400">Dépêches, météo et télévisions par pays.</p></div>
+      <div className="mx-auto max-w-7xl w-full flex-1 px-3 pb-8 pt-3 sm:px-6 sm:pt-4 md:px-6">
+        <section className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-zinc-100 sm:text-2xl">Radar Afrique</h1>
+            <p className="mt-0.5 text-xs text-zinc-400">Dépêches, météo et télévisions par pays.</p>
+          </div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" disabled title="Le briefing reste désactivé jusqu’à sa prochaine implémentation." className="rounded-lg border border-white/10 px-2 py-2 text-[11px] text-zinc-500"><Sparkles aria-hidden="true" className="mr-1 inline h-3 w-3" />Briefing — bientôt</button>
-            <button type="button" onClick={() => setRefreshToken(value => value + 1)} disabled={refreshing} className="rounded-lg border border-white/10 px-2 py-2 text-[11px] text-zinc-200 focus-visible:outline-2 focus-visible:outline-emerald-300"><RefreshCw aria-hidden="true" className="mr-1 inline h-3 w-3" />{refreshing ? 'Actualisation…' : 'Actualiser'}</button>
+            <button
+              type="button"
+              disabled
+              title="Le briefing reste désactivé jusqu’à sa prochaine implémentation."
+              className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-1.5 text-xs font-medium text-zinc-500 cursor-not-allowed"
+            >
+              <Sparkles aria-hidden="true" className="h-3.5 w-3.5" />
+              <span>Briefing — bientôt</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRefreshToken(value => value + 1)}
+              disabled={refreshing}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-amber-400/40 px-3 py-1.5 text-xs font-semibold text-zinc-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 shadow-sm"
+            >
+              <RefreshCw aria-hidden="true" className={`h-3.5 w-3.5 text-amber-400 ${refreshing ? 'animate-spin' : ''}`} />
+              <span>{refreshing ? 'Actualisation…' : 'Actualiser'}</span>
+            </button>
           </div>
         </section>
-        <section aria-label="Sélection du pays" className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-[#0b100e] p-2">
-          <label htmlFor="radar-country" className="text-xs font-semibold text-zinc-200">Choisir un pays</label>
-          <select id="radar-country" aria-label="Choisir un pays" aria-describedby="radar-country-help" value={selectedCountry ?? ''} onChange={event => setSelectedCountry(event.target.value || null)} className="min-w-0 flex-1 rounded-lg border border-white/10 bg-zinc-900 p-2 text-xs text-white focus-visible:outline-2 focus-visible:outline-emerald-300">
-            <option value="">Afrique · tous les pays</option>{AFRICAN_COUNTRIES.map(country => <option key={country.code} value={country.code}>{country.name}</option>)}
+
+        <section aria-label="Sélection du pays" className="relative mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-white/[0.08] bg-black/40 p-2.5 sm:p-3 shadow-xl backdrop-blur-xl">
+          <label htmlFor="radar-country" className="text-xs font-bold text-zinc-300">Choisir un pays</label>
+          <select
+            id="radar-country"
+            aria-label="Choisir un pays"
+            aria-describedby="radar-country-help"
+            value={selectedCountry ?? ''}
+            onChange={event => setSelectedCountry(event.target.value || null)}
+            className="min-w-0 flex-1 rounded-xl border border-white/[0.08] bg-white/[0.03] p-2 text-xs text-zinc-100 hover:border-white/20 focus-visible:border-amber-400/60 focus-visible:bg-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/40"
+          >
+            <option value="" className="bg-zinc-900 text-zinc-100">Afrique · tous les pays</option>
+            {AFRICAN_COUNTRIES.map(country => (
+              <option key={country.code} value={country.code} className="bg-zinc-900 text-zinc-100">{country.name}</option>
+            ))}
           </select>
-          {selectedCountry && <button type="button" onClick={() => setSelectedCountry(null)} className="rounded p-2 text-xs text-emerald-200">Réinitialiser le pays</button>}
+          {selectedCountry && (
+            <button
+              type="button"
+              onClick={() => setSelectedCountry(null)}
+              className="inline-flex items-center gap-1 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-300 transition hover:bg-amber-400/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+            >
+              Réinitialiser le pays
+            </button>
+          )}
           <p id="radar-country-help" className="sr-only">Sélectionnez au clavier ou tapez le début du nom dans la liste. Le pays est conservé dans le lien ; la carte utilise le même choix.</p>
           {countryParam && !selectedCountry && <p role="status" className="w-full text-xs text-amber-200">Pays inconnu dans le lien : vue Afrique affichée.</p>}
         </section>
 
-        <section aria-label="Indicateurs de veille" className="mb-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
-          <MetricCard label="Résultats chargés · 24 h" value={news || rss ? String(visibleArticles.length) : '—'} icon={<Newspaper className="h-4 w-4" />} />
-          <MetricCard label="Médias & Rédactions" value={news || rss ? String(domainsCount) : '—'} icon={<Radar className="h-4 w-4" />} />
-          <MetricCard label="Pays représentés" value={news || rss ? String(new Set(visibleArticles.map(a => a.countryCode).filter(Boolean)).size) : '—'} icon={<MapPin className="h-4 w-4" />} />
+        <section aria-label="Indicateurs de veille" className="mb-4 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+          <MetricCard
+            label="Résultats chargés · 24 h"
+            value={rss ? String(visibleArticles.length) : '—'}
+            icon={<Newspaper className="h-5 w-5" />}
+            accentColor="amber"
+          />
+          <MetricCard
+            label="Médias & Rédactions"
+            value={rss ? String(domainsCount) : '—'}
+            icon={<Radar className="h-5 w-5" />}
+            accentColor="emerald"
+          />
+          <MetricCard
+            label="Pays représentés"
+            value={rss ? String(new Set(visibleArticles.map(a => a.countryCode).filter(Boolean)).size) : '—'}
+            icon={<MapPin className="h-5 w-5" />}
+            accentColor="rose"
+          />
           <MetricCard
             label="Chaînes référencées"
             value={channelsSummary ? String(channelsSummary.totalChannels) : '—'}
             subLabel={channelsSummary ? `${channelsSummary.totalDirectWeb} web · ${channelsSummary.totalDirectVlc ?? 0} VLC` : undefined}
-            icon={<Tv className="h-4 w-4 text-amber-300" />}
+            icon={<Tv className="h-5 w-5" />}
+            accentColor="amber"
           />
         </section>
 
         <RadarSourcesPanel sources={sourceRows} />
 
         <section className="grid grid-cols-1 gap-4 xl:grid-cols-12 xl:gap-5">
-          <article aria-label="Fil et chaînes du pays" className="flex min-h-[520px] flex-col overflow-hidden rounded-2xl border border-white/[0.09] bg-[#0b100e] shadow-[0_20px_70px_-35px_rgba(0,0,0,0.9)] xl:col-span-5">
+          <article aria-label="Fil et chaînes du pays" className="relative flex min-h-[520px] flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 shadow-2xl backdrop-blur-xl xl:col-span-5">
+            <div className="h-[2px] w-full bg-tricolor-bar absolute top-0 left-0 right-0 opacity-80" />
             {/* Embedded PiP Mini-Player Dock */}
             {activePlayChannel && (
               <div className="border-b border-white/[0.08] bg-black/90 p-3 sm:p-4">
@@ -526,14 +577,14 @@ function RadarWorkspace() {
 
             {/* Navigation Tabs : Dépêches vs Chaînes en direct */}
             <div className="flex items-center justify-between border-b border-white/[0.07] bg-black/40 px-3 py-2 sm:px-4">
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => setRightPanelTab('news')}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition ${
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
                     rightPanelTab === 'news'
-                      ? 'bg-white/[0.12] text-white shadow-sm'
-                      : 'text-zinc-400 hover:text-zinc-200'
+                      ? 'border border-amber-400/40 bg-gradient-to-r from-emerald-500/15 via-amber-400/20 to-rose-500/15 text-white font-bold shadow-sm backdrop-blur-sm'
+                      : 'border border-transparent bg-white/[0.02] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.05] hover:border-white/10 font-medium'
                   }`}
                 >
                   <Newspaper className="h-3.5 w-3.5 text-amber-300" />
@@ -542,10 +593,10 @@ function RadarWorkspace() {
                 <button
                   type="button"
                   onClick={() => setRightPanelTab('channels')}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition ${
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
                     rightPanelTab === 'channels'
-                      ? 'border border-amber-400/30 bg-amber-400/15 text-amber-200 shadow-sm'
-                      : 'text-zinc-400 hover:text-zinc-200'
+                      ? 'border border-amber-400/40 bg-gradient-to-r from-emerald-500/15 via-amber-400/20 to-rose-500/15 text-white font-bold shadow-sm backdrop-blur-sm'
+                      : 'border border-transparent bg-white/[0.02] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.05] hover:border-white/10 font-medium'
                   }`}
                 >
                   <Tv className="h-3.5 w-3.5 text-emerald-400" />
@@ -561,11 +612,12 @@ function RadarWorkspace() {
 
               {activeCountry && (
                 <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
-                  <span className="font-semibold text-emerald-200">{activeCountry.name}</span>
+                  <span className="font-semibold text-emerald-300">{activeCountry.name}</span>
                   <button
                     type="button"
                     onClick={() => setSelectedCountry(null)}
-                    className="text-zinc-500 hover:text-white"
+                    aria-label={`Retirer le filtre ${activeCountry.name}`}
+                    className="flex h-5 w-5 items-center justify-center rounded-md text-zinc-400 hover:bg-white/10 hover:text-white"
                   >
                     ×
                   </button>
@@ -589,7 +641,7 @@ function RadarWorkspace() {
               />
             ) : (
               <>
-                <div className="flex flex-col gap-2 border-b border-white/[0.07] px-4 py-3 sm:px-5">
+                <div className="flex flex-col gap-2.5 border-b border-white/[0.07] px-4 py-3 sm:px-5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2 text-sm font-bold text-white">
@@ -599,7 +651,7 @@ function RadarWorkspace() {
                         Fil des dépêches
                       </div>
                       <p className="mt-0.5 text-xs text-zinc-500">
-                        Rédactions africaines & veille GDELT · {visibleArticles.length} résultats datés · 24 h
+                        {activeCountry ? `Dépêches liées à : ${activeCountry.name}` : 'Rédactions africaines et internationales vérifiées'} · {visibleArticles.length} résultats datés · 24 h
                       </p>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -609,48 +661,43 @@ function RadarWorkspace() {
                           {rss.availability?.filter(source => source.status === 'available' || source.status === 'empty').length ?? rss.sources.length} sources RSS
                         </span>
                       )}
-                      {news?.stale && (
-                        <span className="rounded-full border border-amber-300/20 bg-amber-300/10 px-2 py-0.5 text-[9px] font-bold text-amber-200">
-                          Cache
-                        </span>
-                      )}
                     </div>
                   </div>
 
-                  {/* Feed selector tabs */}
-                  <div className="flex items-center gap-1.5 rounded-xl border border-white/[0.06] bg-black/40 p-1 text-xs">
+                  {/* Scope filter tabs: Toutes / Afrique & National / International */}
+                  <div className="flex items-center gap-1 rounded-xl border border-white/[0.08] bg-black/50 p-1">
                     <button
                       type="button"
-                      onClick={() => setFeedTab('all')}
-                      className={`flex-1 rounded-lg px-2.5 py-1 text-center text-[11px] font-bold transition ${
-                        feedTab === 'all'
-                          ? 'bg-white/[0.12] text-white shadow-sm'
-                          : 'text-zinc-400 hover:text-zinc-200'
+                      onClick={() => setScopeTab('all')}
+                      className={`flex-1 rounded-lg px-2 py-1 text-xs font-semibold transition ${
+                        scopeTab === 'all'
+                          ? 'border border-amber-400/40 bg-amber-400/15 text-amber-200 shadow-sm'
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
                       }`}
                     >
-                      Tous ({tabCounts.all})
+                      Toutes ({tabCounts.all})
                     </button>
                     <button
                       type="button"
-                      onClick={() => setFeedTab('rss')}
-                      className={`flex-1 rounded-lg px-2.5 py-1 text-center text-[11px] font-bold transition ${
-                        feedTab === 'rss'
-                          ? 'border border-emerald-400/30 bg-emerald-400/15 text-emerald-200 shadow-sm'
-                          : 'text-zinc-400 hover:text-zinc-200'
+                      onClick={() => setScopeTab('africa')}
+                      className={`flex-1 rounded-lg px-2 py-1 text-xs font-semibold transition ${
+                        scopeTab === 'africa'
+                          ? 'border border-emerald-400/40 bg-emerald-400/15 text-emerald-200 shadow-sm'
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
                       }`}
                     >
-                      Rédactions ({tabCounts.rss})
+                      Afrique & National ({tabCounts.africa})
                     </button>
                     <button
                       type="button"
-                      onClick={() => setFeedTab('gdelt')}
-                      className={`flex-1 rounded-lg px-2.5 py-1 text-center text-[11px] font-bold transition ${
-                        feedTab === 'gdelt'
-                          ? 'bg-white/[0.12] text-white shadow-sm'
-                          : 'text-zinc-400 hover:text-zinc-200'
+                      onClick={() => setScopeTab('international')}
+                      className={`flex-1 rounded-lg px-2 py-1 text-xs font-semibold transition ${
+                        scopeTab === 'international'
+                          ? 'border border-sky-400/40 bg-sky-400/15 text-sky-200 shadow-sm'
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
                       }`}
                     >
-                      GDELT ({tabCounts.gdelt})
+                      International ({tabCounts.intl})
                     </button>
                   </div>
                 </div>
@@ -674,19 +721,19 @@ function RadarWorkspace() {
                   </div>
                 )}
 
-                {newsError && (news || rss) && (
+                {newsError && rss && (
                   <div role="status" className="border-b border-amber-200/10 bg-amber-200/[0.04] px-4 py-2 text-[11px] text-amber-100/80 sm:px-5">
                     {newsError} Les dernières dépêches chargées restent consultables.
                   </div>
                 )}
 
                 <div aria-live="polite" className="flex-1 divide-y divide-white/[0.055] overflow-y-auto xl:max-h-[515px]">
-                  {newsError && !news && !rss ? (
+                  {newsError && !rss ? (
                     <div className="m-4 rounded-xl border border-amber-300/15 bg-amber-300/[0.05] p-4 text-sm text-amber-100/80">
                       <p>{newsError}</p>
                       <button type="button" onClick={() => setRefreshToken((value) => value + 1)} className="mt-3 font-bold text-amber-200 underline underline-offset-4">Réessayer</button>
                     </div>
-                  ) : !news && !rss ? (
+                  ) : !rss ? (
                     <div className="space-y-3 p-4" aria-label="Chargement des dépêches">
                       {[0, 1, 2, 3].map((row) => <div key={row} className="h-20 animate-pulse rounded-xl bg-white/[0.035]" />)}
                     </div>
@@ -700,18 +747,31 @@ function RadarWorkspace() {
                       </p>
                       <p className="mt-1 text-xs text-zinc-500">
                         {activeCountry
-                          ? `Ce pays n'a pas de dépêche récente dans le flux sélectionné.`
-                          : 'Essayez une autre source ou effacez la sélection.'}
+                          ? scopeTab !== 'all' && tabCounts.all > 0
+                            ? `Ce pays a ${tabCounts.all} dépêche(s) dans d'autres rubriques.`
+                            : `Ce pays n'a pas de dépêche récente dans ce flux.`
+                          : 'Essayez une autre rubrique ou effacez la sélection.'}
                       </p>
-                      {selectedCountry && (
-                        <button
-                          type="button"
-                          onClick={() => setSelectedCountry(null)}
-                          className="mt-3.5 inline-flex items-center gap-1.5 rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-300 transition hover:bg-amber-400/20"
-                        >
-                          Afficher toutes les dépêches ({windowed.recent.length})
-                        </button>
-                      )}
+                      <div className="mt-3.5 flex flex-wrap justify-center gap-2">
+                        {scopeTab !== 'all' && tabCounts.all > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setScopeTab('all')}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/40 bg-emerald-400/10 px-3 py-1.5 text-xs font-bold text-emerald-300 transition hover:bg-emerald-400/20"
+                          >
+                            Toutes les rubriques ({tabCounts.all})
+                          </button>
+                        )}
+                        {selectedCountry && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedCountry(null)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-300 transition hover:bg-amber-400/20"
+                          >
+                            Effacer le filtre pays
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     visibleArticles.map((article) => (
@@ -737,17 +797,18 @@ function RadarWorkspace() {
               </>
             )}
           </article>
-          <article aria-label="Carte du Radar" className="overflow-hidden rounded-2xl border border-white/[0.09] bg-[#0b100e] shadow-[0_20px_70px_-35px_rgba(0,0,0,0.9)] xl:col-span-7">
+          <article aria-label="Carte du Radar" className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 shadow-2xl backdrop-blur-xl xl:col-span-7">
+            <div className="h-[2px] w-full bg-tricolor-bar absolute top-0 left-0 right-0 opacity-80" />
             <div className="flex flex-wrap items-start justify-between gap-3 border-b border-white/[0.07] px-4 py-4 sm:px-5">
               <div>
                 <div className="flex items-center gap-2 text-sm font-bold text-white">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-300/10 text-emerald-300">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-emerald-400/30 bg-emerald-400/10 text-emerald-300">
                     <Radar aria-hidden="true" className="h-4 w-4" />
                   </span>
                   Carte des médias et du catalogue
                 </div>
-                <p className="mt-1.5 text-xs text-zinc-500">
-                  Médias et TV initiaux ; séismes et détections thermiques à activer séparément.
+                <p className="mt-1.5 text-xs text-zinc-400">
+                  Médias et chaînes de télévision africaines géolocalisées par pays.
                 </p>
               </div>
               <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
@@ -756,7 +817,7 @@ function RadarWorkspace() {
             </div>
 
             <div className="p-2 sm:p-3">
-              {!desktopMap && <button type="button" aria-expanded={mapRequested} aria-controls="radar-map" onClick={() => setMapRequested(value => !value)} className="mb-2 rounded-lg border border-emerald-300/30 px-3 py-2 text-xs font-semibold text-emerald-200">{mapRequested ? 'Masquer la carte' : 'Afficher la carte'}</button>}
+              {!desktopMap && <button type="button" aria-expanded={mapRequested} aria-controls="radar-map" onClick={() => setMapRequested(value => !value)} className="mb-2 rounded-xl border border-emerald-400/30 bg-emerald-400/10 hover:bg-emerald-400/20 px-3 py-1.5 text-xs font-semibold text-emerald-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400">{mapRequested ? 'Masquer la carte' : 'Afficher la carte'}</button>}
               <div id="radar-map">{showMap ? (
               <TacticalVectorMap
                 countries={AFRICAN_COUNTRIES}
@@ -765,12 +826,11 @@ function RadarWorkspace() {
                 selectedCountry={selectedCountry}
                 onSelectCountry={(code) => setSelectedCountry(code)}
                 onSelectCountryForChannels={handleSelectCountryForChannels}
-                onSourcesChange={setLayerSources}
               />
               ) : <p className="p-3 text-xs text-zinc-400">Carte à la demande. Le choix du pays et les dépêches fonctionnent sans elle.</p>}</div>
             </div>
 
-            <div className="border-t border-white/[0.07] bg-black/20 px-4 py-3 text-[11px] leading-5 text-zinc-500 sm:px-5">
+            <div className="border-t border-white/[0.07] bg-black/40 px-4 py-3 text-[11px] leading-5 text-zinc-400 sm:px-5">
               <Info aria-hidden="true" className="mr-1.5 inline h-3.5 w-3.5 align-[-2px] text-amber-300/80" />
               Fonds de carte Satellite haute résolution (Esri), Topographique (OpenFreeMap) et OpenStreetMap sous licence libre. Les marqueurs situent les médias indexés et les télévisions référencées.
             </div>
@@ -779,15 +839,16 @@ function RadarWorkspace() {
 
         </section>
 
-        <details className="mt-4 rounded-xl border border-white/10 bg-[#0b100e]">
-          <summary className="cursor-pointer p-3 text-xs font-semibold text-zinc-200">Marchés et événements · bandeau daté</summary>
+        <details className="mt-4 overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 shadow-xl backdrop-blur-xl">
+          <summary className="cursor-pointer p-3 sm:p-4 text-xs font-bold text-zinc-200 hover:text-white transition">Marchés et événements · bandeau daté</summary>
           <LiveMarketTicker onSelectCountry={setSelectedCountry} onSourcesChange={setTickerSources} refreshToken={refreshToken} />
         </details>
         <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5">
-          <article className="overflow-hidden rounded-2xl border border-white/[0.09] bg-[#0b100e] shadow-[0_20px_70px_-35px_rgba(0,0,0,0.9)] lg:col-span-7">
+          <article className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 shadow-2xl backdrop-blur-xl lg:col-span-7">
+            <div className="h-[2px] w-full bg-tricolor-bar absolute top-0 left-0 right-0 opacity-80" />
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] px-4 py-4 sm:px-5">
               <div className="flex items-center gap-2.5">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-300/10 text-sky-200">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-sky-400/30 bg-sky-400/10 text-sky-300">
                   <CloudSun aria-hidden="true" className="h-4 w-4" />
                 </span>
                 <div>
@@ -796,7 +857,7 @@ function RadarWorkspace() {
                     <span className="text-zinc-600 font-normal">·</span>
                     <span className="text-sky-200">{weather?.current.locationName ?? 'Dakar'}</span>
                   </div>
-                  <p className="mt-0.5 text-xs text-zinc-500">
+                  <p className="mt-0.5 text-xs text-zinc-400">
                     Observation temps réel · Open-Meteo CC BY 4.0
                   </p>
                 </div>
@@ -820,7 +881,7 @@ function RadarWorkspace() {
             </div>
 
             {/* Quick city selectors */}
-            <div className="flex gap-1.5 overflow-x-auto border-b border-white/[0.06] bg-black/25 px-4 py-2.5 text-xs no-scrollbar sm:px-5">
+            <div className="flex gap-1.5 overflow-x-auto border-b border-white/[0.06] bg-black/40 px-4 py-2.5 text-xs no-scrollbar sm:px-5">
               {weather?.quickLocations.map((loc) => {
                 const isActive = activeWeatherCode === loc.code;
                 return (
@@ -831,9 +892,9 @@ function RadarWorkspace() {
                       setSelectedCityCode({ code: loc.code, countryContext: selectedCountry });
                       setSelectedCountry(loc.code);
                     }}
-                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl px-2.5 py-1 text-[11px] font-semibold transition ${
                       isActive
-                        ? 'border border-sky-300/30 bg-sky-300/15 text-sky-100 shadow-sm'
+                        ? 'border border-sky-300/40 bg-sky-400/20 text-sky-100 shadow-sm'
                         : 'border border-transparent bg-white/[0.03] text-zinc-400 hover:border-white/10 hover:bg-white/[0.06] hover:text-zinc-200'
                     }`}
                   >
@@ -864,7 +925,7 @@ function RadarWorkspace() {
                 </div>
               ) : weather ? (
                 <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-sky-300/15 bg-sky-400/[0.04] p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-sky-300/20 bg-gradient-to-r from-sky-500/10 via-sky-400/5 to-transparent p-4">
                     <div className="flex items-center gap-4">
                       <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-sky-300/20 bg-sky-400/10 shadow-[0_0_25px_-5px_rgba(56,189,248,0.25)]">
                         <WeatherIconDisplay
@@ -902,8 +963,8 @@ function RadarWorkspace() {
 
                   {/* Metrics grid */}
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
-                    <div className="rounded-xl border border-white/[0.06] bg-black/20 p-3">
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                    <div className="rounded-xl border border-white/[0.08] bg-black/30 backdrop-blur-sm p-3">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
                         <Wind className="h-3 w-3 text-sky-300" />
                         Vent
                       </div>
@@ -915,8 +976,8 @@ function RadarWorkspace() {
                       </div>
                     </div>
 
-                    <div className="rounded-xl border border-white/[0.06] bg-black/20 p-3">
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                    <div className="rounded-xl border border-white/[0.08] bg-black/30 backdrop-blur-sm p-3">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
                         <Droplets className="h-3 w-3 text-emerald-300" />
                         Humidité
                       </div>
@@ -928,8 +989,8 @@ function RadarWorkspace() {
                       </div>
                     </div>
 
-                    <div className="rounded-xl border border-white/[0.06] bg-black/20 p-3">
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                    <div className="rounded-xl border border-white/[0.08] bg-black/30 backdrop-blur-sm p-3">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
                         <CloudRain className="h-3 w-3 text-indigo-300" />
                         Pluie
                       </div>
@@ -941,8 +1002,8 @@ function RadarWorkspace() {
                       </div>
                     </div>
 
-                    <div className="rounded-xl border border-white/[0.06] bg-black/20 p-3">
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                    <div className="rounded-xl border border-white/[0.08] bg-black/30 backdrop-blur-sm p-3">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
                         <Compass className="h-3 w-3 text-amber-300" />
                         Relevé
                       </div>
@@ -958,43 +1019,47 @@ function RadarWorkspace() {
               ) : null}
             </div>
 
-            <div className="border-t border-white/[0.06] bg-black/20 px-4 py-2.5 text-[10px] leading-4 text-zinc-500 sm:px-5 flex flex-wrap items-center justify-between gap-2">
+            <div className="border-t border-white/[0.07] bg-black/40 px-4 py-2.5 text-[10px] leading-4 text-zinc-400 sm:px-5 flex flex-wrap items-center justify-between gap-2">
               <span>
                 <a
                   href="https://open-meteo.com/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-semibold text-sky-300/80 hover:text-sky-200 underline underline-offset-2"
+                  className="font-semibold text-sky-300 hover:text-sky-200 underline underline-offset-2"
                 >
                   Données Open-Meteo
                 </a>{' '}
                 · CC BY 4.0 · Relevé d’observation automatisé sans valeur d’alerte officielle de protection civile.
               </span>
-              <span className="text-zinc-600">Aucun relevé simulé</span>
+              <span className="text-zinc-500">Aucun relevé simulé</span>
             </div>
           </article>
 
-          <article className="rounded-2xl border border-white/[0.09] bg-[#0b100e] p-4 sm:p-5 lg:col-span-5">
+          <article className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 p-4 sm:p-5 lg:col-span-5 shadow-2xl backdrop-blur-xl">
+            <div className="h-[2px] w-full bg-tricolor-bar absolute top-0 left-0 right-0 opacity-80" />
             <div className="flex items-center gap-2 text-sm font-bold text-white">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-300/10 text-amber-200"><Info aria-hidden="true" className="h-4 w-4" /></span>
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-amber-400/30 bg-amber-400/10 text-amber-300"><Info aria-hidden="true" className="h-4 w-4" /></span>
               Comment lire le radar
             </div>
-            <details className="mt-3 text-xs text-zinc-300"><summary className="cursor-pointer">Définitions, fenêtre et limites</summary><div className="mt-2 space-y-3 text-xs leading-5 text-zinc-400">
-              <p>{asOf ? <>Fenêtre commune : {formatRadarDate(windowed.window.from)} — {formatRadarDate(windowed.window.asOf)}.</> : 'Fenêtre en cours de chargement.'} Limites : 75 GDELT / 150 RSS, couverture non exhaustive.</p>
+            <details className="mt-3 text-xs text-zinc-300"><summary className="cursor-pointer font-semibold text-zinc-300 hover:text-amber-300 transition">Définitions, fenêtre et limites</summary><div className="mt-2 space-y-3 text-xs leading-5 text-zinc-400">
+              <p>{asOf ? <>Fenêtre commune : {formatRadarDate(windowed.window.from)} — {formatRadarDate(windowed.window.asOf)}.</> : 'Fenêtre en cours de chargement.'} Dépêches d’agences de presse africaines vérifiées.</p>
               <p><strong className="text-zinc-200">TV référencées.</strong> Candidates web/VLC selon les contrôles du résolveur ; la lecture est vérifiée à l’ouverture. VLC inclut les candidates web.</p>
               <p><strong className="text-zinc-200">Veille, pas alerte officielle.</strong> Le nombre d’articles indexés ne mesure ni la gravité ni la véracité d’une situation.</p>
-              <p><strong className="text-zinc-200">Origine, pas géolocalisation.</strong> GDELT situe le pays du média ; RSS peut inférer le pays du sujet. Ces indications ne localisent pas nécessairement l’événement.</p>
+              <p><strong className="text-zinc-200">Origine rédactionnelle.</strong> Les flux RSS identifient l’agence de presse émettrice et le pays d’origine de publication.</p>
               <p><strong className="text-zinc-200">Retour au terrain.</strong> Le bouton « TV » donne accès au catalogue complet et à ses lecteurs habituels.</p>
             </div>
             </details>
-            <Link href={catalogCountryHref(selectedCountry)} className="mt-5 inline-flex items-center gap-2 rounded-xl border border-amber-300/20 bg-amber-300/[0.08] px-3 py-2 text-xs font-bold text-amber-100 transition hover:bg-amber-300/[0.14]">
+            <Link
+              href={activeCountry ? `/app?country=${activeCountry.code}` : '/app'}
+              className="mt-5 inline-flex items-center gap-2 rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/15 via-amber-400/20 to-rose-500/15 hover:from-emerald-500/25 hover:via-amber-400/30 hover:to-rose-500/25 px-4 py-2 text-xs font-bold text-amber-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 shadow-sm backdrop-blur-sm"
+            >
               {selectedCountry ? 'Voir les chaînes du pays' : 'Voir toutes les chaînes'} <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" />
             </Link>
           </article>
         </section>
 
         <footer className="mt-7 flex flex-col gap-2 border-t border-white/[0.07] pt-4 text-[10px] leading-5 text-zinc-600 sm:flex-row sm:items-center sm:justify-between">
-          <span>GDELT DOC · requête actualisée toutes les 5 minutes · disponibilité amont variable</span>
+          <span>Flux RSS officiels rédactions africaines · actualisé régulièrement</span>
           <span>Le service ne confirme pas les faits rapportés par les sources.</span>
         </footer>
       </div>
@@ -1008,29 +1073,37 @@ function MetricCard({
   value,
   subLabel,
   icon,
+  accentColor = 'amber',
 }: {
   label: string;
   value: string;
   subLabel?: string;
   icon: ReactNode;
+  accentColor?: 'emerald' | 'amber' | 'rose';
 }) {
+  const iconBorderBg = {
+    emerald: 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300',
+    amber: 'border-amber-400/30 bg-amber-400/10 text-amber-300',
+    rose: 'border-rose-400/30 bg-rose-400/10 text-rose-300',
+  }[accentColor];
+
   return (
-    <div className="flex min-w-0 items-center gap-2 rounded-xl border border-white/[0.08] bg-[#0b100e] px-2 py-2.5">
-      <span className="flex hidden h-7 w-7 shrink-0 sm:flex items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.025] text-emerald-200">
+    <div className="relative overflow-hidden flex min-w-0 items-center gap-3 rounded-2xl border border-white/[0.08] bg-black/40 p-3 sm:p-4 shadow-xl backdrop-blur-xl">
+      <span className={`hidden sm:flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl border shadow-sm ${iconBorderBg}`}>
         {icon}
       </span>
       <div className="min-w-0">
         <div className="flex flex-wrap items-baseline gap-x-1.5">
-          <span className="text-lg font-bold tracking-tight text-white tabular-nums">
+          <span className="text-lg sm:text-xl font-bold tracking-tight text-white tabular-nums">
             {value}
           </span>
           {subLabel && (
-            <span className="text-[10px] font-bold text-amber-300/80 truncate">
+            <span className="text-[10px] font-bold text-amber-300/90 truncate">
               {subLabel}
             </span>
           )}
         </div>
-        <div className="truncate text-[10px] font-semibold uppercase tracking-[0.08em] text-zinc-500">
+        <div className="truncate text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.08em] text-zinc-400">
           {label}
         </div>
       </div>
@@ -1180,10 +1253,10 @@ function CountryChannelsView({
                   <button
                     type="button"
                     onClick={() => onPlayChannel(channel)}
-                    className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 ${
+                    className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
                       isPlaying
                         ? 'border border-red-500/40 bg-red-500/15 text-red-200'
-                        : 'border border-amber-300/30 bg-amber-300/[0.12] text-amber-200 hover:bg-amber-300/25 hover:text-white'
+                        : 'border border-amber-400/40 bg-gradient-to-r from-emerald-500/15 via-amber-400/20 to-rose-500/15 hover:from-emerald-500/25 hover:via-amber-400/30 hover:to-rose-500/25 text-amber-200 shadow-sm backdrop-blur-sm'
                     }`}
                   >
                     <Play className="h-3 w-3 fill-current" />
@@ -1194,7 +1267,7 @@ function CountryChannelsView({
                     onClick={() => onOpenPopout(channel)}
                     title="Ouvrir dans une fenêtre popout"
                     aria-label={`Ouvrir ${channel.name} en fenêtre séparée`}
-                    className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-zinc-400 transition hover:border-white/20 hover:text-white"
+                    className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-zinc-400 transition hover:border-amber-400/40 hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
                   </button>
@@ -1238,23 +1311,23 @@ function CountryChannelsView({
               key={c.code}
               type="button"
               onClick={() => onSelectCountry(c.code)}
-              className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.025] p-3 text-left transition hover:border-amber-400/30 hover:bg-white/[0.05] group"
+              className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.025] p-3 text-left transition hover:border-amber-400/40 hover:bg-white/[0.06] group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
             >
               <div className="min-w-0 pr-2">
                 <div className="font-bold text-xs text-white group-hover:text-amber-200 transition">
                   {c.name}
                 </div>
-                <div className="mt-0.5 text-[10px] text-zinc-500">
+                <div className="mt-0.5 text-[10px] text-zinc-400">
                   {c.region}
                 </div>
               </div>
               <div className="text-right shrink-0">
-                <div className="inline-flex items-center gap-1 rounded-full border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[10px] font-black text-amber-300">
+                <div className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] font-black text-amber-300">
                   <Tv className="h-2.5 w-2.5" />
                   <span>{totalCh}</span>
                 </div>
                 {webCh > 0 && (
-                  <div className="mt-0.5 text-[9px] text-emerald-400">
+                  <div className="mt-0.5 text-[9px] font-semibold text-emerald-400">
                     {webCh} Web
                   </div>
                 )}
@@ -1285,11 +1358,44 @@ function ArticleRow({
   const sourceBadgeClass = () => {
     const name = (article.sourceName || article.domain).toLowerCase();
     if (name.includes('aps')) return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300';
+    if (name.includes('aip')) return 'border-orange-400/30 bg-orange-400/10 text-orange-300';
     if (name.includes('ecofin')) return 'border-amber-400/30 bg-amber-400/10 text-amber-300';
+    if (name.includes('financial')) return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300';
     if (name.includes('rfi')) return 'border-rose-400/30 bg-rose-400/10 text-rose-300';
+    if (name.includes('france 24')) return 'border-sky-400/30 bg-sky-400/10 text-sky-300';
     if (name.includes('jeune')) return 'border-indigo-400/30 bg-indigo-400/10 text-indigo-300';
     if (name.includes('bbc')) return 'border-red-400/30 bg-red-400/10 text-red-300';
+    if (name.includes('monde')) return 'border-violet-400/30 bg-violet-400/10 text-violet-300';
+    if (name.includes('okapi')) return 'border-cyan-400/30 bg-cyan-400/10 text-cyan-300';
+    if (name.includes('malijet')) return 'border-teal-400/30 bg-teal-400/10 text-teal-300';
+    if (name.includes('lefaso')) return 'border-yellow-400/30 bg-yellow-400/10 text-yellow-300';
+    if (name.includes('cameroun')) return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300';
+    if (name.includes('guinée') || name.includes('guinee')) return 'border-amber-400/30 bg-amber-400/10 text-amber-300';
+    if (name.includes('hespress')) return 'border-red-400/30 bg-red-400/10 text-red-300';
+    if (name.includes('tsa')) return 'border-teal-400/30 bg-teal-400/10 text-teal-300';
+    if (name.includes('gabon')) return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300';
+    if (name.includes('benin') || name.includes('bénin')) return 'border-yellow-400/30 bg-yellow-400/10 text-yellow-300';
+    if (name.includes('africanews')) return 'border-blue-400/30 bg-blue-400/10 text-blue-300';
     return 'border-zinc-700 bg-white/[0.04] text-zinc-300';
+  };
+
+  const isNational = () => {
+    const name = (article.sourceName || '').toLowerCase();
+    return (
+      name.includes('aps') ||
+      name.includes('aip') ||
+      name.includes('okapi') ||
+      name.includes('malijet') ||
+      name.includes('lefaso') ||
+      name.includes('cameroun') ||
+      name.includes('guinée') ||
+      name.includes('guinee') ||
+      name.includes('hespress') ||
+      name.includes('tsa') ||
+      name.includes('gabon') ||
+      name.includes('benin') ||
+      name.includes('bénin')
+    );
   };
 
   return (
@@ -1313,7 +1419,7 @@ function ArticleRow({
           <button
             type="button"
             onClick={() => onSelectCountry?.(article.countryCode!)}
-            className="rounded px-1 text-zinc-400 transition hover:bg-emerald-300/10 hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400"
+            className="rounded px-1 text-zinc-400 transition hover:bg-amber-400/10 hover:text-amber-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-400"
             title={`Centrer la carte sur ${country?.name ?? article.countryCode}`}
           >
             {country?.name ?? 'Pays inconnu'}{article.countryBasis === 'inferred_topic' ? ' · sujet inféré' : ' · pays du média'}
@@ -1325,29 +1431,34 @@ function ArticleRow({
           <button
             type="button"
             onClick={() => onSelectCountryForChannels?.(article.countryCode!)}
-            className="inline-flex items-center gap-1 rounded border border-amber-400/30 bg-amber-400/10 px-1.5 py-0.5 text-[9px] font-bold text-amber-300 transition hover:bg-amber-400/20"
+            className="inline-flex items-center gap-1 rounded-lg border border-amber-400/30 bg-amber-400/10 px-1.5 py-0.5 text-[9px] font-bold text-amber-300 transition hover:bg-amber-400/20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-400"
             title={`Voir les ${channelCount} chaîne(s) TV référencées`}
           >
             <Tv className="h-2.5 w-2.5" />
             <span>{channelCount} chaînes</span>
           </button>
         )}
-        <span className="ml-auto font-mono font-normal tracking-normal text-zinc-600">{isRss ? 'Publication' : 'Indexation'} · {formatRadarDate(article.indexedAt)}</span>
+        <span className="ml-auto font-mono font-normal tracking-normal text-zinc-500">Publication · {formatRadarDate(article.indexedAt)}</span>
       </div>
-      <a href={article.url} target="_blank" rel="noopener noreferrer" className="block text-[13px] font-semibold leading-5 text-zinc-200 transition group-hover:text-white focus-visible:rounded-sm">
+      <a href={article.url} target="_blank" rel="noopener noreferrer" className="block text-[13px] font-semibold leading-5 text-zinc-200 transition group-hover:text-amber-200 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-400">
         {article.title}
-        <ExternalLink aria-hidden="true" className="ml-1.5 inline h-3 w-3 text-zinc-600 group-hover:text-emerald-200" />
+        <ExternalLink aria-hidden="true" className="ml-1.5 inline h-3 w-3 text-zinc-500 group-hover:text-amber-300" />
       </a>
       <div className="mt-2 flex items-center justify-between gap-2">
-        {isRss ? (
+        {article.category === 'International' ? (
+          <span className="inline-flex items-center gap-1 text-[9px] font-medium text-sky-400/90">
+            <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
+            Rubrique internationale
+          </span>
+        ) : isNational() ? (
           <span className="inline-flex items-center gap-1 text-[9px] font-medium text-emerald-400/90">
-
-            Titre publié · source RSS
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            Rédaction nationale officielle
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 text-[9px] text-zinc-600">
-            <span className="h-1 w-1 rounded-full bg-emerald-300/70" />
-            Titre indexé · GDELT
+          <span className="inline-flex items-center gap-1 text-[9px] font-medium text-amber-400/90">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+            Rédaction panafricaine & économie
           </span>
         )}
         {country && <span className="inline-flex items-center gap-1 text-[9px] text-zinc-600"><MapPin aria-hidden="true" className="h-2.5 w-2.5" />{country.region}</span>}

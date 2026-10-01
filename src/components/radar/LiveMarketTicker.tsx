@@ -47,12 +47,13 @@ export default function LiveMarketTicker({ onSelectCountry, onSourcesChange, ref
       const id = `alert:${canonicalArticleUrl(alert.url ?? '') || alert.id}`;
       if (seen.has(id)) continue;
       seen.add(id);
-      const url = canonicalArticleUrl(alert.url ?? '');
+      const rawUrl = canonicalArticleUrl(alert.url ?? '');
+      const safeUrl = /^https?:\/\//i.test(rawUrl) ? rawUrl : null;
       result.push({ id, content: <span className="inline-flex items-center gap-2 text-xs text-zinc-200">
         <strong>{alert.title}</strong>
         {alert.countryCode && alert.scope === 'Africa' && <button type="button" onClick={() => onSelectCountry?.(alert.countryCode!)} className="rounded bg-white/10 px-1">{alert.countryCode}</button>}
         <span className="text-[10px] text-zinc-400">{alert.source ?? 'Source inconnue'} · {alert.dateKind === 'event' ? 'Événement' : 'Publication'} {formatRadarDate(alert.timestamp)} · {alert.scope === 'Africa' ? 'Afrique' : 'Monde / lieu non classé'}</span>
-        {url && <a href={url} target="_blank" rel="noopener noreferrer" aria-label={`Source : ${alert.title}`}><ExternalLink className="h-3 w-3" /></a>}
+        {safeUrl && <a href={safeUrl} target="_blank" rel="noopener noreferrer" aria-label={`Source : ${alert.title}`}><ExternalLink className="h-3 w-3" /></a>}
       </span> });
     }
     for (const quote of data.commodities) {
@@ -71,7 +72,7 @@ export default function LiveMarketTicker({ onSelectCountry, onSourcesChange, ref
   }, [data, scope, onSelectCountry]);
   const degraded = error || data?.availability?.some(source => ['stale', 'unavailable', 'partial'].includes(source.status));
 
-  return <section aria-label="Bandeau des marchés et événements" className={`border-y border-white/10 bg-[#050806] ${className}`}>
+  return <section aria-label="Bandeau des marchés et événements" className={`border-t border-white/[0.08] bg-black/40 backdrop-blur-xl ${className}`}>
     <div className="flex flex-wrap items-center gap-2 px-3 py-2 text-[11px] text-zinc-300">
       <label>Périmètre du bandeau <select aria-label="Périmètre du bandeau" value={scope} onChange={event => setScope(event.target.value as 'Africa' | 'World')} className="rounded bg-zinc-900 px-2 py-1"><option value="Africa">Afrique</option><option value="World">Monde</option></select></label>
       <span className="text-zinc-500">Cotations mondiales identifiées séparément</span>
