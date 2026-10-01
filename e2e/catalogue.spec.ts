@@ -29,7 +29,7 @@ test.describe('catalogue, filtres, favoris et lecteur', () => {
     await search.fill('');
 
     const favoritesFilterRequest = page.waitForRequest(
-      (candidate) => candidate.url().endsWith('/api/channels') && candidate.method() === 'POST',
+      (candidate) => candidate.url().endsWith('/api/channels') && candidate.method() === 'POST' && candidate.postDataJSON().favoritesOnly === true,
     );
     await page.getByRole('button', { name: 'Mes favoris' }).click();
     expect((await favoritesFilterRequest).postDataJSON()).toMatchObject({ favoritesOnly: true });

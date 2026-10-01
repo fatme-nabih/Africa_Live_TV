@@ -1,5 +1,23 @@
 # Checklist de non-régression — lots local et Railway
 
+## Réception locale L5 — 1er octobre 2026
+
+Preuves et limites : [AL-T05](anchored-player-validation.md). Aucun déploiement L5.
+
+- [x] Opt-in local désactivable/non persistant, absent du build production.
+- [x] Zapping rapide HLS/MP4, une vidéo gérée, ancienne détruite ; réponses tardives ignorées.
+- [x] Arrêt, démontage en navigation, requête annulée, pause/reprise, volume clavier conservé et plein écran/refus.
+- [x] Pas d'autoplay/repli VLC automatique dans l'ancré, refus explicite navigateur et serveur.
+- [x] Filtres, liste vide, chaîne hors résultats, favoris et lecteurs modale/fenêtre nommée conservés.
+- [x] 1366/390/320 px, Enter/slider/Échap/focus et zéro débordement.
+- [x] VLC intercepté : sortie explicite, ancré détruit, lancement unique via lecteur existant.
+- [x] 220 unitaires + 14 intégrations + 41 E2E distincts, TypeScript/ESLint/build/migrations.
+- [x] 11 778 chaînes/12 396 sources, zéro fixture média/schéma jetable restant ; IPTV intact.
+- [x] Briefing inactif ; L6 non commencé, aucune publication implicite.
+- [ ] Exclusivité incluant VLC/onglets indépendants et arrêt/volume VLC pilotés : non reçus, arrêt manuel.
+- [ ] VLC réel et disponibilité réelle amont dans L5 : non reçus, fixtures seulement.
+- [ ] Comptes Clerk ordinaires, lecteur d'écran, Safari/HLS natif et appareils physiques : non reçus.
+
 À exécuter avant de clore le lot 1, puis avant tout déploiement. Noter le résultat
 dans `production-progress.md`. Ne jamais inscrire de secret ni d'URL média.
 

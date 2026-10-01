@@ -4,7 +4,10 @@ Création : 30 septembre 2026 · Mise à jour : 1er octobre 2026 · Africa/Dakar
 Statut : L0–L4 implémentés, testés localement et déployés sur staging après
 autorisation. Réception réelle limitée aux profils/appareils disponibles.
 **Nouvelle session : [bilan, réserves et prochaine étape L5](dashboard-session-handoff.md).**
-L5 reste optionnel et non commencé ; L6 briefing reste différé et désactivé.
+L5 / AL-T05 a été retenu par le propriétaire et réalisé/testé en local ;
+recommandation **ajuster avant généralisation**, notamment la sortie VLC.
+[Preuves et limites L5](anchored-player-validation.md). Aucun commit/push/déploiement L5.
+L6 briefing reste différé, désactivé et non commencé dans cette session.
 
 Clôture publiée à la demande du propriétaire : GitHub `main`, applicatif
 `22dea98`, et Railway staging `4c8a82cc-5b3b-4a0e-86a1-bf922540869a` SUCCESS
@@ -75,7 +78,7 @@ L’exécution des tâches indépendantes peut avancer pendant leur clarificatio
 | D4 — retenu en L1 | Afficher « Chaînes référencées » ; compter séparément les candidates web/VLC selon le contrat de résolution | Ne jamais présenter un contrôle antérieur comme une garantie de lecture en temps réel | AL-D05 |
 | D5 — dashboard décidé | Aucun accès au dashboard après expiration de l'essai ou de l'abonnement ; renouvellement requis | Page et API Radar alignées et déployées sur staging ; catalogue consultable selon DOC-006. Grâce active et exception administrateur existantes conservées : voir la matrice AL-C01 | AL-C01, AL-C02 |
 | D6 | Liste de dépêches d’abord sur mobile ; carte accessible ensuite | Carte d’abord reste possible sur grand écran. Pas de grand titre marketing dans le dashboard | AL-W01, AL-W04 |
-| D7 | Reporter le lecteur ancré après validation des filtres et du parcours courant | Une expérimentation locale peut précéder toute décision de remplacement | AL-T05 |
+| D7 — décidé en L5 | Expérimentation locale du lecteur ancré explicitement retenue le 1er octobre ; prototype réalisé et évalué | Recommandation ajuster : conserver le parcours web expérimental, recevoir la limite VLC et l'ergonomie avant généralisation ; aucun remplacement/publication implicite | AL-T05 |
 
 ## 3. Contrats cibles
 
@@ -133,8 +136,9 @@ pagination et gèrent les réponses de requêtes arrivées dans le désordre.
 ## 4. Ordre de réalisation et portes de validation
 
 État courant : **L0–L4 terminés en local et déployés staging**, avec les
-réserves de réception réelle de la fiche de reprise. **L5 non commencé**,
-arbitrage requis ; **L6 différé**, briefing toujours désactivé.
+réserves de réception réelle de la fiche de reprise. **L5 réalisé et évalué
+localement**, recommandation ajuster et limite d'exclusivité VLC non reçue ;
+**L6 différé**, briefing toujours désactivé, aucune reprise dans cette session.
 
 | Lot | Résultat attendu | Tickets | Condition de sortie |
 |---|---|---|---|
@@ -172,7 +176,8 @@ réussi ; neuf E2E distants et parcours administrateur réel reçus.
 [Relevé](dashboard-auth-staging-reception.md). Zoom natif 200 % local reçu à
 18:29 UTC ; comptes ordinaires indisponibles : leur réception réelle reste ouverte.
 Preuves et limites : [réception L4](dashboard-release-validation.md),
-[dossier de livraison](dashboard-delivery-dossier.md). AL-T05 attend la décision L5 ; AL-D01/AL-D04
+[dossier de livraison](dashboard-delivery-dossier.md). AL-T05 expérimenté/testé localement,
+recommandation ajuster et limites dans [la réception L5](anchored-player-validation.md) ; AL-D01/AL-D04
 (**différés au dernier lot L6**). « Décision requise » concerne
 la partie dépendante de l’arbitrage ; les diagnostics restent réalisables.
 Priorités : P1 = confiance et cohérence essentielles ; P2 = qualité du parcours ;
@@ -444,8 +449,11 @@ administrateur staging ; les profils ordinaires restent à recevoir en session r
   droits expirés selon D5 et filtres combinés.
 
 **AL-T05 · P3 · L · Prototype de lecteur ancré et zapping**
-- État : non commencé ; prochaine décision produit L5, réaliser le prototype
-  ou clôturer explicitement ce lot optionnel sans expérimentation.
+- État : prototype réalisé et évalué localement le 1er octobre 2026, après
+  accord produit ; **recommandation ajuster avant généralisation**.
+  [Preuves, activation, fichiers et limites](anchored-player-validation.md).
+  Exclusivité des lecteurs web gérés reçue ; arrêt/exclusivité VLC global non
+  reçus, sortie explicite vers le lecteur existant. Aucune publication de L5.
 - Dépendances : AL-T03, AL-T04 et accord de retenir l’expérimentation D7.
 - Travail : prototype local désactivable, lecteur persistant et liste filtrée ;
   tester ergonomie avant décision de généralisation.
@@ -552,8 +560,8 @@ Pour chaque ticket, consigner : décision liée, fichiers touchés, preuve de
 test, limites, environnement, date et prochaine action. À la fin de chaque lot,
 mettre à jour ce document et le journal production sans effacer l’historique.
 
-Prochaine étape : arbitrer **L5 / AL-T05**, lecteur ancré optionnel, puis le
-réaliser et l’évaluer ou décider explicitement de ne pas le retenir. Revenir
-sur **L6 / AL-D01 et AL-D04** seulement ensuite : le briefing constitue la toute
-dernière implémentation. Les réserves de réception réelles et les preuves
+Prochaine étape : décider de l'ajustement/réception humaine **L5 / AL-T05**
+sur le prototype testé et sa limite VLC. **Ne pas commencer L6 dans cette session** ;
+AL-D01/AL-D04 et le briefing restent différés, toute reprise exigeant une nouvelle
+demande. Les réserves de réception réelles et les preuves
 à conserver sont détaillées dans la [fiche de reprise](dashboard-session-handoff.md).

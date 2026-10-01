@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import BrandLogo from '@/components/BrandLogo';
@@ -9,6 +9,14 @@ import Player from '@/components/Player';
 
 export default function SeparatePlayerPage({ channelId }: { channelId: string }) {
   const router = useRouter();
+  const [stopped, setStopped] = useState(false);
+  useEffect(() => {
+    const stop = (event: MessageEvent) => {
+      if (event.origin === window.location.origin && event.source === window.opener && event.data?.type === 'africa-live-stop-player') setStopped(true);
+    };
+    window.addEventListener('message', stop);
+    return () => window.removeEventListener('message', stop);
+  }, []);
 
   const showCatalog = () => {
     if (window.opener && !window.opener.closed) {
@@ -70,7 +78,7 @@ export default function SeparatePlayerPage({ channelId }: { channelId: string })
 
       <section aria-label="Lecteur vidéo" className="relative z-10 flex flex-1 items-center justify-center p-3 sm:p-5">
         <div className="w-full max-w-[1500px]">
-          <Player channelId={channelId} />
+          {stopped ? <p role="status">Lecture arrêtée depuis le catalogue. Choisissez une chaîne pour relancer le lecteur.</p> : <Player channelId={channelId} />}
         </div>
       </section>
     </main>

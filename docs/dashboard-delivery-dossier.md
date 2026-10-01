@@ -1,5 +1,10 @@
 # Dossier de livraison dashboard — AL-Q02
 
+Complément L5 local, 1er octobre : AL-T05 réalisé/testé et évalué,
+**recommandation ajuster**, sans publication. [Dossier et limites du prototype](anchored-player-validation.md).
+Les preuves de livraison L0–L4 ci-dessous restent distinctes de ces changements
+locaux. Briefing inactif ; L6 non commencé et aucune nouvelle livraison autorisée.
+
 Date : 1er octobre 2026 · réception locale L4 terminée.
 Référence : [plan et tickets](plan-dashboard-backlog.md),
 [preuves intégrées AL-Q01/AL-C05](dashboard-release-validation.md).

@@ -1,5 +1,40 @@
 # Progression — préparation production
 
+## L5 — AL-T05, prototype local ancré — 1er octobre 2026
+
+Expérimentation explicitement retenue par le propriétaire, réalisée et évaluée
+localement depuis `main`/`15d6b4a`, état Git initial propre. **Recommandation :
+ajuster avant généralisation**. Opt-in en développement seulement, non persistant ;
+zapping parmi résultats chargés, HLS/MP4 démontés, requêtes tardives annulées/ignorées,
+arrêt/pause/volume/plein écran accessibles, filtres indépendants. Modale et fenêtre
+nommée conservées ; fenêtre connue arrêtée/détruite au transfert selon parcours.
+VLC exige une sortie explicite du prototype, puis arrêt manuel avant réactivation :
+exclusivité VLC globale non reçue. Gardes, quotas, catalogue, favoris et imports
+conservés ; aucun relais, conversion ou stockage média.
+
+Fichiers : `src/components/AnchoredPlayer.tsx`, `Player.tsx`, `ChannelGrid.tsx`,
+`SeparatePlayerPage.tsx`, `src/app/app/page.tsx`, télémétrie et son test de contrat,
+`e2e/anchored-player.spec.ts`, attente ciblée de favoris dans `catalogue.spec.ts`.
+La télémétrie interne du player polluait le schéma strict et ne s'envoyait pas :
+identité publique seulement désormais. Preuve d'arrêt effective au navigateur.
+
+220 tests unitaires + 14 intégrations isolées, **41 E2E distincts reçus** :
+13 L5, 24 régressions TV/catalogue/lecture/API/MVP, 1 Radar et 3 entrée/auth
+du build hors MVP. TypeScript, ESLint zéro avertissement, build et contrôle
+migrations réussis. Comptes et appareils disponibles distingués des simulations.
+11 778 chaînes/12 396 sources ; zéro fixture média `lot2-*` ni schéma jetable
+restant. Empreintes catalogue et témoin de quota conservés par le runner isolé.
+Captures et détails : [réception L5](anchored-player-validation.md).
+
+Limites : aucune réception Clerk ordinaire, VLC réel, source amont réelle,
+Safari/HLS natif ou appareil physique L5. Aucun changement au compte administrateur.
+Retour arrière : désactiver/recharger ; aucune restauration de base nécessaire.
+Serveur restitué en mode Clerk local ; aucun fichier `.env` modifié.
+IPTV intact ; aucun commit/push/déploiement/état distant, coût ou migration.
+L0–L4 reste livré sur staging ; L6 non commencé et briefing désactivé.
+Suite : arbitrage de l'ajustement et réception humaine L5, nouvelle autorisation
+nécessaire avant publication ou reprise du briefing.
+
 ## Clôture et publication GitHub/Railway — 1er octobre 2026, 18:44 UTC
 
 Demande explicite du propriétaire de publier GitHub et Railway. Commit

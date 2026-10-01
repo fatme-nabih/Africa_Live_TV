@@ -10,6 +10,7 @@ import FilterSidebar from '@/components/FilterSidebar';
 import ChannelGrid from '@/components/ChannelGrid';
 import CategoryTabs from '@/components/CategoryTabs';
 import InlinePlayerModal from '@/components/InlinePlayerModal';
+import AnchoredPlayer from '@/components/AnchoredPlayer';
 import {
   catalogRequestSchema,
   catalogResponseSchema,
@@ -30,6 +31,8 @@ const VLC_DOWNLOAD_URL = 'https://www.videolan.org/vlc/';
 const FAVORITES_STORAGE_KEY = 'iptv_favorites';
 const FAVORITES_PENDING_KEY = 'iptv_favorites_pending';
 const FAVORITES_MIGRATED_KEY = 'iptv_favorites_server_migrated';
+// Excluded from every production build, including Railway staging.
+const ANCHORED_PLAYER_AVAILABLE = process.env.NODE_ENV === 'development';
 
 function readStoredFavorites() {
   if (typeof window === 'undefined') return [];
@@ -114,6 +117,9 @@ function CatalogWorkspace() {
   const [canPlay, setCanPlay] = useState(true);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [isInlinePlayerOpen, setIsInlinePlayerOpen] = useState(false);
+  const [anchoredEnabled, setAnchoredEnabled] = useState(false);
+  const [anchoredChannel, setAnchoredChannel] = useState<Channel | null>(null);
+  const [externalStopped, setExternalStopped] = useState(false);
   const [playerWindowStatus, setPlayerWindowStatus] = useState<'idle' | 'open' | 'blocked' | 'closed'>('idle');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -360,6 +366,7 @@ function CatalogWorkspace() {
 
 
   const openPlayerForChannel = useCallback((channel: Channel) => {
+    setAnchoredChannel(null);
     setSelectedChannel(channel);
     setIsInlinePlayerOpen(false);
     const result = launchPlayer({
@@ -380,10 +387,31 @@ function CatalogWorkspace() {
     }
   }, []);
 
+  const closePlayerWindow = useCallback(() => {
+    const handle = playerWindowRef.current as Window | null;
+    if (handle && !handle.closed) handle.close();
+    playerWindowRef.current = null;
+    setPlayerWindowStatus('closed');
+  }, []);
+
+  const stopPlayerWindow = useCallback(() => {
+    const handle = playerWindowRef.current as Window | null;
+    if (handle && !handle.closed) handle.postMessage({ type: 'africa-live-stop-player' }, window.location.origin);
+  }, []);
+
+  const openInlinePlayer = useCallback(() => {
+    stopPlayerWindow();
+    setAnchoredChannel(null);
+    setIsInlinePlayerOpen(true);
+  }, [stopPlayerWindow]);
+
   const handleSelectChannel = useCallback((channel: Channel) => {
     setSelectedChannel(channel);
-    setIsInlinePlayerOpen(canPlay);
-  }, [canPlay]);
+    if (anchoredEnabled) closePlayerWindow();
+    else stopPlayerWindow();
+    setIsInlinePlayerOpen(canPlay && !anchoredEnabled);
+    setAnchoredChannel(canPlay && anchoredEnabled ? channel : null);
+  }, [canPlay, anchoredEnabled, closePlayerWindow, stopPlayerWindow]);
 
   useEffect(() => {
     if (playerWindowStatus !== 'open') return;
@@ -532,17 +560,33 @@ function CatalogWorkspace() {
         </div>
 
         {/* Section Lecteur + Grille (3/4 de largeur) */}
-        <div className="lg:col-span-3 flex flex-col gap-4 sm:gap-6">
+        <div className={`min-w-0 lg:col-span-3 ${anchoredEnabled && canPlay ? 'grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] items-start' : 'flex flex-col'} gap-4 sm:gap-6`}>
 
           {/* Quick Category Filter Tabs */}
-          <CategoryTabs
+          <div className="xl:col-span-2"><CategoryTabs
             activePresetId={activePresetId}
             onSelectPreset={handleSelectCategoryPreset}
             favoritesCount={favorites.length}
-          />
+          /></div>
 
           {/* Contrôleur du lecteur séparé */}
-          <section aria-label="Lecteur" className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 p-4 shadow-2xl backdrop-blur-xl sm:p-5">
+          <section aria-label="Lecteur" className="relative xl:col-span-2 overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 p-4 shadow-2xl backdrop-blur-xl sm:p-5">
+            {ANCHORED_PLAYER_AVAILABLE && (
+              <div className="mb-3 flex flex-wrap items-center gap-3 text-xs">
+                <button type="button" aria-pressed={anchoredEnabled} disabled={!canPlay || (!anchoredEnabled && !externalStopped)}
+                  className="rounded-lg border border-amber-400/40 px-3 py-2 focus-visible:ring-2 focus-visible:ring-amber-400 disabled:opacity-40"
+                  onClick={() => {
+                    closePlayerWindow();
+                    setIsInlinePlayerOpen(false);
+                    setAnchoredChannel(null);
+                    setAnchoredEnabled(!anchoredEnabled);
+                  }}>{anchoredEnabled ? 'Désactiver le lecteur ancré' : 'Activer le lecteur ancré'}</button>
+                {!anchoredEnabled && <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={externalStopped} onChange={event => setExternalStopped(event.target.checked)} />
+                  VLC et mes autres lecteurs sont arrêtés
+                </label>}
+              </div>
+            )}
             <div className="h-[2px] w-full bg-tricolor-bar absolute top-0 left-0 right-0 opacity-80" />
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 items-start gap-3 sm:gap-4">
@@ -567,7 +611,7 @@ function CatalogWorkspace() {
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     type="button"
-                    onClick={() => setIsInlinePlayerOpen(true)}
+                    onClick={openInlinePlayer}
                     className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/15 via-amber-400/20 to-rose-500/15 hover:from-emerald-500/25 hover:via-amber-400/30 hover:to-rose-500/25 px-3.5 py-2 text-xs sm:text-sm font-bold text-amber-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 shadow-sm backdrop-blur-sm"
                   >
                     <Play aria-hidden="true" className="h-3.5 w-3.5 fill-current" />
@@ -605,8 +649,18 @@ function CatalogWorkspace() {
             )}
           </section>
 
+          {anchoredEnabled && canPlay && <div className="min-w-0 xl:col-start-2 xl:row-start-3 xl:sticky xl:top-24">
+            <AnchoredPlayer channel={anchoredChannel} channels={channels} onSelect={handleSelectChannel}
+              onStop={() => setAnchoredChannel(null)} onExternalHandoff={() => {
+                setAnchoredChannel(null);
+                setAnchoredEnabled(false);
+                setExternalStopped(false);
+                openInlinePlayer();
+              }} />
+          </div>}
+
           {/* Grille de Chaînes */}
-          <section id="catalogue" aria-labelledby="catalog-title" tabIndex={-1} className="flex scroll-mt-28 flex-col gap-4 focus:outline-none">
+          <section id="catalogue" aria-labelledby="catalog-title" tabIndex={-1} className="min-w-0 xl:col-start-1 xl:row-start-3 flex scroll-mt-28 flex-col gap-4 focus:outline-none">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 id="catalog-title" className="flex items-center gap-2 text-base sm:text-lg font-bold text-zinc-100">
@@ -659,6 +713,7 @@ function CatalogWorkspace() {
 
             {(!catalogError || channels.length > 0) && (
               <ChannelGrid
+                compact={anchoredEnabled && canPlay}
                 channels={channels}
                 selectedChannelId={selectedChannel?.id || null}
                 onSelectChannel={handleSelectChannel}
@@ -675,10 +730,10 @@ function CatalogWorkspace() {
       </div>
 
       {/* Floating Action Button for Quick Player Re-Open */}
-      {selectedChannel && canPlay && (
+      {selectedChannel && canPlay && !anchoredEnabled && (
         <button
           type="button"
-          onClick={() => setIsInlinePlayerOpen(true)}
+          onClick={openInlinePlayer}
           className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full border border-amber-400/35 bg-black/80 px-3.5 py-2 text-xs sm:text-sm font-bold text-amber-300 shadow-2xl backdrop-blur-xl transition hover:border-amber-400 hover:bg-black/95 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 sm:bottom-8 sm:right-8"
           title={`Regarder : ${selectedChannelLabel}`}
           aria-label={`Regarder : ${selectedChannelLabel}`}
@@ -696,14 +751,14 @@ function CatalogWorkspace() {
       )}
 
       {/* Inline Video Player Modal Overlay */}
-      <InlinePlayerModal
+      {canPlay && isInlinePlayerOpen && <InlinePlayerModal
         channel={selectedChannel}
         isOpen={canPlay && isInlinePlayerOpen}
         onClose={() => setIsInlinePlayerOpen(false)}
         onOpenPopoutWindow={() => {
           if (selectedChannel) openPlayerForChannel(selectedChannel);
         }}
-      />
+      />}
     </main>
   );
 }

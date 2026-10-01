@@ -60,9 +60,17 @@ aucun changement applicatif supplémentaire à déployer.
 
 ## Ce qui reste à faire
 
+Complément de reprise L5, 1er octobre 2026 : le propriétaire a explicitement
+retenu l'expérimentation. AL-T05 est maintenant réalisé/testé **localement**,
+désactivé par défaut et absent du build de production. Recommandation **ajuster**,
+notamment l'exclusivité avec VLC qui n'est pas piloté par l'ancré.
+[Activation, preuves et limites](anchored-player-validation.md).
+Référence Git inchangée `15d6b4a` ; aucun commit/push/déploiement L5.
+L0–L4 reste la livraison staging ; L6 non commencé, briefing désactivé.
+
 | Travail | État / prochaine action |
 |---|---|
-| L5 — AL-T05, lecteur ancré et zapping | **Non commencé, optionnel.** Faire décider au propriétaire s’il retient le prototype ou clôture L5 sans expérimentation |
+| L5 — AL-T05, lecteur ancré et zapping | **Prototype réalisé, testé et évalué localement. Recommandation ajuster avant généralisation.** Réception web gérée réussie ; exclusivité/arrêt VLC global non reçus, sortie explicite vers le parcours historique. Décider de l'ajustement et de la réception humaine |
 | L6 — AL-D01 et AL-D04, briefing | **Différé, non implémenté.** Après clôture de L5, décider nom/fenêtre/traitement ; implémenter et tester avant toute activation explicite |
 | Comptes Clerk ordinaires essai/actif/expiré | **Non reçus en session réelle.** Le propriétaire n’a que le compte administrateur. Gardes testées automatiquement ; ne pas modifier son rôle/abonnement pour fabriquer les profils |
 | Lecteur d’écran, appareils mobiles physiques et lecture réelle d’un échantillon autorisé sur cette livraison | **Non reçus dans cette réception.** Les E2E responsive et réceptions de lecture historiques ne les remplacent pas |
@@ -83,15 +91,15 @@ implicitement un déploiement futur de L5/L6.
 1. Lire les documents de reprise et `git status --short`. Préserver l’arbre
    volontairement sale, y compris les fichiers non suivis ; aucun commit/push
    ni nettoyage destructif autorisé.
-2. Reprendre **l’arbitrage L5**, AL-T05. Cette fiche n’autorise pas à commencer
-   le prototype ni à activer le briefing : attendre la demande produit du propriétaire.
-3. Si L5 est retenu : prototype local désactivable, un seul flux à la fois,
-   destruction de l’ancien player au zapping, arrêt/volume accessibles,
-   modale/fenêtre séparée conservées, contrôle d’éligibilité inchangé. Vérifier
-   HLS/VLC/indisponible, zapping rapide, plein écran, pause, filtres, mobile et
-   démontage ; consigner conserver/ajuster/abandonner.
-4. Après réalisation ou abandon explicite de L5, reprendre L6 en dernier.
-   Le bouton « Briefing — bientôt » reste désactivé jusque-là.
+2. Relire la [réception L5](anchored-player-validation.md) : le prototype est
+   maintenant disponible en développement local, opt-in et non publié.
+   L'accord produit de cette session autorisait sa réalisation et ses tests.
+3. Suite proposée : réception humaine et arbitrage de l'ajustement VLC/mobile.
+   Ne pas traiter la déclaration d'arrêt de VLC comme un contrôle du processus.
+   Aucun zapping VLC ni contrôle de son volume/arrêt n'a été reçu.
+4. **Ne pas commencer L6 dans cette session**, ni le déduire de la réalisation
+   de L5. Le bouton « Briefing — bientôt » reste désactivé ; toute reprise du
+   briefing et toute publication nécessitent une nouvelle demande.
 
 Le projet source `C:/Users/GAMER PC/IPTV` reste intact. Travailler sur
 `africa_live_dev` et localhost:3001 ; médias téléchargés directement depuis

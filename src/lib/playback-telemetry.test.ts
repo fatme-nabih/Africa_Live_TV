@@ -3,6 +3,15 @@ import test from 'node:test';
 
 import type { PlaybackEventPayload } from './playback-events-client';
 import { PlaybackAttemptTelemetry } from './playback-telemetry';
+import { playbackEventRequestSchema } from './api-contracts';
+import { randomUUID } from 'node:crypto';
+
+test('real player attempt metadata cannot invalidate the strict stopped contract', () => {
+  const events: PlaybackEventPayload[] = [];
+  const telemetry = new PlaybackAttemptTelemetry(event => events.push(event));
+  telemetry.emit({ playbackSessionId: randomUUID(), attemptId: randomUUID(), channelId: 'channel', engine: 'hls.js', startedAt: 42 } as Parameters<typeof telemetry.emit>[0], 'stopped', { playerEngine: 'hls.js', sessionEnded: true });
+  assert.equal(playbackEventRequestSchema.safeParse({ ...events[0], schemaVersion: 1, timestamp: new Date().toISOString(), devicePlatform: 'windows' }).success, true);
+});
 
 test('opened, started, stopped and failures are unique per attempt', () => {
   const events: PlaybackEventPayload[] = [];

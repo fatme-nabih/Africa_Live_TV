@@ -1,5 +1,9 @@
 # Africa Live — Plan de préparation à la production
 
+Complément L5 du 1er octobre : AL-T05 expérimenté/testé et évalué localement,
+recommandation **ajuster avant généralisation** ; [preuves et limites VLC](anchored-player-validation.md).
+Aucune publication de L5. L0–L4 reste staging ; briefing inactif, L6 non commencé.
+
 Complément du 1er octobre à 18:09 UTC : L0–L4 déployé sur staging après autorisation,
 neuf E2E distants et parcours administrateur réel réussis.
 [Réception et limites](dashboard-auth-staging-reception.md). Zoom natif 200 %

@@ -29,7 +29,9 @@ export class PlaybackAttemptTelemetry {
     if (uniqueKey && this.sent.has(uniqueKey)) return false;
     if (uniqueKey) this.sent.add(uniqueKey);
 
-    this.send({ ...attempt, event, ...extras });
+    // Player attempts also contain engine/start time; the API is strict and
+    // must receive only its public identity fields.
+    this.send({ playbackSessionId: attempt.playbackSessionId, attemptId: attempt.attemptId, channelId: attempt.channelId, event, ...extras });
     return true;
   }
 }

@@ -1,5 +1,12 @@
 # Matrice des environnements — revue du 1er octobre 2026
 
+Complément L5 local : AL-T05 disponible exclusivement en développement,
+opt-in désactivé par défaut et au rechargement. Aucun flag `.env` supplémentaire,
+aucune variable distante, aucune migration ; contrôle d'activation absent du
+build de production vérifié. Le lecteur historique conserve les capacités
+VLC existantes. L'ancré web ne contrôle pas VLC et le quitte explicitement.
+[Preuves et limites](anchored-player-validation.md). Aucune livraison L5.
+
 Relevé complémentaire à 18:09 UTC : L0–L4 déployé après autorisation,
 `b0d52c0c-3bca-4600-8a3e-fb1f2709dada` SUCCESS/actif. Variables lues sans afficher
 de secret : rôle staging, MVP/public MVP/lecture locale/VLC desktop désactivés,

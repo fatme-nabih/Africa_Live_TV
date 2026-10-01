@@ -16,6 +16,7 @@ import { formatCountryName } from '@/lib/format';
 import type { Channel } from '@/types/channel';
 
 interface ChannelGridProps {
+  compact?: boolean;
   channels: Channel[];
   selectedChannelId: string | null;
   onSelectChannel: (channel: Channel) => void;
@@ -55,13 +56,13 @@ function ChannelLogo({ channel, compact = false }: { channel: Channel; compact?:
   );
 }
 
-function LoadingSkeleton({ viewMode }: { viewMode: 'grid' | 'list' }) {
+function LoadingSkeleton({ viewMode, compact = false }: { viewMode: 'grid' | 'list'; compact?: boolean }) {
   return (
     <div
       role="status"
       aria-label="Chargement des chaînes"
       className={viewMode === 'grid'
-        ? 'grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 xl:grid-cols-4'
+        ? `grid grid-cols-2 gap-3 sm:gap-4 ${compact ? '' : 'md:grid-cols-3 xl:grid-cols-4'}`
         : 'flex flex-col gap-2'}
     >
       {Array.from({ length: viewMode === 'grid' ? 8 : 5 }).map((_, index) => (
@@ -82,6 +83,7 @@ function LoadingSkeleton({ viewMode }: { viewMode: 'grid' | 'list' }) {
 }
 
 export default function ChannelGrid({
+  compact = false,
   channels,
   selectedChannelId,
   onSelectChannel,
@@ -92,7 +94,7 @@ export default function ChannelGrid({
   favorites,
   toggleFavorite,
 }: ChannelGridProps) {
-  if (channels.length === 0 && loading) return <LoadingSkeleton viewMode={viewMode} />;
+  if (channels.length === 0 && loading) return <LoadingSkeleton viewMode={viewMode} compact={compact} />;
 
   if (channels.length === 0) {
     return (
@@ -130,7 +132,7 @@ export default function ChannelGrid({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className={viewMode === 'grid'
-          ? 'grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 xl:grid-cols-4'
+          ? `grid grid-cols-2 gap-3 sm:gap-4 ${compact ? '' : 'md:grid-cols-3 xl:grid-cols-4'}`
           : 'flex flex-col gap-2'}
       >
         <AnimatePresence mode="popLayout">

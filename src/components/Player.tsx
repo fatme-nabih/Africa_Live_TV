@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useReducer, useRef } from 'react';
+import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -56,6 +56,11 @@ const PLAYBACK_START_TIMEOUT_MS = 15_000;
 interface PlayerProps {
   channelId: string;
   channelName?: string;
+  /** Local experiment: preparation only, explicit play and external handoff. */
+  anchored?: boolean;
+  onExternalHandoff?: () => void;
+  initialVolume?: number;
+  onVolumePreference?: (volume: number) => void;
 }
 
 type ActiveAttempt = {
@@ -74,7 +79,11 @@ function telemetryEngine(engine: PlayerEngine | null | undefined): TelemetryPlay
     : null;
 }
 
-export default function Player({ channelId, channelName = '' }: PlayerProps) {
+export default function Player({ channelId, channelName = '', anchored = false, onExternalHandoff, initialVolume = 1, onVolumePreference }: PlayerProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [paused, setPaused] = useState(true);
+  const [volume, setVolume] = useState(initialVolume);
+  const [fullscreenError, setFullscreenError] = useState('');
   const webAttemptCountRef = useRef(0);
   const automaticDecisionsRef = useRef(new Set<string>());
   const externalLaunchRequestedRef = useRef(false);
@@ -91,6 +100,9 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
   ) || 'Chaîne Africa Live';
   const source = state.channelId === channelId ? state.source : null;
   const videoRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    if (anchored && videoRef.current) videoRef.current.volume = initialVolume;
+  }, [anchored, initialVolume]);
   const hlsRef = useRef<Hls | null>(null);
   const activeAttemptRef = useRef<ActiveAttempt | null>(null);
   const selectedChannelIdRef = useRef(channelId);
@@ -223,6 +235,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
 
   useEffect(() => {
     const controller = new AbortController();
+    selectedChannelIdRef.current = channelId;
     playbackSessionRef.current = null;
     webAttemptCountRef.current = 0;
     automaticDecisionsRef.current.clear();
@@ -243,6 +256,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
 
     return () => {
       controller.abort();
+      selectedChannelIdRef.current = '';
       resolutionSequenceRef.current += 1;
       resolutionControllerRef.current?.abort();
       externalControllerRef.current?.abort();
@@ -363,6 +377,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         if (!isCurrent()) return;
+        if (anchored) stopStartupTimeout();
         dispatch({ type: 'STREAM_READY', engine: 'hls.js' });
       });
       hls.on(Hls.Events.ERROR, (_event, data) => {
@@ -422,6 +437,9 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
         video.removeEventListener('error', handleVideoError);
         hls.destroy();
         if (hlsRef.current === hls) hlsRef.current = null;
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
       };
     }
 
@@ -432,6 +450,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
       const ready = () => {
         if (!readyDispatched && isCurrent()) {
           readyDispatched = true;
+          if (anchored) stopStartupTimeout();
           dispatch({ type: 'STREAM_READY', engine: 'native-hls' });
         }
       };
@@ -463,6 +482,9 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
         video.removeEventListener('loadedmetadata', ready);
         video.removeEventListener('canplay', ready);
         video.removeEventListener('error', failed);
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
       };
     }
 
@@ -471,7 +493,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
       code: 'HLS_UNSUPPORTED',
       message: 'Ce navigateur ne prend pas en charge la lecture HLS.',
     });
-  }, [channelId, failCurrentAttempt, source, state.attemptId, stopStartupTimeout, updateAttemptEngine]);
+  }, [anchored, channelId, failCurrentAttempt, source, state.attemptId, stopStartupTimeout, updateAttemptEngine]);
 
   const startPlayback = useCallback((userInitiated: boolean) => {
     const video = videoRef.current;
@@ -514,13 +536,15 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
   }, [emitForActiveAttempt, failCurrentAttempt, stopStartupTimeout]);
 
   useEffect(() => {
+    if (anchored) return;
     if (state.phase !== 'ready' || !state.attemptId) return;
     if (autoPlayAttemptIdsRef.current.has(state.attemptId)) return;
     autoPlayAttemptIdsRef.current.add(state.attemptId);
     startPlayback(false);
-  }, [startPlayback, state.attemptId, state.phase]);
+  }, [anchored, startPlayback, state.attemptId, state.phase]);
 
   const handlePlaying = useCallback(() => {
+    setPaused(false);
     stopStartupTimeout();
     networkRecoveryCountRef.current = 0;
     dispatch({ type: 'PLAYING' });
@@ -552,12 +576,14 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
   }, [handlePlaying, state.phase]);
 
   const handlePause = useCallback(() => {
+    setPaused(true);
+    if (anchored) { hlsRef.current?.stopLoad(); stopStartupTimeout(); }
     const attempt = activeAttemptRef.current;
     if (state.phase === 'playing' && attempt && playbackStartedAttemptIdsRef.current.has(attempt.attemptId)) {
       stopStartupTimeout();
       emitForActiveAttempt('paused');
     }
-  }, [emitForActiveAttempt, state.phase, stopStartupTimeout]);
+  }, [anchored, emitForActiveAttempt, state.phase, stopStartupTimeout]);
 
   const handleWaiting = useCallback(() => {
     const attemptId = activeAttemptRef.current?.attemptId;
@@ -591,6 +617,10 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
   }, [channelId, handleResolutionFailure, resolveWebSource]);
 
   const openExternalPlayer = useCallback((retry = false) => {
+    if (anchored) {
+      onExternalHandoff?.();
+      return;
+    }
     if (externalLaunchPendingRef.current) return;
     if (LOCAL_AUTOMATIC_PLAYBACK && externalLaunchRequestedRef.current && !retry) return;
     if (retry || !launchIdRef.current) launchIdRef.current = crypto.randomUUID();
@@ -601,6 +631,8 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
     hlsRef.current?.destroy();
     hlsRef.current = null;
     videoRef.current?.pause();
+    videoRef.current?.removeAttribute('src');
+    videoRef.current?.load();
     const active = activeAttemptRef.current;
     if (active) telemetryRef.current?.emit(active, 'stopped', { playerEngine: telemetryEngine(active.engine), sessionEnded: true });
     activeAttemptRef.current = null;
@@ -726,9 +758,10 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
         });
         dispatch({ type: 'EXTERNAL_FAILED', failure });
       });
-  }, [channelId, emitForActiveAttempt, stopStartupTimeout]);
+  }, [anchored, onExternalHandoff, channelId, emitForActiveAttempt, stopStartupTimeout]);
 
   useEffect(() => {
+    if (anchored) return;
     if (state.channelId !== channelId) return;
     if (state.phase === 'external-required') {
       openExternalPlayer();
@@ -738,7 +771,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
       if (webAttemptCountRef.current < MAX_AUTOMATIC_WEB_ATTEMPTS) tryAnotherSource();
       else openExternalPlayer();
     }
-  }, [channelId, openExternalPlayer, source, state.attemptId, state.channelId, state.engine, state.failure?.category, state.phase, tryAnotherSource]);
+  }, [anchored, channelId, openExternalPlayer, source, state.attemptId, state.channelId, state.engine, state.failure?.category, state.phase, tryAnotherSource]);
 
   if (!channelId) {
     return <EmptyChannelState />;
@@ -764,6 +797,7 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
 
   return (
     <motion.div
+      ref={containerRef}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-black/60 shadow-2xl backdrop-blur-xl"
@@ -804,12 +838,53 @@ export default function Player({ channelId, channelName = '' }: PlayerProps) {
           controls
           playsInline
           onPlaying={handlePlaying}
+          onPlay={() => { if (anchored) hlsRef.current?.startLoad(-1); }}
           onTimeUpdate={handleTimeUpdate}
           onPause={handlePause}
           onWaiting={handleWaiting}
+          onVolumeChange={() => {
+            const video = videoRef.current;
+            if (video) {
+              const value = video.muted ? 0 : video.volume;
+              setVolume(value);
+              onVolumePreference?.(value);
+            }
+          }}
           className={`h-full w-full object-contain ${loading || waitingForUser || showError || externalSuggested || externalReady || externalOpened ? 'pointer-events-none' : ''}`}
         />
       </div>
+
+      {anchored && (
+        <div className="flex flex-wrap items-center gap-3 border-t border-white/10 bg-black p-3 text-xs">
+          <button type="button" disabled={!source || loading || externalSuggested || showError}
+            onClick={() => {
+              if (videoRef.current?.paused) startPlayback(true);
+              else { videoRef.current?.pause(); hlsRef.current?.stopLoad(); }
+            }}
+            className="rounded-lg border border-white/20 px-3 py-2 focus-visible:ring-2 focus-visible:ring-amber-400 disabled:opacity-40">
+            {paused ? 'Lire' : 'Pause'}
+          </button>
+          <label className="flex items-center gap-2">Volume
+            <input aria-label="Volume" type="range" min="0" max="1" step="0.05" value={volume}
+              className="w-24 accent-amber-400 focus-visible:ring-2 focus-visible:ring-amber-400"
+              onChange={event => {
+                const video = videoRef.current;
+                if (!video) return;
+                video.muted = false;
+                video.volume = Number(event.target.value);
+                setVolume(video.volume);
+              }} />
+          </label>
+          <button type="button" className="rounded-lg border border-white/20 px-3 py-2 focus-visible:ring-2 focus-visible:ring-amber-400"
+            onClick={() => {
+              setFullscreenError('');
+              const action = document.fullscreenElement ? document.exitFullscreen() : containerRef.current?.requestFullscreen?.();
+              if (!action) setFullscreenError('Le plein écran est indisponible sur ce navigateur.');
+              else void action.catch(() => setFullscreenError('Le plein écran a été refusé par le navigateur.'));
+            }}>Plein écran</button>
+          {fullscreenError && <p role="status">{fullscreenError}</p>}
+        </div>
+      )}
 
       <div className="flex flex-col gap-3.5 border-t border-white/[0.07] bg-white/[0.02] p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">

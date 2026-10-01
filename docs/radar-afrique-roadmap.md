@@ -28,7 +28,10 @@ et [dossier de livraison](dashboard-delivery-dossier.md). Aucun déploiement dé
 Complément autorisé du 1er octobre à 18:09 UTC : L0–L4 est ensuite déployé sur staging,
 neuf E2E distants et parcours administrateur réel reçus.
 [Preuves et validations restantes](dashboard-auth-staging-reception.md).
-Suite : décision L5 sur le lecteur ancré, puis L6 briefing. Les étapes anciennes
+Complément L5 : prototype ancré expérimenté/testé localement, recommandation
+ajuster avant généralisation ; [preuve et limite VLC](anchored-player-validation.md).
+L6 briefing reste désactivé et non commencé ; aucune publication L5.
+Les étapes anciennes
 ci-dessous restent un historique de proposition ; le plan dashboard fait foi.
 
 ## Objectif

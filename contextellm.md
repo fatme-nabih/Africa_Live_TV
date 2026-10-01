@@ -8,6 +8,22 @@ mot de passe, identifiant de paiement, clé Clerk ou URL de flux média.
 
 ## État de reprise courant — 1er octobre 2026
 
+**Complément L5 courant : AL-T05 réalisé, testé et évalué localement**, après
+demande explicite du propriétaire. Prototype opt-in dans `/app`, désactivé au
+chargement, uniquement avec `npm run dev` sur localhost:3001 ; base africa_live_dev.
+Lecteur web unique géré, zapping, destruction HLS/vidéo, pause, volume conservé,
+plein écran, filtres indépendants et parcours modale/fenêtre reçus.
+Recommandation **ajuster avant généralisation** : VLC sort du prototype vers le
+lecteur historique ; son arrêt reste manuel et l'exclusivité globale n'est pas
+reçue. Voir [la réception L5](docs/anchored-player-validation.md).
+220 unitaires + 14 intégrations isolées, 41 scénarios E2E distincts reçus ;
+TypeScript/ESLint/build/migrations réussis. Comptes Clerk ordinaires, VLC réel,
+amont réel et appareils physiques non reçus en L5. Administrateur inchangé.
+Référence Git `15d6b4a`, arbre modifié localement ; aucun commit/push/déploiement.
+L0–L4 reste la livraison staging ci-dessous. **L6 non commencé**, briefing inactif ;
+la prochaine reprise doit traiter l'ajustement/réception humaine L5 selon demande,
+sans démarrer L6 implicitement. Serveur restitué en développement Clerk local.
+
 Clôture publiée à la demande du propriétaire : GitHub `main`, applicatif
 `22dea98`, puis commit documentaire final ; Railway staging
 `4c8a82cc-5b3b-4a0e-86a1-bf922540869a` SUCCESS reçu à 18:44 UTC.
@@ -16,7 +32,8 @@ Aucun changement de code depuis les preuves L4, ni nouvelle migration,
 variable, DNS, plan ou abonnement. Voir la fiche de reprise pour les empreintes.
 
 **Lire d’abord [la fiche de reprise dashboard](docs/dashboard-session-handoff.md)** :
-L0–L4 terminés et déployés staging ; prochaine décision L5, puis L6 en dernier.
+L0–L4 terminés et déployés staging ; L5 évalué localement, recommandation ajuster ;
+L6 reste différé et nécessite une nouvelle demande.
 Les sections anciennes ci-dessous conservent l’historique ; leurs « suite » et
 « non déployé » ne sont pas les instructions de reprise actuelles.
 
