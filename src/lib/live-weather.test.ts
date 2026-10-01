@@ -255,3 +255,61 @@ test('getRadarWeather throws ServiceUnavailableError when upstream fails without
     clearWeatherCacheForTesting();
   }
 });
+
+test('getRadarWeather falls back to wttr.in when Open-Meteo returns 429', async () => {
+  clearWeatherCacheForTesting();
+
+  const originalFetch = globalThis.fetch;
+  let openMeteoCalled = false;
+  let wttrCalled = false;
+
+  const mockWttrResponse = {
+    current_condition: [
+      {
+        temp_C: '29',
+        FeelsLikeC: '33',
+        humidity: '75',
+        windspeedKmph: '18',
+        winddirDegree: '270',
+        winddir16Point: 'W',
+        precipMM: '0.0',
+        lang_fr: [{ value: 'Ensoleillé' }],
+      },
+    ],
+  };
+
+  globalThis.fetch = (async (url: string | URL | Request) => {
+    const urlStr = String(url);
+    if (urlStr.includes('open-meteo.com')) {
+      openMeteoCalled = true;
+      return new Response(JSON.stringify({ error: true, reason: 'Daily API request limit exceeded' }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    if (urlStr.includes('wttr.in')) {
+      wttrCalled = true;
+      return new Response(JSON.stringify(mockWttrResponse), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    throw new Error(`Unexpected URL: ${urlStr}`);
+  }) as typeof fetch;
+
+  try {
+    const result = await getRadarWeather({ code: 'SN' });
+    assert.equal(openMeteoCalled, true);
+    assert.equal(wttrCalled, true);
+    assert.equal(result.current.locationName, 'Dakar');
+    assert.equal(result.current.temperatureC, 29);
+    assert.equal(result.current.apparentTemperatureC, 33);
+    assert.equal(result.current.relativeHumidityPercent, 75);
+    assert.equal(result.current.windSpeedKmh, 18);
+    assert.equal(result.current.weatherDescription, 'Ensoleillé');
+    assert.equal(result.current.weatherIcon, 'clear');
+  } finally {
+    globalThis.fetch = originalFetch;
+    clearWeatherCacheForTesting();
+  }
+});

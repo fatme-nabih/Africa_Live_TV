@@ -270,7 +270,10 @@ async function fetchFromOpenMeteo(target: ResolvedTarget): Promise<LiveWeatherCo
     cache: 'no-store',
     redirect: 'error',
     signal: AbortSignal.timeout(8_000),
-    headers: { Accept: 'application/json' },
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': 'AfricaLiveTV-Radar/1.0 (+https://africatv.sn; contact@africatv.sn)',
+    },
   });
 
   if (!response.ok) {
@@ -334,6 +337,93 @@ async function fetchFromOpenMeteo(target: ResolvedTarget): Promise<LiveWeatherCo
   };
 }
 
+async function fetchFromWttr(target: ResolvedTarget): Promise<LiveWeatherCondition> {
+  const url = new URL(`https://wttr.in/${target.latitude.toFixed(4)},${target.longitude.toFixed(4)}`);
+  url.searchParams.set('format', 'j1');
+  url.searchParams.set('lang', 'fr');
+
+  const response = await fetch(url, {
+    cache: 'no-store',
+    redirect: 'error',
+    signal: AbortSignal.timeout(8_000),
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': 'AfricaLiveTV-Radar/1.0 (+https://africatv.sn; contact@africatv.sn)',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`wttr.in returned status ${response.status}`);
+  }
+
+  const rawText = await readBoundedText(response, MAX_WEATHER_BYTES);
+  const data: unknown = JSON.parse(rawText);
+
+  if (!isRecord(data) || !Array.isArray(data.current_condition) || data.current_condition.length === 0) {
+    throw new Error('wttr.in response format was invalid.');
+  }
+
+  const current = data.current_condition[0] as Record<string, unknown>;
+  const temp = typeof current.temp_C === 'string' ? parseFloat(current.temp_C) : Number(current.temp_C) || 0;
+  const apparent = typeof current.FeelsLikeC === 'string' ? parseFloat(current.FeelsLikeC) : Number(current.FeelsLikeC) || temp;
+  const humidity = typeof current.humidity === 'string' ? parseFloat(current.humidity) : Number(current.humidity) || 0;
+  const windSpeed = typeof current.windspeedKmph === 'string' ? parseFloat(current.windspeedKmph) : Number(current.windspeedKmph) || 0;
+  const windDir = typeof current.winddirDegree === 'string' ? parseFloat(current.winddirDegree) : Number(current.winddirDegree) || 0;
+  const windCompass = typeof current.winddir16Point === 'string' ? current.winddir16Point : degToCompass(windDir);
+  const precipitation = typeof current.precipMM === 'string' ? parseFloat(current.precipMM) : Number(current.precipMM) || 0;
+
+  let description = 'Conditions variables';
+  if (Array.isArray(current.lang_fr) && current.lang_fr.length > 0 && isRecord(current.lang_fr[0]) && typeof current.lang_fr[0].value === 'string') {
+    description = current.lang_fr[0].value;
+  } else if (Array.isArray(current.weatherDesc) && current.weatherDesc.length > 0 && isRecord(current.weatherDesc[0]) && typeof current.weatherDesc[0].value === 'string') {
+    description = current.weatherDesc[0].value;
+  }
+
+  const descLower = description.toLowerCase();
+  let icon: WeatherIconType = 'partly-cloudy';
+  if (descLower.includes('soleil') || descLower.includes('dégagé') || descLower.includes('clear') || descLower.includes('sunny')) {
+    icon = 'clear';
+  } else if (descLower.includes('orage') || descLower.includes('thunder') || descLower.includes('éclair')) {
+    icon = 'storm';
+  } else if (descLower.includes('pluie') || descLower.includes('averse') || descLower.includes('rain') || descLower.includes('bruine')) {
+    icon = 'rain';
+  } else if (descLower.includes('brume') || descLower.includes('brouillard') || descLower.includes('fog') || descLower.includes('mist') || descLower.includes('haze') || descLower.includes('harmattan')) {
+    icon = 'fog';
+  } else if (descLower.includes('nuag') || descLower.includes('couvert') || descLower.includes('cloud') || descLower.includes('overcast')) {
+    icon = 'cloudy';
+  }
+
+  const currentHour = new Date().getUTCHours();
+  const isDay = currentHour >= 6 && currentHour <= 19;
+  const nowIso = new Date().toISOString();
+
+  return {
+    locationName: target.locationName,
+    countryCode: target.countryCode,
+    countryName: target.countryName,
+    region: target.region,
+    latitude: target.latitude,
+    longitude: target.longitude,
+    timezone: 'Africa/Dakar',
+    temperatureC: Math.round(temp * 10) / 10,
+    apparentTemperatureC: Math.round(apparent * 10) / 10,
+    relativeHumidityPercent: Math.round(humidity),
+    windSpeedKmh: Math.round(windSpeed * 10) / 10,
+    windDirectionDeg: Math.round(windDir),
+    windDirectionCompass: windCompass,
+    weatherCode: 0,
+    weatherDescription: description,
+    weatherIcon: icon,
+    isDay,
+    precipitationMm: Math.round(precipitation * 10) / 10,
+    observedAt: nowIso,
+    fetchedAt: nowIso,
+    stale: false,
+    source: 'Open-Meteo',
+    attribution: 'Données météo : Observation temps réel (CC BY 4.0)',
+  };
+}
+
 export async function getRadarWeather(query?: {
   code?: string;
   city?: string;
@@ -357,7 +447,17 @@ export async function getRadarWeather(query?: {
 
   let requestPromise = pendingWeatherRequests.get(cacheKey);
   if (!requestPromise) {
-    requestPromise = fetchFromOpenMeteo(target)
+    requestPromise = (async () => {
+      try {
+        return await fetchFromOpenMeteo(target);
+      } catch (openMeteoError) {
+        try {
+          return await fetchFromWttr(target);
+        } catch {
+          throw openMeteoError;
+        }
+      }
+    })()
       .then((condition) => {
         const savedAt = Date.now();
         weatherCache.set(cacheKey, {
