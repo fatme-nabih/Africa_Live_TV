@@ -8,7 +8,19 @@ mot de passe, identifiant de paiement, clé Clerk ou URL de flux média.
 
 ## État de reprise courant — 1er octobre 2026
 
-**Complément L5 courant : AL-T05 réalisé, testé et évalué localement**, après
+**Mise à jour Radar & rédactions (GitHub et Railway staging reçus à 22:14 UTC)** :
+- Commit applicatif `6f7e384` poussé sur GitHub `main`.
+- Déploiement Railway staging CLI `812e1527-13a8-4884-9250-e25133afddca` **SUCCESS / actif** sur le service `Africa_Live_TV`.
+- Santé `GET /api/health` : HTTP 200 (`process` et `database` ok) sur `staging.africatv.sn` et sur le domaine de secours Railway.
+- Radar anonyme : HTTP 401 et redirection 307 de `/app/live` vers Clerk protégées.
+- Évolutions livrées :
+  1. Intégration et validation d'AIP (Côte d'Ivoire) et de 21 flux RSS nationaux et économiques africains (APS, MaliJet, LeFaso, Actu Cameroun, Okapi, etc.).
+  2. Nouvelle rubrique internationale (France 24 Monde/Afrique, RFI Monde/Afrique, BBC Afrique, Le Monde Afrique) avec onglets de filtrage (« Toutes », « Afrique & National », « International »).
+  3. Retrait de GDELT (dépendance externe en dépassement de quota) et suppression des couches séismes (USGS) et feux thermiques (FIRMS) sur la carte vectorielle.
+  4. Harmonisation visuelle complète du dashboard avec le design de la page TV (barre tricolore, cartes glassmorphismes, badges de rédaction avec codes couleur dédiés).
+- Schéma PostgreSQL et dépendances inchangés (0 nouvelle migration requise).
+
+**Complément L5 historique : AL-T05 réalisé, testé et évalué localement**, après
 demande explicite du propriétaire. Prototype opt-in dans `/app`, désactivé au
 chargement, uniquement avec `npm run dev` sur localhost:3001 ; base africa_live_dev.
 Lecteur web unique géré, zapping, destruction HLS/vidéo, pause, volume conservé,
