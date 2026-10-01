@@ -30,10 +30,15 @@ Limites : aucune réception Clerk ordinaire, VLC réel, source amont réelle,
 Safari/HLS natif ou appareil physique L5. Aucun changement au compte administrateur.
 Retour arrière : désactiver/recharger ; aucune restauration de base nécessaire.
 Serveur restitué en mode Clerk local ; aucun fichier `.env` modifié.
-IPTV intact ; aucun commit/push/déploiement/état distant, coût ou migration.
-L0–L4 reste livré sur staging ; L6 non commencé et briefing désactivé.
+IPTV intact ; aucune nouvelle migration ou modification des variables/services.
+Publication L5 autorisée ensuite et reçue le 1er octobre à 20:08 UTC :
+commit applicatif `9326fc0` poussé sur GitHub `main`, Railway staging
+`dc557ad8-8288-4872-863d-7a2b6396014c` SUCCESS/actif. Santé processus/base 200
+sur les deux domaines, **9 E2E distants réussis**. Le contrôle d'activation
+ancré reste absent du build production ; le prototype reste local et opt-in.
+Briefing inactif, L6 non commencé. [Preuves de publication](anchored-player-validation.md#publication-github-et-railway-staging).
 Suite : arbitrage de l'ajustement et réception humaine L5, nouvelle autorisation
-nécessaire avant publication ou reprise du briefing.
+nécessaire avant toute publication future ou reprise du briefing.
 
 ## Clôture et publication GitHub/Railway — 1er octobre 2026, 18:44 UTC
 
@@ -846,4 +851,3 @@ Statut : terminé.
 - Création du script \
 pm run simulate:incident\ (simulate-incident.ts) pour générer des événements critiques (\db.pool.connection_failed\, \process.uncaught_exception\, \xternal.provider.failed\) permettant de tester les Log Drains sans créer de véritable panne applicative.
 - Création du document \docs/production-operations.md\ définissant la procédure d'alerte, les métriques (JSON events), les politiques de sauvegarde (RPO: 24h, RTO: 2h), et détaillant explicitement le fonctionnement du rollback de l'infrastructure sur Railway.
-

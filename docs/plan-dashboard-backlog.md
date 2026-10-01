@@ -453,7 +453,9 @@ administrateur staging ; les profils ordinaires restent à recevoir en session r
   accord produit ; **recommandation ajuster avant généralisation**.
   [Preuves, activation, fichiers et limites](anchored-player-validation.md).
   Exclusivité des lecteurs web gérés reçue ; arrêt/exclusivité VLC global non
-  reçus, sortie explicite vers le lecteur existant. Aucune publication de L5.
+  reçus, sortie explicite vers le lecteur existant. Code L5 ensuite publié avec
+  autorisation sur staging ; contrôle d'activation limité au développement local.
+  Neuf E2E distants et santé des deux domaines reçus ; voir la réception L5.
 - Dépendances : AL-T03, AL-T04 et accord de retenir l’expérimentation D7.
 - Travail : prototype local désactivable, lecteur persistant et liste filtrée ;
   tester ergonomie avant décision de généralisation.

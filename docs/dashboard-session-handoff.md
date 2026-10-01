@@ -65,8 +65,12 @@ retenu l'expérimentation. AL-T05 est maintenant réalisé/testé **localement**
 désactivé par défaut et absent du build de production. Recommandation **ajuster**,
 notamment l'exclusivité avec VLC qui n'est pas piloté par l'ancré.
 [Activation, preuves et limites](anchored-player-validation.md).
-Référence Git inchangée `15d6b4a` ; aucun commit/push/déploiement L5.
-L0–L4 reste la livraison staging ; L6 non commencé, briefing désactivé.
+Publication L5 autorisée ensuite et reçue le 1er octobre à 20:08 UTC :
+commit applicatif `9326fc0` poussé sur GitHub `main`, Railway staging
+`dc557ad8-8288-4872-863d-7a2b6396014c` SUCCESS/actif. Santé processus/base 200
+sur les deux domaines, **9 E2E distants réussis**. Le contrôle d'activation
+ancré reste absent du build production ; le prototype reste local et opt-in.
+Briefing inactif, L6 non commencé. [Preuves de publication](anchored-player-validation.md#publication-github-et-railway-staging).
 
 | Travail | État / prochaine action |
 |---|---|
@@ -85,14 +89,15 @@ Ces réserves sont consignées ; elles ne remettent pas les lots implémentés �
 Publication de clôture demandée ensuite par le propriétaire et exécutée :
 GitHub et Railway staging mis à jour avec L0–L4 et les documents réconciliés.
 Le relevé final est aussi dans [le journal](production-progress.md).
-Cette autorisation porte sur la publication de clôture ; elle n’autorise pas
-implicitement un déploiement futur de L5/L6.
+La publication L5 de cette session a ensuite été autorisée et reçue ci-dessus.
+Cette autorisation ne vaut pas pour une publication future ni pour L6.
 
 1. Lire les documents de reprise et `git status --short`. Préserver l’arbre
-   volontairement sale, y compris les fichiers non suivis ; aucun commit/push
-   ni nettoyage destructif autorisé.
+   existant, y compris les fichiers non suivis. Arbre propre après publication ;
+   tout prochain commit/push exige une nouvelle demande, aucun nettoyage destructif.
 2. Relire la [réception L5](anchored-player-validation.md) : le prototype est
-   maintenant disponible en développement local, opt-in et non publié.
+   disponible en développement local, opt-in ; son code est publié mais
+   son activation reste exclue du build de staging.
    L'accord produit de cette session autorisait sa réalisation et ses tests.
 3. Suite proposée : réception humaine et arbitrage de l'ajustement VLC/mobile.
    Ne pas traiter la déclaration d'arrêt de VLC comme un contrôle du processus.

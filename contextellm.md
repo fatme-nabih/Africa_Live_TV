@@ -19,9 +19,14 @@ reçue. Voir [la réception L5](docs/anchored-player-validation.md).
 220 unitaires + 14 intégrations isolées, 41 scénarios E2E distincts reçus ;
 TypeScript/ESLint/build/migrations réussis. Comptes Clerk ordinaires, VLC réel,
 amont réel et appareils physiques non reçus en L5. Administrateur inchangé.
-Référence Git `15d6b4a`, arbre modifié localement ; aucun commit/push/déploiement.
-L0–L4 reste la livraison staging ci-dessous. **L6 non commencé**, briefing inactif ;
-la prochaine reprise doit traiter l'ajustement/réception humaine L5 selon demande,
+Publication L5 autorisée ensuite et reçue le 1er octobre à 20:08 UTC :
+commit applicatif `9326fc0` poussé sur GitHub `main`, Railway staging
+`dc557ad8-8288-4872-863d-7a2b6396014c` SUCCESS/actif. Santé processus/base 200
+sur les deux domaines, **9 E2E distants réussis**. Le contrôle d'activation
+ancré reste absent du build production ; le prototype reste local et opt-in.
+Briefing inactif, L6 non commencé. [Preuves de publication](docs/anchored-player-validation.md#publication-github-et-railway-staging).
+La clôture L0–L4 ci-dessous est un relevé historique.
+La prochaine reprise doit traiter l'ajustement/réception humaine L5 selon demande,
 sans démarrer L6 implicitement. Serveur restitué en développement Clerk local.
 
 Clôture publiée à la demande du propriétaire : GitHub `main`, applicatif
@@ -553,4 +558,3 @@ aboopay\) et du code source.
 - [x] PROD-051 : Consolidation du nettoyage (télémétrie/abus) dans un script \
 un-maintenance.ts\ autonome avec lots de suppression, verrou exclusif et sécurité des connexions.
 - [x] PROD-052 & PROD-053 : Simulation d'incidents (simulate-incident.ts) pour valider l'observabilité externe des métriques. Ajout des objectifs de sauvegarde/restauration.
-

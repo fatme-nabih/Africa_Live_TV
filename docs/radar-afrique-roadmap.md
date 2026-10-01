@@ -30,7 +30,8 @@ neuf E2E distants et parcours administrateur réel reçus.
 [Preuves et validations restantes](dashboard-auth-staging-reception.md).
 Complément L5 : prototype ancré expérimenté/testé localement, recommandation
 ajuster avant généralisation ; [preuve et limite VLC](anchored-player-validation.md).
-L6 briefing reste désactivé et non commencé ; aucune publication L5.
+Code L5 publié avec autorisation, activation du prototype limitée au dev local.
+L6 briefing reste désactivé et non commencé.
 Les étapes anciennes
 ci-dessous restent un historique de proposition ; le plan dashboard fait foi.
 

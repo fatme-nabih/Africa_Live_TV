@@ -2,7 +2,8 @@
 
 Complément L5 du 1er octobre : AL-T05 expérimenté/testé et évalué localement,
 recommandation **ajuster avant généralisation** ; [preuves et limites VLC](anchored-player-validation.md).
-Aucune publication de L5. L0–L4 reste staging ; briefing inactif, L6 non commencé.
+Code L5 publié sur staging après autorisation ; prototype activable seulement
+en développement local. Briefing inactif, L6 non commencé.
 
 Complément du 1er octobre à 18:09 UTC : L0–L4 déployé sur staging après autorisation,
 neuf E2E distants et parcours administrateur réel réussis.

@@ -2,7 +2,9 @@
 
 ## Réception locale L5 — 1er octobre 2026
 
-Preuves et limites : [AL-T05](anchored-player-validation.md). Aucun déploiement L5.
+Preuves et limites : [AL-T05](anchored-player-validation.md). Code L5 livré
+sur staging après autorisation ; neuf E2E distants reçus, santé 200 sur deux
+domaines et activation du prototype absente du build, briefing inactif.
 
 - [x] Opt-in local désactivable/non persistant, absent du build production.
 - [x] Zapping rapide HLS/MP4, une vidéo gérée, ancienne détruite ; réponses tardives ignorées.

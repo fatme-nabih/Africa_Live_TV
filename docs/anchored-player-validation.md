@@ -3,8 +3,9 @@
 Date : 1er octobre 2026, Africa/Dakar. Base de départ : `main`, `15d6b4a`,
 état Git initial propre. Expérimentation explicitement retenue par le propriétaire.
 Prototype réalisé et évalué localement ; **recommandation : ajuster avant
-généralisation**. L0–L4 reste la version publiée sur Railway staging.
-Aucun commit, push, déploiement, migration ou changement de service distant.
+généralisation**. La réception locale a précédé la publication autorisée ensuite :
+code L5 poussé et livré sur Railway staging, prototype toujours réservé au dev.
+Aucune nouvelle migration ni modification des variables, rôles ou configuration des services.
 L6 n'est pas commencé ; briefing toujours désactivé.
 
 ## Utilisation et périmètre
@@ -170,5 +171,75 @@ Edge. Le petit écran exige du défilement : mesurer ce compromis avec les utili
 Retour arrière fonctionnel immédiat : désactiver/recharger. Pour une revue de
 code, isoler les changements de ce lot ; aucune restauration de DB nécessaire.
 Ne pas supprimer les gardes AL-C01/C02 ni employer un nettoyage Git destructif.
-Suite : décider de l'ajustement et de la réception humaine de L5. Toute publication
+Suite : décider de l'ajustement et de la réception humaine de L5. La publication
+de cette session est autorisée et reçue ci-dessous ; toute publication future
 exige une nouvelle autorisation. Le briefing reste différé ; aucune reprise L6 implicite.
+
+## Publication GitHub et Railway staging
+
+Le propriétaire a ensuite autorisé explicitement commit, push et déploiement.
+Commit applicatif `9326fc096e0a7f65b1e40a0b861bbc365b2cc40b`, poussé sur `main`.
+Deux uploads CLI du même paquet isolé ont expiré avant build :
+`e6572025-166b-45d6-8049-14c3f5ee8710` et
+`8b91e9e4-68ac-4f69-962b-ba8035d86bb4`. Aucune livraison réussie
+n'est attribuée à ce paquet préparé (338 fichiers, SHA-256
+`b8f21ef3e767718b6974f474f54ae6d2cc2551407359ea3bf6a8e294bcf5d8c4`).
+Le premier upload est FAILED. Le retry CLI est resté INITIALIZING sans build
+associé après expiration du client. Une tentative GitHub
+`9b0ee9e9-8dd8-46f2-932a-bcd0aae302b9` a alors coexisté avec lui : le
+propriétaire l'a retirée. Le retry CLI a ensuite été retiré par son identifiant
+exact, après vérification de son service/environnement et de son état bloqué.
+La version active L0–L4 a été conservée. La livraison finale a été lancée
+seulement après confirmation des deux retraits ; aucun doublon encore en cours.
+La livraison reçue utilise **la source GitHub déjà configurée**, via
+`railway redeploy --from-source`, sans changement de configuration :
+Railway confirme le commit complet ci-dessus dans sa métadonnée `commitHash`.
+Aucun fichier privé ignoré (.env, cookies, backups, traces) n'est commité.
+
+Les fichiers de migrations, le schéma et les dépendances sont inchangés
+par rapport à `15d6b4a`. Le registre distant a été lu par SSH avant puis
+après livraison : **19 appliquées, zéro en attente**. Deux empreintes
+historiques différaient déjà des fichiers du conteneur précédent, avec dates
+enregistrées ; Drizzle utilise la dernière date appliquée, pas une réexécution
+de ces migrations. Aucune migration nouvelle ni altération de ce registre.
+Après livraison, les 19 dates et empreintes concordent avec les fichiers du
+conteneur GitHub ; la dernière date appliquée est identique à celle d'avant.
+Pas de sauvegarde/restauration nouvelle, ce déploiement ne changeant pas le schéma.
+
+Déploiement `dc557ad8-8288-4872-863d-7a2b6396014c` **SUCCESS et instance active** à
+**20:08 UTC** ; build Next réussi, hook existant
+`npm run db:migrate:deploy` terminé, démarrage reçu. Aucun changement de
+configuration, DNS, plan, rôle ou abonnement. Cible : projet `just-compassion`,
+environnement Railway nommé `production`, rôle **`DEPLOYMENT_ENV=staging`**.
+Modes MVP/public MVP/lecture locale/VLC désactivés, éligibilité active.
+
+- `GET /api/health` : **200, processus/base sains** sur
+  [staging.africatv.sn](https://staging.africatv.sn) et
+  [domaine Railway de secours](https://africalivetv-production.up.railway.app).
+- Radar anonyme : **401** sur les deux domaines, sans données de catalogue ni URL média.
+- **9 E2E distants reçus** : landing/mobile, widgets Clerk connexion/inscription,
+  refus anonymes pages/API, cinq parcours de paiement sans transaction réelle,
+  worker MapLibre réel et protection dashboard. Logs privés ignorés.
+- Lecture SSH des chunks produits : **zéro chunk contenant le contrôle
+  « Activer le lecteur ancré »** ; disponibilité du prototype exclusivement locale.
+- Aucun nouveau parcours Clerk connecté L5 reçu sur staging, aucun compte
+  ordinaire ni média amont/VLC réel validé par cette publication. Les preuves
+  locales de lecture et leurs limites ci-dessus restent applicables.
+
+Reproduction des neuf E2E, avec variables seulement dans le processus local :
+
+```powershell
+$env:LOCAL_DEV_MODE='false'
+$env:NEXT_PUBLIC_LOCAL_DEV_MODE='false'
+$env:NEXT_PUBLIC_LOCAL_PLAYBACK='false'
+$env:ENABLE_LOCAL_VLC='false'
+$env:DEPLOYMENT_ENV='local'
+$env:E2E_EXTERNAL_SERVER='true'
+$env:E2E_BASE_URL='https://staging.africatv.sn'
+$env:RADAR_BUILD_TEST='true'
+npx playwright test e2e/auth-entry.spec.ts e2e/payment.spec.ts e2e/radar-reliability.spec.ts --grep 'Build servi|anonymous visitors|landing page|Clerk sign|Page de paiement' --workers=2
+```
+
+Un commit documentaire de réception est poussé après ces contrôles ; aucun
+code n'y change. Le déploiement reste celui du commit applicatif ci-dessus.
+Tout prochain déploiement ou changement distant nécessite une nouvelle demande.
