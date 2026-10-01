@@ -4,6 +4,7 @@ import {
   eq,
   gt,
   inArray,
+  isNull,
   or,
   sql,
   type SQL,
@@ -31,8 +32,10 @@ import { authorizeCatalogRequest } from '@/lib/require-app-access';
 import { consumeAdditionalRequestQuota } from '@/lib/request-quota';
 import type { Channel } from '@/types/channel';
 import { BadRequestError, RateLimitError, withApiErrorHandler } from '@/lib/api-errors';
+import { metadataValuesMatching } from '@/lib/catalog-metadata';
+import { catalogStreamCondition } from '@/lib/catalog-visibility';
+import { AFRICAN_COUNTRIES } from '@/lib/live-osint';
 
-const VISIBLE_STREAM_STATUSES = ['BROWSER_OK', 'VLC_ONLY', 'UNTESTED'] as const;
 
 export const POST = withApiErrorHandler(async (request: Request) => {
   const authorization = await authorizeCatalogRequest(
@@ -50,6 +53,7 @@ export const POST = withApiErrorHandler(async (request: Request) => {
   const {
     search,
     country,
+    region,
     group,
     language,
     status,
@@ -81,6 +85,7 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     clerkSessionId: authorization.clerkSessionId,
     search,
     country,
+    region,
     group,
     language,
     status,
@@ -113,13 +118,19 @@ export const POST = withApiErrorHandler(async (request: Request) => {
   }
 
   if (country) conditions.push(eq(channels.countryCode, country.toUpperCase()));
-  if (group) conditions.push(eq(channels.groupTitle, group));
-  if (language) {
-    conditions.push(
-      sql`${language.toLowerCase()} = any(
-        string_to_array(lower(coalesce(${channels.language}, '')), ';')
-      )`,
-    );
+  if (region === 'africa') conditions.push(inArray(channels.countryCode, AFRICAN_COUNTRIES.map(item => item.code)));
+  if (group || language) {
+    const metadata = await db.selectDistinct({ group: channels.groupTitle, language: channels.language })
+      .from(channels).where(and(eq(channels.active, true), publicCatalogChannelCondition()));
+    for (const [column, values, code, kind] of [
+      [channels.groupTitle, metadata.map(row => row.group), group, 'category'],
+      [channels.language, metadata.map(row => row.language), language, 'language'],
+    ] as const) {
+      if (!code) continue;
+      const matches = metadataValuesMatching(values, code, kind);
+      const nonNull = matches.filter((value): value is string => value !== null);
+      conditions.push(or(nonNull.length ? inArray(column, nonNull) : sql`false`, matches.includes(null) ? isNull(column) : sql`false`)!);
+    }
   }
 
   const matchingChannelIds = db
@@ -127,11 +138,7 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     .from(streams)
     .where(
       and(
-        eq(streams.active, true),
-        inArray(streams.status, VISIBLE_STREAM_STATUSES),
-        sql`${streams.status} != 'OFFLINE'`,
-        sql`${streams.directEligibility} != 'OFFLINE'`,
-        status ? eq(streams.status, status) : undefined,
+        catalogStreamCondition(status),
       ),
     );
   conditions.push(inArray(channels.id, matchingChannelIds));
@@ -181,12 +188,8 @@ export const POST = withApiErrorHandler(async (request: Request) => {
       .from(streams)
       .where(
         and(
-          eq(streams.active, true),
-          inArray(streams.status, VISIBLE_STREAM_STATUSES),
-          sql`${streams.status} != 'OFFLINE'`,
-          sql`${streams.directEligibility} != 'OFFLINE'`,
+          catalogStreamCondition(status),
           inArray(streams.channelId, channelIds),
-          status ? eq(streams.status, status) : undefined,
         ),
       );
 

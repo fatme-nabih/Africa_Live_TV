@@ -1,310 +1,90 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
-import {
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  AlertTriangle,
-  RefreshCw,
-  ExternalLink,
-  Pause,
-  Play,
-} from 'lucide-react';
-import type {
-  LiveMarketsSnapshot,
-  MarketCommodity,
-  MarketForex,
-} from '@/lib/live-markets-types';
-import { formatMarketPrice, formatVariation } from '@/lib/live-markets';
+import { useEffect, useMemo, useState } from 'react';
+import { Pause, Play, RefreshCw, ExternalLink } from 'lucide-react';
+import type { LiveMarketsSnapshot } from '@/lib/live-markets-types';
+import { formatMarketPrice, formatVariation } from '@/lib/market-format';
+import { sourcePlaceholder, type RadarSourceRow } from '@/lib/radar-workspace';
+import { canonicalArticleUrl, formatRadarDate, radarStatusLabel } from '@/lib/radar-data';
 
-interface LiveMarketTickerProps {
-  onSelectCountry?: (code: string) => void;
-  className?: string;
-}
-
-const REFRESH_INTERVAL_MS = 5 * 60_000;
-
-function sanitizeExternalUrl(rawUrl: string | undefined): string | null {
-  if (!rawUrl) return null;
-  const trimmed = rawUrl.trim();
-  if (!trimmed.startsWith('https://') && !trimmed.startsWith('http://')) {
-    return null;
-  }
-  try {
-    return encodeURI(trimmed);
-  } catch {
-    return null;
-  }
-}
-
-export default function LiveMarketTicker({
-  onSelectCountry,
-  className = '',
-}: LiveMarketTickerProps) {
+export default function LiveMarketTicker({ onSelectCountry, onSourcesChange, refreshToken = 0, className = '' }: { onSelectCountry?: (code: string) => void; onSourcesChange?: (sources: RadarSourceRow[]) => void; refreshToken?: number; className?: string }) {
   const [data, setData] = useState<LiveMarketsSnapshot | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [paused, setPaused] = useState(false);
+  const [scope, setScope] = useState<'Africa' | 'World'>('Africa');
+  const [refresh, setRefresh] = useState(0);
+  useEffect(() => {
+    const controller = new AbortController();
+    let active = true;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('/api/live/markets' + (refresh ? '?refresh=true' : ''), { signal: controller.signal, cache: 'no-store' });
+        if (!response.ok) throw new Error('Unavailable');
+        const snapshot = await response.json() as LiveMarketsSnapshot;
+        if (!Array.isArray(snapshot.alerts) || !Array.isArray(snapshot.commodities) || !Array.isArray(snapshot.forex)) throw new Error('Invalid payload');
+        if (active) { setData(snapshot); setError(false); }
+      } catch { if (active && !controller.signal.aborted) { setError(true); setData(previous => previous && Date.now() - Date.parse(previous.updatedAt) <= 6 * 60 * 60_000 ? previous : null); } }
+      finally { if (active) setLoading(false); }
+    };
+    void load();
+    const interval = window.setInterval(() => void load(), 5 * 60_000);
+    return () => { active = false; controller.abort(); window.clearInterval(interval); };
+  }, [refresh, refreshToken]);
 
   useEffect(() => {
-    let active = true;
-    const controller = new AbortController();
+    onSourcesChange?.(error ? [sourcePlaceholder('Marchés / bandeau', 'Cotations et événements', 'unavailable')]
+      : data?.availability?.map(source => ({ ...source, scope: `Bandeau · ${source.scope}` })) ?? [sourcePlaceholder('Marchés / bandeau', 'Cotations et événements', loading ? 'loading' : 'empty')]);
+  }, [data, error, loading, onSourcesChange]);
 
-    async function load() {
-      try {
-        const res = await fetch('/api/live/markets', { signal: controller.signal });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json: LiveMarketsSnapshot = await res.json();
-        if (active) setData(json);
-      } catch {
-        // Silencieux
-      }
-    }
-
-    void load();
-    const timer = setInterval(() => {
-      void load();
-    }, REFRESH_INTERVAL_MS);
-
-    return () => {
-      active = false;
-      controller.abort();
-      clearInterval(timer);
-    };
-  }, []);
-
-  const handleManualRefresh = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/live/markets?refresh=true');
-      if (res.ok) {
-        const json: LiveMarketsSnapshot = await res.json();
-        setData(json);
-      }
-    } catch {
-      // Silencieux
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Éléments du ticker normalisés
-  const tickerItems = useMemo(() => {
+  const items = useMemo(() => {
     if (!data) return [];
+    const seen = new Set<string>();
+    const result: Array<{ id: string; content: React.ReactNode }> = [];
+    for (const alert of data.alerts) {
+      if (scope === 'Africa' && alert.scope !== 'Africa') continue;
+      const id = `alert:${canonicalArticleUrl(alert.url ?? '') || alert.id}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      const url = canonicalArticleUrl(alert.url ?? '');
+      result.push({ id, content: <span className="inline-flex items-center gap-2 text-xs text-zinc-200">
+        <strong>{alert.title}</strong>
+        {alert.countryCode && alert.scope === 'Africa' && <button type="button" onClick={() => onSelectCountry?.(alert.countryCode!)} className="rounded bg-white/10 px-1">{alert.countryCode}</button>}
+        <span className="text-[10px] text-zinc-400">{alert.source ?? 'Source inconnue'} · {alert.dateKind === 'event' ? 'Événement' : 'Publication'} {formatRadarDate(alert.timestamp)} · {alert.scope === 'Africa' ? 'Afrique' : 'Monde / lieu non classé'}</span>
+        {url && <a href={url} target="_blank" rel="noopener noreferrer" aria-label={`Source : ${alert.title}`}><ExternalLink className="h-3 w-3" /></a>}
+      </span> });
+    }
+    for (const quote of data.commodities) {
+      const id = `quote:${quote.symbol}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      result.push({ id, content: <span className="inline-flex items-center gap-2 text-xs text-zinc-200"><strong>{quote.label}</strong><span>{formatMarketPrice(quote.price, quote.currency, quote.unit)}</span><span>{formatVariation(quote.changePercent24h).text}</span><span className="text-[10px] text-zinc-400">Monde · {quote.source} · Dernière séance {formatRadarDate(quote.updatedAt)}</span></span> });
+    }
+    for (const rate of data.forex) {
+      const id = `forex:${rate.pair}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      result.push({ id, content: <span className="inline-flex items-center gap-2 text-xs text-amber-200"><strong>{rate.pair}</strong><span>{rate.rate.toFixed(3)}</span><span className="text-[10px] text-zinc-400">{rate.isPegged ? 'Parité fixe · ' + rate.source : 'Monde · ' + rate.source + ' · ' + formatRadarDate(rate.updatedAt)}</span></span> });
+    }
+    return result;
+  }, [data, scope, onSelectCountry]);
+  const degraded = error || data?.availability?.some(source => ['stale', 'unavailable', 'partial'].includes(source.status));
 
-    const items: Array<{
-      id: string;
-      kind: 'alert' | 'commodity' | 'forex';
-      content: React.ReactNode;
-    }> = [];
-
-    // 1. Alertes d'urgence en tête
-    data.alerts.forEach((alert) => {
-      const isCritical = alert.severity === 'critical';
-      items.push({
-        id: alert.id,
-        kind: 'alert',
-        content: (
-          <div
-            className={`inline-flex items-center gap-2 rounded-lg border px-2.5 py-1 text-xs transition ${
-              isCritical
-                ? 'border-red-500/40 bg-red-950/40 text-red-200 hover:border-red-400'
-                : 'border-amber-500/30 bg-amber-950/30 text-amber-200 hover:border-amber-400'
-            }`}
-          >
-            <span className="relative flex h-2 w-2">
-              <span
-                className={`absolute inline-flex h-full w-full animate-ping rounded-full ${
-                  isCritical ? 'bg-red-400' : 'bg-amber-400'
-                } opacity-75`}
-              />
-              <span
-                className={`relative inline-flex h-2 w-2 rounded-full ${
-                  isCritical ? 'bg-red-500' : 'bg-amber-500'
-                }`}
-              />
-            </span>
-            <AlertTriangle className="h-3 w-3 shrink-0 text-amber-400" />
-            <span className="font-semibold">{alert.title}</span>
-            {alert.countryCode && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelectCountry?.(alert.countryCode!);
-                }}
-                className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white hover:bg-white/20"
-                title={`Centrer sur ${alert.countryCode}`}
-              >
-                {alert.countryCode}
-              </button>
-            )}
-            {(() => {
-              const safeUrl = sanitizeExternalUrl(alert.url);
-              if (!safeUrl) return null;
-              return (
-                <a
-                  href={safeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-zinc-400 hover:text-white"
-                  title="Consulter la source"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              );
-            })()}
-          </div>
-        ),
-      });
-    });
-
-    // 2. Matières premières stratégiques
-    data.commodities.forEach((item: MarketCommodity) => {
-      const variation = formatVariation(item.changePercent24h);
-      items.push({
-        id: `com-${item.symbol}`,
-        kind: 'commodity',
-        content: (
-          <div className="inline-flex items-center gap-2 rounded-lg border border-white/[0.08] bg-[#0c120f] px-2.5 py-1 text-xs text-zinc-200">
-            <span className="font-bold text-white">{item.label}</span>
-            <span className="font-mono text-zinc-300">
-              {formatMarketPrice(item.price, item.currency, item.unit)}
-            </span>
-            <span
-              className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-bold ${
-                variation.isNeutral
-                  ? 'bg-zinc-800 text-zinc-400'
-                  : variation.isPositive
-                    ? 'bg-emerald-500/15 text-emerald-400'
-                    : 'bg-red-500/15 text-red-400'
-              }`}
-            >
-              {variation.isNeutral ? (
-                <Minus className="h-2.5 w-2.5" />
-              ) : variation.isPositive ? (
-                <TrendingUp className="h-2.5 w-2.5" />
-              ) : (
-                <TrendingDown className="h-2.5 w-2.5" />
-              )}
-              {variation.text}
-            </span>
-          </div>
-        ),
-      });
-    });
-
-    // 3. Devises clés et parités
-    data.forex.forEach((item: MarketForex) => {
-      items.push({
-        id: `forex-${item.pair}`,
-        kind: 'forex',
-        content: (
-          <div className="inline-flex items-center gap-2 rounded-lg border border-white/[0.08] bg-[#0c120f] px-2.5 py-1 text-xs text-zinc-200">
-            <span className="font-bold text-amber-300">{item.pair}</span>
-            <span className="font-mono font-semibold text-white">
-              {item.isPegged
-                ? item.rate.toFixed(3)
-                : item.rate >= 10
-                  ? item.rate.toFixed(2)
-                  : item.rate.toFixed(4)}
-            </span>
-            {item.isPegged ? (
-              <span className="rounded bg-amber-400/15 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-amber-300">
-                Fixe BCEAO/BEAC
-              </span>
-            ) : (
-              <span className="text-[10px] text-zinc-500">Flottant</span>
-            )}
-          </div>
-        ),
-      });
-    });
-
-    return items;
-  }, [data, onSelectCountry]);
-
-  if (!data && loading) {
-    return (
-      <div className={`flex h-10 w-full items-center justify-between border-y border-white/[0.08] bg-[#060907] px-4 text-xs text-zinc-400 ${className}`}>
-        <div className="flex items-center gap-2">
-          <div className="h-2 w-2 animate-ping rounded-full bg-emerald-400" />
-          <span>Chargement du bandeau marchés & alertes…</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (tickerItems.length === 0) {
-    return null;
-  }
-
-  return (
-    <div
-      className={`group relative flex h-11 w-full items-center overflow-hidden border-y border-white/[0.08] bg-[#050806]/95 backdrop-blur-md ${className}`}
-      role="region"
-      aria-label="Bandeau des marchés et alertes panafricaines"
-    >
-      {/* Badge fixe à gauche type Bloomberg / Salle de crise */}
-      <div className="z-10 flex shrink-0 items-center gap-2 border-r border-white/[0.1] bg-[#080d0a] px-3.5 py-2 text-[10px] font-black uppercase tracking-wider text-emerald-300 sm:text-xs">
-        <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-        </span>
-        <span className="hidden sm:inline">Marchés & Alertes</span>
-        <span className="sm:hidden">Marchés</span>
-      </div>
-
-      {/* Piste de défilement horizontal continu */}
-      <div
-        className="relative flex flex-1 items-center overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_2%,black_98%,transparent)]"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-      >
-        <div
-          className={`animate-ticker-scroll flex items-center gap-4 px-4 ${
-            isPaused ? '[animation-play-state:paused]' : ''
-          }`}
-        >
-          {/* Première passe */}
-          {tickerItems.map((item) => (
-            <div key={`p1-${item.id}`} className="shrink-0">
-              {item.content}
-            </div>
-          ))}
-
-          {/* Deuxième passe identique pour créer la boucle infinie continue */}
-          {tickerItems.map((item) => (
-            <div key={`p2-${item.id}`} className="shrink-0" aria-hidden="true">
-              {item.content}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Contrôles discrets à droite (pause/lecture & actualisation manuelle) */}
-      <div className="z-10 flex shrink-0 items-center gap-1 border-l border-white/[0.1] bg-[#080d0a] px-2 py-1.5 text-zinc-400">
-        <button
-          type="button"
-          onClick={() => setIsPaused((prev) => !prev)}
-          className="rounded p-1 text-zinc-400 transition hover:bg-white/[0.08] hover:text-white"
-          title={isPaused ? 'Reprendre le défilement' : 'Mettre en pause'}
-          aria-label={isPaused ? 'Reprendre le défilement' : 'Mettre en pause'}
-        >
-          {isPaused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
-        </button>
-        <button
-          type="button"
-          onClick={() => void handleManualRefresh()}
-          disabled={loading}
-          className="rounded p-1 text-zinc-400 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-50"
-          title="Actualiser les cotations"
-          aria-label="Actualiser les cotations"
-        >
-          <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
-        </button>
-      </div>
+  return <section aria-label="Bandeau des marchés et événements" className={`border-y border-white/10 bg-[#050806] ${className}`}>
+    <div className="flex flex-wrap items-center gap-2 px-3 py-2 text-[11px] text-zinc-300">
+      <label>Périmètre du bandeau <select aria-label="Périmètre du bandeau" value={scope} onChange={event => setScope(event.target.value as 'Africa' | 'World')} className="rounded bg-zinc-900 px-2 py-1"><option value="Africa">Afrique</option><option value="World">Monde</option></select></label>
+      <span className="text-zinc-500">Cotations mondiales identifiées séparément</span>
+      <span role="status" className={degraded ? 'text-amber-200' : 'text-zinc-400'}>{loading ? 'Chargement du bandeau…' : degraded ? 'Bandeau partiel · sources indisponibles ou cache ancien' : items.length ? 'Dates et sources affichées' : 'Aucun résultat fourni par les sources consultées'}</span>
+      <button type="button" aria-label={paused ? 'Reprendre le défilement' : 'Mettre en pause'} onClick={() => setPaused(value => !value)} className="ml-auto rounded p-2 hover:bg-white/10">{paused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}</button>
+      <button type="button" aria-label="Actualiser les cotations" disabled={loading} onClick={() => setRefresh(value => value + 1)} className="rounded p-2 hover:bg-white/10"><RefreshCw className="h-3 w-3" /></button>
     </div>
-  );
+    {items.length > 0 && <div className="overflow-hidden py-2">
+      <div className={`animate-ticker-scroll motion-reduce:animate-none flex w-max gap-8 px-4 hover:[animation-play-state:paused] focus-within:[animation-play-state:paused] ${paused ? '[animation-play-state:paused]' : ''}`}>
+        {items.map(item => <div key={`original:${item.id}`} className="shrink-0">{item.content}</div>)}
+        <div aria-hidden="true" inert className="flex gap-8 motion-reduce:hidden">{items.map(item => <div key={`copy:${item.id}`} className="shrink-0">{item.content}</div>)}</div>
+      </div>
+    </div>}
+    {data?.availability && <details className="px-3 pb-2 text-[10px] text-zinc-400"><summary>Sources du bandeau</summary><ul>{data.availability.map((source, index) => <li key={`${source.provider}:${index}`}>{source.provider} : {radarStatusLabel(source.status)} · dernier succès {formatRadarDate(source.lastSuccessAt)} · données {formatRadarDate(source.dataAt)}</li>)}</ul></details>}
+  </section>;
 }

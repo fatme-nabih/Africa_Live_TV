@@ -11,6 +11,7 @@ import {
   Tv,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { categoryLabels } from '@/lib/catalog-metadata';
 import { formatCountryName } from '@/lib/format';
 import type { Channel } from '@/types/channel';
 
@@ -165,7 +166,7 @@ export default function ChannelGrid({
                     <h3 className="truncate text-xs sm:text-sm font-bold text-white">{channel.name}</h3>
                     <p className="mt-0.5 flex items-center gap-2 truncate text-[11px] text-zinc-500">
                       <span>{formatCountryName(channel.countryCode, 'International')}</span>
-                      {channel.groupTitle && <><span aria-hidden="true">•</span><span className="truncate">{channel.groupTitle}</span></>}
+                      <span aria-hidden="true">•</span><span className="truncate">{categoryLabels(channel.groupTitle)}</span>
                     </p>
                   </div>
                   <span className="pointer-events-none relative z-[1] hidden h-8 w-8 items-center justify-center rounded-full border border-amber-400/30 bg-amber-400/10 text-amber-300 transition group-hover:border-amber-400 group-hover:bg-amber-400 group-hover:text-black md:flex">
@@ -235,7 +236,7 @@ export default function ChannelGrid({
                   </div>
                   <div className="mt-1 flex min-w-0 items-center gap-2 text-[10px] text-zinc-500 sm:text-[11px]">
                     <span className="flex min-w-0 items-center gap-1 truncate"><Globe className="h-3 w-3 shrink-0 text-zinc-600" aria-hidden="true" />{formatCountryName(channel.countryCode, 'International')}</span>
-                    {channel.groupTitle && <span className="hidden min-w-0 items-center gap-1 truncate sm:flex"><Tag className="h-3 w-3 shrink-0 text-zinc-600" aria-hidden="true" />{channel.groupTitle}</span>}
+                    <span className="hidden min-w-0 items-center gap-1 truncate sm:flex"><Tag className="h-3 w-3 shrink-0 text-zinc-600" aria-hidden="true" />{categoryLabels(channel.groupTitle)}</span>
                   </div>
                 </div>
               </motion.article>

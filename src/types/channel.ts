@@ -13,6 +13,7 @@ export type ChannelAvailabilityStatus =
   (typeof CHANNEL_AVAILABILITY_STATUSES)[number];
 
 export interface ChannelFilters {
+  region?: '' | 'africa';
   search: string;
   country: string;
   group: string;

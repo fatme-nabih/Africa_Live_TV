@@ -5,7 +5,8 @@ import { auth } from '@clerk/nextjs/server';
 import { CreditCard, ShieldCheck, ArrowRight, AlertCircle, Sparkles } from 'lucide-react';
 
 import { getCurrentAccessDecision } from '@/lib/access-control';
-import BrandLogo from '@/components/BrandLogo';
+import AppNavigation, { AppBrand, NavigationProvider } from '@/components/AppNavigation';
+import { getAdministratorAccess } from '@/lib/admin-access';
 import BrandWatermark from '@/components/BrandWatermark';
 
 function formatStatus(status: string, reason?: string) {
@@ -36,38 +37,17 @@ export default async function AccountPage(props: {
 
   const { user, decision, subscriptions } = await getCurrentAccessDecision();
   const currentSubscription = subscriptions[0];
-  const isAdmin = decision.reason === 'administrator_access';
+  const admin = await getAdministratorAccess();
+  const isAdmin = admin.allowed;
 
   return (
     <main className="relative min-h-screen bg-black px-5 py-8 text-zinc-100 overflow-hidden">
       <BrandWatermark />
 
       <div className="relative z-10 mx-auto max-w-6xl">
-        <nav className="mb-8 flex items-center justify-between gap-4 border-b border-white/[0.08] pb-5">
-          <Link href="/" className="group flex items-center gap-3">
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400/10 border border-amber-400/25 p-1">
-              <BrandLogo className="h-full w-full" />
-            </div>
-            <span className="text-base font-bold tracking-tight text-white group-hover:text-amber-300 transition">
-              Africa Live
-            </span>
-          </Link>
-          <div className="flex items-center gap-3">
-            {isAdmin && (
-              <Link
-                href="/admin"
-                className="text-xs font-semibold text-amber-300 hover:text-amber-200 transition"
-              >
-                Administration
-              </Link>
-            )}
-            <Link
-              href="/app"
-              className="rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/20 via-amber-400/25 to-rose-500/20 hover:from-emerald-500/30 hover:via-amber-400/35 hover:to-rose-500/35 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-amber-200 transition backdrop-blur-md shadow-sm"
-            >
-              Consulter le catalogue
-            </Link>
-          </div>
+        <nav className="mb-8 flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.08] pb-5">
+          <AppBrand />
+          <NavigationProvider admin={isAdmin}><AppNavigation /></NavigationProvider>
         </nav>
 
         {/* Access required notice banner */}
@@ -77,7 +57,7 @@ export default async function AccountPage(props: {
             <div>
               <p className="font-bold text-sm text-white">Abonnement ou période d&apos;essai requis</p>
               <p className="mt-1 leading-relaxed text-zinc-300">
-                Votre période d&apos;essai de 5 jours est arrivée à échéance. Vous pouvez toujours consulter le catalogue avec votre compte; un abonnement est nécessaire pour lancer une source et utiliser les fonctions de lecture.
+                Votre compte ne dispose plus d&apos;un accès actif. Vous pouvez toujours consulter le catalogue TV ; un abonnement est nécessaire pour accéder au dashboard et lancer une source.
               </p>
               <Link
                 href="/pricing"

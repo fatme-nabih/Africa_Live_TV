@@ -50,7 +50,7 @@ export default async function proxy(req: NextRequest, event: NextFetchEvent) {
       return NextResponse.json({ error: 'Une session administrateur Clerk est requise.' }, { status: 403 });
     }
     if (/^\/(account|pricing|sign-in|sign-up)(\/|$)/.test(req.nextUrl.pathname)) {
-      return NextResponse.redirect(new URL('/app', req.url));
+      return NextResponse.redirect(new URL('/app/live', req.url));
     }
     if (req.nextUrl.pathname.startsWith('/api/webhooks/')) return new NextResponse(null, { status: 404 });
     return NextResponse.next();

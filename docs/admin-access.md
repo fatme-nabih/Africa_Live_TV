@@ -32,11 +32,16 @@ pas l'instance Production. Ne pas recopier les clés de développement en produc
 - Le compte technique du MVP local n'est pas administrateur : `/admin` répond 403
   dans ce mode. Conserver la configuration locale existante jusqu'à préparation
   d'une session Clerk dédiée et valide.
-- Le lien Administration est affiché selon le jeton ; la page revérifie les droits
-  côté serveur, même si le lien est absent ou obsolète.
-- L'espace actuel confirme l'accès administrateur. Il ne comporte pas encore
-  d'outils de modification des utilisateurs ou du catalogue.
-- Le rôle administrateur ne contourne pas les règles d'abonnement ou de lecture.
+- Depuis L3 local (1er octobre 2026), le lien Administration utilise la capacité
+  revérifiée sur le serveur ; la page applique également sa garde. La réception
+  locale et ses limites sont dans [le dossier L4](dashboard-release-validation.md).
+- L'espace comporte la revue des demandes de contact/retrait et la désactivation
+  des sources concernées, livrées avec DOC-006. Aucun outil d'attribution de rôle
+  utilisateur n'est fourni. La réception L4 n'effectue aucun retrait réel.
+- Un administrateur actif revérifié bénéficie déjà d'un accès applicatif sans
+  abonnement via `getCurrentAccessDecision` ; les contrôles d'éligibilité des
+  sources et les quotas de lecture restent appliqués. Cette exception existante
+  est conservée par AL-C01/AL-C02 ; voir [la matrice](dashboard-access-matrix.md).
 - Toute future API ou Server Action administrative doit appeler le contrôle serveur
   avant de lire des données sensibles ou d'effectuer une mutation. Le proxy seul
   ne suffit pas. Aucun endpoint d'attribution de rôle n'est ajouté.

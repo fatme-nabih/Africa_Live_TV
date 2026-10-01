@@ -11,6 +11,9 @@ export type RadarArticle = {
   url: string;
   domain: string;
   indexedAt: string;
+  publishedAt?: string | null;
+  id?: string;
+  countryBasis?: 'media' | 'inferred_topic';
   countryCode: string | null;
   sourceType?: 'gdelt' | 'rss';
   sourceName?: string;
@@ -22,4 +25,7 @@ export type RadarNewsSnapshot = {
   countries: RadarCountry[];
   updatedAt: string;
   stale: boolean;
+  availability?: import('./radar-data').RadarSourceState[];
+  undatedArticles?: RadarArticle[];
+  window?: ReturnType<typeof import('./radar-data').temporalWindow>['window'];
 };

@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 
 import { withApiErrorHandler, BadRequestError } from '@/lib/api-errors';
 import { getRadarWeather } from '@/lib/live-weather';
-import { authorizeCatalogRequest } from '@/lib/require-app-access';
+import { authorizeAppRequest } from '@/lib/require-app-access';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export const GET = withApiErrorHandler(async (request: Request) => {
-  const authorization = await authorizeCatalogRequest(
+  const authorization = await authorizeAppRequest(
     { bucket: 'live.weather.read', limit: 30, windowSeconds: 60 },
     request,
   );

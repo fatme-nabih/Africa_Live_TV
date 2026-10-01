@@ -1,5 +1,94 @@
 # Progression — préparation production
 
+**État de clôture et reprise : [travail terminé, réserves et prochain lot L5](dashboard-session-handoff.md).**
+
+Les relevés plus anciens conservent leur date ; ils ne remplacent pas ce bilan courant.
+
+## Complément L4 — staging autorisé — 1er octobre 2026, 18:09 UTC
+
+L0–L4 déployé directement sur `staging.africatv.sn`, snapshot de travail sans
+commit/push : `b0d52c0c-3bca-4600-8a3e-fb1f2709dada`, SUCCESS/actif.
+Neuf E2E distants réussis et santé 200 ; parcours Clerk administrateur réel
+reçu en local et sur staging. Modes locaux désactivés et rôle staging conservé.
+Pas de nouvelle migration, changement de plan ni transaction ; première
+tentative d’upload expirée, relance réussie. [Preuves](dashboard-auth-staging-reception.md).
+Comptes standard indisponibles (confirmé par le propriétaire). Complément à
+18:29 UTC : zoom natif 200 % local validé, DPR=2, 937×477 CSS, sans débordement,
+pays et filtres TV au clavier/focus reçus. Le briefing reste désactivé,
+aucun lancement de production.
+
+## Réception locale initiale L4 — avant la livraison staging du 1er octobre 2026
+
+Réception locale terminée : 219 unitaires, 14 intégrations PostgreSQL isolées
+et 57 E2E réussis, zéro échec final. TypeScript, ESLint, build et cohérence
+des migrations réussis. Catalogue et empreintes conservés, fixtures nettoyées.
+[Matrice de preuves et limites](dashboard-release-validation.md),
+[dossier de livraison et rollback](dashboard-delivery-dossier.md).
+Documentation réconciliée ; anciens chiffres staging marqués historiques et
+non certifiés au 1er octobre. Widgets Clerk réels chargés sur build hors MVP,
+sans connexion ni transaction. Comptes connectés et zoom natif restent à recevoir.
+Acceptation locale AL-Q02 remplie ; réception staging conditionnelle non exécutée.
+Aucun commit/push, déploiement, migration ou changement distant. Briefing inactif.
+Suite : décision L5 sur le lecteur ancré, puis L6.
+
+## L3 — AL-T01 à AL-T04 — 1er octobre 2026
+
+Statut : livré et testé localement, non déployé. Navigation commune avec rôle
+administrateur contrôlé côté serveur, catégories/langues normalisées sans
+modifier les imports, filtres/raccourcis/URL synchronisés, entrées Afrique,
+Sénégal, Tout et favoris persistants. Pays transmis entre dashboard et TV.
+219 tests unitaires et 42 E2E réussis ; 14 intégrations optionnelles ignorées.
+TypeScript, ESLint et build réussis. Réception, mesures, captures et limites :
+[tv-workspace-validation.md](tv-workspace-validation.md).
+Serveur restitué en mode Clerk local. Catalogue consultable après expiration,
+dashboard et lecture refusés selon D5/DOC-006 ; briefing différé L6. Aucun commit, push, déploiement, migration
+ou changement distant. Suite du plan : L4, AL-Q01/AL-Q02/AL-C05.
+
+## L2 — AL-W01 à AL-W06 — 30 septembre 2026
+
+Statut : livré et testé localement, non déployé. Dashboard compact, pays
+accessible et partageable dans l’URL/historique, fil prioritaire sur mobile,
+carte à la demande, couches optionnelles datées et tableau de disponibilité
+selon chaque cadence fournisseur. Réception :
+[dashboard-workspace-validation.md](dashboard-workspace-validation.md).
+211 tests unitaires et 24 E2E réussis ; 14 intégrations optionnelles ignorées.
+TypeScript, ESLint et build réussis. Limites Clerk/zoom/lecteur d’écran détaillées
+dans la réception. Serveur restitué en mode Clerk local, briefing différé L6.
+Aucun changement de schéma ou d’état distant, commit, push ou déploiement.
+Suite logique : L3, navigation et filtres TV (AL-T01 à AL-T04).
+
+## AL-C03 / AL-C04 / AL-D02 / AL-D03 / AL-D05 / AL-D06 — 30 septembre 2026
+
+Statut : livré et testé localement, non déployé. Identités et déduplication,
+worker MapLibre ESM explicite avec état dégradé, dates de publication/indexation
+sur fenêtre commune 24 h, disponibilité par source et caches bornés,
+références TV distinctes des candidates du résolveur, bandeau daté avec Afrique
+par défaut. Aucune cotation ni date de secours simulée. Briefing inchangé,
+désactivé jusqu’au lot L6. Aucun changement de droits, migration ou état distant.
+
+Preuves, définitions et limites de test :
+[dashboard-reliability-validation.md](dashboard-reliability-validation.md).
+Suite unitaire, TypeScript, ESLint, build, E2E desktop/mobile/dégradation,
+catalogue/favoris et worker sous CSP du build servi réussis. Le dashboard
+complet en session authentifiée du build n’est pas revendiqué : worker depuis
+page publique et garde anonyme vérifiés. Serveur remis en mode Clerk local.
+
+## AL-C01 / AL-C02 — accès dashboard après expiration — 30 septembre 2026
+
+Statut : implémenté et validé localement, non déployé. Décision D5 : refus du
+dashboard après expiration ; catalogue TV consultable selon DOC-006. Le layout
+commun utilise la consultation catalogue et la page dashboard vérifie le droit
+actif. Les huit API Radar exigent désormais `authorizeAppRequest` avant tout
+appel fournisseur ; briefing et marchés ne renvoient plus de cache public.
+Grâce et accès administrateur existants conservés, lecture/favoris inchangés.
+
+Preuves : 26 tests ciblés, suite unitaire (198 réussis, 14 intégrations ignorées),
+TypeScript, ESLint, build et E2E anonyme Edge réussis. Les profils expirés et
+connectés sont simulés dans les tests des vrais handlers et gardes de page ;
+aucun compte Clerk réel expiré ni paiement n'a été testé. Aucun changement DB,
+Clerk, Railway, DNS, commit ou push. Détails, matrice et retour arrière :
+[dashboard-access-matrix.md](dashboard-access-matrix.md).
+
 ## DOC-005 — positionnement technique et juridique — 29 septembre 2026
 
 Statut : note interne rédigée dans
@@ -690,7 +779,8 @@ pm run worker:verify\.
 
 ### PROD-051 — Script de nettoyage unifié (Maintenance)
 Statut : terminé.
-- Création de \un-maintenance.ts\ consolidant la purge des événements, de la télémétrie et des abus, conçu pour un fonctionnement planifié (CRON) autonome.
+- Création de \
+un-maintenance.ts\ consolidant la purge des événements, de la télémétrie et des abus, conçu pour un fonctionnement planifié (CRON) autonome.
 - Verrou exclusif (\pg_try_advisory_lock('worker_maintenance')\) et fermeture sécurisée.
 - Suppression des prompt interactifs dangereux en production. Purge par lots bornés de 5000 lignes limitant le verrouillage de table (WAL friendly).
 - Implémentation d'un \statement_timeout\ explicite limitant la transaction globale.

@@ -122,10 +122,10 @@ export default function SuccessClient() {
         <h1 className="mb-2 text-2xl font-black text-white">Paiement réussi</h1>
         <p className="mb-6 text-xs text-zinc-300 leading-relaxed">Votre abonnement Africa Live est désormais actif.</p>
         <Link
-          href="/app"
+          href="/app/live"
           className="inline-block rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/25 via-amber-400/30 to-rose-500/25 hover:from-emerald-500/35 hover:via-amber-400/40 hover:to-rose-500/35 px-6 py-2.5 text-xs sm:text-sm font-bold text-amber-100 shadow-md backdrop-blur-md transition active:scale-[0.99]"
         >
-          Ouvrir l&apos;application
+          Ouvrir le dashboard
         </Link>
       </div>
     );

@@ -1,7 +1,35 @@
 # Africa Live — feuille de route du Radar OSINT
 
+**État de clôture et reprise : [travail terminé, réserves et prochain lot L5](dashboard-session-handoff.md).**
+
+Les relevés plus anciens conservent leur date ; ils ne remplacent pas ce bilan courant.
+
 Dernière revue des sources : 29 septembre 2026
 Statut : proposition produit et technique ; aucun fournisseur payant n’est activé.
+
+## Complément local du 30 septembre 2026
+
+La description « État de départ » ci-dessous est historique. Les correctifs
+AL-C01/C02 interdisent maintenant le dashboard après expiration ; AL-C03/C04
+et AL-D02/D03/D05/D06 sont livrés localement. Carte MapLibre, météo Open-Meteo,
+RSS et métadonnées de disponibilité remplacent certaines hypothèses initiales.
+[Contrats et réception locale](dashboard-reliability-validation.md),
+[matrice d’accès](dashboard-access-matrix.md),
+[plan de suite](plan-dashboard-backlog.md). Aucun déploiement de ces changements
+n’est déclaré ; les couches et fournisseurs envisagés plus loin restent des
+propositions lorsqu’ils ne figurent pas dans la réception. Briefing différé L6.
+
+AL-W01 à AL-W06 sont maintenant livrés localement : pays dans l’URL,
+dashboard compact, fil mobile prioritaire, couches FIRMS/USGS/GDACS à la
+demande et tableau de sources. [Réception L2](dashboard-workspace-validation.md).
+AL-T01 à AL-T04 (L3) et réception L4 sont livrés localement au 1er octobre 2026 :
+[réception TV](tv-workspace-validation.md), [réception intégrée](dashboard-release-validation.md)
+et [dossier de livraison](dashboard-delivery-dossier.md). Aucun déploiement déclaré.
+Complément autorisé du 1er octobre à 18:09 UTC : L0–L4 est ensuite déployé sur staging,
+neuf E2E distants et parcours administrateur réel reçus.
+[Preuves et validations restantes](dashboard-auth-staging-reception.md).
+Suite : décision L5 sur le lecteur ancré, puis L6 briefing. Les étapes anciennes
+ci-dessous restent un historique de proposition ; le plan dashboard fait foi.
 
 ## Objectif
 

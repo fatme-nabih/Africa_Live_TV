@@ -19,11 +19,15 @@ import {
   messageForApiError,
   readApiResponse,
 } from '@/lib/api-contracts';
-import { formatCountryName, formatLanguageName } from '@/lib/format';
+import { formatCountryName } from '@/lib/format';
+import { categoryCodes, categoryLabel, catalogLanguageCodes, catalogLanguageLabel } from '@/lib/catalog-metadata';
+import { uniqueFilterOptions } from '@/lib/radar-data';
 import { LatestRequestController } from '@/lib/latest-request';
 import type { ChannelFilters } from '@/types/channel';
 
 interface FilterSidebarProps {
+  filters: ChannelFilters;
+  onReset: () => void;
   onFilterChange: (filters: ChannelFilters) => void;
   showFavoritesOnly: boolean;
   setShowFavoritesOnly: (value: boolean) => void;
@@ -31,22 +35,24 @@ interface FilterSidebarProps {
   onCloseMobile?: () => void;
 }
 export default function FilterSidebar({
-  onFilterChange,
+  filters, onReset, onFilterChange,
   showFavoritesOnly,
   setShowFavoritesOnly,
   isOpenMobile = false,
   onCloseMobile,
 }: FilterSidebarProps) {
-  const [search, setSearch] = useState('');
-  const [country, setCountry] = useState('');
-  const [group, setGroup] = useState('');
-  const [language, setLanguage] = useState('');
+  const { search, country, group, language } = filters;
+  const setSearch = (search: string) => onFilterChange({ ...filters, search });
+  const setCountry = (country: string) => onFilterChange({ ...filters, country });
+  const setGroup = (group: string) => onFilterChange({ ...filters, group });
+  const setLanguage = (language: string) => onFilterChange({ ...filters, language });
   const [countries, setCountries] = useState<string[]>([]);
   const [groups, setGroups] = useState<string[]>([]);
   const [languages, setLanguages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const filterRequestsRef = useRef<LatestRequestController | null>(null);
+  const drawerRef = useRef<HTMLDivElement | null>(null);
   if (filterRequestsRef.current === null) filterRequestsRef.current = new LatestRequestController();
 
   const loadFilters = useCallback(async () => {
@@ -57,9 +63,9 @@ export default function FilterSidebar({
       const response = await fetch('/api/filters', { signal: request.signal, cache: 'no-store' });
       const data = await readApiResponse(response, filterOptionsResponseSchema);
       if (!filterRequestsRef.current!.isCurrent(request.id)) return;
-      setCountries(data.countries);
-      setGroups(data.groups);
-      setLanguages(data.languages);
+      setCountries(uniqueFilterOptions(data.countries));
+      setGroups(uniqueFilterOptions(data.groups.flatMap(categoryCodes)));
+      setLanguages(uniqueFilterOptions(data.languages.flatMap(catalogLanguageCodes)));
     } catch (requestError) {
       if (request.signal.aborted || !filterRequestsRef.current!.isCurrent(request.id)) return;
       setError(messageForApiError(requestError, 'Impossible de charger les options de filtre.'));
@@ -83,19 +89,26 @@ export default function FilterSidebar({
   }, [loadFilters]);
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      onFilterChange({ search, country, group, language, status: '' });
-    }, 300);
-    return () => window.clearTimeout(timeoutId);
-  }, [onFilterChange, search, country, group, language]);
-
-  useEffect(() => {
     if (!isOpenMobile) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const drawer = drawerRef.current;
+    const controls = () => Array.from(drawer?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), a[href]') ?? []);
+    controls()[0]?.focus();
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onCloseMobile?.();
+      if (event.key === 'Tab') {
+        const items = controls(), first = items[0], last = items.at(-1);
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+      }
     };
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    const closeOnDesktop = () => { if (desktop.matches) onCloseMobile?.(); };
+    desktop.addEventListener('change', closeOnDesktop);
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => { window.removeEventListener('keydown', handleKeyDown); desktop.removeEventListener('change', closeOnDesktop); document.body.style.overflow = previousOverflow; previous?.focus(); };
   }, [isOpenMobile, onCloseMobile]);
 
   const filterForm = (
@@ -110,16 +123,10 @@ export default function FilterSidebar({
           </h2>
         </div>
         <div className="flex items-center gap-2">
-          {(search || country || group || language || showFavoritesOnly) && (
+          {(search || country || group || language || filters.region || showFavoritesOnly) && (
             <button
               type="button"
-              onClick={() => {
-                setSearch('');
-                setCountry('');
-                setGroup('');
-                setLanguage('');
-                setShowFavoritesOnly(false);
-              }}
+              onClick={onReset}
               className="text-[11px] font-bold text-amber-400 hover:text-amber-300 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded px-1"
             >
               Réinitialiser
@@ -217,7 +224,7 @@ export default function FilterSidebar({
             className="w-full appearance-none rounded-xl border border-white/[0.08] bg-white/[0.03] py-1.5 pl-8 pr-7 text-xs text-zinc-100 transition hover:border-white/20 focus-visible:border-amber-400/60 focus-visible:bg-black/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-400/30"
           >
             <option value="" className="bg-black text-zinc-100">Toutes</option>
-            {groups.map((availableGroup) => <option key={availableGroup} value={availableGroup} className="bg-black text-zinc-100">{availableGroup}</option>)}
+            {uniqueFilterOptions([...groups, ...(group ? [group] : [])]).map((availableGroup) => <option key={availableGroup} value={availableGroup} className="bg-black text-zinc-100">{categoryLabel(availableGroup)}</option>)}
           </select>
           <FilmIcon className="pointer-events-none absolute left-2.5 top-2 h-3.5 w-3.5 text-zinc-500" aria-hidden="true" />
         </div>
@@ -234,7 +241,7 @@ export default function FilterSidebar({
             className="w-full appearance-none rounded-xl border border-white/[0.08] bg-white/[0.03] py-1.5 pl-8 pr-7 text-xs text-zinc-100 transition hover:border-white/20 focus-visible:border-amber-400/60 focus-visible:bg-black/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-400/30"
           >
             <option value="" className="bg-black text-zinc-100">Tous</option>
-            {countries
+            {uniqueFilterOptions([...countries, ...(country ? [country] : [])])
               .map((code) => ({ code, name: formatCountryName(code, code) }))
               .sort((left, right) => left.name.localeCompare(right.name, 'fr'))
               .map(({ code, name }) => <option key={code} value={code} className="bg-black text-zinc-100">{name}</option>)}
@@ -254,8 +261,8 @@ export default function FilterSidebar({
             className="w-full appearance-none rounded-xl border border-white/[0.08] bg-white/[0.03] py-1.5 pl-8 pr-7 text-xs text-zinc-100 transition hover:border-white/20 focus-visible:border-amber-400/60 focus-visible:bg-black/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-400/30"
           >
             <option value="" className="bg-black text-zinc-100">Toutes</option>
-            {languages
-              .map((code) => ({ code, name: formatLanguageName(code, code.toUpperCase()) }))
+            {uniqueFilterOptions([...languages, ...(language ? [language] : [])])
+              .map((code) => ({ code, name: catalogLanguageLabel(code) }))
               .sort((left, right) => left.name.localeCompare(right.name, 'fr'))
               .map(({ code, name }) => <option key={code} value={code} className="bg-black text-zinc-100">{name}</option>)}
           </select>
@@ -263,6 +270,8 @@ export default function FilterSidebar({
         </div>
       </div>
 
+      {filters.region === 'africa' && <p className="text-xs text-emerald-200">Périmètre : Afrique</p>}
+      {search.trim().length === 1 && <p className="text-xs text-zinc-400">Saisissez au moins deux caractères.</p>}
       <p className="sr-only" aria-live="polite">
         {loading ? 'Chargement des options de filtre.' : 'Options de filtre chargées.'}
       </p>
@@ -272,16 +281,16 @@ export default function FilterSidebar({
   return (
     <>
       {/* Desktop Sidebar (visible on lg and up) */}
-      <aside
+      {!isOpenMobile && <aside
         aria-labelledby="catalog-filters-title"
         className="hidden lg:sticky lg:top-24 lg:flex lg:max-h-[calc(100vh-7rem)] flex-col gap-4 overflow-y-auto rounded-2xl border border-white/[0.08] bg-black/40 p-4 shadow-2xl backdrop-blur-2xl"
       >
         {filterForm}
-      </aside>
+      </aside>}
 
       {/* Mobile Slide-over Drawer */}
       {isOpenMobile && (
-        <div className="fixed inset-0 z-50 flex justify-end lg:hidden" role="dialog" aria-modal="true" aria-labelledby="catalog-filters-title">
+        <div ref={drawerRef} className="fixed inset-0 z-50 flex justify-end lg:hidden" role="dialog" aria-modal="true" aria-labelledby="catalog-filters-title">
           <div
             className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
             onClick={onCloseMobile}

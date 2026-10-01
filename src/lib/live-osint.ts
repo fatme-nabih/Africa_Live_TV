@@ -1,4 +1,5 @@
 import { ServiceUnavailableError } from '@/lib/api-errors';
+import { canonicalArticleUrl, normalizeRadarDate, radarSource, temporalWindow } from './radar-data';
 import type {
   RadarArticle,
   RadarCountry,
@@ -118,6 +119,7 @@ const MAX_NEWS_BYTES = 2_000_000;
 
 let newsCache: CacheEntry<RadarArticle[]> | null = null;
 let newsRequest: Promise<RadarArticle[]> | null = null;
+export function clearNewsCacheForTests() { newsCache = null; newsRequest = null; }
 
 async function readBoundedText(response: Response, maxBytes: number) {
   const declaredLength = Number(response.headers.get('content-length'));
@@ -154,17 +156,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-function normalizeGdeltDate(value: unknown) {
-  if (typeof value !== 'string') return null;
-  const compact = value.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z?$/);
-  const date = compact
-    ? new Date(Date.UTC(
-        Number(compact[1]), Number(compact[2]) - 1, Number(compact[3]),
-        Number(compact[4]), Number(compact[5]), Number(compact[6]),
-      ))
-    : new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date.toISOString();
-}
+const normalizeGdeltDate = normalizeRadarDate;
 
 function normalizeArticle(value: unknown): RadarArticle | null {
   if (!isRecord(value)) return null;
@@ -172,7 +164,7 @@ function normalizeArticle(value: unknown): RadarArticle | null {
     ? value.title.replace(/<[^>]*>/g, ' ').replace(/&amp;/gi, '&').replace(/&quot;/gi, '"').replace(/&#39;|&#x27;/gi, "'").replace(/\s+/g, ' ').trim().slice(0, 280)
     : '';
   const indexedAt = normalizeGdeltDate(value.seendate);
-  if (!title || !indexedAt) return null;
+  if (!title) return null;
 
   let articleUrl: URL;
   try {
@@ -192,9 +184,10 @@ function normalizeArticle(value: unknown): RadarArticle | null {
 
   return {
     title,
-    url: articleUrl.toString(),
+    url: canonicalArticleUrl(articleUrl.toString()),
     domain: domain.slice(0, 120),
-    indexedAt,
+    indexedAt: indexedAt ?? '',
+    countryBasis: 'media',
     countryCode: country?.code ?? null,
   };
 }
@@ -226,12 +219,12 @@ async function fetchNews() {
     .map(normalizeArticle)
     .filter((article): article is RadarArticle => Boolean(article))
     .filter((article) => {
-      const key = article.url.toLowerCase();
+      const key = canonicalArticleUrl(article.url);
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     })
-    .sort((left, right) => Date.parse(right.indexedAt) - Date.parse(left.indexedAt))
+    .sort((left, right) => (Date.parse(right.indexedAt) || 0) - (Date.parse(left.indexedAt) || 0))
     .slice(0, 75);
 }
 
@@ -250,17 +243,24 @@ async function getFreshNews() {
 
 export async function getRadarNews(): Promise<RadarNewsSnapshot> {
   const now = Date.now();
+  const snapshot = (articles: RadarArticle[], savedAt: number, stale: boolean): RadarNewsSnapshot => {
+    const windowed = temporalWindow(articles, article => article.indexedAt, Date.now());
+    return { articles: windowed.recent, undatedArticles: windowed.undated, window: windowed.window,
+      countries: PUBLIC_COUNTRIES, updatedAt: new Date(savedAt).toISOString(), stale,
+      availability: [radarSource('GDELT', 'Afrique · pays du média', stale ? now : savedAt, NEWS_TTL_MS, articles.length,
+        { status: stale ? 'stale' : undefined, lastSuccessAt: new Date(savedAt).toISOString(), dataAt: articles[0]?.indexedAt || null, limit: 75 })] };
+  };
   if (newsCache && newsCache.expiresAt > now) {
-    return { articles: newsCache.value, countries: PUBLIC_COUNTRIES, updatedAt: new Date(newsCache.savedAt).toISOString(), stale: false };
+    return snapshot(newsCache.value, newsCache.savedAt, false);
   }
 
   try {
     const articles = await getFreshNews();
     const savedAt = newsCache?.savedAt ?? Date.now();
-    return { articles, countries: PUBLIC_COUNTRIES, updatedAt: new Date(savedAt).toISOString(), stale: false };
+    return snapshot(articles, savedAt, false);
   } catch {
     if (newsCache && now - newsCache.savedAt <= NEWS_MAX_STALE_MS) {
-      return { articles: newsCache.value, countries: PUBLIC_COUNTRIES, updatedAt: new Date(newsCache.savedAt).toISOString(), stale: true };
+      return snapshot(newsCache.value, newsCache.savedAt, true);
     }
     throw new ServiceUnavailableError('Le fil de veille est temporairement indisponible.', 'LIVE_NEWS_UNAVAILABLE');
   }

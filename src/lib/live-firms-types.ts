@@ -36,6 +36,7 @@ export interface FirmsSnapshot {
     returnedFeatures: number;
     updatedAt: string;
     stale: boolean;
+    availability?: import('./radar-data').RadarSourceState[];
   };
   features: FirmsGeoJsonFeature[];
 }

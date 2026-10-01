@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 
 import { withApiErrorHandler } from '@/lib/api-errors';
 import { getLiveMarkets } from '@/lib/live-markets';
-import { authorizeCatalogRequest } from '@/lib/require-app-access';
+import { authorizeAppRequest } from '@/lib/require-app-access';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export const GET = withApiErrorHandler(async (request: Request) => {
-  const authorization = await authorizeCatalogRequest(
+  const authorization = await authorizeAppRequest(
     { bucket: 'live.markets.read', limit: 60, windowSeconds: 60 },
     request,
   );
@@ -22,7 +22,7 @@ export const GET = withApiErrorHandler(async (request: Request) => {
   return NextResponse.json(snapshot, {
     status: 200,
     headers: {
-      'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=1800',
+      'Cache-Control': 'private, no-store',
     },
   });
 });

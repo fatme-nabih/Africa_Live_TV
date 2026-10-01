@@ -90,7 +90,12 @@ test('three failed web sources trigger one automatic VLC launch', async ({ page 
   });
   await page.route('https://failure.fixture.test/**', route => route.fulfill({ status: 404 }));
   await page.goto('/player/test-fallback');
-  await page.clock.fastForward(60_000);
+  // Network promises settle between advances; a single jump made before a
+  // later source installs its watchdog leaves that watchdog frozen.
+  await expect(async () => {
+    await page.clock.fastForward(15_000);
+    expect(intents).toHaveLength(1);
+  }).toPass({ timeout: 15_000, intervals: [100, 250, 500] });
   await expect(page.getByRole('heading', { name: 'VLC lancé' })).toBeVisible();
   expect(attempts).toBe(3);
   expect(intents).toHaveLength(1);

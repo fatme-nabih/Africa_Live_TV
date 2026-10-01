@@ -3,6 +3,33 @@
 À exécuter avant de clore le lot 1, puis avant tout déploiement. Noter le résultat
 dans `production-progress.md`. Ne jamais inscrire de secret ni d'URL média.
 
+## Réception L4 locale — 1er octobre 2026
+
+Complément autorisé : [réception staging](dashboard-auth-staging-reception.md).
+
+- [x] L0–L4 staging actif, neuf E2E distants réussis et santé processus/base 200.
+- [x] Compte administrateur Clerk réel : dashboard/TV/compte/admin et pays/URL reçus.
+- [ ] Comptes ordinaires distincts essai/actif/expiré : indisponibles à cette réception.
+- [x] Zoom natif 200 % local : DPR=2, 937×477 CSS, aucun débordement ;
+  pays/clavier/navigation TV/drawer/Échap/focus vérifiés le 1er octobre à 18:29 UTC.
+
+- [x] 219 unitaires + 14 intégrations isolées + 57 E2E réussis ; TypeScript,
+  ESLint, build et migrations cohérentes. [Preuves et limites](dashboard-release-validation.md).
+- [x] Captures desktop/mobile, clavier/320/390/reflow et fond cartographique bloqué.
+- [x] Dashboard/API et lecture refusés après expiration ; catalogue consultable.
+- [x] Catalogue local avant/après : 11 778 chaînes, 12 396 sources, empreintes
+  identiques ; fixtures et schémas d’intégration nettoyés.
+- [x] Documentation réconciliée, état staging historique distinct ;
+  [dossier AL-Q02](dashboard-delivery-dossier.md) préparé sans action distante.
+- [ ] Réception des comptes Clerk ordinaires, lecteur d’écran et
+  lecture sur appareils physiques réels pour cette livraison.
+- [ ] Inventaire staging actuel et qualification datée des sources.
+
+[Reprise de session : preuves, limites et prochain lot L5](dashboard-session-handoff.md).
+
+Les listes historiques ci-dessous ne sont pas cochées automatiquement par cette
+réception : fournisseurs, sécurité/exploitation et comptes réels ont leur périmètre.
+
 ## Configuration et base
 
 - [ ] `npm run config:check` accepte la configuration locale visée.
@@ -36,6 +63,12 @@ dans `production-progress.md`. Ne jamais inscrire de secret ni d'URL média.
 - [ ] `ENABLE_LOCAL_VLC=false` dans Railway et dans toute production.
 
 ## Contact, retrait et Radar Afrique
+
+- [ ] AL-C01/AL-C02 : dashboard et huit API Radar refusés après expiration ;
+  catalogue TV toujours consultable ; favoris et lecture restent soumis aux droits.
+  Tester essai, actif, grâce, expiré, paiement requis, bloqué et administrateur
+  distincts selon [la matrice](dashboard-access-matrix.md). Les comptes réels
+  connectés restent à vérifier avant livraison staging.
 
 - [ ] Une demande de contact/retrait n'est confirmée qu'après son enregistrement ; les abus sont limités par email et, si disponible, par empreinte réseau calculée depuis un en-tête proxy explicitement fiable.
 - [ ] Les routes d'administration des demandes exigent un administrateur actif ; fermer une demande remet une source en révision et ne la rend pas automatiquement éligible à la lecture.
@@ -78,3 +111,40 @@ dans `production-progress.md`. Ne jamais inscrire de secret ni d'URL média.
 - [ ] Clerk accepte l'origine et les redirections staging ; connexion, déconnexion et les trois API authentifiées réussissent sur le nouveau domaine.
 - [ ] `africatv.sn` et `www.africatv.sn` ne servent pas la préproduction et restent réservés au lancement.
 - [ ] Planification de vérification et surveillance continue sont traitées avant la production ; le healthcheck de déploiement ne les remplace pas.
+
+## Réception locale du dashboard — 30 septembre 2026
+
+Périmètre et preuves : [dashboard-reliability-validation.md](dashboard-reliability-validation.md).
+
+- [x] AL-C03 : collisions Ecofin, déduplication listes/bandeau et options, aucun avertissement React dans les fixtures.
+- [x] AL-C04 : worker dev et build servi sous CSP, panne explicite, fil et pays utilisables ; desktop/mobile/navigation répétée.
+- [x] AL-D02 : bornes 24 h, dates inconnues/futures, fuseaux, doublons et compteurs sur le même ensemble filtré.
+- [x] AL-D03 : vide valide, HTTP/payload/timeout, panne partielle, dernier succès, cache expiré et reprise.
+- [x] AL-D05 : références/candidates web/VLC, prédicat partagé du résolveur ; aucune sonde média du résumé.
+- [x] AL-D06 : Afrique/Monde, dates/source, copie inaccessible, pause et mouvement réduit.
+- [x] Briefing toujours désactivé ; aucune requête E2E depuis le dashboard.
+- [ ] Dashboard complet avec une session Clerk authentifiée sur le build servi : non revendiqué dans cette réception locale.
+
+## Réception locale L2 — 30 septembre 2026
+
+Preuves et limites : [dashboard-workspace-validation.md](dashboard-workspace-validation.md).
+
+- [x] AL-W01 : en-tête/KPI compacts, début carte/fil à 1366×768, repli 683×384.
+- [x] AL-W02 : contrôle natif nommé, clavier, reset, pays vide et sans carte.
+- [x] AL-W03 : lien direct, paramètres/fragment, rechargement, historique, code invalide et réponses SN→CI tardives.
+- [x] AL-W04 : 320/390 px, paysage, connexion lente, fil avant carte, zéro worker par défaut sur mobile, panne isolée.
+- [x] AL-W05 : opt-in, dates/légendes, erreur/retry, coordonnées invalides, activations concurrentes, cache et réponse tardive ignorée.
+- [x] AL-W06 : détail par fournisseur, panne totale/partielle, non configuré, reprise, expiration selon cadence et annonces stables.
+- [x] Non-régressions Radar/catalogue, TypeScript, ESLint, unitaires, build et worker sous CSP du build servi.
+
+## Réception locale L3 — 1er octobre 2026
+
+Preuves et limites : [tv-workspace-validation.md](tv-workspace-validation.md).
+
+- [x] AL-T01 : navigation commune, logo Dashboard, page active, rôle serveur, fallback Clerk et succès paiement simulé.
+- [x] AL-T02 : composites/alias/accents/casse, inconnus explicites, facettes et résultats cohérents, imports intacts, mesures locales.
+- [x] AL-T03 : filtres combinés, shortcut/sidebar, reset, curseur et réponses tardives, compte des chaînes chargées cohérent.
+- [x] AL-T04 : contexte Sénégal→TV, Afrique→Tout, favoris persistants/vides, historique/rechargement, disponibilité et droits expirés simulés.
+- [x] 1366/390/320 px, Ctrl+K, boucle de focus, Échap, retour au déclencheur, absence de débordement.
+- [x] Lecteurs historiques et API locale, fixtures nettoyées, gardes anonymes et worker du build servi.
+- [ ] Parcours Clerk réels standard/admin/expiré sur le build : non revendiqués par cette réception locale.

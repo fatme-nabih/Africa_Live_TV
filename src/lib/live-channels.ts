@@ -9,10 +9,10 @@ import {
 } from '@/lib/channel-selection';
 import { PLAYBACK_SOURCE_FRESHNESS_MS } from '@/lib/playback-resolution-policy';
 import type {
-  CountryChannelCount,
   LiveChannelsSummarySnapshot,
   LiveCountryChannelsSnapshot,
 } from '@/lib/live-channels-types';
+import { summarizeChannelCandidates } from './live-channel-summary';
 import type { Channel } from '@/types/channel';
 
 const SUMMARY_CACHE_TTL_MS = 10 * 60_000;
@@ -59,17 +59,17 @@ export async function getAfricanChannelsSummary(
       const rows = await customDb
         .select({
           countryCode: channels.countryCode,
-          channelCount: sql<number>`count(DISTINCT ${channels.id})::int`,
-          directWebCount: sql<number>`count(DISTINCT CASE WHEN ${streams.directEligibility} = 'PUBLIC_DIRECT_WEB' OR ${streams.status} = 'BROWSER_OK' THEN ${channels.id} END)::int`,
+          channelId: channels.id, url: streams.url, status: streams.status,
+          corsAllowed: streams.corsAllowed, mixedContent: streams.mixedContent,
+          lastSuccessAt: streams.lastSuccessAt, directEligibility: streams.directEligibility,
+          eligibilityReason: streams.eligibilityReason,
         })
         .from(channels)
-        .innerJoin(
+        .leftJoin(
           streams,
           and(
             eq(streams.channelId, channels.id),
             eq(streams.active, true),
-            sql`${streams.status} != 'OFFLINE'`,
-            sql`${streams.directEligibility} != 'OFFLINE'`,
           ),
         )
         .where(
@@ -79,39 +79,14 @@ export async function getAfricanChannelsSummary(
             inArray(channels.countryCode, africanCodes),
           ),
         )
-        .groupBy(channels.countryCode);
+        .orderBy(asc(channels.id));
 
-      const countriesRecord: Record<string, CountryChannelCount> = {};
-      let totalChannels = 0;
-      let totalDirectWeb = 0;
-
-      for (const row of rows) {
-        if (!row.countryCode) continue;
-        const code = row.countryCode.toUpperCase();
-        const chCount = Number(row.channelCount) || 0;
-        const webCount = Number(row.directWebCount) || 0;
-
-        countriesRecord[code] = {
-          countryCode: code,
-          channelCount: chCount,
-          directWebCount: webCount,
-        };
-
-        totalChannels += chCount;
-        totalDirectWeb += webCount;
-      }
-
-      const snapshot: LiveChannelsSummarySnapshot = {
-        updatedAt: new Date(now).toISOString(),
-        countries: countriesRecord,
-        totalChannels,
-        totalDirectWeb,
-      };
+      const snapshot = summarizeChannelCandidates(rows, new Date(now));
 
       summaryCache = { data: snapshot, timestamp: now };
       return snapshot;
     } catch (error) {
-      if (summaryCache) {
+      if (summaryCache && now - summaryCache.timestamp <= 6 * 60 * 60_000) {
         return { ...summaryCache.data, stale: true };
       }
       throw error;

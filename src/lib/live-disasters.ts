@@ -1,4 +1,6 @@
+import { readRadarText } from './radar-upstream';
 import { ServiceUnavailableError } from '@/lib/api-errors';
+import { normalizeRadarDate, radarSource, type RadarSourceState } from './radar-data';
 import type {
   AlertSeverity,
   DisasterEvent,
@@ -29,6 +31,7 @@ interface CacheEntry {
   earthquakesCount: number;
   gdacsAlertsCount: number;
   timestamp: number;
+  availability: RadarSourceState[];
 }
 
 let cachedDisasters: CacheEntry | null = null;
@@ -93,8 +96,9 @@ export function parseUsgsEarthquakes(geojson: unknown): DisasterEvent[] {
 
     const eventDate = Number.isFinite(f.properties.time)
       ? new Date(f.properties.time).toISOString()
-      : new Date().toISOString();
+      : null;
 
+    if (!eventDate) continue;
     events.push({
       id: f.id || `usgs-${lat.toFixed(2)}-${lon.toFixed(2)}`,
       source: 'USGS',
@@ -163,8 +167,9 @@ export function parseGdacsRss(xmlText: string): DisasterEvent[] {
 
     const pubDateMatch = item.match(/<pubDate>([\s\S]*?)<\/pubDate>/);
     const eventDate = pubDateMatch
-      ? new Date(pubDateMatch[1].trim()).toISOString()
-      : new Date().toISOString();
+      ? normalizeRadarDate(pubDateMatch[1].trim())
+      : null;
+    if (!eventDate) continue;
 
     const idMatch = item.match(/<guid[^>]*>([\s\S]*?)<\/guid>/);
     const id = idMatch ? `gdacs-${idMatch[1].trim()}` : `gdacs-${lat.toFixed(2)}-${lon.toFixed(2)}`;
@@ -336,11 +341,14 @@ async function fetchDisastersFromUpstream(): Promise<CacheEntry> {
 
   let usgsEvents: DisasterEvent[] = [];
   let gdacsEvents: DisasterEvent[] = [];
+  let usgsOk = false, gdacsOk = false;
 
   if (usgsRes.status === 'fulfilled' && usgsRes.value.ok) {
     try {
-      const json: unknown = await usgsRes.value.json();
+      const json: unknown = JSON.parse(await readRadarText(usgsRes.value));
+      if (!json || typeof json !== 'object' || !Array.isArray((json as { features?: unknown }).features)) throw new Error('Invalid USGS payload');
       usgsEvents = parseUsgsEarthquakes(json);
+      usgsOk = true;
     } catch {
       // Ignore parse failure for partial resilience
     }
@@ -348,24 +356,29 @@ async function fetchDisastersFromUpstream(): Promise<CacheEntry> {
 
   if (gdacsRes.status === 'fulfilled' && gdacsRes.value.ok) {
     try {
-      const xml = await gdacsRes.value.text();
+      const xml = await readRadarText(gdacsRes.value);
+      if (!/<(?:rss|feed)[\s>]/i.test(xml)) throw new Error('Invalid GDACS payload');
       gdacsEvents = parseGdacsRss(xml);
+      gdacsOk = true;
     } catch {
       // Ignore parse failure
     }
   }
 
-  if (usgsEvents.length === 0 && gdacsEvents.length === 0) {
+  if (!usgsOk && !gdacsOk) {
     throw new Error('Toutes les sources d’alertes amont sont inaccessibles.');
   }
 
   const merged = deduplicateEvents([...usgsEvents, ...gdacsEvents]);
+  const timestamp = Date.now();
 
   return {
     events: merged,
     earthquakesCount: usgsEvents.length,
     gdacsAlertsCount: gdacsEvents.length,
-    timestamp: Date.now(),
+    timestamp,
+    availability: [radarSource('USGS', 'Afrique · lieu du séisme', timestamp, CACHE_TTL_MS, usgsEvents.length, { status: usgsOk ? undefined : 'unavailable', dataAt: usgsEvents[0]?.eventDate }),
+      radarSource('GDACS', 'Afrique · lieu de l’événement', timestamp, CACHE_TTL_MS, gdacsEvents.length, { status: gdacsOk ? undefined : 'unavailable', dataAt: gdacsEvents[0]?.eventDate })],
   };
 }
 
@@ -373,16 +386,16 @@ export async function getDisasterEventsSnapshot(
   options: DisasterQueryOptions = {},
 ): Promise<DisasterEventsSnapshot> {
   const now = Date.now();
+  const snapshot = (entry: CacheEntry, stale: boolean) => {
+    const result = convertToDisastersGeoJson(filterDisasters(entry.events, options), entry.earthquakesCount, entry.gdacsAlertsCount, stale);
+    result.metadata.updatedAt = new Date(entry.timestamp).toISOString();
+    result.metadata.availability = entry.availability.map(source => stale && source.status !== 'unavailable' ? { ...source, fetchedAt: new Date(now).toISOString(), status: 'stale' as const } : source);
+    return result;
+  };
 
   // Fresh cache hit
   if (cachedDisasters && now - cachedDisasters.timestamp < CACHE_TTL_MS) {
-    const filtered = filterDisasters(cachedDisasters.events, options);
-    return convertToDisastersGeoJson(
-      filtered,
-      cachedDisasters.earthquakesCount,
-      cachedDisasters.gdacsAlertsCount,
-      false,
-    );
+    return snapshot(cachedDisasters, false);
   }
 
   if (!inFlightFetch) {
@@ -407,23 +420,8 @@ export async function getDisasterEventsSnapshot(
   try {
     const entry = await inFlightFetch;
     const isStale = now - entry.timestamp >= CACHE_TTL_MS;
-    const filtered = filterDisasters(entry.events, options);
-    return convertToDisastersGeoJson(
-      filtered,
-      entry.earthquakesCount,
-      entry.gdacsAlertsCount,
-      isStale,
-    );
+    return snapshot(entry, isStale);
   } catch (error) {
-    if (cachedDisasters) {
-      const filtered = filterDisasters(cachedDisasters.events, options);
-      return convertToDisastersGeoJson(
-        filtered,
-        cachedDisasters.earthquakesCount,
-        cachedDisasters.gdacsAlertsCount,
-        true,
-      );
-    }
     throw error;
   }
 }

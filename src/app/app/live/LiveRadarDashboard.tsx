@@ -1,13 +1,17 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, Suspense, type ReactNode } from 'react';
 import dynamic from 'next/dynamic';
+import { useSearchParams } from 'next/navigation';
+import RadarSourcesPanel from '@/components/radar/RadarSourcesPanel';
+import { radarCountry, radarCountryUrl, sourcePlaceholder, type RadarSourceRow } from '@/lib/radar-workspace';
 import Link from 'next/link';
-import BrandLogo from '@/components/BrandLogo';
+import AppNavigation, { AppBrand } from '@/components/AppNavigation';
+import { catalogCountryHref } from '@/lib/catalog-filter-state';
 import LocalAccountControls from '@/components/LocalAccountControls';
 import Player from '@/components/Player';
 import LiveMarketTicker from '@/components/radar/LiveMarketTicker';
-import FlashBriefingModal from '@/components/radar/FlashBriefingModal';
+import { canonicalArticleUrl, temporalWindow, formatRadarDate, radarSource } from '@/lib/radar-data';
 import { launchPlayer } from '@/lib/player-window';
 import { AFRICAN_COUNTRIES } from '@/lib/live-osint';
 import type { RadarArticle, RadarCountry, RadarNewsSnapshot } from '@/lib/live-osint-types';
@@ -18,7 +22,6 @@ import type { Channel } from '@/types/channel';
 import {
   ArrowRight,
   ArrowUpRight,
-  CheckCircle2,
   Cloud,
   CloudFog,
   CloudLightning,
@@ -112,16 +115,39 @@ function isWeatherSnapshot(value: unknown): value is LiveWeatherSnapshot {
 }
 
 export default function LiveRadarDashboard() {
+  return <Suspense fallback={<p className="p-4">Chargement du Radar…</p>}><RadarWorkspace /></Suspense>;
+}
+
+function RadarWorkspace() {
   const [news, setNews] = useState<RadarNewsSnapshot | null>(null);
   const [newsError, setNewsError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const countryParam = searchParams.get('country');
+  const selectedCountry = radarCountry(countryParam);
+  const setSelectedCountry = useCallback((code: string | null) => {
+    const next = radarCountryUrl(window.location.href, code);
+    if (next !== window.location.pathname + window.location.search + window.location.hash) window.history.pushState(null, '', next);
+  }, []);
+  const [mapRequested, setMapRequested] = useState(false);
+  const [desktopMap, setDesktopMap] = useState(false);
+  const [tickerSources, setTickerSources] = useState<RadarSourceRow[]>([]);
+  const [layerSources, setLayerSources] = useState<RadarSourceRow[]>([]);
+  const showMap = desktopMap || mapRequested;
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 1280px)');
+    const update = () => setDesktopMap(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
   const [refreshToken, setRefreshToken] = useState(0);
   const [clock, setClock] = useState('');
 
+  const [asOf, setAsOf] = useState(0);
+  const [summaryError, setSummaryError] = useState(false);
   const [rss, setRss] = useState<RadarRssSnapshot | null>(null);
   const [feedTab, setFeedTab] = useState<'all' | 'rss' | 'gdelt'>('all');
-  const [isBriefingOpen, setIsBriefingOpen] = useState(false);
 
   const [channelsSummary, setChannelsSummary] = useState<LiveChannelsSummarySnapshot | null>(null);
   const [countryChannels, setCountryChannels] = useState<Channel[]>([]);
@@ -130,8 +156,8 @@ export default function LiveRadarDashboard() {
   const [activePlayChannel, setActivePlayChannel] = useState<Channel | null>(null);
   const [rightPanelTab, setRightPanelTab] = useState<'news' | 'channels'>('news');
 
-  const [selectedCityCode, setSelectedCityCode] = useState<string | null>(null);
-  const activeWeatherCode = selectedCityCode ?? selectedCountry ?? 'SN';
+  const [selectedCityCode, setSelectedCityCode] = useState<{ code: string; countryContext: string | null } | null>(null);
+  const activeWeatherCode = selectedCityCode?.countryContext === selectedCountry ? selectedCityCode.code : selectedCountry ?? 'SN';
   const [weather, setWeather] = useState<LiveWeatherSnapshot | null>(null);
   const [weatherError, setWeatherError] = useState<string | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
@@ -142,6 +168,7 @@ export default function LiveRadarDashboard() {
 
     const loadWeather = async () => {
       setWeatherLoading(true);
+      setWeather(previous => previous?.current.countryCode === activeWeatherCode ? previous : null);
       try {
         const response = await fetch(`/api/live/weather?code=${encodeURIComponent(activeWeatherCode)}`, {
           signal: controller.signal,
@@ -190,33 +217,24 @@ export default function LiveRadarDashboard() {
     const load = async () => {
       setRefreshing(true);
       try {
-        const [newsRes, rssRes] = await Promise.allSettled([
-          fetch('/api/live/news', { signal: controller.signal, cache: 'no-store' }),
-          fetch('/api/live/rss', { signal: controller.signal, cache: 'no-store' }),
-        ]);
-
-        let hasSuccess = false;
-
-        if (newsRes.status === 'fulfilled' && newsRes.value.ok) {
-          const body: unknown = await newsRes.value.json();
-          if (isNewsSnapshot(body)) {
-            setNews(body);
-            hasSuccess = true;
-          }
-        }
-
-        if (rssRes.status === 'fulfilled' && rssRes.value.ok) {
-          const body: unknown = await rssRes.value.json();
-          if (body && typeof body === 'object' && Array.isArray((body as RadarRssSnapshot).articles)) {
-            setRss(body as RadarRssSnapshot);
-            hasSuccess = true;
-          }
-        }
-
-        if (!hasSuccess) {
-          throw new Error('Les flux d’actualités sont momentanément indisponibles.');
-        }
-        setNewsError(null);
+        const results = await Promise.allSettled(['/api/live/news', '/api/live/rss'].map(async url => {
+          const response = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+          if (!response.ok) throw new Error('Source indisponible');
+          const body: unknown = await response.json();
+          if (!body || typeof body !== 'object' || !Array.isArray((body as RadarNewsSnapshot).articles)) throw new Error('Format invalide');
+          if (url.endsWith('/news') && !isNewsSnapshot(body)) throw new Error('Format GDELT invalide');
+          if (url.endsWith('/rss') && (!Array.isArray((body as RadarRssSnapshot).sources) || typeof (body as RadarRssSnapshot).updatedAt !== 'string')) throw new Error('Format RSS invalide');
+          return body;
+        }));
+        if (!active) return;
+        setAsOf(Date.now());
+        const [newsResult, rssResult] = results;
+        if (newsResult.status === 'fulfilled' && isNewsSnapshot(newsResult.value)) setNews(newsResult.value);
+        else setNews(previous => previous && Date.now() - Date.parse(previous.updatedAt) <= 45 * 60_000 ? { ...previous, stale: true, availability: previous.availability?.map(source => source.status === 'unavailable' ? source : { ...source, status: 'stale' as const }) } : null);
+        if (rssResult.status === 'fulfilled') setRss(rssResult.value as RadarRssSnapshot);
+        else setRss(previous => previous && Date.now() - Date.parse(previous.updatedAt) <= 45 * 60_000 ? { ...previous, stale: true, availability: previous.availability?.map(source => source.status === 'unavailable' ? source : { ...source, status: 'stale' as const }) } : null);
+        const failures = results.flatMap((result, index) => result.status === 'rejected' ? [index ? 'RSS' : 'GDELT'] : []);
+        setNewsError(failures.length ? `${failures.join(' et ')} indisponible(s). Les autres sources restent consultables.` : null);
       } catch (error) {
         if (active && !controller.signal.aborted) {
           setNewsError(error instanceof Error ? error.message : 'Impossible de charger les flux.');
@@ -245,14 +263,15 @@ export default function LiveRadarDashboard() {
           signal: controller.signal,
           cache: 'no-store',
         });
-        if (!response.ok) return;
+        if (!response.ok) throw new Error('Catalogue indisponible');
         const body: unknown = await response.json();
         if (!active) return;
         if (body && typeof body === 'object' && 'countries' in body) {
           setChannelsSummary(body as LiveChannelsSummarySnapshot);
+          setSummaryError(false);
         }
       } catch {
-        // Ignored
+        if (active && !controller.signal.aborted) setSummaryError(true);
       }
     };
 
@@ -272,6 +291,7 @@ export default function LiveRadarDashboard() {
     const controller = new AbortController();
 
     const loadCountryChannels = async () => {
+      setCountryChannels([]);
       setCountryChannelsLoading(true);
       setCountryChannelsError(null);
       try {
@@ -322,10 +342,10 @@ export default function LiveRadarDashboard() {
   const handleSelectCountryForChannels = useCallback((countryCode: string) => {
     setSelectedCountry(countryCode);
     setRightPanelTab('channels');
-  }, []);
+  }, [setSelectedCountry]);
 
   const gdeltArticles = useMemo<RadarArticle[]>(() => {
-    return (news?.articles ?? []).map((a) => ({
+    return [...(news?.articles ?? []), ...(news?.undatedArticles ?? [])].map((a) => ({
       ...a,
       sourceType: 'gdelt',
       sourceName: a.domain,
@@ -333,11 +353,13 @@ export default function LiveRadarDashboard() {
   }, [news]);
 
   const rssArticles = useMemo<RadarArticle[]>(() => {
-    return (rss?.articles ?? []).map((a) => ({
+    return [...(rss?.articles ?? []), ...(rss?.undatedArticles ?? [])].map((a) => ({
       title: a.title,
       url: a.url,
       domain: a.domain,
-      indexedAt: a.publishedAt,
+      indexedAt: a.publishedAt ?? '',
+      publishedAt: a.publishedAt,
+      countryBasis: a.countryBasis ?? 'inferred_topic',
       countryCode: a.countryCode,
       sourceType: 'rss',
       sourceName: a.sourceName,
@@ -349,53 +371,43 @@ export default function LiveRadarDashboard() {
     const seen = new Set<string>();
     const merged: RadarArticle[] = [];
     for (const art of [...rssArticles, ...gdeltArticles]) {
-      const key = art.url.toLowerCase();
-      if (!seen.has(key)) {
+      const key = canonicalArticleUrl(art.url);
+      if (key && !seen.has(key)) {
         seen.add(key);
         merged.push(art);
       }
     }
-    return merged.sort((a, b) => Date.parse(b.indexedAt) - Date.parse(a.indexedAt));
+    return merged.sort((a, b) => (Date.parse(b.indexedAt) || 0) - (Date.parse(a.indexedAt) || 0));
   }, [rssArticles, gdeltArticles]);
 
-  const currentTabArticles = useMemo<RadarArticle[]>(() => {
-    if (feedTab === 'rss') return rssArticles;
-    if (feedTab === 'gdelt') return gdeltArticles;
-    return allMergedArticles;
-  }, [feedTab, rssArticles, gdeltArticles, allMergedArticles]);
-
-  const visibleArticles = useMemo(() => {
-    return selectedCountry
-      ? currentTabArticles.filter((article) => article.countryCode === selectedCountry)
-      : currentTabArticles;
-  }, [currentTabArticles, selectedCountry]);
-
-  const tabCounts = useMemo(() => {
-    if (!selectedCountry) {
-      return {
-        all: allMergedArticles.length,
-        rss: rssArticles.length,
-        gdelt: gdeltArticles.length,
-      };
-    }
-    return {
-      all: allMergedArticles.filter((a) => a.countryCode === selectedCountry).length,
-      rss: rssArticles.filter((a) => a.countryCode === selectedCountry).length,
-      gdelt: gdeltArticles.filter((a) => a.countryCode === selectedCountry).length,
-    };
-  }, [selectedCountry, allMergedArticles, rssArticles, gdeltArticles]);
-
+  const windowed = useMemo(() => temporalWindow(allMergedArticles, a => a.indexedAt, asOf), [allMergedArticles, asOf]);
+  const matches = (a: RadarArticle) => (!selectedCountry || a.countryCode === selectedCountry) &&
+    (feedTab === 'all' || a.sourceType === feedTab);
+  const visibleArticles = windowed.recent.filter(matches);
+  const visibleUnknownArticles = windowed.undated.filter(matches);
+  const tabCounts = {
+    all: windowed.recent.filter(a => !selectedCountry || a.countryCode === selectedCountry).length,
+    rss: windowed.recent.filter(a => a.sourceType === 'rss' && (!selectedCountry || a.countryCode === selectedCountry)).length,
+    gdelt: windowed.recent.filter(a => a.sourceType === 'gdelt' && (!selectedCountry || a.countryCode === selectedCountry)).length,
+  };
   const countryCounts = useMemo(() => {
     const counts = new Map<string, number>();
-    for (const article of allMergedArticles) {
+    for (const article of windowed.recent) {
       if (article.countryCode) counts.set(article.countryCode, (counts.get(article.countryCode) ?? 0) + 1);
     }
     return counts;
-  }, [allMergedArticles]);
+  }, [windowed]);
 
-  const domainsCount = useMemo(() => {
-    return new Set(allMergedArticles.map((article) => article.sourceName || article.domain)).size;
-  }, [allMergedArticles]);
+  const domainsCount = new Set(visibleArticles.map(article => article.sourceName || article.domain)).size;
+
+  const sourceRows: RadarSourceRow[] = [
+    ...(news?.availability ?? (news ? [radarSource('GDELT', 'Pays du média', Date.parse(news.updatedAt), 5 * 60_000, news.articles.length, { status: news.stale ? 'stale' : undefined, dataAt: news.articles[0]?.indexedAt })] : [sourcePlaceholder('GDELT', 'Afrique · pays du média', newsError?.includes('GDELT') ? 'unavailable' : 'loading')])),
+    ...(rss?.availability ?? (rss ? [radarSource('RSS', 'Afrique · publications', Date.parse(rss.updatedAt), 5 * 60_000, rss.articles.length, { status: rss.stale ? 'stale' : undefined })] : [sourcePlaceholder('RSS', 'Afrique · publications', newsError?.includes('RSS') ? 'unavailable' : 'loading')])),
+    ...(weather?.availability ?? [sourcePlaceholder('Open-Meteo', activeWeatherCode, weatherError ? 'unavailable' : 'loading')]),
+    channelsSummary ? radarSource('Catalogue TV', 'Afrique · références et candidates', Date.parse(channelsSummary.updatedAt), 10 * 60_000, channelsSummary.totalChannels, { status: summaryError || channelsSummary.stale ? 'stale' : undefined, dataAt: channelsSummary.updatedAt }) : sourcePlaceholder('Catalogue TV', 'Afrique', summaryError ? 'unavailable' : 'loading'),
+    ...(tickerSources.length ? tickerSources : [sourcePlaceholder('Marchés / bandeau', 'Cotations et événements', 'loading')]),
+    ...(showMap && layerSources.length ? layerSources : [sourcePlaceholder('NASA FIRMS', 'Détections thermiques', 'not_requested'), sourcePlaceholder('USGS / GDACS', 'Lieu des événements', 'not_requested')]),
+  ];
 
   const activeCountry = AFRICAN_COUNTRIES.find((country) => country.code === selectedCountry) ?? null;
 
@@ -403,16 +415,9 @@ export default function LiveRadarDashboard() {
     <main className="min-h-screen bg-[#070a09] text-zinc-100 selection:bg-emerald-300/20 selection:text-emerald-100">
       <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#080b0a]/90 px-4 py-3 backdrop-blur-xl sm:px-6">
         <div className="absolute inset-x-0 top-0 h-[2px] bg-tricolor-bar opacity-90" />
-        <div className="mx-auto flex max-w-[1480px] items-center justify-between gap-3">
-          <Link href="/" aria-label="Accueil Africa Live" className="flex shrink-0 items-center gap-2.5 rounded-lg">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-300/10 p-1 ring-1 ring-emerald-200/20">
-              <BrandLogo className="h-full w-full" />
-            </span>
-            <span className="hidden sm:block">
-              <span className="block text-sm font-black tracking-tight text-white">Africa Live</span>
-              <span className="block text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-500">Radar panafricain</span>
-            </span>
-          </Link>
+        <div className="mx-auto flex max-w-[1480px] flex-wrap items-center justify-between gap-2">
+          <AppBrand />
+          <AppNavigation country={selectedCountry} />
 
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <div className="hidden items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/[0.06] px-3 py-1.5 text-[11px] font-semibold text-emerald-100 sm:flex">
@@ -420,111 +425,50 @@ export default function LiveRadarDashboard() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70" />
                 <span className="relative h-2 w-2 rounded-full bg-emerald-400" />
               </span>
-              <span>VEILLE ACTIVE</span>
+              <span>HEURE DE DAKAR</span>
               <span className="font-mono tabular-nums text-emerald-100/70">{clock || '—'}</span>
               <span className="text-emerald-100/50">GMT</span>
             </div>
             <LocalAccountControls />
-            <Link
-              href="/app"
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-amber-300/30 bg-amber-300 px-3.5 py-2 text-xs font-extrabold text-zinc-950 shadow-[0_6px_24px_-10px_rgba(252,211,77,0.65)] transition hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 sm:px-4 sm:text-sm"
-            >
-              <span className="hidden sm:inline">Ouvrir l’app des chaînes</span>
-              <span className="sm:hidden">Chaînes</span>
-              <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
-            </Link>
+
           </div>
         </div>
       </header>
 
-      <LiveMarketTicker
-        onSelectCountry={(code) => setSelectedCountry(code)}
-      />
-
-      <div className="mx-auto max-w-[1480px] px-4 pb-12 pt-6 sm:px-6 sm:pt-8">
-        <section className="mb-6 flex flex-col gap-5 xl:mb-7 xl:flex-row xl:items-end xl:justify-between">
-          <div className="max-w-3xl">
-            <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-300">
-              <Radar aria-hidden="true" className="h-4 w-4" />
-              Afrique · sources ouvertes · actualisé automatiquement
-            </div>
-            <h1 className="text-3xl font-black tracking-[-0.045em] text-white sm:text-4xl lg:text-[44px]">
-              L’Afrique, <span className="text-gradient-africa">vue depuis le terrain.</span>
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
-              Une veille médiatique panafricaine, une carte des rédactions et un point de suivi prévu à Dakar. Ouvrez une dépêche, puis retrouvez les chaînes du pays dans Africa Live.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <button
-              type="button"
-              onClick={() => setIsBriefingOpen(true)}
-              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-amber-400/40 bg-gradient-to-r from-amber-400/15 via-amber-400/10 to-emerald-400/15 px-3.5 py-2 text-xs font-black text-amber-200 shadow-[0_4px_20px_-8px_rgba(251,191,36,0.35)] transition hover:border-amber-300 hover:bg-amber-400/25 hover:text-white"
-            >
-              <Sparkles className="h-4 w-4 text-amber-300" />
-              <span>Flash Briefing IA (12h)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setRefreshToken((value) => value + 1)}
-              disabled={refreshing}
-              className="inline-flex min-h-10 w-fit items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-bold text-zinc-200 transition hover:border-emerald-300/30 hover:bg-white/[0.07] disabled:cursor-wait disabled:opacity-60"
-            >
-              <RefreshCw aria-hidden="true" className={'h-4 w-4 ' + (refreshing ? 'animate-spin' : '')} />
-              {refreshing ? 'Actualisation…' : 'Actualiser'}
-            </button>
+      <div className="mx-auto max-w-[1480px] px-3 pb-8 pt-3 sm:px-6">
+        <section className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div><h1 className="text-xl font-bold tracking-tight sm:text-2xl">Radar Afrique</h1><p className="text-xs text-zinc-400">Dépêches, météo et télévisions par pays.</p></div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" disabled title="Le briefing reste désactivé jusqu’à sa prochaine implémentation." className="rounded-lg border border-white/10 px-2 py-2 text-[11px] text-zinc-500"><Sparkles aria-hidden="true" className="mr-1 inline h-3 w-3" />Briefing — bientôt</button>
+            <button type="button" onClick={() => setRefreshToken(value => value + 1)} disabled={refreshing} className="rounded-lg border border-white/10 px-2 py-2 text-[11px] text-zinc-200 focus-visible:outline-2 focus-visible:outline-emerald-300"><RefreshCw aria-hidden="true" className="mr-1 inline h-3 w-3" />{refreshing ? 'Actualisation…' : 'Actualiser'}</button>
           </div>
         </section>
+        <section aria-label="Sélection du pays" className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-[#0b100e] p-2">
+          <label htmlFor="radar-country" className="text-xs font-semibold text-zinc-200">Choisir un pays</label>
+          <select id="radar-country" aria-label="Choisir un pays" aria-describedby="radar-country-help" value={selectedCountry ?? ''} onChange={event => setSelectedCountry(event.target.value || null)} className="min-w-0 flex-1 rounded-lg border border-white/10 bg-zinc-900 p-2 text-xs text-white focus-visible:outline-2 focus-visible:outline-emerald-300">
+            <option value="">Afrique · tous les pays</option>{AFRICAN_COUNTRIES.map(country => <option key={country.code} value={country.code}>{country.name}</option>)}
+          </select>
+          {selectedCountry && <button type="button" onClick={() => setSelectedCountry(null)} className="rounded p-2 text-xs text-emerald-200">Réinitialiser le pays</button>}
+          <p id="radar-country-help" className="sr-only">Sélectionnez au clavier ou tapez le début du nom dans la liste. Le pays est conservé dans le lien ; la carte utilise le même choix.</p>
+          {countryParam && !selectedCountry && <p role="status" className="w-full text-xs text-amber-200">Pays inconnu dans le lien : vue Afrique affichée.</p>}
+        </section>
 
-        <section aria-label="Indicateurs de veille" className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard label="Résultats chargés · 24 h" value={news || rss ? String(allMergedArticles.length) : '—'} icon={<Newspaper className="h-4 w-4" />} />
+        <section aria-label="Indicateurs de veille" className="mb-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
+          <MetricCard label="Résultats chargés · 24 h" value={news || rss ? String(visibleArticles.length) : '—'} icon={<Newspaper className="h-4 w-4" />} />
           <MetricCard label="Médias & Rédactions" value={news || rss ? String(domainsCount) : '—'} icon={<Radar className="h-4 w-4" />} />
-          <MetricCard label="Pays représentés" value={news || rss ? String(countryCounts.size) : '—'} icon={<MapPin className="h-4 w-4" />} />
+          <MetricCard label="Pays représentés" value={news || rss ? String(new Set(visibleArticles.map(a => a.countryCode).filter(Boolean)).size) : '—'} icon={<MapPin className="h-4 w-4" />} />
           <MetricCard
-            label="Chaînes directes actives"
+            label="Chaînes référencées"
             value={channelsSummary ? String(channelsSummary.totalChannels) : '—'}
-            subLabel={channelsSummary && channelsSummary.totalDirectWeb > 0 ? `${channelsSummary.totalDirectWeb} Web` : undefined}
+            subLabel={channelsSummary ? `${channelsSummary.totalDirectWeb} web · ${channelsSummary.totalDirectVlc ?? 0} VLC` : undefined}
             icon={<Tv className="h-4 w-4 text-amber-300" />}
           />
         </section>
 
+        <RadarSourcesPanel sources={sourceRows} />
+
         <section className="grid grid-cols-1 gap-4 xl:grid-cols-12 xl:gap-5">
-          <article className="overflow-hidden rounded-2xl border border-white/[0.09] bg-[#0b100e] shadow-[0_20px_70px_-35px_rgba(0,0,0,0.9)] xl:col-span-7">
-            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-white/[0.07] px-4 py-4 sm:px-5">
-              <div>
-                <div className="flex items-center gap-2 text-sm font-bold text-white">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-300/10 text-emerald-300">
-                    <Radar aria-hidden="true" className="h-4 w-4" />
-                  </span>
-                  Carte tactique interactive & Globe 3D
-                </div>
-                <p className="mt-1.5 text-xs text-zinc-500">
-                  Navigation 2D & Globe 3D immersif, zoom molette, inclinaison horizon et couches OSINT.
-                </p>
-              </div>
-              <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
-                2D / Globe 3D · MapLibre GL
-              </span>
-            </div>
-
-            <div className="p-2 sm:p-3">
-              <TacticalVectorMap
-                countries={AFRICAN_COUNTRIES}
-                countryCounts={countryCounts}
-                channelsSummary={channelsSummary}
-                selectedCountry={selectedCountry}
-                onSelectCountry={(code) => setSelectedCountry(code)}
-                onSelectCountryForChannels={handleSelectCountryForChannels}
-              />
-            </div>
-
-            <div className="border-t border-white/[0.07] bg-black/20 px-4 py-3 text-[11px] leading-5 text-zinc-500 sm:px-5">
-              <Info aria-hidden="true" className="mr-1.5 inline h-3.5 w-3.5 align-[-2px] text-amber-300/80" />
-              Fonds de carte Satellite haute résolution (Esri), Topographique (OpenFreeMap) et OpenStreetMap sous licence libre. Les marqueurs situent les médias indexés et les télévisions directes.
-            </div>
-          </article>
-
-          <article className="flex min-h-[520px] flex-col overflow-hidden rounded-2xl border border-white/[0.09] bg-[#0b100e] shadow-[0_20px_70px_-35px_rgba(0,0,0,0.9)] xl:col-span-5">
+          <article aria-label="Fil et chaînes du pays" className="flex min-h-[520px] flex-col overflow-hidden rounded-2xl border border-white/[0.09] bg-[#0b100e] shadow-[0_20px_70px_-35px_rgba(0,0,0,0.9)] xl:col-span-5">
             {/* Embedded PiP Mini-Player Dock */}
             {activePlayChannel && (
               <div className="border-b border-white/[0.08] bg-black/90 p-3 sm:p-4">
@@ -593,7 +537,7 @@ export default function LiveRadarDashboard() {
                   }`}
                 >
                   <Newspaper className="h-3.5 w-3.5 text-amber-300" />
-                  <span>Dépêches ({allMergedArticles.length})</span>
+                  <span>Dépêches ({tabCounts.all})</span>
                 </button>
                 <button
                   type="button"
@@ -655,14 +599,14 @@ export default function LiveRadarDashboard() {
                         Fil des dépêches
                       </div>
                       <p className="mt-0.5 text-xs text-zinc-500">
-                        Rédactions africaines & veille GDELT · {allMergedArticles.length} disponibles
+                        Rédactions africaines & veille GDELT · {visibleArticles.length} résultats datés · 24 h
                       </p>
                     </div>
                     <div className="flex items-center gap-1.5">
                       {rss && (
                         <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-bold text-emerald-300">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                          5 Rédactions
+                          {rss.availability?.filter(source => source.status === 'available' || source.status === 'empty').length ?? rss.sources.length} sources RSS
                         </span>
                       )}
                       {news?.stale && (
@@ -732,7 +676,7 @@ export default function LiveRadarDashboard() {
 
                 {newsError && (news || rss) && (
                   <div role="status" className="border-b border-amber-200/10 bg-amber-200/[0.04] px-4 py-2 text-[11px] text-amber-100/80 sm:px-5">
-                    Mise à jour partielle ; les dernières dépêches chargées restent consultables.
+                    {newsError} Les dernières dépêches chargées restent consultables.
                   </div>
                 )}
 
@@ -765,14 +709,14 @@ export default function LiveRadarDashboard() {
                           onClick={() => setSelectedCountry(null)}
                           className="mt-3.5 inline-flex items-center gap-1.5 rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-300 transition hover:bg-amber-400/20"
                         >
-                          Afficher toutes les dépêches ({allMergedArticles.length})
+                          Afficher toutes les dépêches ({windowed.recent.length})
                         </button>
                       )}
                     </div>
                   ) : (
-                    visibleArticles.map((article, index) => (
+                    visibleArticles.map((article) => (
                       <ArticleRow
-                        key={article.url + index}
+                        key={canonicalArticleUrl(article.url)}
                         article={article}
                         country={AFRICAN_COUNTRIES.find((country) => country.code === article.countryCode)}
                         channelCount={article.countryCode ? channelsSummary?.countries[article.countryCode]?.channelCount : undefined}
@@ -783,14 +727,62 @@ export default function LiveRadarDashboard() {
                   )}
                 </div>
 
+                {visibleUnknownArticles.length > 0 && <section aria-label="Dépêches sans date" className="border-t border-amber-300/20">
+                  <h2 className="p-3 text-xs text-amber-200">Date inconnue · {visibleUnknownArticles.length} titres exclus des compteurs 24 h</h2>
+                  {visibleUnknownArticles.map(article => <ArticleRow key={canonicalArticleUrl(article.url)} article={article} country={AFRICAN_COUNTRIES.find(country => country.code === article.countryCode)} onSelectCountry={setSelectedCountry} />)}
+                </section>}
                 <div className="border-t border-white/[0.07] px-4 py-3 text-[10px] leading-4 text-zinc-500 sm:px-5">
                   Les liens ouvrent les publications d’origine. Africa Live affiche les titres et métadonnées de veille, sans reprendre le contenu des articles.
                 </div>
               </>
             )}
           </article>
+          <article aria-label="Carte du Radar" className="overflow-hidden rounded-2xl border border-white/[0.09] bg-[#0b100e] shadow-[0_20px_70px_-35px_rgba(0,0,0,0.9)] xl:col-span-7">
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-white/[0.07] px-4 py-4 sm:px-5">
+              <div>
+                <div className="flex items-center gap-2 text-sm font-bold text-white">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-300/10 text-emerald-300">
+                    <Radar aria-hidden="true" className="h-4 w-4" />
+                  </span>
+                  Carte des médias et du catalogue
+                </div>
+                <p className="mt-1.5 text-xs text-zinc-500">
+                  Médias et TV initiaux ; séismes et détections thermiques à activer séparément.
+                </p>
+              </div>
+              <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                2D / Globe 3D · MapLibre GL
+              </span>
+            </div>
+
+            <div className="p-2 sm:p-3">
+              {!desktopMap && <button type="button" aria-expanded={mapRequested} aria-controls="radar-map" onClick={() => setMapRequested(value => !value)} className="mb-2 rounded-lg border border-emerald-300/30 px-3 py-2 text-xs font-semibold text-emerald-200">{mapRequested ? 'Masquer la carte' : 'Afficher la carte'}</button>}
+              <div id="radar-map">{showMap ? (
+              <TacticalVectorMap
+                countries={AFRICAN_COUNTRIES}
+                countryCounts={countryCounts}
+                channelsSummary={channelsSummary}
+                selectedCountry={selectedCountry}
+                onSelectCountry={(code) => setSelectedCountry(code)}
+                onSelectCountryForChannels={handleSelectCountryForChannels}
+                onSourcesChange={setLayerSources}
+              />
+              ) : <p className="p-3 text-xs text-zinc-400">Carte à la demande. Le choix du pays et les dépêches fonctionnent sans elle.</p>}</div>
+            </div>
+
+            <div className="border-t border-white/[0.07] bg-black/20 px-4 py-3 text-[11px] leading-5 text-zinc-500 sm:px-5">
+              <Info aria-hidden="true" className="mr-1.5 inline h-3.5 w-3.5 align-[-2px] text-amber-300/80" />
+              Fonds de carte Satellite haute résolution (Esri), Topographique (OpenFreeMap) et OpenStreetMap sous licence libre. Les marqueurs situent les médias indexés et les télévisions référencées.
+            </div>
+          </article>
+
+
         </section>
 
+        <details className="mt-4 rounded-xl border border-white/10 bg-[#0b100e]">
+          <summary className="cursor-pointer p-3 text-xs font-semibold text-zinc-200">Marchés et événements · bandeau daté</summary>
+          <LiveMarketTicker onSelectCountry={setSelectedCountry} onSourcesChange={setTickerSources} refreshToken={refreshToken} />
+        </details>
         <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5">
           <article className="overflow-hidden rounded-2xl border border-white/[0.09] bg-[#0b100e] shadow-[0_20px_70px_-35px_rgba(0,0,0,0.9)] lg:col-span-7">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] px-4 py-4 sm:px-5">
@@ -836,7 +828,7 @@ export default function LiveRadarDashboard() {
                     key={loc.code}
                     type="button"
                     onClick={() => {
-                      setSelectedCityCode(loc.code);
+                      setSelectedCityCode({ code: loc.code, countryContext: selectedCountry });
                       setSelectedCountry(loc.code);
                     }}
                     className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
@@ -987,13 +979,16 @@ export default function LiveRadarDashboard() {
               <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-300/10 text-amber-200"><Info aria-hidden="true" className="h-4 w-4" /></span>
               Comment lire le radar
             </div>
-            <div className="mt-4 space-y-3 text-xs leading-5 text-zinc-400">
+            <details className="mt-3 text-xs text-zinc-300"><summary className="cursor-pointer">Définitions, fenêtre et limites</summary><div className="mt-2 space-y-3 text-xs leading-5 text-zinc-400">
+              <p>{asOf ? <>Fenêtre commune : {formatRadarDate(windowed.window.from)} — {formatRadarDate(windowed.window.asOf)}.</> : 'Fenêtre en cours de chargement.'} Limites : 75 GDELT / 150 RSS, couverture non exhaustive.</p>
+              <p><strong className="text-zinc-200">TV référencées.</strong> Candidates web/VLC selon les contrôles du résolveur ; la lecture est vérifiée à l’ouverture. VLC inclut les candidates web.</p>
               <p><strong className="text-zinc-200">Veille, pas alerte officielle.</strong> Le nombre d’articles indexés ne mesure ni la gravité ni la véracité d’une situation.</p>
-              <p><strong className="text-zinc-200">Origine, pas géolocalisation.</strong> Les points cartographient le pays de publication connu du média ; l’événement peut se dérouler ailleurs.</p>
-              <p><strong className="text-zinc-200">Retour au terrain.</strong> Le bouton « Ouvrir l’app des chaînes » donne accès au catalogue complet et à ses lecteurs habituels.</p>
+              <p><strong className="text-zinc-200">Origine, pas géolocalisation.</strong> GDELT situe le pays du média ; RSS peut inférer le pays du sujet. Ces indications ne localisent pas nécessairement l’événement.</p>
+              <p><strong className="text-zinc-200">Retour au terrain.</strong> Le bouton « TV » donne accès au catalogue complet et à ses lecteurs habituels.</p>
             </div>
-            <Link href="/app" className="mt-5 inline-flex items-center gap-2 rounded-xl border border-amber-300/20 bg-amber-300/[0.08] px-3 py-2 text-xs font-bold text-amber-100 transition hover:bg-amber-300/[0.14]">
-              Voir toutes les chaînes <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" />
+            </details>
+            <Link href={catalogCountryHref(selectedCountry)} className="mt-5 inline-flex items-center gap-2 rounded-xl border border-amber-300/20 bg-amber-300/[0.08] px-3 py-2 text-xs font-bold text-amber-100 transition hover:bg-amber-300/[0.14]">
+              {selectedCountry ? 'Voir les chaînes du pays' : 'Voir toutes les chaînes'} <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" />
             </Link>
           </article>
         </section>
@@ -1004,12 +999,6 @@ export default function LiveRadarDashboard() {
         </footer>
       </div>
 
-      <FlashBriefingModal
-        isOpen={isBriefingOpen}
-        onClose={() => setIsBriefingOpen(false)}
-        selectedCountryCode={selectedCountry}
-        onSelectCountryForChannels={handleSelectCountryForChannels}
-      />
     </main>
   );
 }
@@ -1026,13 +1015,13 @@ function MetricCard({
   icon: ReactNode;
 }) {
   return (
-    <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-white/[0.08] bg-[#0b100e] px-4 py-3.5">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.025] text-emerald-200">
+    <div className="flex min-w-0 items-center gap-2 rounded-xl border border-white/[0.08] bg-[#0b100e] px-2 py-2.5">
+      <span className="flex hidden h-7 w-7 shrink-0 sm:flex items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.025] text-emerald-200">
         {icon}
       </span>
       <div className="min-w-0">
-        <div className="flex items-baseline gap-1.5">
-          <span className="text-xl font-black tracking-tight text-white tabular-nums">
+        <div className="flex flex-wrap items-baseline gap-x-1.5">
+          <span className="text-lg font-bold tracking-tight text-white tabular-nums">
             {value}
           </span>
           {subLabel && (
@@ -1081,7 +1070,7 @@ function CountryChannelsView({
           <div className="flex items-center gap-2 text-amber-200">
             <Tv className="h-3.5 w-3.5" />
             <span>
-              Chaînes en direct : <strong>{activeCountry.name}</strong> ({countryChannels.length})
+              Chaînes du catalogue : <strong>{activeCountry.name}</strong> ({countryChannels.length})
             </span>
           </div>
           <button
@@ -1231,7 +1220,7 @@ function CountryChannelsView({
     <div className="flex-1 divide-y divide-white/[0.055] overflow-y-auto">
       <div className="border-b border-white/[0.07] bg-black/20 px-4 py-3 sm:px-5">
         <div className="text-xs font-bold text-white">
-          Télévisions d’Afrique en direct
+          Télévisions d’Afrique référencées
         </div>
         <p className="mt-0.5 text-[11px] text-zinc-400">
           Choisissez un pays pour ouvrir ses chaînes locales dans le lecteur intégré :
@@ -1327,23 +1316,23 @@ function ArticleRow({
             className="rounded px-1 text-zinc-400 transition hover:bg-emerald-300/10 hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400"
             title={`Centrer la carte sur ${country?.name ?? article.countryCode}`}
           >
-            {country?.name ?? 'Source africaine'}
+            {country?.name ?? 'Pays inconnu'}{article.countryBasis === 'inferred_topic' ? ' · sujet inféré' : ' · pays du média'}
           </button>
         ) : (
-          <span>{country?.name ?? 'Source africaine'}</span>
+          <span>{country?.name ?? 'Pays inconnu'}{article.countryBasis === 'inferred_topic' ? ' · sujet inféré' : ' · pays du média'}</span>
         )}
         {article.countryCode && channelCount !== undefined && channelCount > 0 && (
           <button
             type="button"
             onClick={() => onSelectCountryForChannels?.(article.countryCode!)}
             className="inline-flex items-center gap-1 rounded border border-amber-400/30 bg-amber-400/10 px-1.5 py-0.5 text-[9px] font-bold text-amber-300 transition hover:bg-amber-400/20"
-            title={`Voir les ${channelCount} chaîne(s) TV directes`}
+            title={`Voir les ${channelCount} chaîne(s) TV référencées`}
           >
             <Tv className="h-2.5 w-2.5" />
-            <span>{channelCount} direct</span>
+            <span>{channelCount} chaînes</span>
           </button>
         )}
-        <span className="ml-auto font-mono font-normal tracking-normal text-zinc-600">{formatTime(article.indexedAt)}</span>
+        <span className="ml-auto font-mono font-normal tracking-normal text-zinc-600">{isRss ? 'Publication' : 'Indexation'} · {formatRadarDate(article.indexedAt)}</span>
       </div>
       <a href={article.url} target="_blank" rel="noopener noreferrer" className="block text-[13px] font-semibold leading-5 text-zinc-200 transition group-hover:text-white focus-visible:rounded-sm">
         {article.title}
@@ -1352,8 +1341,8 @@ function ArticleRow({
       <div className="mt-2 flex items-center justify-between gap-2">
         {isRss ? (
           <span className="inline-flex items-center gap-1 text-[9px] font-medium text-emerald-400/90">
-            <CheckCircle2 className="h-2.5 w-2.5 text-emerald-400" />
-            Dépêche officielle · Rédaction vérifiée
+
+            Titre publié · source RSS
           </span>
         ) : (
           <span className="inline-flex items-center gap-1 text-[9px] text-zinc-600">

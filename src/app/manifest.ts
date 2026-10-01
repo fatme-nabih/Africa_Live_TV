@@ -4,9 +4,9 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Africa Live',
     short_name: 'Africa Live',
-    description: 'Catalogue TV avec lecture navigateur et VLC.',
+    description: 'Radar panafricain et chaînes TV en direct.',
     lang: 'fr',
-    start_url: '/app',
+    start_url: '/app/live',
     display: 'standalone',
     background_color: '#000000',
     theme_color: '#000000',

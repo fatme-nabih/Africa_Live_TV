@@ -1,4 +1,6 @@
+import { readRadarText } from './radar-upstream';
 import { ServiceUnavailableError } from '@/lib/api-errors';
+import { radarSource } from './radar-data';
 import type {
   FirmsGeoJsonFeature,
   FirmsHotspot,
@@ -188,7 +190,8 @@ async function fetchFirmsFromNasa(): Promise<CacheEntry> {
       throw new Error(`NASA FIRMS upstream HTTP error ${response.status}`);
     }
 
-    const csvText = await response.text();
+    const csvText = await readRadarText(response);
+    if (!/^latitude,longitude,/i.test(csvText.trim())) throw new Error('Invalid FIRMS payload');
     // Parse with high limit for in-memory cache storage
     const parsed = parseFirmsCsv(csvText, { minConfidence: 20, limit: 10000 });
 
@@ -206,15 +209,18 @@ export async function getFirmsSnapshot(
   options: FirmsQueryOptions = {},
 ): Promise<FirmsSnapshot> {
   const now = Date.now();
+  const snapshot = (entry: CacheEntry, stale: boolean) => {
+    const result = convertToFirmsGeoJson(filterCachedHotspots(entry.hotspots, options), entry.totalAfricaCount, stale);
+    result.metadata.updatedAt = new Date(entry.timestamp).toISOString();
+    result.metadata.availability = [radarSource('NASA FIRMS', 'Afrique · détections satellitaires', stale ? now : entry.timestamp, CACHE_TTL_MS, result.features.length,
+      { status: stale ? 'stale' : undefined, lastSuccessAt: new Date(entry.timestamp).toISOString(), limit: options.limit ?? DEFAULT_LIMIT,
+        dataAt: result.features[0] ? result.features[0].properties.date + 'T' + result.features[0].properties.time.replace(' UTC', '') + ':00Z' : null })];
+    return result;
+  };
 
   // Fresh cache hit
   if (cachedFirms && now - cachedFirms.timestamp < CACHE_TTL_MS) {
-    const filtered = filterCachedHotspots(cachedFirms.hotspots, options);
-    return convertToFirmsGeoJson(
-      filtered,
-      cachedFirms.totalAfricaCount,
-      false,
-    );
+    return snapshot(cachedFirms, false);
   }
 
   // Fetch or reuse in-flight request
@@ -240,13 +246,8 @@ export async function getFirmsSnapshot(
   try {
     const entry = await inFlightFetch;
     const isStale = now - entry.timestamp >= CACHE_TTL_MS;
-    const filtered = filterCachedHotspots(entry.hotspots, options);
-    return convertToFirmsGeoJson(filtered, entry.totalAfricaCount, isStale);
+    return snapshot(entry, isStale);
   } catch (error) {
-    if (cachedFirms) {
-      const filtered = filterCachedHotspots(cachedFirms.hotspots, options);
-      return convertToFirmsGeoJson(filtered, cachedFirms.totalAfricaCount, true);
-    }
     throw error;
   }
 }

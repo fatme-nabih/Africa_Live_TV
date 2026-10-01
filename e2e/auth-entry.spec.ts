@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test('landing page offers sign-in and sign-up without exposing the catalogue', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: /L’Afrique et le monde/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /L’Afrique à portée de regard/ })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Commencer', exact: true })).toHaveAttribute('href', '/sign-up');
   await expect(page.getByRole('link', { name: 'Se connecter' }).first()).toHaveAttribute('href', '/sign-in');
   await expect(page.getByRole('link', { name: 'Administration', exact: true })).toHaveCount(0);
@@ -32,16 +32,20 @@ test('Clerk sign-in and sign-up widgets load', async ({ page }) => {
 });
 
 test('anonymous visitors cannot access app, account, admin or protected APIs', async ({ page }) => {
-  for (const path of ['/app', '/account', '/admin']) {
+  for (const path of ['/app/live', '/app', '/account', '/admin']) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/sign-in(?:[/?]|$)/);
   }
-  for (const path of ['/api/favorites', '/api/channels']) {
+  for (const path of ['/api/favorites', '/api/channels',
+    '/api/live/news', '/api/live/rss', '/api/live/weather', '/api/live/events',
+    '/api/live/firms', '/api/live/markets', '/api/live/briefing', '/api/live/channels']) {
     const response = await page.request.get(path, { maxRedirects: 0 });
     expect([401, 403, 404, 307]).toContain(response.status());
     const body = await response.text();
     expect(body).not.toContain('sourceUrl');
     expect(body).not.toContain('"channels":');
     expect(body).not.toContain('"favorites":');
+    expect(body).not.toContain('"articles":');
+    expect(body).not.toContain('"commodities":');
   }
 });

@@ -109,10 +109,10 @@ export default function PricingPage() {
           </Link>
           <Show when="signed-in">
             <Link
-              href="/app"
+              href="/app/live"
               className="rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/20 via-amber-400/25 to-rose-500/20 hover:from-emerald-500/30 hover:via-amber-400/35 hover:to-rose-500/30 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-amber-200 transition backdrop-blur-md shadow-sm"
             >
-              Ouvrir l&apos;application
+              Ouvrir le dashboard
             </Link>
           </Show>
         </nav>

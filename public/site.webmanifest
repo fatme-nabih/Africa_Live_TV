@@ -1,8 +1,8 @@
 {
   "name": "Africa Live",
   "short_name": "Africa Live",
-  "description": "Catalogue TV en direct fluide et fiabilisé",
-  "start_url": "/app",
+  "description": "Radar panafricain et chaînes TV en direct",
+  "start_url": "/app/live",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",

@@ -107,7 +107,8 @@ test('parseFeedXml parses Atom 1.0 entries accurately', () => {
   assert.equal(articles[0].title, 'Nouvelle récolte de cacao à Abidjan');
   assert.equal(articles[0].url, 'https://atom.org/news/cacao-2026');
   assert.equal(articles[0].countryCode, 'CI');
-  assert.equal(articles[0].publishedAt, '2026-09-30T12:00:00.000Z');
+  assert.equal(articles[0].publishedAt, null);
+  assert.equal(articles[0].updatedAt, '2026-09-30T12:00:00.000Z');
 });
 
 test('getRadarRss fetches, caches, and filters articles by source or country', async () => {
@@ -122,12 +123,12 @@ test('getRadarRss fetches, caches, and filters articles by source or country', a
         <item>
           <title>Croissance économique au Sénégal</title>
           <link>https://aps.sn/article-1</link>
-          <pubDate>Wed, 30 Sep 2026 15:00:00 GMT</pubDate>
+          <pubDate>${new Date(Date.now() - 60000).toUTCString()}</pubDate>
         </item>
         <item>
           <title>Marché boursier à Abidjan</title>
           <link>https://agenceecofin.com/article-2</link>
-          <pubDate>Wed, 30 Sep 2026 14:30:00 GMT</pubDate>
+          <pubDate>${new Date(Date.now() - 120000).toUTCString()}</pubDate>
         </item>
       </channel>
     </rss>

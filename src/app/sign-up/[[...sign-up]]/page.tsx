@@ -12,7 +12,7 @@ export default function SignUpPage() {
         <Link href="/" aria-label="Retour à l’accueil">
           <BrandLogo className="h-20 w-20 drop-shadow-[0_2px_12px_rgba(250,204,21,0.25)]" />
         </Link>
-        <h1 className="text-2xl font-black text-white">Votre direct commence ici</h1>
+        <h1 className="text-2xl font-black text-white">Votre regard sur l’Afrique commence ici</h1>
         {!isAnonymousE2EMode() && <SignUp routing="path" path="/sign-up" />}
         <Link href="/" className="text-xs font-medium text-zinc-400 hover:text-white transition">
           Retour à l’accueil

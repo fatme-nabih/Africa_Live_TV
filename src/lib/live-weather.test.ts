@@ -82,7 +82,7 @@ test('getRadarWeather fetches, normalizes Open-Meteo responses and caches them',
     longitude: -17.44,
     timezone: 'Africa/Dakar',
     current: {
-      time: '2026-09-29T23:00',
+      time: '2026-09-29T23:00:00Z',
       interval: 900,
       temperature_2m: 27.8,
       relative_humidity_2m: 84,
@@ -146,7 +146,7 @@ test('getRadarWeather coalesces concurrent requests to the same target', async (
         longitude: -4.01,
         timezone: 'Africa/Abidjan',
         current: {
-          time: '2026-09-29T23:00',
+          time: '2026-09-29T23:00:00Z',
           temperature_2m: 26.0,
           relative_humidity_2m: 90,
           apparent_temperature: 29.5,
@@ -178,7 +178,9 @@ test('getRadarWeather coalesces concurrent requests to the same target', async (
   }
 });
 
-test('getRadarWeather serves stale cache if upstream fails within tolerance', async () => {
+test('getRadarWeather serves stale cache if upstream fails within tolerance', async t => {
+  let now = Date.now();
+  t.mock.method(Date, 'now', () => now);
   clearWeatherCacheForTesting();
 
   const originalFetch = globalThis.fetch;
@@ -194,7 +196,7 @@ test('getRadarWeather serves stale cache if upstream fails within tolerance', as
         longitude: -8.0,
         timezone: 'Africa/Bamako',
         current: {
-          time: '2026-09-29T23:00',
+          time: '2026-09-29T23:00:00Z',
           temperature_2m: 31.0,
           relative_humidity_2m: 55,
           apparent_temperature: 34.0,
@@ -216,9 +218,14 @@ test('getRadarWeather serves stale cache if upstream fails within tolerance', as
 
     // Simulate upstream outage
     shouldFail = true;
-    // Force cache expiry by mocking Date.now or testing stale fallback
+    now += 16 * 60_000;
     const staleResult = await getRadarWeather({ code: 'ML' });
     assert.equal(staleResult.current.locationName, 'Bamako');
+    assert.equal(staleResult.stale, true);
+    assert.equal(staleResult.fetchedAt, fresh.fetchedAt);
+    assert.equal(staleResult.current.observedAt, fresh.current.observedAt);
+    now += 7 * 60 * 60_000;
+    await assert.rejects(getRadarWeather({ code: 'ML' }));
   } finally {
     globalThis.fetch = originalFetch;
     clearWeatherCacheForTesting();

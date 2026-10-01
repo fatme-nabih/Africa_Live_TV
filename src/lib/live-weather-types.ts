@@ -42,6 +42,7 @@ export type QuickWeatherLocation = {
 };
 
 export type LiveWeatherSnapshot = {
+  availability?: import('./radar-data').RadarSourceState[];
   current: LiveWeatherCondition;
   quickLocations: QuickWeatherLocation[];
   fetchedAt: string;

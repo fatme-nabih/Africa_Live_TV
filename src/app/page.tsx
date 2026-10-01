@@ -4,10 +4,8 @@ import { UserButton } from '@clerk/nextjs';
 import {
   ArrowRight,
   Heart,
-  Search,
+  Radar,
   Tv,
-  Radio,
-  Play,
   Sparkles,
   Globe2,
   CheckCircle2,
@@ -28,33 +26,34 @@ import {
 import { redirect } from 'next/navigation';
 import BrandLogo from '@/components/BrandLogo';
 import BrandWatermark from '@/components/BrandWatermark';
+import LandingDashboardPreview from '@/components/LandingDashboardPreview';
 import { isAnonymousE2EMode, isLocalDevMode } from '@/lib/local-dev';
 
 export default async function HomePage() {
-  if (isLocalDevMode()) redirect('/app');
+  if (isLocalDevMode()) redirect('/app/live');
   const { userId, sessionClaims } = isAnonymousE2EMode()
     ? { userId: null, sessionClaims: null }
     : await auth();
 
   const metrics = [
-    { label: 'Chaînes référencées', value: '11 700+', icon: Tv, detail: 'Catalogue international' },
-    { label: 'Pays représentés', value: '176', icon: Globe2, detail: 'Afrique & International' },
-    { label: 'Modes de lecture', value: 'Web & VLC', icon: MonitorPlay, detail: 'Navigateur ou application native' },
-    { label: 'Flux directs', value: '100%', icon: Zap, detail: 'Sans relais ni transcodage' },
+    { label: 'Carte interactive', value: 'Afrique', icon: Globe2, detail: 'Explorer les pays et leurs médias' },
+    { label: 'Veille médiatique', value: 'Multi-sources', icon: Newspaper, detail: 'Dépêches et publications d’origine' },
+    { label: 'Météo', value: 'Par ville', icon: Globe2, detail: 'Suivre les conditions locales' },
+    { label: 'Télévision', value: 'Web & VLC', icon: Tv, detail: 'Un accès depuis le dashboard' },
   ];
 
   const features = [
     {
-      icon: Search,
-      title: 'Recherche Instantanée & Filtres Intelligents',
-      description: 'Trouvez n’importe quel programme en une seconde. Filtrez par pays, langue, genre ou résolution avec indexation ultra-rapide.',
-      badge: 'Filtre multi-critères',
+      icon: Radar,
+      title: 'Un dashboard pour suivre l’Afrique',
+      description: 'Parcourez les dépêches de plusieurs médias, consultez leurs sources et retrouvez le contexte du pays qui vous intéresse.',
+      badge: 'Veille multi-sources',
     },
     {
-      icon: MonitorPlay,
-      title: 'Double Expérience de Lecture',
-      description: 'Profitez d’un lecteur vidéo intégré moderne avec HLS dans votre navigateur, ou lancez vos flux en 1 clic directement dans VLC Player.',
-      badge: 'HLS & VLC natif',
+      icon: Globe2,
+      title: 'Une carte pour explorer et comprendre',
+      description: 'Sélectionnez un pays pour retrouver ses médias et ses chaînes. Consultez aussi la météo et les couches de suivi disponibles.',
+      badge: 'Exploration par pays',
     },
     {
       icon: Heart,
@@ -64,9 +63,9 @@ export default async function HomePage() {
     },
     {
       icon: Zap,
-      title: 'Sélection de flux certifiés et qualifiés en direct',
-      description: 'Chaque flux est testé et validé pour garantir une disponibilité optimale, avec bascule fluide vers VLC si nécessaire.',
-      badge: 'Flux qualifiés',
+      title: 'La TV à portée de main',
+      description: 'Depuis le dashboard, ouvrez l’app TV et ses filtres. La lecture utilise votre navigateur ou VLC selon la disponibilité et la compatibilité de la source.',
+      badge: 'Web & VLC',
     },
   ];
 
@@ -80,7 +79,7 @@ export default async function HomePage() {
   const faqs = [
     {
       q: 'Qu’est-ce qu’Africa Live ?',
-      a: 'Africa Live organise un catalogue de chaînes et de sources. Lorsqu’une source est compatible et disponible, la lecture s’effectue depuis votre navigateur ou votre lecteur multimédia.',
+      a: 'Africa Live réunit un dashboard de veille panafricaine, une carte interactive, des dépêches et la météo. L’app TV est accessible depuis le dashboard ; la lecture dépend de la disponibilité et de la compatibilité des sources.',
     },
     {
       q: 'Ai-je besoin d’installer un logiciel pour regarder les chaînes ?',
@@ -126,7 +125,7 @@ export default async function HomePage() {
                 Africa Live<span className="text-amber-400">.</span>
               </span>
               <span className="hidden text-[10px] font-semibold tracking-wider text-amber-400/80 uppercase sm:block">
-                Télévision Panafricaine
+                Veille Panafricaine
               </span>
             </div>
           </Link>
@@ -159,10 +158,10 @@ export default async function HomePage() {
                   </Link>
                 )}
                 <Link
-                  href="/app"
+                  href="/app/live"
                   className="rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/20 via-amber-400/25 to-rose-500/20 hover:from-emerald-500/30 hover:via-amber-400/35 hover:to-rose-500/30 px-4 py-2 text-xs sm:text-sm font-bold text-amber-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 shadow-sm backdrop-blur-sm"
                 >
-                  Ouvrir le direct
+                  Ouvrir le dashboard
                 </Link>
                 <UserButton />
               </div>
@@ -194,28 +193,28 @@ export default async function HomePage() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
               </span>
-              <span>DIRECT • 11 700+ chaînes • 5 jours d’essai sans engagement</span>
+              <span>RADAR PANAFRICAIN • Actualités, carte & direct</span>
             </div>
 
             {/* Headline */}
             <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-[64px] lg:leading-[1.1]">
-              L’Afrique et le monde{' '}
-              <span className="text-gradient-gold">en direct</span>, sur tous vos écrans.
+              L’Afrique{' '}
+              <span className="text-gradient-gold">à portée de regard.</span>
             </h1>
 
             {/* Subhead */}
             <p className="mt-6 max-w-xl text-base sm:text-lg leading-relaxed text-zinc-300">
-              Accédez à un vaste catalogue télévisuel panafricain. Information en direct,
-              sports, divertissement, musiques et cultures régionales réunis dans une interface moderne et fluide.
+              Explorez l’Afrique depuis un dashboard de veille : carte interactive, dépêches,
+              météo et marchés. Retrouvez les chaînes TV du pays quand vous souhaitez passer au direct.
             </p>
 
             {/* CTAs */}
             <div className="mt-8 flex flex-wrap items-center gap-3 sm:gap-4">
               <Link
-                href={userId ? '/app' : '/sign-up'}
+                href={userId ? '/app/live' : '/sign-up'}
                 className="inline-flex items-center gap-2.5 rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/25 via-amber-400/30 to-rose-500/25 hover:from-emerald-500/35 hover:via-amber-400/40 hover:to-rose-500/35 px-6 py-3.5 text-sm sm:text-base font-bold text-white transition backdrop-blur-md shadow-lg shadow-black/40 hover:scale-[1.01] active:scale-[0.98]"
               >
-                <span>{userId ? 'Accéder au direct' : 'Profiter de 5 jours d’essai gratuit'}</span>
+                <span>{userId ? 'Accéder au dashboard' : 'Profiter de 5 jours d’essai gratuit'}</span>
                 <ArrowRight size={17} />
               </Link>
               {!userId && (
@@ -246,75 +245,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Player Mockup Visual */}
-          <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
-            {/* Ambient halo behind mockup */}
-            <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-emerald-500/15 via-amber-500/15 to-rose-500/15 opacity-70 blur-2xl pointer-events-none" />
-
-            <div className="glass-panel-subtle relative overflow-hidden rounded-2xl border border-amber-400/30 p-1 shadow-2xl">
-              {/* Window Bar */}
-              <div className="flex items-center justify-between border-b border-white/[0.08] bg-black/50 backdrop-blur-md px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <div className="h-2.5 w-2.5 rounded-full bg-rose-500/80" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-amber-400/80" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" />
-                </div>
-                <div className="flex items-center gap-2 rounded-md bg-white/[0.04] border border-white/[0.06] px-3 py-1 text-[11px] font-mono text-zinc-400">
-                  <Radio size={12} className="text-emerald-400 animate-pulse" />
-                  <span>CRTV News • 1080p HLS Direct</span>
-                </div>
-                <div className="h-2 w-2 rounded-full bg-emerald-400" />
-              </div>
-
-              {/* Mock Screen Content */}
-              <div className="relative flex aspect-video w-full flex-col justify-between overflow-hidden rounded-b-xl bg-gradient-to-b from-black/60 to-black/90 p-5">
-                {/* Background Art with Subtle Tricolor Glow */}
-                <div className="absolute inset-0 opacity-20 [background:radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-amber-500/30 via-emerald-500/20 to-black pointer-events-none" />
-
-                {/* Top Player Badges */}
-                <div className="relative z-10 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1 rounded bg-rose-600/90 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
-                      ● LIVE
-                    </span>
-                    <span className="rounded bg-black/60 border border-white/[0.08] px-2 py-0.5 text-[10px] font-semibold text-zinc-300 backdrop-blur-md">
-                      SOURCE DIRECTE
-                    </span>
-                  </div>
-                  <span className="rounded-full bg-white/[0.06] border border-white/[0.08] px-2.5 py-1 text-[10px] font-medium text-amber-300 backdrop-blur-md">
-                    🇨🇲 Cameroun
-                  </span>
-                </div>
-
-                {/* Center Play Button Graphic */}
-                <div className="relative z-10 flex flex-col items-center justify-center gap-3">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full border border-amber-400/50 bg-gradient-to-r from-emerald-500/30 via-amber-400/40 to-rose-500/30 text-amber-200 shadow-lg shadow-black/50 backdrop-blur-md transition hover:scale-105">
-                    <Play size={22} className="fill-current translate-x-0.5" />
-                  </div>
-                  <p className="text-xs font-medium tracking-wide text-zinc-300 drop-shadow">
-                    Cliquez pour lancer le zapping
-                  </p>
-                </div>
-
-                {/* Bottom Mock Channel Strip */}
-                <div className="relative z-10 flex items-center justify-between rounded-lg bg-black/60 px-3 py-2 text-xs backdrop-blur-md border border-white/[0.08]">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-6 w-6 rounded bg-amber-400/10 border border-amber-400/20 p-1 flex items-center justify-center">
-                      <BrandLogo className="h-full w-full" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-white leading-none">Journal Télévisé Panafricain</p>
-                      <p className="text-[9px] text-zinc-400">Édition spéciale en continu</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-mono">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Sans relais
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <LandingDashboardPreview href={userId ? '/app/live' : '/sign-up'} />
         </section>
 
         {/* Live Metrics Grid */}
@@ -340,48 +271,17 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Thematic Categories Explorer */}
-        <section id="categories" className="py-20">
-          <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-amber-400">
-              Un catalogue infini
-            </h2>
-            <p className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-              Explorez toutes les thématiques
-            </p>
-            <p className="mt-3 text-sm text-zinc-400">
-              De Dakar à Nairobi, de Kinshasa à Johannesburg, trouvez vos émissions favorites classées par genre.
-            </p>
-          </div>
-
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {categories.map(({ name, icon: Icon, count, desc }) => (
-              <div
-                key={name}
-                className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-6 transition-all duration-300 hover:border-amber-400/40 hover:bg-white/[0.02] hover:-translate-y-1 shadow-lg shadow-black/40"
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-amber-400/20 bg-amber-400/10 text-amber-300 transition-colors group-hover:bg-amber-400/20 group-hover:text-amber-200">
-                  <Icon size={22} />
-                </div>
-                <h3 className="mt-5 text-lg font-bold text-white">{name}</h3>
-                <p className="text-xs font-semibold text-amber-300/90 mt-1">{count}</p>
-                <p className="mt-3 text-xs leading-5 text-zinc-400">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Feature Highlights Grid */}
+        {/* Dashboard features */}
         <section id="features" className="py-20 border-t border-white/[0.08]">
           <div className="text-center max-w-2xl mx-auto">
             <h2 className="text-xs font-bold uppercase tracking-widest text-amber-400">
-              Technologies & Ergonomie
+              Votre dashboard au quotidien
             </h2>
             <p className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-              Conçu pour une expérience de streaming optimale
+              Explorez, informez-vous, puis regardez
             </p>
             <p className="mt-3 text-sm text-zinc-400">
-              Toute la puissance d’une interface de streaming moderne sans la complexité des listes M3U manuelles.
+              La veille au centre de votre expérience, avec la télévision accessible depuis le même espace.
             </p>
           </div>
 
@@ -406,7 +306,39 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Dual Player Spotlight (Web + VLC) */}
+        {/* Secondary TV categories */}
+        <section id="categories" className="py-20">
+          <div className="text-center max-w-2xl mx-auto">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-amber-400">
+              La TV, en complément
+            </h2>
+            <p className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+              Retrouvez aussi vos chaînes favorites
+            </p>
+            <p className="mt-3 text-sm text-zinc-400">
+              De Dakar à Nairobi, de Kinshasa à Johannesburg, trouvez vos émissions favorites classées par genre.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {categories.map(({ name, icon: Icon, count, desc }) => (
+              <div
+                key={name}
+                className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-6 transition-all duration-300 hover:border-amber-400/40 hover:bg-white/[0.02] hover:-translate-y-1 shadow-lg shadow-black/40"
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-amber-400/20 bg-amber-400/10 text-amber-300 transition-colors group-hover:bg-amber-400/20 group-hover:text-amber-200">
+                  <Icon size={22} />
+                </div>
+                <h3 className="mt-5 text-lg font-bold text-white">{name}</h3>
+                <p className="text-xs font-semibold text-amber-300/90 mt-1">{count}</p>
+                <p className="mt-3 text-xs leading-5 text-zinc-400">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* TV playback options */}
+
         <section className="py-16">
           <div className="relative overflow-hidden rounded-3xl border border-white/[0.1] bg-black/40 backdrop-blur-2xl p-8 sm:p-12 shadow-2xl">
             {/* Ambient accent halo */}
@@ -690,17 +622,17 @@ export default async function HomePage() {
             <div className="relative z-10">
               <BrandLogo className="mx-auto h-20 w-20 drop-shadow-[0_4px_15px_rgba(250,204,21,0.25)]" />
               <h2 className="mt-6 text-3xl font-black text-white sm:text-5xl">
-                Prêt à vivre la télévision autrement ?
+                Prêt à explorer l’Afrique autrement ?
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-base text-zinc-300">
-                Rejoignez Africa Live et explorez plus de 11 700 chaînes réunies dans un catalogue simple à parcourir.
+                Rejoignez votre dashboard de veille panafricaine et retrouvez le direct TV depuis un seul espace.
               </p>
               <div className="mt-8 flex justify-center">
                 <Link
-                  href={userId ? '/app' : '/sign-up'}
+                  href={userId ? '/app/live' : '/sign-up'}
                   className="inline-flex items-center gap-3 rounded-xl border border-amber-400/50 bg-gradient-to-r from-emerald-500/25 via-amber-400/30 to-rose-500/25 hover:from-emerald-500/35 hover:via-amber-400/40 hover:to-rose-500/35 px-7 py-3 text-base font-bold text-white shadow-lg shadow-black/40 backdrop-blur-md transition hover:scale-[1.01] active:scale-[0.98]"
                 >
-                  <span>{userId ? 'Ouvrir mon catalogue' : 'Commencer maintenant'}</span>
+                  <span>{userId ? 'Ouvrir mon dashboard' : 'Commencer maintenant'}</span>
                   <ArrowRight size={17} />
                 </Link>
               </div>
@@ -714,7 +646,7 @@ export default async function HomePage() {
             <div className="flex items-center gap-3">
               <BrandLogo className="h-8 w-8" />
               <span className="text-sm font-bold text-zinc-300">Africa Live</span>
-              <span>— La télévision sans frontières.</span>
+              <span>— Un regard sur l’Afrique.</span>
             </div>
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-zinc-400">
               <Link href="#features" className="hover:text-white transition">Fonctionnalités</Link>

@@ -7,15 +7,19 @@ import {
   NavigationControl,
   Popup,
   GeoJSONSource,
+  setWorkerUrl,
   type MapLayerMouseEvent,
   type StyleSpecification,
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { checkMapWorker, MAP_WORKER_URL } from '@/lib/map-worker';
 import type { RadarCountry } from '@/lib/live-osint-types';
 import { AFRICAN_COUNTRIES } from '@/lib/live-osint';
 import type { LiveChannelsSummarySnapshot } from '@/lib/live-channels-types';
-import type { FirmsSnapshot } from '@/lib/live-firms-types';
-import type { DisasterEventsSnapshot } from '@/lib/live-disasters-types';
+import { useRadarLayer } from './useRadarLayer';
+import { normalizeFirmsLayer, normalizeDisasterLayer, escapeMapText, firmsObservationDate } from '@/lib/radar-layers';
+import { formatRadarDate } from '@/lib/radar-data';
+import { sourcePlaceholder, sourceStatusText, type RadarSourceRow } from '@/lib/radar-workspace';
 import { AlertTriangle, Compass, Flame, Globe2, RotateCcw } from 'lucide-react';
 
 function isWebGLSupported(): boolean {
@@ -92,6 +96,7 @@ export interface TacticalVectorMapProps {
   selectedCountry: string | null;
   onSelectCountry: (countryCode: string | null) => void;
   onSelectCountryForChannels?: (countryCode: string) => void;
+  onSourcesChange?: (sources: RadarSourceRow[]) => void;
 }
 
 export default function TacticalVectorMap({
@@ -101,12 +106,14 @@ export default function TacticalVectorMap({
   selectedCountry,
   onSelectCountry,
   onSelectCountryForChannels,
+  onSourcesChange,
 }: TacticalVectorMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markersRef = useRef<Map<string, Marker>>(new Map());
   const [isSupported] = useState(() => isWebGLSupported());
   const [isLoaded, setIsLoaded] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
   const [basemapMode, setBasemapMode] = useState<BasemapMode>('satellite');
   const [styleRevision, setStyleRevision] = useState(0);
 
@@ -118,72 +125,37 @@ export default function TacticalVectorMap({
   };
 
   const [showFires, setShowFires] = useState(false);
-  const [firmsData, setFirmsData] = useState<FirmsSnapshot | null>(null);
-  const [firmsLoading, setFirmsLoading] = useState(false);
-  const [firmsError, setFirmsError] = useState<string | null>(null);
-
-  const handleToggleFires = () => {
-    setShowFires((prev) => {
-      const next = !prev;
-      if (next && !firmsData && !firmsLoading) {
-        setFirmsLoading(true);
-        setFirmsError(null);
-        fetch('/api/live/firms?limit=2500&minConfidence=40', { cache: 'no-store' })
-          .then((res) => {
-            if (!res.ok) throw new Error('Impossible de charger les feux NASA.');
-            return res.json() as Promise<FirmsSnapshot>;
-          })
-          .then((data) => {
-            setFirmsData(data);
-          })
-          .catch((err) => {
-            setFirmsError(err instanceof Error ? err.message : 'Erreur de chargement.');
-          })
-          .finally(() => {
-            setFirmsLoading(false);
-          });
-      }
-      return next;
-    });
-  };
-
   const [showDisasters, setShowDisasters] = useState(false);
-  const [disastersData, setDisastersData] = useState<DisasterEventsSnapshot | null>(null);
-  const [disastersLoading, setDisastersLoading] = useState(false);
-  const [disastersError, setDisastersError] = useState<string | null>(null);
-
-  const handleToggleDisasters = () => {
-    setShowDisasters((prev) => {
-      const next = !prev;
-      if (next && !disastersData && !disastersLoading) {
-        setDisastersLoading(true);
-        setDisastersError(null);
-        fetch('/api/live/events?limit=300', { cache: 'no-store' })
-          .then((res) => {
-            if (!res.ok) throw new Error('Impossible de charger les alertes GDACS/USGS.');
-            return res.json() as Promise<DisasterEventsSnapshot>;
-          })
-          .then((data) => {
-            setDisastersData(data);
-          })
-          .catch((err) => {
-            setDisastersError(err instanceof Error ? err.message : 'Erreur alertes.');
-          })
-          .finally(() => {
-            setDisastersLoading(false);
-          });
-      }
-      return next;
-    });
-  };
+  const firms = useRadarLayer(showFires, '/api/live/firms?limit=2500&minConfidence=40', normalizeFirmsLayer, 30 * 60_000);
+  const disasters = useRadarLayer(showDisasters, '/api/live/events?limit=300', normalizeDisasterLayer, 15 * 60_000);
+  const firmsData = firms.data, firmsLoading = firms.loading, firmsError = firms.error;
+  const disastersData = disasters.data, disastersLoading = disasters.loading, disastersError = disasters.error;
+  const handleToggleFires = () => setShowFires(value => !value);
+  const handleToggleDisasters = () => setShowDisasters(value => !value);
+  useEffect(() => {
+    const states: RadarSourceRow[] = [];
+    for (const layer of [{ enabled: showFires, result: { data: firmsData, error: firmsError }, provider: 'NASA FIRMS', scope: 'Afrique · détections thermiques' },
+      { enabled: showDisasters, result: { data: disastersData, error: disastersError }, provider: 'USGS / GDACS', scope: 'Lieu des événements' }]) {
+      if (!layer.enabled) states.push(sourcePlaceholder(layer.provider, layer.scope, 'not_requested'));
+      else if (layer.result.error) states.push(sourcePlaceholder(layer.provider, layer.scope, 'unavailable'));
+      else if (layer.result.data?.metadata.availability?.length) states.push(...layer.result.data.metadata.availability);
+      else if (layer.result.data) {
+        const data = layer.result.data;
+        states.push({ ...sourcePlaceholder(layer.provider, layer.scope, data.metadata.stale ? 'stale' : data.features.length ? 'available' : 'empty'),
+          lastSuccessAt: data.metadata.updatedAt, dataAt: null, fetchedAt: data.metadata.updatedAt, count: data.features.length });
+      } else states.push(sourcePlaceholder(layer.provider, layer.scope, 'loading'));
+    }
+    onSourcesChange?.(states);
+  }, [showFires, showDisasters, firmsData, disastersData, firmsError, disastersError, firmsLoading, disastersLoading, onSourcesChange]);
 
   const [isGlobeMode, setIsGlobeMode] = useState(false);
 
   const handleToggleGlobe = () => {
     if (!mapRef.current) return;
     const map = mapRef.current;
-    setIsGlobeMode((prev) => {
-      const next = !prev;
+    const next = !isGlobeMode;
+    setIsGlobeMode(next);
+    try {
       if (next) {
         // Bascule vers le Globe 3D immersif
         map.setMaxBounds(null);
@@ -218,56 +190,72 @@ export default function TacticalVectorMap({
           }
         }, 1300);
       }
-      return next;
-    });
+    } catch { setMapError('Carte indisponible. Le fil et le choix du pays restent accessibles.'); }
   };
 
   // Initialize MapLibre GL
   useEffect(() => {
-    if (!mapContainerRef.current || !isSupported) return;
+    if (!mapContainerRef.current || !isSupported || mapError) return;
 
-    const map = new MapLibreMap({
-      container: mapContainerRef.current,
-      style: BASEMAP_STYLES.satellite,
-      center: AFRICA_CENTER,
-      zoom: AFRICA_DEFAULT_ZOOM,
-      minZoom: 1.5,
-      maxZoom: 12,
-      maxBounds: AFRICA_BOUNDS,
-      attributionControl: false,
-      renderWorldCopies: true,
-      dragRotate: true,
-      pitchWithRotate: true,
-    });
+    let disposed = false;
+    const initialize = async () => {
+      try {
+        await checkMapWorker();
+        if (disposed || !mapContainerRef.current) return;
+        setWorkerUrl(MAP_WORKER_URL);
 
-    map.addControl(
-      new NavigationControl({
-        showCompass: true,
-        showZoom: true,
-        visualizePitch: true,
-      }),
-      'top-right',
-    );
+        const map = new MapLibreMap({
+          container: mapContainerRef.current,
+          style: BASEMAP_STYLES.satellite,
+          center: AFRICA_CENTER,
+          zoom: AFRICA_DEFAULT_ZOOM,
+          minZoom: 1.5,
+          maxZoom: 12,
+          maxBounds: AFRICA_BOUNDS,
+          attributionControl: false,
+          renderWorldCopies: true,
+          dragRotate: true,
+          pitchWithRotate: true,
+        });
 
-    map.on('load', () => {
-      setIsLoaded(true);
-    });
+        map.addControl(
+          new NavigationControl({
+            showCompass: true,
+            showZoom: true,
+            visualizePitch: true,
+          }),
+          'top-right',
+        );
 
-    map.on('style.load', () => {
-      setIsLoaded(true);
-      setStyleRevision((r) => r + 1);
-    });
+        map.on('load', () => {
+          setIsLoaded(true);
+        });
 
-    mapRef.current = map;
+        map.on('error', () => {
+          if (!disposed) setMapError('Carte indisponible. Le fil et le choix du pays restent accessibles.');
+        });
+
+        map.on('style.load', () => {
+          setIsLoaded(true);
+          setStyleRevision((r) => r + 1);
+        });
+
+        mapRef.current = map;
+      } catch {
+        if (!disposed) setMapError('Carte indisponible. Le fil et le choix du pays restent accessibles.');
+      }
+    };
+    void initialize();
     const markers = markersRef.current;
 
     return () => {
       markers.forEach((marker) => marker.remove());
       markers.clear();
-      map.remove();
+      disposed = true;
+      mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [isSupported]);
+  }, [isSupported, mapError]);
 
   // Sync Markers
   useEffect(() => {
@@ -376,7 +364,7 @@ export default function TacticalVectorMap({
               }
             </div>
             <div class="text-[9px] font-normal text-zinc-400 mt-0.5">${count} dépêche(s)${
-              channelCount > 0 ? ` · ${channelCount} TV direct` : ''
+              channelCount > 0 ? ` · ${channelCount} TV référencées` : ''
             }</div>
           </div>
         </div>
@@ -470,86 +458,87 @@ export default function TacticalVectorMap({
       map.setLayoutProperty(CLUSTERS_LAYER_ID, 'visibility', 'visible');
       map.setLayoutProperty(CLUSTER_GLOW_LAYER_ID, 'visibility', 'visible');
       map.setLayoutProperty(POINTS_LAYER_ID, 'visibility', 'visible');
-      return;
+    } else {
+
+      // Add source with spatial clustering
+      map.addSource(SOURCE_ID, {
+        type: 'geojson',
+        data: firmsData,
+        cluster: true,
+        clusterMaxZoom: 8,
+        clusterRadius: 35,
+      });
+
+      // Outer glow for thermal clusters
+      map.addLayer({
+        id: CLUSTER_GLOW_LAYER_ID,
+        type: 'circle',
+        source: SOURCE_ID,
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': '#f97316',
+          'circle-radius': [
+            'step',
+            ['get', 'point_count'],
+            16,
+            20,
+            22,
+            100,
+            30,
+          ],
+          'circle-opacity': 0.28,
+          'circle-blur': 0.6,
+        },
+      });
+
+      // Core cluster circle
+      map.addLayer({
+        id: CLUSTERS_LAYER_ID,
+        type: 'circle',
+        source: SOURCE_ID,
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': [
+            'step',
+            ['get', 'point_count'],
+            '#ea580c',
+            20,
+            '#dc2626',
+            100,
+            '#991b1b',
+          ],
+          'circle-radius': [
+            'step',
+            ['get', 'point_count'],
+            10,
+            20,
+            14,
+            100,
+            18,
+          ],
+          'circle-stroke-width': 1.5,
+          'circle-stroke-color': '#fef08a',
+          'circle-stroke-opacity': 0.85,
+          'circle-opacity': 0.9,
+        },
+      });
+
+      // Individual fire detections (unclustered)
+      map.addLayer({
+        id: POINTS_LAYER_ID,
+        type: 'circle',
+        source: SOURCE_ID,
+        filter: ['!', ['has', 'point_count']],
+        paint: {
+          'circle-color': '#ef4444',
+          'circle-radius': 4.5,
+          'circle-stroke-width': 1.5,
+          'circle-stroke-color': '#fbbf24',
+          'circle-opacity': 0.95,
+        },
+      });
+
     }
-
-    // Add source with spatial clustering
-    map.addSource(SOURCE_ID, {
-      type: 'geojson',
-      data: firmsData,
-      cluster: true,
-      clusterMaxZoom: 8,
-      clusterRadius: 35,
-    });
-
-    // Outer glow for thermal clusters
-    map.addLayer({
-      id: CLUSTER_GLOW_LAYER_ID,
-      type: 'circle',
-      source: SOURCE_ID,
-      filter: ['has', 'point_count'],
-      paint: {
-        'circle-color': '#f97316',
-        'circle-radius': [
-          'step',
-          ['get', 'point_count'],
-          16,
-          20,
-          22,
-          100,
-          30,
-        ],
-        'circle-opacity': 0.28,
-        'circle-blur': 0.6,
-      },
-    });
-
-    // Core cluster circle
-    map.addLayer({
-      id: CLUSTERS_LAYER_ID,
-      type: 'circle',
-      source: SOURCE_ID,
-      filter: ['has', 'point_count'],
-      paint: {
-        'circle-color': [
-          'step',
-          ['get', 'point_count'],
-          '#ea580c',
-          20,
-          '#dc2626',
-          100,
-          '#991b1b',
-        ],
-        'circle-radius': [
-          'step',
-          ['get', 'point_count'],
-          10,
-          20,
-          14,
-          100,
-          18,
-        ],
-        'circle-stroke-width': 1.5,
-        'circle-stroke-color': '#fef08a',
-        'circle-stroke-opacity': 0.85,
-        'circle-opacity': 0.9,
-      },
-    });
-
-    // Individual fire detections (unclustered)
-    map.addLayer({
-      id: POINTS_LAYER_ID,
-      type: 'circle',
-      source: SOURCE_ID,
-      filter: ['!', ['has', 'point_count']],
-      paint: {
-        'circle-color': '#ef4444',
-        'circle-radius': 4.5,
-        'circle-stroke-width': 1.5,
-        'circle-stroke-color': '#fbbf24',
-        'circle-opacity': 0.95,
-      },
-    });
 
     // Click cluster to zoom in
     const handleClusterClick = (e: MapLayerMouseEvent) => {
@@ -593,13 +582,13 @@ export default function TacticalVectorMap({
               <span>🔥 Foyer thermique satellitaire</span>
             </div>
             <div style="margin-top:6px; font-size:12px; color:#f1f5f9;">
-              Puissance (FRP) : <strong style="color:#fde047;">${props.frp} MW</strong>
+              Puissance (FRP) : <strong style="color:#fde047;">${escapeMapText(props.frp)} MW</strong>
             </div>
             <div style="font-size:10px; color:#94a3b8; margin-top:3px;">
-              Brillance : ${props.brightness} K
+              Brillance : ${escapeMapText(props.brightness)} K
             </div>
             <div style="font-size:10px; color:#94a3b8; margin-top:3px;">
-              Confiance : ${props.confidence}% · ${props.date} ${props.time}
+              Confiance : ${escapeMapText(props.confidence)}% · Observation ${formatRadarDate(firmsObservationDate(props.date, props.time))}
             </div>
             <div style="margin-top:6px; font-size:9px; color:#fdba74; opacity:0.8; border-top:1px solid rgba(255,255,255,0.08); padding-top:4px;">
               NASA FIRMS · MODIS C6.1 NRT
@@ -658,44 +647,45 @@ export default function TacticalVectorMap({
       existingSource.setData(disastersData);
       map.setLayoutProperty(WAVES_LAYER_ID, 'visibility', 'visible');
       map.setLayoutProperty(POINTS_LAYER_ID, 'visibility', 'visible');
-      return;
+    } else {
+
+      map.addSource(SOURCE_ID, {
+        type: 'geojson',
+        data: disastersData,
+      });
+
+      // Outer seismic/cyclone wave ripple halo
+      map.addLayer({
+        id: WAVES_LAYER_ID,
+        type: 'circle',
+        source: SOURCE_ID,
+        paint: {
+          'circle-radius': ['*', ['get', 'radius'], 1.9],
+          'circle-color': ['get', 'glowColor'],
+          'circle-opacity': 0.35,
+          'circle-stroke-width': 1.5,
+          'circle-stroke-color': ['get', 'color'],
+          'circle-stroke-opacity': 0.7,
+          'circle-blur': 0.25,
+        },
+      });
+
+      // Core disaster event symbol
+      map.addLayer({
+        id: POINTS_LAYER_ID,
+        type: 'circle',
+        source: SOURCE_ID,
+        paint: {
+          'circle-radius': ['get', 'radius'],
+          'circle-color': ['get', 'color'],
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-opacity': 0.9,
+          'circle-opacity': 0.95,
+        },
+      });
+
     }
-
-    map.addSource(SOURCE_ID, {
-      type: 'geojson',
-      data: disastersData,
-    });
-
-    // Outer seismic/cyclone wave ripple halo
-    map.addLayer({
-      id: WAVES_LAYER_ID,
-      type: 'circle',
-      source: SOURCE_ID,
-      paint: {
-        'circle-radius': ['*', ['get', 'radius'], 1.9],
-        'circle-color': ['get', 'glowColor'],
-        'circle-opacity': 0.35,
-        'circle-stroke-width': 1.5,
-        'circle-stroke-color': ['get', 'color'],
-        'circle-stroke-opacity': 0.7,
-        'circle-blur': 0.25,
-      },
-    });
-
-    // Core disaster event symbol
-    map.addLayer({
-      id: POINTS_LAYER_ID,
-      type: 'circle',
-      source: SOURCE_ID,
-      paint: {
-        'circle-radius': ['get', 'radius'],
-        'circle-color': ['get', 'color'],
-        'circle-stroke-width': 2,
-        'circle-stroke-color': '#ffffff',
-        'circle-stroke-opacity': 0.9,
-        'circle-opacity': 0.95,
-      },
-    });
 
     let activePopup: Popup | null = null;
     const handleDisasterClick = (e: MapLayerMouseEvent) => {
@@ -727,14 +717,14 @@ export default function TacticalVectorMap({
       const detailsHtml = isEarthquake
         ? `
           <div style="margin-top:6px; font-size:12px; color:#f1f5f9;">
-            Magnitude : <strong style="color:#fde047;">M ${props.magnitude ?? '—'}</strong>
-            ${props.depthKm !== undefined ? ` · Profondeur : ${props.depthKm} km` : ''}
+            Magnitude : <strong style="color:#fde047;">M ${escapeMapText(props.magnitude ?? '—')}</strong>
+            ${props.depthKm !== undefined ? ` · Profondeur : ${escapeMapText(props.depthKm)} km` : ''}
           </div>
         `
         : `
           <div style="margin-top:6px; font-size:11px; color:#f1f5f9;">
-            ${props.description ? `<p style="margin:0 0 4px 0; color:#cbd5e1;">${props.description}</p>` : ''}
-            ${props.countryName ? `<span>Zone : <strong>${props.countryName}</strong></span>` : ''}
+            ${props.description ? `<p style="margin:0 0 4px 0; color:#cbd5e1;">${escapeMapText(props.description)}</p>` : ''}
+            ${props.countryName ? `<span>Zone : <strong>${escapeMapText(props.countryName)}</strong></span>` : ''}
           </div>
         `;
 
@@ -748,16 +738,17 @@ export default function TacticalVectorMap({
         .setHTML(`
           <div style="background:#090d0b; color:#fff; padding:10px 14px; border-radius:10px; border:1px solid ${props.color}80; font-family:sans-serif; min-width:210px; max-width:280px; box-shadow:0 12px 30px rgba(0,0,0,0.9);">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
-              <span style="font-weight:bold; font-size:11px; color:${props.color};">${eventIcon} ${String(props.eventType).toUpperCase()}</span>
+              <span style="font-weight:bold; font-size:11px; color:${props.color};">${eventIcon} ${escapeMapText(String(props.eventType).toUpperCase())}</span>
               ${severityBadge}
             </div>
             <div style="margin-top:5px; font-size:12px; font-weight:bold; color:#fff; line-height:1.3;">
-              ${props.title}
+              ${escapeMapText(props.title)}
             </div>
+            <div style="margin-top:4px; font-size:10px; color:#cbd5e1;">Événement : ${formatRadarDate(props.eventDate)}</div>
             ${detailsHtml}
             <div style="margin-top:8px; display:flex; align-items:center; justify-content:space-between; font-size:9px; color:#94a3b8; border-top:1px solid rgba(255,255,255,0.08); padding-top:6px;">
-              <span>Source : ${props.source}</span>
-              <a href="${props.sourceUrl}" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:none; font-weight:bold;">Rapport officiel ↗</a>
+              <span>Source : ${escapeMapText(props.source)}</span>
+              ${props.sourceUrl ? `<a href="${escapeMapText(props.sourceUrl)}" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:none; font-weight:bold;">Rapport source ↗</a>` : '<span>Rapport source indisponible</span>'}
             </div>
           </div>
         `)
@@ -814,13 +805,13 @@ export default function TacticalVectorMap({
     }
   };
 
-  if (!isSupported) {
+  if (!isSupported || mapError) {
     return (
       <div className="flex h-[480px] w-full flex-col items-center justify-center rounded-xl bg-zinc-950 p-6 text-center text-zinc-400">
         <Compass className="mb-3 h-10 w-10 text-amber-400" />
-        <p className="text-sm font-bold text-white">WebGL non supporté</p>
+        <p role="status" className="text-sm font-bold text-white">{mapError ?? 'WebGL non supporté'}</p>
         <p className="mt-1 text-xs">
-          Votre navigateur ou affichage ne supporte pas l’accélération matérielle WebGL.
+          {mapError ? 'Vous pouvez sélectionner un pays et consulter les dépêches ci-dessous.' : 'Votre navigateur ou affichage ne supporte pas l’accélération matérielle WebGL.'}
         </p>
       </div>
     );
@@ -829,12 +820,13 @@ export default function TacticalVectorMap({
   return (
     <div className="relative w-full overflow-hidden rounded-xl border border-white/[0.08] bg-[#070b09]">
       {/* Tactical Header Overlay */}
-      <div className="absolute left-3 top-3 z-10 flex flex-wrap items-center gap-2">
+      <div className="relative z-10 flex flex-wrap items-center gap-2 border-b border-white/10 bg-[#0b100e] p-2">
         {/* Style de fond de carte (Satellite Réel / Relief Couleurs / Sombre) */}
         <div className="flex items-center rounded-lg border border-white/10 bg-black/85 p-0.5 shadow-xl backdrop-blur-md">
           <button
             type="button"
             onClick={() => handleSwitchBasemap('satellite')}
+            aria-pressed={basemapMode === 'satellite'}
             title="Vue Satellite Réelle en couleurs (ESRI World Imagery + Frontières)"
             className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-bold transition ${
               basemapMode === 'satellite'
@@ -847,6 +839,7 @@ export default function TacticalVectorMap({
           <button
             type="button"
             onClick={() => handleSwitchBasemap('liberty')}
+            aria-pressed={basemapMode === 'liberty'}
             title="Vue Relief & Couleurs vives (OpenFreeMap Topo)"
             className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-bold transition ${
               basemapMode === 'liberty'
@@ -859,6 +852,7 @@ export default function TacticalVectorMap({
           <button
             type="button"
             onClick={() => handleSwitchBasemap('dark')}
+            aria-pressed={basemapMode === 'dark'}
             title="Vue Tactique Sombre nocturne"
             className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-bold transition ${
               basemapMode === 'dark'
@@ -874,6 +868,8 @@ export default function TacticalVectorMap({
         <button
           type="button"
           onClick={handleToggleGlobe}
+          aria-pressed={isGlobeMode}
+          disabled={!isLoaded}
           title={isGlobeMode ? 'Basculer en vue 2D tactique (Mercator)' : 'Basculer en vue Globe 3D immersif'}
           className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[10px] font-bold shadow-lg backdrop-blur-md transition ${
             isGlobeMode
@@ -893,6 +889,7 @@ export default function TacticalVectorMap({
         <button
           type="button"
           onClick={handleToggleFires}
+          aria-pressed={showFires}
           title="Afficher/masquer les feux de brousse actifs détectés par satellite NASA FIRMS"
           className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[10px] font-bold shadow-lg backdrop-blur-md transition ${
             showFires
@@ -920,6 +917,7 @@ export default function TacticalVectorMap({
         <button
           type="button"
           onClick={handleToggleDisasters}
+          aria-pressed={showDisasters}
           title="Afficher/masquer les séismes USGS et alertes catastrophes GDACS"
           className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[10px] font-bold shadow-lg backdrop-blur-md transition ${
             showDisasters
@@ -956,6 +954,18 @@ export default function TacticalVectorMap({
         )}
       </div>
 
+      {showFires && <div role="status" className="border-b border-white/10 p-2 text-xs text-orange-200">
+        NASA FIRMS · {firmsLoading ? 'chargement' : firmsError ? 'indisponible' : firmsData ? `${firmsData.features.length} détections` : 'chargement'} · collecte {formatRadarDate(firmsData?.metadata.updatedAt)}
+        {firmsData?.metadata.availability?.map(source => <span key={source.provider} className="block">{sourceStatusText(source.status)} · observation {formatRadarDate(source.dataAt)}</span>)}
+        {firms.rejected > 0 && <p>{firms.rejected} géométries ou mesures invalides exclues.</p>}
+        {firmsError && <button type="button" onClick={firms.retry} className="ml-2 rounded border border-orange-300/30 px-2 py-1">Réessayer les feux</button>}
+      </div>}
+      {showDisasters && <div role="status" className="border-b border-white/10 p-2 text-xs text-yellow-200">
+        USGS / GDACS · {disastersLoading ? 'chargement' : disastersError ? 'indisponible' : disastersData ? `${disastersData.features.length} événements` : 'chargement'} · collecte {formatRadarDate(disastersData?.metadata.updatedAt)}
+        {disastersData?.metadata.availability?.map(source => <span key={source.provider} className="block">{source.provider} · {sourceStatusText(source.status)} · événement {formatRadarDate(source.dataAt)}</span>)}
+        {disasters.rejected > 0 && <p>{disasters.rejected} géométries invalides exclues.</p>}
+        {disastersError && <button type="button" onClick={disasters.retry} className="ml-2 rounded border border-yellow-300/30 px-2 py-1">Réessayer les événements</button>}
+      </div>}
       {/* Recenter Button */}
       <button
         type="button"
@@ -980,22 +990,22 @@ export default function TacticalVectorMap({
         <div className="flex flex-wrap items-center gap-3">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            Média source indexé
+            Pays du média / sujet inféré
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full border border-dashed border-amber-400" />
-            Chaîne TV en direct
+            Chaîne TV référencée
           </span>
           {showFires && (
             <span className="inline-flex items-center gap-1.5 text-orange-300">
               <span className="h-2.5 w-2.5 rounded-full bg-orange-500 ring-2 ring-yellow-400/50 shadow-[0_0_8px_#f97316]" />
-              Foyer thermique NASA (24h)
+              Détection thermique · pas un incendie confirmé
             </span>
           )}
           {showDisasters && (
             <span className="inline-flex items-center gap-1.5 text-yellow-300">
               <span className="h-2.5 w-2.5 rounded-full bg-yellow-400 ring-2 ring-red-400/60 shadow-[0_0_8px_#facc15]" />
-              Alerte séisme / GDACS
+              Lieu d’événement · USGS / GDACS
             </span>
           )}
           {isGlobeMode && (

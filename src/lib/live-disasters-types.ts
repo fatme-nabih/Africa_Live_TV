@@ -61,6 +61,7 @@ export interface DisasterEventsSnapshot {
     updatedAt: string;
     stale: boolean;
     disclaimer: string;
+    availability?: import('./radar-data').RadarSourceState[];
   };
   features: DisasterGeoJsonFeature[];
 }

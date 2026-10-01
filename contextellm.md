@@ -1,10 +1,88 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 29 septembre 2026, 23:25 UTC, fuseau Africa/Dakar.
+Dernière mise à jour : 1er octobre 2026, fuseau Africa/Dakar.
 
 Ce document permet à une nouvelle session de reprendre le travail sans
 réinterpréter l'historique. Il ne contient volontairement aucun secret, cookie,
 mot de passe, identifiant de paiement, clé Clerk ou URL de flux média.
+
+## État de reprise courant — 1er octobre 2026
+
+**Lire d’abord [la fiche de reprise dashboard](docs/dashboard-session-handoff.md)** :
+L0–L4 terminés et déployés staging ; prochaine décision L5, puis L6 en dernier.
+Les sections anciennes ci-dessous conservent l’historique ; leurs « suite » et
+« non déployé » ne sont pas les instructions de reprise actuelles.
+
+### Complément local — 1er octobre 2026 : réception L4
+
+Complément staging autorisé à la suite : snapshot L0–L4 déployé le 1er octobre,
+`b0d52c0c-3bca-4600-8a3e-fb1f2709dada` SUCCESS/actif vérifié à 18:09 UTC.
+Neuf E2E distants réussis, santé processus/base 200 ; parcours administrateur
+Clerk réel reçu en local et staging. Pas de commit/push, changement de plan,
+variable ou nouvelle migration. Premier upload expiré avant build puis relance
+réussie. Preuves : `docs/dashboard-auth-staging-reception.md`.
+Le propriétaire ne dispose que du compte administrateur : essai/actif standard/
+expiré non reçus en session réelle. Zoom natif 200 % confirmé puis reçu à
+18:29 UTC : viewport de l’outil réinitialisé, DPR=2, 937×477 CSS, aucun
+débordement ; pays/clavier/filtres TV/Échap/focus vérifiés. Les premiers
+relevés DPR=1 étaient masqués par le viewport simulé de l’outil.
+
+AL-Q01, AL-C05 et acceptation locale AL-Q02 : réception intégrée et dossier
+dans `docs/dashboard-release-validation.md` et `docs/dashboard-delivery-dossier.md`.
+Les lots L0–L3 sont implémentés et testés localement, sans migration supplémentaire.
+Dashboard/API et lecture refusés après expiration ; catalogue consultable.
+Les statistiques staging historiques divergent : ne pas les reconduire comme
+mesure actuelle. À la réception locale initiale, aucun déploiement n’avait eu lieu ; staging a
+ensuite été livré avec autorisation. Rôle, domaine et plan inchangés.
+Suite : arbitrage L5 sur le lecteur ancré ; briefing désactivé jusqu’à L6.
+La réception de comptes Clerk connectés et le zoom natif restent explicitement
+distincts des tests automatisés de gardes et de reflow.
+
+### Complément local — 30 septembre 2026 : AL-C01 / AL-C02
+
+Le propriétaire a décidé de refuser l'accès au dashboard après expiration.
+Cette règle est implémentée localement sur `/app/live` et les huit API Radar ;
+le catalogue TV demeure consultable selon DOC-006. Grâce active et exception
+administrateur préexistantes conservées. Matrice, tests et limites dans
+`docs/dashboard-access-matrix.md` ; suivi dans `docs/plan-dashboard-backlog.md`
+et `docs/production-progress.md`. Aucun déploiement ni changement distant.
+Les références plus anciennes ci-dessous ne décrivent pas cette livraison
+locale. Préserver les modifications landing/navigation déjà présentes.
+
+### Complément local — 30 septembre 2026 : fin L0 / fiabilité L1
+
+AL-C03/AL-C04 et AL-D02/AL-D03/AL-D05/AL-D06 sont livrés et testés
+localement : identités RSS/options/bandeau, worker ESM explicite, fenêtre
+commune 24 h, états par fournisseur, candidates TV selon le résolveur et
+bandeau daté. Contrats et preuves : `docs/dashboard-reliability-validation.md`.
+La réception du worker en build servi passe depuis une page publique sous
+CSP ; le dashboard complet est testé en mode MVP de développement. Pas de
+nouvelle session Clerk authentifiée sur le build. Serveur restitué en mode
+Clerk local, briefing toujours désactivé jusqu’au lot L6. Aucun changement
+de schéma, déploiement, commit, push ou état distant. Les autres lots du plan
+restent à faire ; ne pas confondre cette livraison avec Railway.
+
+### Complément local — 30 septembre 2026 : L2 terminé
+
+AL-W01 à AL-W06 sont livrés localement : dashboard compact, sélecteur pays
+accessible, URL/historique, priorité au fil sur mobile, carte à la demande,
+couches optionnelles datées et tableau de disponibilité. Contrats, captures
+et limites : `docs/dashboard-workspace-validation.md`. 211 tests unitaires
+et 24 E2E réussis, TypeScript/ESLint/build réussis. Serveur Clerk local
+restitué ; briefing désactivé jusqu’à L6. Prochain lot : L3, AL-T01 à AL-T04.
+Pas de déploiement, migration, commit, push ou modification distante.
+
+### Complément local — 1er octobre 2026 : L3 terminé
+
+AL-T01 à AL-T04 livrés localement : navigation commune et capacité admin
+vérifiée sur le serveur, catégories/langues normalisées à la lecture,
+URL/sidebar/raccourcis synchronisés, Afrique/Sénégal/Tout/favoris et contexte
+pays dashboard→TV. Les imports restent inchangés. Contrats et réception :
+`docs/tv-workspace-validation.md` ; 219 unitaires et 42 E2E réussis,
+TypeScript/ESLint/build réussis, 14 intégrations optionnelles ignorées.
+Serveur remis en mode Clerk local. Briefing désactivé jusqu’à L6.
+Prochain lot : L4, AL-Q01/AL-Q02/AL-C05. Aucun déploiement, migration, commit,
+push ou changement distant. Les parcours Clerk réels du build restent à recevoir.
 
 ## 1. Point de départ obligatoire
 
@@ -30,8 +108,11 @@ mot de passe, identifiant de paiement, clé Clerk ou URL de flux média.
 
 - Workspace : `C:/Users/GAMER PC/Africa_Live_TV`.
 - Branche locale : `main` (synchronisée avec `origin/main` après mise à jour documentaire du déploiement).
-- Dernier commit applicatif poussé sur GitHub `main` : `2f19e38`.
-- Déploiement Railway staging actif : `dfa1da5f-36d2-402f-887a-228d5b1e7e57` (`SUCCESS`, commit applicatif `2f19e38`).
+- Références GitHub anciennes ci-dessous historiques ; vérifier `git log -1`
+  et `git ls-remote origin refs/heads/main` avant toute nouvelle publication.
+- Dernier staging reçu : `b0d52c0c-3bca-4600-8a3e-fb1f2709dada`, SUCCESS/actif
+  le 1er octobre à 18:09 UTC, snapshot L0–L4 non commité lors de cette livraison.
+  Voir la fiche de reprise pour la publication de clôture demandée ensuite.
 - Un fichier non suivi, `docs/radar-cockpit-backlog.md`, est apparu pendant cette reprise. Il n'a pas été publié ni validé ; le préserver et traiter ses propositions comme un brouillon à comparer à la feuille de route sourcée `docs/radar-afrique-roadmap.md`.
 - Dépôt distant : `https://github.com/fatme-nabih/Africa_Live_TV.git`.
 - Aucun commit ou push ne doit être créé sans demande explicite de l'utilisateur.
@@ -110,7 +191,7 @@ Recherche, filtre, favori persistant, tentative web et lancement VLC réel ont
 La logique d'erreur client modifiée se trouve dans `src/lib/api-contracts.ts`,
 avec ses tests dans `src/lib/catalog-api.test.ts`.
 
-## 5. État Railway courant — 29 septembre 2026
+## 5. État Railway historique — 29 septembre 2026
 
 - Projet `just-compassion`, environnement visible `production`, rôle applicatif `staging` (`DEPLOYMENT_ENV=staging`).
 - Déploiement applicatif actif : `dfa1da5f-36d2-402f-887a-228d5b1e7e57`, `SUCCESS`, commit `2f19e38` ; domaine `https://staging.africatv.sn`.
@@ -331,7 +412,7 @@ Toujours refaire `git status --short` avant une modification. Ne pas restaurer,
 nettoyer ou remplacer les changements existants avec une commande Git
 destructive.
 
-## 11. Prochaine séquence sûre — Identités et Abonnements (Lot 2)
+## 11. Séquence historique — Identités et Abonnements (Lot 2)
 
 Les Phases A, B et le Lot 3 (adaptation de la lecture et qualification des flux) sont terminés et déployés sur staging. L'ordre recommandé pour la suite est :
 
@@ -445,6 +526,7 @@ aboopay\) et du code source.
 ### Clôture de la Phase Lot 5 - Vérification périodique et jobs (25 septembre 2026)
 
 - [x] PROD-050 : Ajout du worker de vérification avec concurrence bornée, verrou consultatif et reprise automatisée.
-- [x] PROD-051 : Consolidation du nettoyage (télémétrie/abus) dans un script \un-maintenance.ts\ autonome avec lots de suppression, verrou exclusif et sécurité des connexions.
+- [x] PROD-051 : Consolidation du nettoyage (télémétrie/abus) dans un script \
+un-maintenance.ts\ autonome avec lots de suppression, verrou exclusif et sécurité des connexions.
 - [x] PROD-052 & PROD-053 : Simulation d'incidents (simulate-incident.ts) pour valider l'observabilité externe des métriques. Ajout des objectifs de sauvegarde/restauration.
 

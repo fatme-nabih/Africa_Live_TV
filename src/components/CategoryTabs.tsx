@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Flame,
+  Globe,
 } from 'lucide-react';
 
 export interface CategoryPreset {
@@ -24,7 +25,9 @@ export interface CategoryPreset {
 }
 
 const CATEGORY_PRESETS: CategoryPreset[] = [
-  { id: 'all', label: 'Tout le direct', icon: Sparkles },
+  { id: 'all', label: 'Tout le catalogue', icon: Sparkles },
+  { id: 'africa', label: 'Afrique', icon: Globe },
+  { id: 'senegal', label: 'Sénégal', icon: Globe, country: 'SN' },
   { id: 'favorites', label: 'Favoris', icon: Star, favoritesOnly: true },
   { id: 'news', label: 'Actualités', icon: Newspaper, group: 'News' },
   { id: 'entertainment', label: 'Divertissement', icon: Flame, group: 'Entertainment' },

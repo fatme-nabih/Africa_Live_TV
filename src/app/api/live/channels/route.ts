@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { withApiErrorHandler } from '@/lib/api-errors';
-import { authorizeCatalogRequest } from '@/lib/require-app-access';
+import { authorizeAppRequest } from '@/lib/require-app-access';
 import {
   getAfricanChannelsSummary,
   getChannelsForAfricanCountry,
@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export const GET = withApiErrorHandler(async (request: Request) => {
-  const authorization = await authorizeCatalogRequest(
+  const authorization = await authorizeAppRequest(
     { bucket: 'live.channels.read', limit: 60, windowSeconds: 60 },
     request,
   );

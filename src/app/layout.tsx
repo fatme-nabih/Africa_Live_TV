@@ -7,8 +7,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001"),
-  title: "Africa Live — Catalogue unifié",
-  description: "Un catalogue TV fluide et fiabilisé avec détection de compatibilité navigateur et lecteur externe VLC.",
+  title: "Africa Live — Le radar panafricain",
+  description: "Suivez l’Afrique avec un dashboard de veille, une carte interactive, les dépêches et les chaînes TV en direct.",
   icons: {
     icon: [
       { url: "/favicon.ico" },
@@ -20,13 +20,13 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
   openGraph: {
     title: "Africa Live",
-    description: "Catalogue TV fluide avec lecture navigateur et VLC.",
+    description: "Veille panafricaine, carte interactive et télévision en direct.",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Africa Live" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Africa Live",
-    description: "Catalogue TV fluide avec lecture navigateur et VLC.",
+    description: "Veille panafricaine, carte interactive et télévision en direct.",
     images: ["/og-image.png"],
   },
 };
@@ -46,8 +46,8 @@ export default function RootLayout({
           <ClerkProvider
             signInUrl="/sign-in"
             signUpUrl="/sign-up"
-            signInFallbackRedirectUrl="/app"
-            signUpFallbackRedirectUrl="/app"
+            signInFallbackRedirectUrl="/app/live"
+            signUpFallbackRedirectUrl="/app/live"
             appearance={{ variables: {
               colorPrimary: '#fbbf24',
               colorBackground: '#050505',

@@ -1,11 +1,24 @@
 # Railway — runbook de préproduction
 
+**État de clôture et reprise : [travail terminé, réserves et prochain lot L5](dashboard-session-handoff.md).**
+
+Les relevés plus anciens conservent leur date ; ils ne remplacent pas ce bilan courant.
+
 Référence : 24 septembre 2026. Le projet Railway `just-compassion` est une
 **préproduction**, même si l'environnement porte encore le nom d'interface
 `production`. La valeur applicative qui fait foi est `DEPLOYMENT_ENV=staging`.
 Il ne doit pas être promu en production par simple renommage.
 
-## État vérifié
+## État historique — 24 septembre 2026
+
+Complément du 1er octobre, 18:09 UTC : livraison L0–L4 autorisée et active
+(`b0d52c0c-3bca-4600-8a3e-fb1f2709dada`), neuf E2E distants réussis, santé 200.
+Modes locaux désactivés, rôle staging conservé, aucune nouvelle migration.
+[Réception, snapshot et limites](dashboard-auth-staging-reception.md).
+
+Revue locale initiale L4 : avant les contrôles distants et la livraison autorisée du 1er octobre.
+Les inventaires historiques de sources divergent ; ne pas reconduire leurs
+effectifs comme état courant. [Dossier local et réception conditionnelle](dashboard-delivery-dossier.md).
 
 | Élément | État observé | Cible du lot 2 |
 |---|---|---|
@@ -16,7 +29,7 @@ Il ne doit pas être promu en production par simple renommage.
 | Healthcheck | Actif et validé : `/api/health`, 120 s | Conserver public et sans fuite |
 | Sauvegardes natives | Aucune ; l'interface les réserve au plan Pro | Ne pas activer sans décision de plan et de coût |
 | Domaine | `staging.africatv.sn` actif en HTTPS (Let's Encrypt), DNS OVHcloud validé | Conserver `staging.africatv.sn` pour la préproduction, apex/`www` réservés à la production |
-| Lecture streaming | Active (`PLAYBACK_ELIGIBILITY_READY=true`), 8 911 flux HTTPS et 2 089 HTTP qualifiés | Streaming 100 % direct amont sans proxy ni transcodage |
+| Lecture streaming | Active selon le journal (`PLAYBACK_ELIGIBILITY_READY=true`) ; effectif/santé à remesurer lors d'une réception autorisée | Transport direct amont sans proxy ni transcodage |
 
 Railway indique aussi que `railway.json` est déprécié, que ce service ne peut
 plus l'adopter, et que le mécanisme cessera le 1er décembre 2026. Les réglages

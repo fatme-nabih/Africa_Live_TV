@@ -19,9 +19,12 @@ test.beforeAll(async ({ baseURL }) => {
     await client.query('INSERT INTO channels (id, name, normalized_name) VALUES ($1, $2, $2)', [channelId, 'Lot 2 source fixture']);
     await client.query(`INSERT INTO streams (id, channel_id, url, status, cors_allowed, direct_eligibility, last_success_at) VALUES
       ($1, $4, $5, 'BROWSER_OK', true, 'PUBLIC_DIRECT_WEB', '2020-01-01'),
-      ($2, $4, $6, 'OFFLINE', false, 'REVIEW_REQUIRED', null),
+      ($2, $4, $6, 'UNTESTED', false, 'REVIEW_REQUIRED', null),
       ($3, $4, $7, 'VLC_ONLY', false, 'PUBLIC_DIRECT_VLC', '2020-01-01')`,
     [`${channelId}-a`, `${channelId}-b`, `${channelId}-c`, channelId, firstUrl, secondUrl, `https://external.fixture.test/${channelId}/live.m3u8`]);
+    // A historical temporary failure remains retryable locally; OFFLINE denotes
+    // a source explicitly excluded by the resolver's existing SQL policy.
+    await client.query("UPDATE streams SET verification_state='TEMPORARY_FAILURE' WHERE id=$1", [`${channelId}-b`]);
     await client.query('COMMIT');
   } catch (error) {
     await client.query('ROLLBACK');

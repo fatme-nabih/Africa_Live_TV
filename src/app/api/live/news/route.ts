@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 
 import { withApiErrorHandler } from '@/lib/api-errors';
 import { getRadarNews } from '@/lib/live-osint';
-import { authorizeCatalogRequest } from '@/lib/require-app-access';
+import { authorizeAppRequest } from '@/lib/require-app-access';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export const GET = withApiErrorHandler(async (request: Request) => {
-  const authorization = await authorizeCatalogRequest(
+  const authorization = await authorizeAppRequest(
     { bucket: 'live.news.read', limit: 20, windowSeconds: 60 },
     request,
   );

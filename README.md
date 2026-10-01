@@ -1,11 +1,23 @@
 # Africa Live
 
+**État de clôture et reprise : [travail terminé, réserves et prochain lot L5](docs/dashboard-session-handoff.md).**
+
+Les relevés plus anciens conservent leur date ; ils ne remplacent pas ce bilan courant.
+
 ## Accueil et authentification Clerk
 
 La configuration de développement actuelle utilise la landing page publique et
 les formulaires Clerk sur `/sign-in` et `/sign-up`, avec retour par défaut vers
-`/app`. Les routes catalogue, compte et administration exigent une connexion.
-L'accès au catalogue conserve les règles d'essai et d'abonnement existantes.
+`/app/live`, le dashboard principal. L’app TV reste sur `/app`, accessible par
+le lien « TV » de la navigation commune. Les routes dashboard, catalogue,
+compte et administration exigent une connexion.
+Après expiration, le catalogue reste consultable ; le dashboard, ses API et
+la lecture sont refusés. Essai/abonnement actif et exception administrateur
+revérifiée suivent [la matrice d’accès](docs/dashboard-access-matrix.md).
+Les lots dashboard L0–L4 sont testés localement et déployés sur staging après
+autorisation le 1er octobre 2026. [Réception staging et limites](docs/dashboard-auth-staging-reception.md),
+[réception locale L4](docs/dashboard-release-validation.md),
+[dossier de livraison](docs/dashboard-delivery-dossier.md).
 
 Dans `.env.local`, renseigner les deux clés de la même instance Clerk Development,
 et définir `LOCAL_DEV_MODE=false`, `NEXT_PUBLIC_LOCAL_DEV_MODE=false`,
@@ -32,8 +44,9 @@ Ces réglages ne sont jamais utilisables en production.
 Application indépendante d’IPTV : catalogue complet, recherche, filtres,
 favoris locaux, lecture navigateur directe et secours VLC automatique.
 Les contrôles de disponibilité repris d’IPTV sont historiques ; ils ne prouvent
-pas que les sources fonctionnent aujourd’hui. Toutes les chaînes restent
-cliquables pour une nouvelle tentative locale.
+pas que les sources fonctionnent aujourd’hui. Les contrôles anciens et pannes
+temporaires peuvent être retentés ; les sources définitivement `OFFLINE` et
+les exclusions du catalogue public restent masquées.
 
 ## Démarrage
 

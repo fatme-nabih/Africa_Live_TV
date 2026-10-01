@@ -36,11 +36,11 @@ export default function NotFound() {
         {/* Action Buttons */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
-            href="/app"
+            href="/app/live"
             className="inline-flex items-center gap-2 rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/20 via-amber-400/25 to-rose-500/20 hover:from-emerald-500/30 hover:via-amber-400/35 hover:to-rose-500/30 px-5 py-2.5 text-xs sm:text-sm font-bold text-amber-100 shadow-md backdrop-blur-md transition active:scale-[0.99]"
           >
             <Tv size={15} />
-            <span>Ouvrir le direct</span>
+            <span>Ouvrir le dashboard</span>
           </Link>
 
           <Link

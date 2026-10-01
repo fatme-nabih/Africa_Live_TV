@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { canonicalLanguage, categoryCodes } from './catalog-metadata';
 
 import {
   CHANNEL_AVAILABILITY_STATUSES,
@@ -30,14 +31,17 @@ export const channelFiltersSchema = z.object({
     .refine((value) => value.length === 0 || value.length >= 2)
     .default(''),
   country: z.string().trim().max(10).default(''),
-  group: z.string().trim().max(500).default(''),
+  region: z.enum(['', 'africa']).default(''),
+  group: z.string().trim().max(500).transform(value => value ? categoryCodes(value)[0] : '').default(''),
   language: z
     .string()
     .trim()
     .toLowerCase()
     .max(35)
     .regex(/^[a-z]{2,3}(?:-[a-z0-9]{1,8})*$/)
+    .or(z.literal('unknown'))
     .or(z.literal(''))
+    .transform(value => value ? canonicalLanguage(value) : '')
     .default(''),
   status: z.union([streamStatusSchema, z.literal('')]).default(''),
 });
@@ -145,7 +149,7 @@ export const filterOptionsResponseSchema = z.object({
   countries: z.array(z.string().min(1).max(10)),
   groups: z.array(z.string().min(1).max(500)),
   languages: z.array(
-    z.string().min(2).max(35).regex(/^[a-z]{2,3}(?:-[a-z0-9]{1,8})*$/),
+    z.string().min(2).max(35).regex(/^[a-z]{2,3}(?:-[a-z0-9]{1,8})*$/).or(z.literal('unknown')),
   ),
   statuses: z.array(streamStatusSchema),
 });

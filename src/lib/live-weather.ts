@@ -1,4 +1,5 @@
 import { ServiceUnavailableError } from '@/lib/api-errors';
+import { normalizeRadarDate, radarSource } from './radar-data';
 import { getAfricanCountryByCode, AFRICAN_COUNTRIES } from '@/lib/live-osint';
 import type {
   LiveWeatherCondition,
@@ -263,6 +264,7 @@ async function fetchFromOpenMeteo(target: ResolvedTarget): Promise<LiveWeatherCo
     'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m',
   );
   url.searchParams.set('timezone', 'auto');
+  url.searchParams.set('timeformat', 'unixtime');
 
   const response = await fetch(url, {
     cache: 'no-store',
@@ -283,6 +285,10 @@ async function fetchFromOpenMeteo(target: ResolvedTarget): Promise<LiveWeatherCo
   }
 
   const current = data.current;
+  if (![0, 1, true, false].includes(current.is_day as number | boolean)) throw new Error('Weather day indicator missing');
+  for (const field of ['temperature_2m', 'apparent_temperature', 'relative_humidity_2m', 'wind_speed_10m', 'wind_direction_10m', 'weather_code', 'precipitation']) {
+    if (typeof current[field] !== 'number' || !Number.isFinite(current[field])) throw new Error('Weather measurement missing');
+  }
   const temp = typeof current.temperature_2m === 'number' ? Math.round(current.temperature_2m * 10) / 10 : 0;
   const apparent = typeof current.apparent_temperature === 'number' ? Math.round(current.apparent_temperature * 10) / 10 : temp;
   const humidity = typeof current.relative_humidity_2m === 'number' ? Math.round(current.relative_humidity_2m) : 0;
@@ -291,7 +297,10 @@ async function fetchFromOpenMeteo(target: ResolvedTarget): Promise<LiveWeatherCo
   const weatherCode = typeof current.weather_code === 'number' ? current.weather_code : 0;
   const isDay = current.is_day === 1 || current.is_day === true;
   const precipitation = typeof current.precipitation === 'number' ? Math.round(current.precipitation * 10) / 10 : 0;
-  const timeStr = typeof current.time === 'string' ? current.time : new Date().toISOString();
+  const timeStr = typeof current.time === 'number' && Number.isFinite(current.time)
+    ? new Date(current.time * 1000).toISOString()
+    : normalizeRadarDate(current.time);
+  if (!timeStr) throw new Error('Weather observation date missing');
   const timezone = typeof data.timezone === 'string' ? data.timezone : 'Africa/Dakar';
 
   const { description, icon } = interpretWeatherCode(weatherCode);
@@ -334,15 +343,16 @@ export async function getRadarWeather(query?: {
   const target = resolveWeatherTarget(query);
   const cacheKey = `${target.latitude.toFixed(2)},${target.longitude.toFixed(2)}`;
   const now = Date.now();
+  const snapshot = (condition: LiveWeatherCondition, savedAt: number, stale: boolean): LiveWeatherSnapshot => ({
+    current: { ...condition, stale }, quickLocations: QUICK_WEATHER_LOCATIONS,
+    fetchedAt: new Date(savedAt).toISOString(), stale,
+    availability: [radarSource('Open-Meteo', condition.locationName, stale ? now : savedAt, WEATHER_TTL_MS, 1,
+      { status: stale ? 'stale' : undefined, lastSuccessAt: new Date(savedAt).toISOString(), dataAt: condition.observedAt })],
+  });
 
   const cached = weatherCache.get(cacheKey);
   if (cached && cached.expiresAt > now) {
-    return {
-      current: cached.value,
-      quickLocations: QUICK_WEATHER_LOCATIONS,
-      fetchedAt: new Date(cached.savedAt).toISOString(),
-      stale: false,
-    };
+    return snapshot(cached.value, cached.savedAt, false);
   }
 
   let requestPromise = pendingWeatherRequests.get(cacheKey);
@@ -365,20 +375,10 @@ export async function getRadarWeather(query?: {
 
   try {
     const condition = await requestPromise;
-    return {
-      current: condition,
-      quickLocations: QUICK_WEATHER_LOCATIONS,
-      fetchedAt: condition.fetchedAt,
-      stale: false,
-    };
+    return snapshot(condition, weatherCache.get(cacheKey)?.savedAt ?? Date.parse(condition.fetchedAt), false);
   } catch {
     if (cached && now - cached.savedAt <= WEATHER_MAX_STALE_MS) {
-      return {
-        current: { ...cached.value, stale: true },
-        quickLocations: QUICK_WEATHER_LOCATIONS,
-        fetchedAt: new Date(cached.savedAt).toISOString(),
-        stale: true,
-      };
+      return snapshot(cached.value, cached.savedAt, true);
     }
     throw new ServiceUnavailableError(
       'Les données météo sont temporairement indisponibles.',

@@ -1,88 +1,25 @@
-import { and, eq, gte, inArray, isNotNull } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
-
 import { db } from '@/db';
-import { channels, streams } from '@/db/schema';
+import { channels } from '@/db/schema';
 import { filterOptionsResponseSchema } from '@/lib/api-contracts';
-import { parseLanguageCodes } from '@/lib/channel-language';
-import { PLAYBACK_SOURCE_FRESHNESS_MS } from '@/lib/playback-resolution-policy';
+import { categoryCodes, catalogLanguageCodes } from '@/lib/catalog-metadata';
+import { catalogHasVisibleStream, VISIBLE_STREAM_STATUSES } from '@/lib/catalog-visibility';
 import { publicCatalogChannelCondition } from '@/lib/public-catalog-visibility';
 import { authorizeCatalogRequest } from '@/lib/require-app-access';
 import { withApiErrorHandler } from '@/lib/api-errors';
 
-const PLAYABLE_STATUSES = ['BROWSER_OK', 'VLC_ONLY'] as const;
-const PUBLIC_DIRECT_ELIGIBILITIES = [
-  'PUBLIC_DIRECT_WEB',
-  'PUBLIC_DIRECT_VLC',
-] as const;
-
 export const GET = withApiErrorHandler(async (request: Request) => {
-  const authorization = await authorizeCatalogRequest(
-    { bucket: 'filters.read', limit: 60 },
-    request,
-  );
+  const authorization = await authorizeCatalogRequest({ bucket: 'filters.read', limit: 60 }, request);
   if (!authorization.ok) return authorization.response;
-  
-  const freshnessCutoff = new Date(
-    Date.now() - PLAYBACK_SOURCE_FRESHNESS_MS,
-  ).toISOString();
-
-  const availableJoin = and(
-    eq(streams.channelId, channels.id),
-    eq(streams.active, true),
-    eq(streams.verificationState, 'HEALTHY'),
-    gte(streams.lastSuccessAt, freshnessCutoff),
-    inArray(streams.status, PLAYABLE_STATUSES),
-    inArray(streams.directEligibility, PUBLIC_DIRECT_ELIGIBILITIES),
-  );
-  
-  const [rawCountries, rawGroups, rawLanguages, rawStatuses] = await Promise.all([
-    db
-      .selectDistinct({ code: channels.countryCode })
-      .from(channels)
-      .innerJoin(streams, availableJoin)
-      .where(and(eq(channels.active, true), publicCatalogChannelCondition())),
-    db
-      .selectDistinct({ title: channels.groupTitle })
-      .from(channels)
-      .innerJoin(streams, availableJoin)
-      .where(and(eq(channels.active, true), publicCatalogChannelCondition())),
-    db
-      .selectDistinct({ language: channels.language })
-      .from(channels)
-      .innerJoin(streams, availableJoin)
-      .where(
-        and(
-          eq(channels.active, true),
-          publicCatalogChannelCondition(),
-          isNotNull(channels.language),
-        ),
-      ),
-    db
-      .selectDistinct({ status: streams.status })
-      .from(channels)
-      .innerJoin(streams, availableJoin)
-      .where(and(eq(channels.active, true), publicCatalogChannelCondition())),
-  ]);
-
+  const rows = await db.selectDistinct({ country: channels.countryCode, group: channels.groupTitle, language: channels.language })
+    .from(channels).where(and(eq(channels.active, true), publicCatalogChannelCondition(), catalogHasVisibleStream()));
+  const unique = (values: string[]) => [...new Set(values)].sort();
   const response = filterOptionsResponseSchema.parse({
-    countries: rawCountries
-      .map(({ code }) => code)
-      .filter((code): code is string => Boolean(code))
-      .sort(),
-    groups: rawGroups
-      .map(({ title }) => title)
-      .filter((title): title is string => Boolean(title))
-      .sort((left, right) => left.localeCompare(right, 'fr')),
-    languages: [
-      ...new Set(
-        rawLanguages.flatMap(({ language }) => parseLanguageCodes(language)),
-      ),
-    ].sort(),
-    statuses: PLAYABLE_STATUSES.filter((status) =>
-      rawStatuses.some((row) => row.status === status),
-    ),
+    countries: unique(rows.flatMap(row => row.country ? [row.country.trim().toUpperCase()] : [])),
+    groups: unique(rows.flatMap(row => categoryCodes(row.group))),
+    languages: unique(rows.flatMap(row => catalogLanguageCodes(row.language))),
+    statuses: [...VISIBLE_STREAM_STATUSES],
   });
-
-  return NextResponse.json(response);
+  return NextResponse.json(response, { headers: { 'Cache-Control': 'private, no-store' } });
 });

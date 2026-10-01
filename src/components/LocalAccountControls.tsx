@@ -1,19 +1,9 @@
 'use client';
 
-import Link from 'next/link';
-import { UserButton, useAuth } from '@clerk/nextjs';
+import { UserButton } from '@clerk/nextjs';
 
 function ClerkAccountControls() {
-  const { sessionClaims } = useAuth();
-  return (
-    <>
-      {sessionClaims?.metadata?.role === 'admin' && (
-        <Link href="/admin" className="text-xs font-semibold text-amber-300 hover:text-amber-200 transition">Administration</Link>
-      )}
-      <Link href="/account" className="text-xs font-semibold text-zinc-300 hover:text-white transition">Compte</Link>
-      <UserButton />
-    </>
-  );
+  return <UserButton />;
 }
 
 export default function LocalAccountControls() {

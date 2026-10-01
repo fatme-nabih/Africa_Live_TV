@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { withApiErrorHandler, BadRequestError } from '@/lib/api-errors';
 import { getDisasterEventsSnapshot } from '@/lib/live-disasters';
 import type { DisasterEventType } from '@/lib/live-disasters-types';
-import { authorizeCatalogRequest } from '@/lib/require-app-access';
+import { authorizeAppRequest } from '@/lib/require-app-access';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -18,7 +18,7 @@ const VALID_EVENT_TYPES = new Set<DisasterEventType>([
 ]);
 
 export const GET = withApiErrorHandler(async (request: Request) => {
-  const authorization = await authorizeCatalogRequest(
+  const authorization = await authorizeAppRequest(
     { bucket: 'live.events.read', limit: 30, windowSeconds: 60 },
     request,
   );

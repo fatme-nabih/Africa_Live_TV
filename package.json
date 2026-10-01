@@ -7,6 +7,8 @@
     "npm": ">=10 <12"
   },
   "scripts": {
+    "predev": "node scripts/prepare-maplibre-worker.mjs",
+    "prebuild": "node scripts/prepare-maplibre-worker.mjs",
     "dev": "next dev --hostname 127.0.0.1 --port 3001",
     "build": "next build",
     "start": "next start --hostname 0.0.0.0",

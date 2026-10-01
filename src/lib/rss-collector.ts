@@ -1,4 +1,6 @@
 import { ServiceUnavailableError } from '@/lib/api-errors';
+import { createHash } from 'node:crypto';
+import { canonicalArticleUrl, normalizeRadarDate, radarSource, temporalWindow, type RadarSourceState } from './radar-data';
 import type {
   FeedConfig,
   RadarRssArticle,
@@ -155,11 +157,7 @@ export function decodeXmlEntities(text: string): string {
     .trim();
 }
 
-function parseDate(rawDate: string | null | undefined): string {
-  if (!rawDate) return new Date().toISOString();
-  const parsed = new Date(rawDate.trim());
-  return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
-}
+const parseDate = normalizeRadarDate;
 
 export function parseFeedXml(xml: string, feed: FeedConfig): RadarRssArticle[] {
   const articles: RadarRssArticle[] = [];
@@ -199,19 +197,13 @@ export function parseFeedXml(xml: string, feed: FeedConfig): RadarRssArticle[] {
       continue;
     }
 
-    // Strip common tracking parameters (utm_*, fbclid, etc.)
-    for (const key of Array.from(articleUrl.searchParams.keys())) {
-      if (/^utm_|^fbclid|^ref/i.test(key)) {
-        articleUrl.searchParams.delete(key);
-      }
-    }
-    const finalUrl = articleUrl.toString();
+    const finalUrl = canonicalArticleUrl(articleUrl.toString());
 
     // 3. Date
     let dateStr: string | null = null;
-    const pubDateMatch = itemXml.match(/<(?:pubDate|dc:date|published|updated)[^>]*>([\s\S]*?)<\/(?:pubDate|dc:date|published|updated)>/i);
+    const pubDateMatch = itemXml.match(/<(pubDate|dc:date|published)[^>]*>([\s\S]*?)<\/\1>/i);
     if (pubDateMatch) {
-      dateStr = decodeXmlEntities(pubDateMatch[1]);
+      dateStr = decodeXmlEntities(pubDateMatch[2]);
     }
     const publishedAt = parseDate(dateStr);
 
@@ -226,10 +218,12 @@ export function parseFeedXml(xml: string, feed: FeedConfig): RadarRssArticle[] {
     }
 
     // 5. Geolocation / Country code
-    const countryCode = detectCountryCode(`${title} ${category}`, feed.defaultCountry);
+    const inferredCountry = detectCountryCode(`${title} ${category}`);
+    const countryCode = inferredCountry ?? feed.defaultCountry;
 
     // 6. ID
-    const id = `${feed.id}-${Buffer.from(finalUrl).toString('base64url').slice(0, 32)}`;
+    const id = `${feed.id}-${createHash('sha256').update(finalUrl).digest('hex')}`;
+    const updatedMatch = itemXml.match(/<updated[^>]*>([\s\S]*?)<\/updated>/i);
 
     articles.push({
       id,
@@ -239,7 +233,9 @@ export function parseFeedXml(xml: string, feed: FeedConfig): RadarRssArticle[] {
       sourceName: feed.name,
       sourceType: 'rss',
       publishedAt,
+      updatedAt: normalizeRadarDate(updatedMatch ? decodeXmlEntities(updatedMatch[1]) : null),
       countryCode,
+      countryBasis: inferredCountry ? 'inferred_topic' : 'media',
       category,
     });
   }
@@ -258,10 +254,12 @@ type CacheEntry = {
 };
 
 let rssCache: CacheEntry | null = null;
+const feedCache = new Map<string, { articles: RadarRssArticle[]; savedAt: number }>();
 let inFlightPromise: Promise<RadarRssSnapshot> | null = null;
 
 export function clearRssCacheForTesting(): void {
   rssCache = null;
+  feedCache.clear();
   inFlightPromise = null;
 }
 
@@ -297,7 +295,6 @@ async function readBoundedText(response: Response, maxBytes: number): Promise<st
 }
 
 async function fetchSingleFeed(feed: FeedConfig): Promise<RadarRssArticle[]> {
-  try {
     const response = await fetch(feed.url, {
       cache: 'no-store',
       redirect: 'follow',
@@ -309,14 +306,12 @@ async function fetchSingleFeed(feed: FeedConfig): Promise<RadarRssArticle[]> {
     });
 
     if (!response.ok) {
-      return [];
+      throw new Error('RSS_HTTP_ERROR');
     }
 
     const xml = await readBoundedText(response, MAX_FEED_BYTES);
+    if (!/<(?:rss|feed|rdf:RDF)[\s>]/i.test(xml)) throw new Error('RSS_INVALID_PAYLOAD');
     return parseFeedXml(xml, feed);
-  } catch {
-    return [];
-  }
 }
 
 async function fetchAllFeeds(): Promise<RadarRssSnapshot> {
@@ -325,19 +320,27 @@ async function fetchAllFeeds(): Promise<RadarRssSnapshot> {
 
   const allArticles: RadarRssArticle[] = [];
   const sourceCounts = new Map<string, number>();
+  const availability: RadarSourceState[] = [];
+  const now = Date.now();
 
   for (let index = 0; index < activeFeeds.length; index++) {
     const feed = activeFeeds[index];
     const outcome = settled[index];
-    if (outcome.status === 'fulfilled' && outcome.value.length > 0) {
+    if (outcome.status === 'fulfilled') {
       allArticles.push(...outcome.value);
       sourceCounts.set(feed.id, outcome.value.length);
+      feedCache.set(feed.id, { articles: outcome.value, savedAt: now });
+      availability.push(radarSource(feed.name, 'Afrique · pays du sujet inféré', now, RSS_TTL_MS, outcome.value.length, { limit: 150, dataAt: outcome.value.find(a => a.publishedAt)?.publishedAt }));
     } else {
-      sourceCounts.set(feed.id, 0);
+      const cached = feedCache.get(feed.id);
+      const reusable = cached && now - cached.savedAt <= RSS_MAX_STALE_MS;
+      if (reusable) allArticles.push(...cached.articles);
+      sourceCounts.set(feed.id, reusable ? cached.articles.length : 0);
+      availability.push(radarSource(feed.name, 'Afrique · pays du sujet inféré', now, RSS_TTL_MS, reusable ? cached.articles.length : 0, { status: reusable ? 'stale' : 'unavailable', lastSuccessAt: cached ? new Date(cached.savedAt).toISOString() : null, limit: 150 }));
     }
   }
 
-  if (allArticles.length === 0) {
+  if (availability.every(source => source.status === 'unavailable')) {
     throw new Error('No articles could be retrieved from any African RSS feed.');
   }
 
@@ -346,28 +349,30 @@ async function fetchAllFeeds(): Promise<RadarRssSnapshot> {
   const deduplicatedArticles: RadarRssArticle[] = [];
 
   for (const article of allArticles) {
-    const key = article.url.toLowerCase();
+    const key = canonicalArticleUrl(article.url);
     if (seenUrls.has(key)) continue;
     seenUrls.add(key);
     deduplicatedArticles.push(article);
   }
 
   // Sort descending by date
-  deduplicatedArticles.sort((a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt));
+  deduplicatedArticles.sort((a, b) => (Date.parse(b.publishedAt ?? '') || 0) - (Date.parse(a.publishedAt ?? '') || 0));
 
   const sources: RssSourceMetric[] = activeFeeds.map((feed) => ({
     id: feed.id,
     name: feed.name,
     domain: feed.domain,
     count: sourceCounts.get(feed.id) ?? 0,
+    availability: availability.find(source => source.provider === feed.name),
   }));
 
-  const now = Date.now();
   const snapshot: RadarRssSnapshot = {
     articles: deduplicatedArticles.slice(0, 150),
     sources,
     updatedAt: new Date(now).toISOString(),
-    stale: false,
+    stale: availability.some(source => source.status === 'stale'),
+    partial: availability.some(source => source.status === 'unavailable' || source.status === 'stale'),
+    availability,
   };
 
   rssCache = {
@@ -401,9 +406,6 @@ export async function getRadarRss(query?: {
     const snapshot = await inFlightPromise;
     return filterSnapshot(snapshot, query);
   } catch {
-    if (rssCache && now - rssCache.savedAt <= RSS_MAX_STALE_MS) {
-      return filterSnapshot({ ...rssCache.snapshot, stale: true }, query);
-    }
     throw new ServiceUnavailableError(
       'Le service de dépêches des rédactions africaines est temporairement indisponible.',
       'LIVE_RSS_UNAVAILABLE',
@@ -433,8 +435,12 @@ function filterSnapshot(
     articles = articles.slice(0, Math.min(query.limit, 150));
   }
 
+  const windowed = temporalWindow(articles, article => article.publishedAt, Date.now());
   return {
-    articles,
+    ...snapshot,
+    articles: windowed.recent,
+    undatedArticles: windowed.undated,
+    window: windowed.window,
     sources: snapshot.sources,
     updatedAt: snapshot.updatedAt,
     stale: snapshot.stale,

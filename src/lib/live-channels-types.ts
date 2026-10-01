@@ -4,6 +4,7 @@ export interface CountryChannelCount {
   countryCode: string;
   channelCount: number;
   directWebCount: number;
+  directVlcCount?: number;
 }
 
 export interface LiveChannelsSummarySnapshot {
@@ -11,6 +12,7 @@ export interface LiveChannelsSummarySnapshot {
   countries: Record<string, CountryChannelCount>;
   totalChannels: number;
   totalDirectWeb: number;
+  totalDirectVlc?: number;
   stale?: boolean;
 }
 

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { UserButton } from '@clerk/nextjs';
 import { getAdministratorAccess } from '@/lib/admin-access';
-import BrandLogo from '@/components/BrandLogo';
+import AppNavigation, { AppBrand, NavigationProvider } from '@/components/AppNavigation';
 import BrandWatermark from '@/components/BrandWatermark';
 import AdminSupportQueue from '@/components/AdminSupportQueue';
 
@@ -22,15 +22,9 @@ export default async function AdminPage() {
       <BrandWatermark />
 
       <div className="relative z-10 mx-auto max-w-4xl">
-        <nav className="mb-10 flex items-center justify-between gap-4 border-b border-white/[0.08] pb-5">
-          <Link href="/app" className="group flex items-center gap-3">
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400/10 border border-amber-400/25 p-1">
-              <BrandLogo className="h-full w-full" />
-            </div>
-            <span className="text-base font-bold tracking-tight text-white group-hover:text-amber-300 transition">
-              Africa Live
-            </span>
-          </Link>
+        <nav className="mb-10 flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.08] pb-5">
+          <AppBrand />
+          <NavigationProvider admin={true}><AppNavigation /></NavigationProvider>
           <UserButton />
         </nav>
         <section className="rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-6 sm:p-10 shadow-xl shadow-black/40">

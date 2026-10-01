@@ -13,6 +13,9 @@ test('catalogue is accessible without an account and pagination stays consistent
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
+  await expect(page).toHaveURL(/\/app\/live$/);
+  await expect(page.getByRole('heading', { name: /Radar Afrique/ })).toBeVisible();
+  await page.getByRole('link', { name: 'TV', exact: true }).click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(page).toHaveTitle('Africa Live — Catalogue unifié');
   await expect(page.getByText('Version locale', { exact: true })).toBeVisible();

@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 
 import { withApiErrorHandler } from '@/lib/api-errors';
-import { authorizeCatalogRequest } from '@/lib/require-app-access';
+import { authorizeAppRequest } from '@/lib/require-app-access';
 import { getRadarRss } from '@/lib/rss-collector';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export const GET = withApiErrorHandler(async (request: Request) => {
-  const authorization = await authorizeCatalogRequest(
+  const authorization = await authorizeAppRequest(
     { bucket: 'live.rss.read', limit: 30, windowSeconds: 60 },
     request,
   );

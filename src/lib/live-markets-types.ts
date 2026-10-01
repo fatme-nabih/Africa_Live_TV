@@ -61,7 +61,10 @@ export interface MarketTickerAlert {
   /** Lien source externe */
   url?: string;
   /** Horodatage ISO */
-  timestamp: string;
+  timestamp: string | null;
+  scope?: 'Africa' | 'World' | 'unknown';
+  source?: string;
+  dateKind?: 'publication' | 'event';
 }
 
 export interface LiveMarketsSnapshot {
@@ -75,4 +78,5 @@ export interface LiveMarketsSnapshot {
   updatedAt: string;
   /** Mention légale et sources open data */
   disclaimer: string;
+  availability?: import('./radar-data').RadarSourceState[];
 }

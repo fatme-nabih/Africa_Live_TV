@@ -47,6 +47,7 @@ export function catalogCursorContext(input: {
   clerkSessionId: string | null;
   search: string;
   country: string;
+  region?: '' | 'africa';
   group: string;
   language: string;
   status: string;
@@ -60,6 +61,7 @@ export function catalogCursorContext(input: {
         input.clerkSessionId,
         normalizeCatalogSearch(input.search),
         input.country.toUpperCase(),
+        input.region ?? '',
         input.group,
         input.language.toLowerCase(),
         input.status,

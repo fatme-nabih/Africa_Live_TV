@@ -1,349 +1,136 @@
-/**
- * Africa Live — Moteur d'Agrégation Marchés Économiques & Ticker OSINT (RAD-403)
- *
- * Collecte et normalise en temps réel :
- * 1. Matières premières stratégiques pour l'Afrique (Cacao Abidjan/Accra, Pétrole Brent, Or).
- * 2. Devises clés (EUR/XOF, EUR/XAF parités fixes BCEAO/BEAC, USD/XOF flottant).
- * 3. Alertes d'urgence combinées (séismes majeurs USGS, alertes GDACS, dépêches chaudes Ecofin/APS).
- *
- * 100 % open data sans clé API propriétaire. Cache mémoire de 15 minutes.
- */
-
-import type {
-  LiveMarketsSnapshot,
-  MarketCommodity,
-  MarketForex,
-  MarketTickerAlert,
-} from './live-markets-types';
+import type { LiveMarketsSnapshot, MarketCommodity, MarketForex, MarketTickerAlert } from './live-markets-types';
 import { getDisasterEventsSnapshot } from './live-disasters';
 import { getRadarRss } from './rss-collector';
+import { AFRICAN_COUNTRIES } from './live-osint';
+import { radarSource, temporalWindow, type RadarSourceState } from './radar-data';
+export { formatMarketPrice, formatVariation } from './market-format';
 
-/** Durée de validité du cache mémoire : 15 minutes */
-const MARKETS_CACHE_TTL_MS = 15 * 60 * 1000;
-const FETCH_TIMEOUT_MS = 5000;
-
-/** Parité institutionnelle officielle fixe Euro / Franc CFA (Traité UEMOA / CEMAC) */
 export const PEGGED_EUR_XOF_RATE = 655.957;
 export const PEGGED_EUR_XAF_RATE = 655.957;
-
-interface CachedMarkets {
-  snapshot: LiveMarketsSnapshot;
-  cachedAt: number;
-}
-
-let marketsCache: CachedMarkets | null = null;
-
-/** Définition des matières premières stratégiques africaines suivies */
-interface CommodityDefinition {
-  symbol: string;
-  name: string;
-  label: string;
-  unit: string;
-  defaultPrice: number;
-  source: string;
-}
-
-const STRATEGIC_COMMODITIES: CommodityDefinition[] = [
-  {
-    symbol: 'CC=F',
-    name: 'Cacao',
-    label: 'Cacao (Abidjan / Accra)',
-    unit: '$/tonne',
-    defaultPrice: 5350,
-    source: 'ICE US / Marchés mondiaux',
-  },
-  {
-    symbol: 'BZ=F',
-    name: 'Pétrole Brent',
-    label: 'Pétrole Brent',
-    unit: '$/baril',
-    defaultPrice: 98.5,
-    source: 'ICE Europe / Mer du Nord',
-  },
-  {
-    symbol: 'GC=F',
-    name: 'Or',
-    label: 'Or métal (Once)',
-    unit: '$/oz',
-    defaultPrice: 4180.0,
-    source: 'COMEX / Métaux précieux',
-  },
+const TTL = 15 * 60_000;
+const MAX_STALE = 6 * 60 * 60_000;
+let cache: { snapshot: LiveMarketsSnapshot; at: number } | null = null;
+let inFlight: Promise<LiveMarketsSnapshot> | null = null;
+const quotes = new Map<string, { value: MarketCommodity; at: number }>();
+let forexCache: { value: MarketForex[]; at: number } | null = null;
+const definitions = [
+  { symbol: 'CC=F', name: 'Cacao', label: 'Cacao · marché mondial', unit: '$/tonne', source: 'Yahoo Finance / ICE US' },
+  { symbol: 'BZ=F', name: 'Pétrole Brent', label: 'Pétrole Brent · marché mondial', unit: '$/baril', source: 'Yahoo Finance / ICE Europe' },
+  { symbol: 'GC=F', name: 'Or', label: 'Or · marché mondial', unit: '$/oz', source: 'Yahoo Finance / COMEX' },
 ];
 
-/**
- * Récupère les cotations d'une matière première via l'API publique de marché
- */
-async function fetchCommodityQuote(def: CommodityDefinition): Promise<MarketCommodity> {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(def.symbol)}?interval=1d&range=5d`;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
+async function readJson(url: string) {
+  const response = await fetch(url, { cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(5000) });
+  if (!response.ok) throw new Error('MARKET_UPSTREAM_ERROR');
+  if (Number(response.headers.get('content-length')) > 2_000_000) throw new Error('MARKET_PAYLOAD_TOO_LARGE');
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error('MARKET_PAYLOAD_EMPTY');
+  let size = 0, text = '';
+  const decoder = new TextDecoder();
   try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AfricaLive/1.0',
-        Accept: 'application/json',
-      },
-      signal: controller.signal,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+    while (true) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      size += chunk.value.byteLength;
+      if (size > 2_000_000) { await reader.cancel(); throw new Error('MARKET_PAYLOAD_TOO_LARGE'); }
+      text += decoder.decode(chunk.value, { stream: true });
     }
+    return JSON.parse(text + decoder.decode());
+  } finally { reader.releaseLock(); }
+}
 
-    const json = await response.json();
-    const meta = json?.chart?.result?.[0]?.meta;
-    const price = typeof meta?.regularMarketPrice === 'number' ? meta.regularMarketPrice : def.defaultPrice;
-    const prevClose = typeof meta?.chartPreviousClose === 'number' ? meta.chartPreviousClose : null;
-
-    let changePercent24h: number | null = null;
-    if (typeof meta?.regularMarketChangePercent === 'number') {
-      changePercent24h = Number(meta.regularMarketChangePercent.toFixed(2));
-    } else if (prevClose !== null && prevClose > 0) {
-      changePercent24h = Number((((price - prevClose) / prevClose) * 100).toFixed(2));
-    }
-
-    return {
-      symbol: def.symbol,
-      name: def.name,
-      label: def.label,
-      price: Number(price.toFixed(2)),
-      previousClose: prevClose ? Number(prevClose.toFixed(2)) : null,
-      changePercent24h,
-      currency: meta?.currency || 'USD',
-      unit: def.unit,
-      updatedAt: new Date().toISOString(),
-      source: def.source,
-    };
+async function commodity(def: typeof definitions[number], now: number) {
+  try {
+    const payload = await readJson(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(def.symbol)}?interval=1d&range=5d`);
+    const meta = payload?.chart?.result?.[0]?.meta;
+    if (!Number.isFinite(meta?.regularMarketPrice) || meta.regularMarketPrice <= 0 || !Number.isFinite(meta?.regularMarketTime)) throw new Error('MARKET_INVALID_QUOTE');
+    const updatedAt = new Date(meta.regularMarketTime * 1000).toISOString();
+    if (Date.parse(updatedAt) > now) throw new Error('MARKET_FUTURE_QUOTE');
+    const previousClose = Number.isFinite(meta.chartPreviousClose) && meta.chartPreviousClose > 0 ? meta.chartPreviousClose : null;
+    const value: MarketCommodity = { ...def, price: meta.regularMarketPrice, previousClose,
+      changePercent24h: previousClose ? (meta.regularMarketPrice - previousClose) / previousClose * 100 : null,
+      currency: typeof meta.currency === 'string' ? meta.currency : 'USD', updatedAt };
+    quotes.set(def.symbol, { value, at: now });
+    return { value, source: radarSource(def.source, 'Monde · dernière séance', now, TTL, 1, { dataAt: updatedAt }) };
   } catch {
-    // En cas de panne temporaire du fournisseur amont, renvoie la cotation de référence résiliente
-    return {
-      symbol: def.symbol,
-      name: def.name,
-      label: def.label,
-      price: def.defaultPrice,
-      previousClose: def.defaultPrice,
-      changePercent24h: 0.0,
-      currency: 'USD',
-      unit: def.unit,
-      updatedAt: new Date().toISOString(),
-      source: `${def.source} (Référence)`,
-    };
-  } finally {
-    clearTimeout(timeoutId);
+    const cached = quotes.get(def.symbol);
+    const usable = cached && now - cached.at <= MAX_STALE;
+    return { value: usable ? cached.value : null, source: radarSource(def.source, 'Monde · dernière séance', now, TTL, usable ? 1 : 0,
+      { status: usable ? 'stale' : 'unavailable', lastSuccessAt: cached ? new Date(cached.at).toISOString() : null, dataAt: cached?.value.updatedAt }) };
   }
 }
 
-/**
- * Récupère les taux de change mondiaux (open.er-api.com, gratuit, sans clé)
- * et calcule les parités FCFA UEMOA / CEMAC.
- */
-async function fetchForexRates(): Promise<MarketForex[]> {
-  const url = 'https://open.er-api.com/v6/latest/USD';
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
-  let usdToEur = 0.88;
-  let usdToXof = 580.0;
-  let isLiveRate = false;
-
-  try {
-    const response = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
-      },
-      signal: controller.signal,
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data?.result === 'success' && data.rates) {
-        if (typeof data.rates.EUR === 'number' && data.rates.EUR > 0) {
-          usdToEur = data.rates.EUR;
-        }
-        if (typeof data.rates.XOF === 'number' && data.rates.XOF > 0) {
-          usdToXof = data.rates.XOF;
-        } else if (usdToEur > 0) {
-          // Calcul dérivé via parité officielle EUR/XOF si XOF n'est pas coté en direct
-          usdToXof = (1 / usdToEur) * PEGGED_EUR_XOF_RATE;
-        }
-        isLiveRate = true;
-      }
-    }
-  } catch {
-    // Taux de repli sécurisés
-    usdToEur = 0.92;
-    usdToXof = (1 / usdToEur) * PEGGED_EUR_XOF_RATE;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-
-  const nowIso = new Date().toISOString();
-  const sourceLabel = isLiveRate ? 'BCEAO / Open Rates' : 'Parité officielle / Référence';
-
-  return [
-    {
-      pair: 'EUR / XOF',
-      base: 'EUR',
-      quote: 'XOF',
-      rate: PEGGED_EUR_XOF_RATE,
-      label: 'Franc CFA UEMOA (Taux officiel fixe)',
-      isPegged: true,
-      updatedAt: nowIso,
-      source: 'Banque Centrale des États de l’Afrique de l’Ouest (BCEAO)',
-    },
-    {
-      pair: 'EUR / XAF',
-      base: 'EUR',
-      quote: 'XAF',
-      rate: PEGGED_EUR_XAF_RATE,
-      label: 'Franc CFA CEMAC (Taux officiel fixe)',
-      isPegged: true,
-      updatedAt: nowIso,
-      source: 'Banque des États de l’Afrique Centrale (BEAC)',
-    },
-    {
-      pair: 'USD / XOF',
-      base: 'USD',
-      quote: 'XOF',
-      rate: Number(usdToXof.toFixed(2)),
-      label: 'Dollar US / Franc CFA (Flottant)',
-      isPegged: false,
-      updatedAt: nowIso,
-      source: sourceLabel,
-    },
-    {
-      pair: 'USD / EUR',
-      base: 'USD',
-      quote: 'EUR',
-      rate: Number(usdToEur.toFixed(4)),
-      label: 'Dollar US / Euro',
-      isPegged: false,
-      updatedAt: nowIso,
-      source: sourceLabel,
-    },
+async function forex(now: number) {
+  const fixed: MarketForex[] = [
+    { pair: 'EUR / XOF', base: 'EUR', quote: 'XOF', rate: PEGGED_EUR_XOF_RATE, label: 'Parité fixe UEMOA', isPegged: true, updatedAt: '', source: 'BCEAO · parité institutionnelle' },
+    { pair: 'EUR / XAF', base: 'EUR', quote: 'XAF', rate: PEGGED_EUR_XAF_RATE, label: 'Parité fixe CEMAC', isPegged: true, updatedAt: '', source: 'BEAC · parité institutionnelle' },
   ];
+  try {
+    const payload = await readJson('https://open.er-api.com/v6/latest/USD');
+    if (payload?.result !== 'success' || !Number.isFinite(payload.rates?.EUR) || payload.rates.EUR <= 0 || !Number.isFinite(payload.time_last_update_unix)) throw new Error('FOREX_INVALID_PAYLOAD');
+    const date = new Date(payload.time_last_update_unix * 1000).toISOString();
+    if (Date.parse(date) > now) throw new Error('FOREX_FUTURE_RATE');
+    const value: MarketForex[] = [
+      { pair: 'USD / EUR', base: 'USD', quote: 'EUR', rate: payload.rates.EUR, label: 'Taux indicatif mondial', isPegged: false, updatedAt: date, source: 'ExchangeRate-API' },
+      { pair: 'USD / XOF', base: 'USD', quote: 'XOF', rate: Number.isFinite(payload.rates.XOF) && payload.rates.XOF > 0 ? payload.rates.XOF : PEGGED_EUR_XOF_RATE / payload.rates.EUR, label: 'Taux indicatif dérivé', isPegged: false, updatedAt: date, source: 'ExchangeRate-API / parité BCEAO' },
+    ];
+    forexCache = { value, at: now };
+    return { value: [...fixed, ...value], source: radarSource('ExchangeRate-API', 'Monde · devises', now, TTL, value.length, { dataAt: date }) };
+  } catch {
+    const usable = forexCache && now - forexCache.at <= MAX_STALE ? forexCache : null;
+    return { value: [...fixed, ...(usable?.value ?? [])], source: radarSource('ExchangeRate-API', 'Monde · devises', now, TTL, usable?.value.length ?? 0,
+      { status: usable ? 'stale' : 'unavailable', lastSuccessAt: forexCache ? new Date(forexCache.at).toISOString() : null, dataAt: forexCache?.value[0]?.updatedAt }) };
+  }
 }
 
-/**
- * Récupère les alertes chaudes et critiques pour le bandeau défilant :
- * - Séismes M5.0+ ou catastrophes GDACS Orange/Red
- * - Dépêches urgentes éco/politique récentes
- */
-async function fetchTickerAlerts(): Promise<MarketTickerAlert[]> {
-  const alerts: MarketTickerAlert[] = [];
-
-  try {
-    const disastersSnapshot = await getDisasterEventsSnapshot();
-    for (const feat of disastersSnapshot.features) {
-      const p = feat.properties;
-      const isCritical = p.severity === 'red' || (typeof p.magnitude === 'number' && p.magnitude >= 5.5);
-      const isWarning = p.severity === 'orange' || (typeof p.magnitude === 'number' && p.magnitude >= 4.8);
-      if (isCritical || isWarning) {
-        alerts.push({
-          id: `disaster-${p.id}`,
-          type: 'disaster',
-          title: `${p.eventType === 'earthquake' ? 'Séisme' : 'Catastrophe GDACS'} : ${p.title}`,
-          severity: isCritical ? 'critical' : 'warning',
-          countryCode: p.countryName ?? undefined,
-          url: p.sourceUrl,
-          timestamp: p.eventDate,
-        });
-      }
-      if (alerts.length >= 4) break;
-    }
-  } catch {
-    // Si indisponible, continue sans bloquer le ticker
-  }
-
-  try {
-    const rssSnapshot = await getRadarRss();
-    const ecoArticles = rssSnapshot.articles
-      .filter((a) => a.category === 'Économie' || a.sourceName === 'Agence Ecofin')
-      .slice(0, 3);
-
-    for (const art of ecoArticles) {
-      alerts.push({
-        id: `news-${art.id}`,
-        type: 'news',
-        title: `[${art.sourceName}] ${art.title}`,
-        severity: 'info',
-        countryCode: art.countryCode ?? undefined,
-        url: art.url,
-        timestamp: art.publishedAt,
-      });
-      if (alerts.length >= 6) break;
-    }
-  } catch {
-    // Continue sans bloquer
-  }
-
-  return alerts;
+function countryCode(name: string | undefined) {
+  if (!name) return undefined;
+  const english = new Intl.DisplayNames(['en'], { type: 'region' });
+  return AFRICAN_COUNTRIES.find(c => [c.code, c.name, english.of(c.code)].some(candidate => candidate?.toLowerCase() === name.toLowerCase()))?.code;
 }
 
-/**
- * Point d'entrée principal : récupère la synthèse des marchés et du ticker
- */
+async function tickerAlerts(now: number) {
+  const alerts: MarketTickerAlert[] = [], availability: RadarSourceState[] = [];
+  const settled = await Promise.allSettled([getDisasterEventsSnapshot(), getRadarRss()]);
+  const disasters = settled[0];
+  if (disasters.status === 'fulfilled') {
+    availability.push(...disasters.value.metadata.availability ?? []);
+    for (const feature of disasters.value.features) {
+      const p = feature.properties;
+      if (p.severity !== 'red' && p.severity !== 'orange' && (p.magnitude ?? 0) < 4.8) continue;
+      const code = countryCode(p.countryName);
+      alerts.push({ id: `disaster-${p.source}-${p.id}`, type: 'disaster', title: p.title, severity: p.severity === 'red' ? 'critical' : 'warning',
+        countryCode: code, scope: code ? 'Africa' : 'unknown', source: p.source, dateKind: 'event', url: p.sourceUrl, timestamp: p.eventDate });
+    }
+  } else availability.push(radarSource('USGS / GDACS', 'Événements', now, TTL, 0, { status: 'unavailable' }));
+  const rss = settled[1];
+  if (rss.status === 'fulfilled') {
+    availability.push(...rss.value.availability ?? []);
+    for (const article of [...rss.value.articles, ...rss.value.undatedArticles ?? []]) {
+      if (!/économ|finance/i.test(article.category) && article.sourceName !== 'Agence Ecofin') continue;
+      alerts.push({ id: `news-${article.id}`, type: 'news', title: article.title, severity: 'info', source: article.sourceName,
+        dateKind: 'publication', countryCode: article.countryCode ?? undefined, scope: article.countryCode ? 'Africa' : 'unknown', url: article.url, timestamp: article.publishedAt });
+    }
+  } else availability.push(radarSource('RSS', 'Afrique', now, TTL, 0, { status: 'unavailable' }));
+  const windowed = temporalWindow(alerts, alert => alert.timestamp, now);
+  return { alerts: [...windowed.recent, ...windowed.undated].slice(0, 12), availability };
+}
+
 export async function getLiveMarkets(options: { forceRefresh?: boolean } = {}): Promise<LiveMarketsSnapshot> {
   const now = Date.now();
-
-  if (!options.forceRefresh && marketsCache && now - marketsCache.cachedAt < MARKETS_CACHE_TTL_MS) {
-    return marketsCache.snapshot;
+  if (!options.forceRefresh && cache && now - cache.at < TTL) {
+    const windowed = temporalWindow(cache.snapshot.alerts, alert => alert.timestamp, now);
+    return { ...cache.snapshot, alerts: [...windowed.recent, ...windowed.undated] };
   }
-
-  const [commodities, forex, alerts] = await Promise.all([
-    Promise.all(STRATEGIC_COMMODITIES.map((c) => fetchCommodityQuote(c))),
-    fetchForexRates(),
-    fetchTickerAlerts(),
-  ]);
-
-  const snapshot: LiveMarketsSnapshot = {
-    commodities,
-    forex,
-    alerts,
-    updatedAt: new Date().toISOString(),
-    disclaimer: 'Cotations de référence et cours indicatifs à usage informatif. Parités officielles BCEAO/BEAC.',
-  };
-
-  marketsCache = {
-    snapshot,
-    cachedAt: now,
-  };
-
-  return snapshot;
+  if (!inFlight) inFlight = (async () => {
+    const [commodityResults, currencies, ticker] = await Promise.all([Promise.all(definitions.map(def => commodity(def, now))), forex(now), tickerAlerts(now)]);
+    const snapshot: LiveMarketsSnapshot = {
+      commodities: commodityResults.flatMap(result => result.value ? [result.value] : []), forex: currencies.value, alerts: ticker.alerts,
+      updatedAt: new Date(now).toISOString(), availability: [...commodityResults.map(result => result.source), currencies.source, ...ticker.availability],
+      disclaimer: 'Dernières cotations disponibles, à usage informatif ; dates de séance distinctes de la collecte. Parités fixes BCEAO/BEAC.' };
+    cache = { snapshot, at: now };
+    return snapshot;
+  })().finally(() => { inFlight = null; });
+  return inFlight;
 }
-
-/**
- * Réinitialise le cache mémoire (utile pour les tests unitaires)
- */
-export function clearMarketsCache(): void {
-  marketsCache = null;
-}
-
-/**
- * Formate un prix avec sa devise et son unité pour affichage dans le bandeau
- */
-export function formatMarketPrice(price: number, currency: string, unit: string): string {
-  const formattedNumber = new Intl.NumberFormat('fr-FR', {
-    maximumFractionDigits: price >= 100 ? 2 : 4,
-    minimumFractionDigits: 2,
-  }).format(price);
-
-  return `${formattedNumber} ${currency} / ${unit.replace('$/', '')}`;
-}
-
-/**
- * Formate une variation en pourcentage avec signe (+/-) et couleur associée
- */
-export function formatVariation(variation: number | null): { text: string; isPositive: boolean; isNeutral: boolean } {
-  if (variation === null || Number.isNaN(variation) || variation === 0) {
-    return { text: '0.00 %', isPositive: false, isNeutral: true };
-  }
-
-  const sign = variation > 0 ? '+' : '';
-  return {
-    text: `${sign}${variation.toFixed(2)} %`,
-    isPositive: variation > 0,
-    isNeutral: false,
-  };
-}
+export function clearMarketsCache() { cache = null; inFlight = null; quotes.clear(); forexCache = null; }

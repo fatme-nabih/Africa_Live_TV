@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import BrandLogo from '@/components/BrandLogo';
+import AppNavigation, { AppBrand } from '@/components/AppNavigation';
+import { useCatalogFilters } from '@/components/useCatalogFilters';
 import BrandWatermark from '@/components/BrandWatermark';
 import LocalAccountControls from '@/components/LocalAccountControls';
 import FilterSidebar from '@/components/FilterSidebar';
 import ChannelGrid from '@/components/ChannelGrid';
-import CategoryTabs, { type CategoryPreset } from '@/components/CategoryTabs';
+import CategoryTabs from '@/components/CategoryTabs';
 import InlinePlayerModal from '@/components/InlinePlayerModal';
 import {
   catalogRequestSchema,
@@ -19,8 +20,8 @@ import {
 } from '@/lib/api-contracts';
 import { LatestRequestController, SingleFlightGate } from '@/lib/latest-request';
 import { launchPlayer, type PlayerWindowHandle } from '@/lib/player-window';
-import type { Channel, ChannelFilters } from '@/types/channel';
-import { AlertCircle, ExternalLink, Filter, LayoutGrid, LayoutList, List, MonitorPlay, Play, Radar, RefreshCw, X } from 'lucide-react';
+import type { Channel } from '@/types/channel';
+import { AlertCircle, ExternalLink, Filter, LayoutGrid, LayoutList, List, MonitorPlay, Play, RefreshCw, X } from 'lucide-react';
 
 
 const VLC_NOTICE_STORAGE_KEY = 'iptv_vlc_notice_dismissed';
@@ -96,20 +97,10 @@ function getServerVlcNoticeSnapshot() {
   return true;
 }
 
-function areBaseFiltersEqual(
-  current: ChannelFilters,
-  next: ChannelFilters,
-) {
-  return (
-    current.search === next.search &&
-    current.country === next.country &&
-    current.group === next.group &&
-    current.language === next.language &&
-    current.status === next.status
-  );
-}
+export default function Home() { return <Suspense fallback={<p>Chargement du catalogue…</p>}><CatalogWorkspace /></Suspense>; }
 
-export default function Home() {
+function CatalogWorkspace() {
+  const { filters: baseFilters, favoritesOnly: showFavoritesOnly, activePresetId, update: handleFilterChange, setFavoritesOnly: handleShowFavoritesOnlyChange, selectPreset: handleSelectCategoryPreset, reset: resetFilters } = useCatalogFilters();
   const playerWindowRef = useRef<PlayerWindowHandle | null>(null);
   const catalogRequestsRef = useRef<LatestRequestController | null>(null);
   const favoriteSyncRequestsRef = useRef<LatestRequestController | null>(null);
@@ -123,12 +114,10 @@ export default function Home() {
   const [canPlay, setCanPlay] = useState(true);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [isInlinePlayerOpen, setIsInlinePlayerOpen] = useState(false);
-  const [activePresetId, setActivePresetId] = useState('all');
   const [playerWindowStatus, setPlayerWindowStatus] = useState<'idle' | 'open' | 'blocked' | 'closed'>('idle');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [favorites, setFavorites] = useState<string[]>([]);
   const [favoritesHydrated, setFavoritesHydrated] = useState(false);
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [favoritesRevision, setFavoritesRevision] = useState(0);
   const [favoriteError, setFavoriteError] = useState<string | null>(null);
   const showVlcNotice = useSyncExternalStore(
@@ -139,16 +128,9 @@ export default function Home() {
 
   const [loading, setLoading] = useState(false);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const closeMobileFilters = useCallback(() => setIsMobileFiltersOpen(false), []);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [catalogError, setCatalogError] = useState<string | null>(null);
-  const [baseFilters, setBaseFilters] = useState<ChannelFilters>({
-    search: '',
-    country: '',
-    group: '',
-    language: '',
-    status: '',
-  });
-
   const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (baseFilters.search) count++;
@@ -156,6 +138,7 @@ export default function Home() {
     if (baseFilters.group) count++;
     if (baseFilters.language) count++;
     if (baseFilters.status) count++;
+    if (baseFilters.region) count++;
     if (showFavoritesOnly) count++;
     return count;
   }, [baseFilters, showFavoritesOnly]);
@@ -165,11 +148,11 @@ export default function Home() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        const input = document.getElementById('catalog-search') as HTMLInputElement | null;
-        if (input) {
-          input.focus();
-          input.select();
-        }
+        if (!window.matchMedia('(min-width: 1024px)').matches) setIsMobileFiltersOpen(true);
+        window.requestAnimationFrame(() => {
+          const input = document.getElementById('catalog-search') as HTMLInputElement | null;
+          input?.focus(); input?.select();
+        });
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -180,6 +163,8 @@ export default function Home() {
   const catalogRequest = useMemo<CatalogRequest>(
     () => ({
       ...baseFilters,
+      region: baseFilters.region ?? '',
+      search: baseFilters.search.trim().length >= 2 ? baseFilters.search : '',
       favoritesOnly: showFavoritesOnly,
       cursor: null,
       limit: 30,
@@ -349,14 +334,6 @@ export default function Home() {
     }
   }, []);
 
-  const handleFilterChange = useCallback((newFilters: ChannelFilters) => {
-    setBaseFilters((current) => (areBaseFiltersEqual(current, newFilters) ? current : newFilters));
-  }, []);
-
-  const handleShowFavoritesOnlyChange = useCallback((value: boolean) => {
-    setShowFavoritesOnly(value);
-  }, []);
-
   const handleLoadMore = useCallback(() => {
     if (!nextCursor || loading || loadingMoreGateRef.current.isActive()) return;
     void fetchChannels({ ...catalogRequest, cursor: nextCursor }, true);
@@ -364,16 +341,18 @@ export default function Home() {
 
   useEffect(() => {
     let active = true;
-    queueMicrotask(() => {
+    queueMicrotask(() => { if (active) { setChannels([]); setNextCursor(null); setLoading(true); } });
+    const timer = window.setTimeout(() => {
       if (!active) return;
       loadingMoreGateRef.current.leave();
       void fetchChannels(catalogRequest, false);
-    });
+    }, baseFilters.search ? 300 : 0);
     return () => {
       active = false;
+      window.clearTimeout(timer);
       catalogRequestsRef.current?.abort();
     };
-  }, [catalogRequest, favoritesRevision, fetchChannels]);
+  }, [catalogRequest, baseFilters.search, favoritesRevision, fetchChannels]);
 
   const retryCatalog = useCallback(() => {
     void fetchChannels(catalogRequest, false);
@@ -403,23 +382,8 @@ export default function Home() {
 
   const handleSelectChannel = useCallback((channel: Channel) => {
     setSelectedChannel(channel);
-    setIsInlinePlayerOpen(true);
-  }, []);
-
-  const handleSelectCategoryPreset = useCallback((preset: CategoryPreset) => {
-    setActivePresetId(preset.id);
-    if (preset.favoritesOnly) {
-      setShowFavoritesOnly(true);
-      setBaseFilters((prev) => ({ ...prev, group: '', country: '' }));
-    } else {
-      setShowFavoritesOnly(false);
-      setBaseFilters((prev) => ({
-        ...prev,
-        group: preset.group ?? '',
-        country: preset.country ?? '',
-      }));
-    }
-  }, []);
+    setIsInlinePlayerOpen(canPlay);
+  }, [canPlay]);
 
   useEffect(() => {
     if (playerWindowStatus !== 'open') return;
@@ -459,25 +423,9 @@ export default function Home() {
       {/* Entête */}
       <header className="sticky top-0 z-40 border-b border-white/[0.07] bg-black/50 px-4 py-2.5 shadow-2xl backdrop-blur-2xl sm:px-6 sm:py-3">
         <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-tricolor-bar opacity-80" />
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-          <Link
-            href="/"
-            aria-label="Retour à la page d’accueil Africa Live"
-            className="group flex items-center gap-2.5 rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 sm:gap-3"
-          >
-            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.03] p-1 ring-1 ring-white/10 transition group-hover:ring-amber-400/40 sm:h-11 sm:w-11">
-              <BrandLogo className="h-full w-full drop-shadow-[0_2px_8px_rgba(250,204,21,0.25)]" />
-            </div>
-            <div className="hidden flex-col sm:flex">
-              <div className="flex items-center gap-0.5">
-                <span className="text-base font-black tracking-tight text-white sm:text-lg">Africa Live</span>
-                <span className="text-lg font-black text-amber-400">.</span>
-              </div>
-              <span className="-mt-0.5 hidden text-[9px] font-bold uppercase tracking-[0.16em] text-zinc-500 sm:block">
-                Le direct panafricain
-              </span>
-            </div>
-          </Link>
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+          <AppBrand />
+          <AppNavigation country={baseFilters.country} />
 
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Mobile Filter Trigger Button */}
@@ -495,14 +443,6 @@ export default function Home() {
                 </span>
               )}
             </button>
-
-            <Link
-              href="/app/live"
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-emerald-300/20 bg-emerald-300/[0.07] px-2.5 py-1.5 text-xs font-bold text-emerald-100 transition hover:border-emerald-300/40 hover:bg-emerald-300/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:px-3"
-            >
-              <Radar aria-hidden="true" className="h-3.5 w-3.5" />
-              <span>Radar Live</span>
-            </Link>
 
             <LocalAccountControls />
 
@@ -581,11 +521,13 @@ export default function Home() {
         {/* Colonne Filtres (1/4 de largeur sur grand écran, drawer sur mobile) */}
         <div className="lg:col-span-1">
           <FilterSidebar
+            filters={baseFilters}
+            onReset={resetFilters}
             onFilterChange={handleFilterChange}
             showFavoritesOnly={showFavoritesOnly}
             setShowFavoritesOnly={handleShowFavoritesOnlyChange}
             isOpenMobile={isMobileFiltersOpen}
-            onCloseMobile={() => setIsMobileFiltersOpen(false)}
+            onCloseMobile={closeMobileFilters}
           />
         </div>
 
@@ -733,7 +675,7 @@ export default function Home() {
       </div>
 
       {/* Floating Action Button for Quick Player Re-Open */}
-      {selectedChannel && (
+      {selectedChannel && canPlay && (
         <button
           type="button"
           onClick={() => setIsInlinePlayerOpen(true)}
@@ -756,7 +698,7 @@ export default function Home() {
       {/* Inline Video Player Modal Overlay */}
       <InlinePlayerModal
         channel={selectedChannel}
-        isOpen={isInlinePlayerOpen}
+        isOpen={canPlay && isInlinePlayerOpen}
         onClose={() => setIsInlinePlayerOpen(false)}
         onOpenPopoutWindow={() => {
           if (selectedChannel) openPlayerForChannel(selectedChannel);

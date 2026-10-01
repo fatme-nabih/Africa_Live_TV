@@ -5,8 +5,10 @@ export type RadarRssArticle = {
   domain: string;
   sourceName: string;
   sourceType: 'rss';
-  publishedAt: string;
+  publishedAt: string | null;
+  updatedAt?: string | null;
   countryCode: string | null;
+  countryBasis?: 'media' | 'inferred_topic';
   category: string;
 };
 
@@ -15,6 +17,7 @@ export type RssSourceMetric = {
   name: string;
   domain: string;
   count: number;
+  availability?: import('./radar-data').RadarSourceState;
 };
 
 export type RadarRssSnapshot = {
@@ -22,6 +25,10 @@ export type RadarRssSnapshot = {
   sources: RssSourceMetric[];
   updatedAt: string;
   stale: boolean;
+  partial?: boolean;
+  availability?: import('./radar-data').RadarSourceState[];
+  undatedArticles?: RadarRssArticle[];
+  window?: ReturnType<typeof import('./radar-data').temporalWindow>['window'];
 };
 
 export type FeedConfig = {

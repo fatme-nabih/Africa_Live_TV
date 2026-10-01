@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 const hasAuthenticatedState = Boolean(process.env.E2E_STORAGE_STATE);
+const isLocalMvp = process.env.LOCAL_DEV_MODE === 'true';
 
 async function openAuthenticatedCatalogue(page: Page) {
   const catalogResponse = page.waitForResponse(
@@ -12,7 +13,7 @@ async function openAuthenticatedCatalogue(page: Page) {
 }
 
 test.describe('catalogue, filtres, favoris et lecteur', () => {
-  test.skip(!hasAuthenticatedState, 'Définir E2E_STORAGE_STATE avec une session Clerk dédiée.');
+  test.skip(!hasAuthenticatedState && !isLocalMvp, 'Session Clerk dédiée ou serveur MVP local requis.');
 
   test('le parcours principal reste accessible et les favoris sortent de l’URL', async ({ page }) => {
     await openAuthenticatedCatalogue(page);
@@ -60,8 +61,10 @@ test.describe('catalogue, filtres, favoris et lecteur', () => {
       });
     });
     await firstCard.focus();
-    const popupPromise = page.waitForEvent('popup');
     await page.keyboard.press('Enter');
+    await expect(page.getByRole('dialog')).toBeVisible();
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: 'Ouvrir dans une fenêtre séparée' }).click();
     const playerWindow = await popupPromise;
     await expect(playerWindow).toHaveURL(/\/player\//);
     await expect(playerWindow.getByRole('region', { name: 'Lecteur vidéo' })).toContainText(channelName);
@@ -75,6 +78,7 @@ test.describe('catalogue, filtres, favoris et lecteur', () => {
     const windowsAfterFirstLaunch = page.context().pages().length;
 
     await firstCard.click();
+    await page.getByRole('button', { name: 'Ouvrir dans une fenêtre séparée' }).click();
     await expect.poll(() => page.context().pages().length).toBe(windowsAfterFirstLaunch);
     await expect(playerWindow).toHaveURL(/\/player\//);
 
@@ -115,7 +119,7 @@ test.describe('catalogue, filtres, favoris et lecteur', () => {
             playbackMode: 'BROWSER',
             availabilityStatus: 'READY',
           }],
-          total: 1,
+          hasMore: false,
           limit: 30,
           nextCursor: null,
         }),

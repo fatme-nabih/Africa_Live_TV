@@ -1,14 +1,24 @@
 # Africa Live — Plan de préparation à la production
 
-Date de référence : 29 septembre 2026.
+Complément du 1er octobre à 18:09 UTC : L0–L4 déployé sur staging après autorisation,
+neuf E2E distants et parcours administrateur réel réussis.
+[Réception et limites](dashboard-auth-staging-reception.md). Zoom natif 200 %
+local validé à 18:29 UTC ; comptes standard indisponibles, aucun lancement de production.
+
+État courant au 1er octobre : L0–L4 dashboard testés localement et déployés
+sur staging ; [réception L4](dashboard-release-validation.md),
+[dossier de livraison](dashboard-delivery-dossier.md) et
+[fiche de reprise : terminé / restant / L5](dashboard-session-handoff.md).
+Staging reste staging. Les lots opérationnels ci-dessous sont distincts des lots dashboard.
 Statut : Railway sert la préproduction officielle sur `https://staging.africatv.sn` ;
 lots opérationnels 0, 1, 2 (Phases A et B) et Lot 3 (UX de lecture et qualification des flux) terminés et validés en ligne.
-Le garde-fou de lecture a été levé (`PLAYBACK_ELIGIBILITY_READY=true`), 6 825 flux sains certifiés
-(4 385 BROWSER_OK et 2 440 VLC_ONLY) sont activés sur PostgreSQL Railway. L'ouverture de VLC
-est 100 % automatique sur PC et mobile sans exposition d'URL, et les langues principales sont inférées.
+Le garde-fou de lecture a été levé (`PLAYBACK_ELIGIBILITY_READY=true`) selon le
+journal historique. Les décomptes antérieurs de sources qualifiées divergent et
+ne certifient aucune santé actuelle ; un nouveau relevé daté sera nécessaire lors
+d'une réception staging. L'ouverture VLC dépend du système et de sa configuration.
 Responsable d'exécution : assistant, avec décisions produit et infrastructure du propriétaire.
 
-## État courant — 29 septembre 2026
+## État historique — 29 septembre 2026
 
 - La préproduction `staging.africatv.sn` sert le commit `2f19e38` ; le rôle applicatif reste `staging`, malgré le nom Railway `production`.
 - Le lot DOC-006 (demandes de contact/retrait, revue administrateur et accès catalogue après expiration) et la première version du Radar GDELT sont déployés. GDACS et la météo ne sont pas encore intégrés.

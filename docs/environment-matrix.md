@@ -1,4 +1,16 @@
-# Matrice des environnements — 29 septembre 2026
+# Matrice des environnements — revue du 1er octobre 2026
+
+Relevé complémentaire à 18:09 UTC : L0–L4 déployé après autorisation,
+`b0d52c0c-3bca-4600-8a3e-fb1f2709dada` SUCCESS/actif. Variables lues sans afficher
+de secret : rôle staging, MVP/public MVP/lecture locale/VLC desktop désactivés,
+origine staging correcte. [Réception réelle et limites](dashboard-auth-staging-reception.md).
+Les paragraphes historiques ci-dessous décrivent l’état avant cette livraison.
+
+Les capacités dashboard L0–L4 sont implémentées/testées localement et livrées
+sur staging après autorisation : [preuves et limites](dashboard-release-validation.md).
+Les variables listées comme vérifiées dans le relevé du 1er octobre ont été
+contrôlées ; les autres valeurs restent des attentes ou des observations datées.
+[État de reprise et validations restantes](dashboard-session-handoff.md).
 
 Cette matrice décrit les valeurs attendues, sans recopier aucun secret. Le nom
 Railway de l'environnement actuel est `production`, alors que son rôle applicatif
@@ -44,7 +56,7 @@ sont exécutées. Elles valident la cohérence et les formats, pas l'existence r
 des comptes fournisseurs. Les variables `NEXT_PUBLIC_*` sont intégrées au build :
 une modification Railway exige un nouveau build pour atteindre le navigateur.
 
-## État Railway observé
+## État Railway observé le 29 septembre 2026 — historique
 
 - Projet : `just-compassion`, environnement Railway nommé `production`.
 - Rôle applicatif : staging (`DEPLOYMENT_ENV=staging`).
@@ -53,8 +65,14 @@ une modification Railway exige un nouveau build pour atteindre le navigateur.
 - Runtime observé : Node.js 22.23.3, Railpack 0.40.0, une réplique US West.
 - Pré-déploiement actif et validé : `npm run db:migrate:deploy`, délai 300 s.
 - Healthcheck actif et validé : `/api/health`, délai 120 s (200 OK).
-- PostgreSQL : volume persistant, 22 tables publiques, 19 migrations, 14 505 chaînes et 15 646 sources après migration `0018_support_requests`. Sauvegarde/PITR natif non disponible sur le plan observé.
-- Lecture : `PLAYBACK_ELIGIBILITY_READY=true` ; 6 825 flux sains certifiés (4 385 flux web direct BROWSER_OK et 2 440 flux VLC_ONLY) sur 12 396 flux. Lancement VLC 100 % automatique sans affichage d'URL ni bouton de copie M3U8. Lecture directe validée sur PC et mobile, sans relais média serveur.
+- PostgreSQL : volume persistant, 22 tables publiques et 19 migrations consignées
+  après `0018_support_requests`. Les inventaires historiques de catalogue divergent
+  entre documents ; aucun effectif staging actuel n'est certifié par L4.
+  Sauvegarde/PITR natif non disponible sur le plan alors observé.
+- Lecture : `PLAYBACK_ELIGIBILITY_READY=true` consigné historiquement. Les anciens
+  décomptes de sources qualifiées ne prouvent pas leur santé actuelle. Lancement
+  VLC selon compatibilité de l'appareil ; aucune garantie universelle sur mobile.
+  Transport direct amont, sans relais média serveur.
 - Domaine staging : `staging.africatv.sn` actif avec DNS OVHcloud et certificat
   Let's Encrypt validé. Le domaine Railway reste disponible en repli.
 - Nommage retenu : `staging.africatv.sn` pour cette préproduction ; apex et

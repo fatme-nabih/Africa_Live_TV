@@ -29,41 +29,15 @@ function createMockDb(options: {
   } as unknown as LiveChannelsDb;
 }
 
-test('getAfricanChannelsSummary aggregates counts, calculates totals, and caches results', async () => {
+test('getAfricanChannelsSummary counts references separately from resolver candidates and caches', async () => {
   _clearLiveChannelsCache();
-
-  const mockDb = createMockDb({
-    summaryRows: [
-      { countryCode: 'SN', channelCount: 3, directWebCount: 2 },
-      { countryCode: 'CI', channelCount: 5, directWebCount: 4 },
-      { countryCode: 'NG', channelCount: 12, directWebCount: 8 },
-    ],
-  });
-
-  const summary = await getAfricanChannelsSummary(mockDb);
-
-  assert.ok(summary);
-  assert.strictEqual(summary.totalChannels, 20);
-  assert.strictEqual(summary.totalDirectWeb, 14);
-  assert.deepStrictEqual(summary.countries.SN, {
-    countryCode: 'SN',
-    channelCount: 3,
-    directWebCount: 2,
-  });
-  assert.deepStrictEqual(summary.countries.CI, {
-    countryCode: 'CI',
-    channelCount: 5,
-    directWebCount: 4,
-  });
-  assert.strictEqual(summary.countries.NG.channelCount, 12);
-
-  // Cached call: returns exact same instance without querying DB again
-  const failingDb = createMockDb({
-    summaryRows: undefined,
-  });
-  const cached = await getAfricanChannelsSummary(failingDb);
-  assert.strictEqual(cached, summary);
-  assert.strictEqual(cached.totalChannels, 20);
+  const source = { channelId: 'a', countryCode: 'SN', url: 'https://example.org/a.m3u8', status: 'BROWSER_OK', corsAllowed: true, mixedContent: false, directEligibility: 'PUBLIC_DIRECT_WEB', eligibilityReason: '', lastSuccessAt: new Date().toISOString() };
+  const query = { from: () => query, leftJoin: () => query, where: () => query, orderBy: async () => [source, source, { ...source, channelId: 'b', directEligibility: 'REVIEW_REQUIRED' }, { ...source, channelId: 'c', url: null }] };
+  const summary = await getAfricanChannelsSummary({ select: () => query } as unknown as LiveChannelsDb);
+  assert.equal(summary.totalChannels, 3);
+  assert.equal(summary.totalDirectWeb, 1);
+  assert.equal(summary.totalDirectVlc, 1);
+  assert.strictEqual(await getAfricanChannelsSummary(createMockDb()), summary);
 });
 
 test('getAfricanChannelsSummary coalesces concurrent requests', async () => {
@@ -75,9 +49,9 @@ test('getAfricanChannelsSummary coalesces concurrent requests', async () => {
       callCount++;
       return {
         from: () => ({
-          innerJoin: () => ({
+          leftJoin: () => ({
             where: () => ({
-              groupBy: () =>
+              orderBy: () =>
                 new Promise((resolve) => {
                   setTimeout(
                     () =>
