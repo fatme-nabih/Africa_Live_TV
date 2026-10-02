@@ -1,4 +1,5 @@
 export type WeatherIconType =
+  | 'unknown'
   | 'clear'
   | 'partly-cloudy'
   | 'cloudy'
@@ -13,22 +14,24 @@ export type LiveWeatherCondition = {
   region: string;
   latitude: number;
   longitude: number;
-  timezone: string;
+  timezone: string | null;
   temperatureC: number;
   apparentTemperatureC: number;
   relativeHumidityPercent: number;
   windSpeedKmh: number;
   windDirectionDeg: number;
   windDirectionCompass: string;
-  weatherCode: number;
+  weatherCode: number | null;
   weatherDescription: string;
   weatherIcon: WeatherIconType;
-  isDay: boolean;
+  isDay: boolean | null;
   precipitationMm: number;
-  observedAt: string;
+  observedAt: string | null;
   fetchedAt: string;
   stale: boolean;
-  source: 'Open-Meteo';
+  source: 'Open-Meteo' | 'wttr.in';
+  transport: 'server' | 'browser';
+  timeAnomaly: 'future_skew' | null;
   attribution: string;
 };
 
@@ -42,7 +45,8 @@ export type QuickWeatherLocation = {
 };
 
 export type LiveWeatherSnapshot = {
-  availability?: import('./radar-data').RadarSourceState[];
+  availability: import('./radar-data').RadarSourceState[];
+  validUntil: string;
   current: LiveWeatherCondition;
   quickLocations: QuickWeatherLocation[];
   fetchedAt: string;

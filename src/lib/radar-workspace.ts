@@ -1,4 +1,4 @@
-import { AFRICAN_COUNTRIES } from './live-osint';
+import { AFRICAN_COUNTRIES } from './radar-countries';
 import { radarStatusLabel, type RadarSourceState, type RadarSourceStatus } from './radar-data';
 
 const codes = new Set(AFRICAN_COUNTRIES.map(country => country.code));

@@ -1,12 +1,94 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 1er octobre 2026, fuseau Africa/Dakar.
+Dernière mise à jour : 2 octobre 2026, fuseau Africa/Dakar.
 
 Ce document permet à une nouvelle session de reprendre le travail sans
 réinterpréter l'historique. Il ne contient volontairement aucun secret, cookie,
 mot de passe, identifiant de paiement, clé Clerk ou URL de flux média.
 
-## État de reprise courant — 1er octobre 2026
+## Complément de reprise — 2 octobre 2026
+
+- Diff RW revu, fichiers existants préservés. Le serveur absent a été relancé ;
+  après un nouvel arrêt sans erreur consignée, `npm run dev` est maintenant
+  maintenu dans une session de terminal sur 3001, avec Clerk initial.
+- Capture utilisateur : clés dupliquées dans les overlays `AnimatePresence`
+  du lecteur. Six clés distinctes ajoutées dans `src/components/Player.tsx`.
+  Reproduction navigateur avant : 15 avertissements ; après : zéro sur quatre
+  cas (refus, HLS décodé, autoplay refusé, VLC simulé). TypeScript et lint ciblé
+  réussis. Preuves dans `.local-logs/review-2026-10-02/player-keys-results.json`.
+  Réception de composant avec réseau simulé, distincte des E2E RW historiques.
+- Point P2 météo corrigé avant la publication demandée le 2 octobre : rejet de
+  `reader.cancel()` géré, deux tests de corps HTTP réels ajoutés. Le reproducteur
+  timeout/annulation ne produit plus aucun rejet non géré. Les tests utilisent
+  le fetch natif capturé avant les mocks précédents du même fichier.
+- Le propriétaire autorise maintenant la mise à jour GitHub et Railway via CLI.
+  Publication en préparation sur staging uniquement ; 19 migrations appliquées,
+  zéro en attente et aucune différence d'empreinte, contrôlés par SSH CLI.
+  Nouvelle validation : 244 unitaires réussis, 14 ignorés, invariants 4/4,
+  TypeScript/lint/migrations/build réussis. Le
+  [dossier de publication CLI](docs/publication-cli-2026-10-02.md) suit la livraison.
+  Le brouillon `docs/plan-experience-premium.md` apparu ensuite reste local.
+  Aucun changement de variable, DNS, plan, coût supplémentaire ou fichier `.env`.
+
+## État de reprise historique — 1er octobre 2026
+
+**Point d'arrêt avant déconnexion du propriétaire :**
+- Travail demandé terminé localement : RW-001 à RW-010 clos ; aucun test
+  échoué restant. Dernière modification : message de validation météo lisible,
+  suivi de 18/18 E2E météo, TypeScript/lint/build et test build servi réussis.
+- À la prochaine connexion : lire AGENTS.md, ce document et le dossier RW,
+  puis `git status --short`. L'arbre sale est le résultat à revoir ; ne pas
+  le nettoyer, committer, pousser ou déployer sans nouvelle demande.
+- Suite normale : revue du diff local et des limites du dossier. Il n'y a pas
+  de ticket RW d'implémentation à reprendre. Une réception Clerk connectée/
+  staging ou publication nécessite une demande explicite du propriétaire.
+- Serveur laissé en `npm run dev` avec Clerk initial, santé 200, météo anonyme
+  401 et dashboard 307 à la clôture. Après déconnexion, vérifier le listener
+  3001 et son checkout avant de le réutiliser ; sa survie n'est pas garantie.
+  Si absent, relancer `npm run dev` dans Africa_Live_TV sans modifier `.env.local`.
+- Journaux exacts dans `.local-logs/rw/` ; liste et chemins dans le dossier RW.
+  Un seul test build ignoré en dev est reçu séparément ; les 14 intégrations
+  PostgreSQL ignorées ne sont pas des succès. HEAD toujours `54e5696`.
+
+**Complément courant : remédiation RW-001 à RW-010 reçue localement.**
+- Lots A/B/C/D terminés ; HEAD `54e5696`, diff applicatif/documentaire non
+  committé. Modifications documentaires précédentes conservées.
+- Preuves : [dossier RW](docs/radar-weather-remediation-validation.md),
+  [backlog/journal](docs/radar-weather-remediation-backlog.md), checklist et reprise dashboard.
+- 256 unitaires : 242 réussis, 14 intégrations PostgreSQL ignorées, zéro échec ;
+  invariants 4/4, TypeScript/ESLint (zéro avertissement), migrations et build verts.
+- E2E dev : 51 réussis, 1 réservé build ; build servi Clerk anonyme réel :
+  1/1 réussi, worker prêt, météo 401 et dashboard redirigé. Les amonts météo/RSS
+  et profils authentifiés sont simulés dans les autres scénarios.
+- Serveur final `npm run dev` Clerk initial sur 3001, `.env.local` inchangé,
+  africa_live_dev seulement. Aucun commit/push/déploiement, changement DB,
+  distant, source IPTV ou coût. Railway demeure staging, RW non publié.
+- Restent hors réception RW : Clerk connecté, appareils/VLC et amonts actuels,
+  staging/production. Revue du diff puis publication uniquement sur demande.
+  Ne pas utiliser le mode anonyme de test pour recevoir les handlers Radar
+  qui requièrent le middleware Clerk. L5/L6 non relancés.
+
+Les paragraphes de préparation suivants décrivent l'état avant cette exécution.
+
+**Historique : revue Gemini et plan de remédiation Radar/météo :**
+- Code local revu : `6f7e384` (Radar/RSS) et `54e5696` (météo), HEAD `54e5696`.
+- Défauts confirmés : secours navigateur après refus d'accès, mesures absentes
+  acceptées comme 0 °C, observation wttr.in rajeunie et fuseau/jour-nuit arbitraires,
+  provenance/disponibilité incohérentes, filtre International basé sur une catégorie
+  RSS instable, appel météo direct sans timeout.
+- Le propriétaire a demandé un plan détaillé destiné à Gemini :
+  [backlog RW-001 à RW-010](docs/radar-weather-remediation-backlog.md) et
+  [prompt prêt à copier-coller](docs/gemini-radar-weather-prompt.md).
+  **Plan rédigé, aucune correction implémentée ; tous les tickets À faire.**
+- Audit initial : 221 tests réussis, 14 ignorés ; TypeScript/ESLint réussis.
+  Reproductions serveur et composant navigateur avec fournisseurs simulés,
+  pas de nouveau build/E2E complets ni réception Clerk authentifiée staging.
+- Déploiement météo `19a9a9ae-6746-4652-b16d-996e4d48aaa9` déclaré SUCCESS
+  par Gemini dans le compte rendu transmis ; non revérifié pendant cette revue.
+  Le relevé 22:14 UTC ci-dessous concerne le déploiement Radar antérieur.
+- Préparation documentaire uniquement : aucun commit/push/déploiement, coût,
+  modification de base ou état distant. Reprise des corrections selon le plan
+  et une demande d'implémentation ; aucun lancement implicite de L5/L6.
 
 **Mise à jour Radar & rédactions (GitHub et Railway staging reçus à 22:14 UTC)** :
 - Commit applicatif `6f7e384` poussé sur GitHub `main`.

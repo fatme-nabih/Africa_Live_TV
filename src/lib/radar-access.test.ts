@@ -105,6 +105,20 @@ const routes = ['news', 'rss', 'weather', 'events', 'firms', 'markets', 'briefin
 type Handler = (request: Request, context?: unknown) => Promise<Response>;
 const request = (route: string, query = '') => new Request(`http://localhost:3001/api/live/${route}${query}`);
 
+test('RW-003: weather query rejects unknown country and empty/out-of-range coordinates after authorization', async () => {
+  const { load, state } = harness(cases[2]);
+  const GET = load('app/api/live/weather/route.ts').GET as Handler;
+  for (const query of ['?code=ZZ', '?code=AFR', '?code=', '?lat=&lon=0', '?lat=0&lon=', '?lat=0', '?lat=91&lon=0', '?lat=0&lon=Infinity']) {
+    assert.equal((await GET(request('weather', query))).status, 400, query);
+    assert.equal(state.collectorCalls, 0);
+  }
+  state.scenario = cases[0];
+  assert.equal((await GET(request('weather', '?code=ZZ'))).status, 401);
+  state.scenario = cases[2];
+  assert.equal((await GET(request('weather', '?code=ci'))).status, 200);
+  assert.equal(state.collectorCalls, 1);
+});
+
 for (const route of routes) {
   test(`Radar ${route}: real GET enforces the complete access matrix before collecting data`, async () => {
     for (const scenario of cases) {

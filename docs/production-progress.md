@@ -1,5 +1,98 @@
 # Progression — préparation production
 
+## Correction locale lecteur — 2 octobre 2026
+
+Capture utilisateur : React signale une clé vide dupliquée dans `Player.tsx`.
+Les six overlays enfants directs de `AnimatePresence` ont désormais des clés
+distinctes et stables. Gardes et transport média conservés ; diff RW préservé.
+
+Réception de composant dans Edge headless, avec le vrai `Player` et réseau
+simulé : ancien code reproduit 15 avertissements ; les quatre cas corrigés
+(refus d'accès, HLS réellement décodé depuis les fixtures, autoplay refusé,
+lancement VLC simulé unique) passent avec zéro avertissement de clé et zéro
+erreur de page. Ce contrôle ne constitue pas une réception Clerk connectée ou
+de VLC réel. TypeScript et ESLint ciblé réussis. Preuves reproductibles :
+`.local-logs/review-2026-10-02/player-keys-check.cjs` et `player-keys-results.json`.
+
+La revue a aussi confirmé un P2 météo distinct, non corrigé dans ce changement initial :
+rejet non géré de `reader.cancel()` quand le corps HTTP est annulé ou expire.
+Reproduction isolée dans `weather-abort-repro.cjs`, dans le même dossier ignoré.
+Serveur Clerk sur 3001 maintenu dans une session de terminal ; aucun commit,
+push, déploiement, changement distant, coût ou modification de `.env.local`.
+
+### Publication CLI demandée ensuite — 2 octobre 2026, en préparation
+
+Validation finale actuelle : 244 tests unitaires réussis, 14 ignorés, zéro échec ;
+invariants 4/4, TypeScript, lint, migrations et build réussis. Le build a été
+effectué dans un snapshot isolé pour préserver le serveur dev. Le
+[dossier de publication CLI](publication-cli-2026-10-02.md) consigne le périmètre,
+les limites et les preuves, puis recevra les résultats distants effectifs.
+
+Le propriétaire autorise la publication GitHub et Railway du diff RW et de la
+correction du lecteur. Le P2 météo est corrigé avant publication : rejet de
+`reader.cancel()` géré et deux tests HTTP natifs (timeout du corps et annulation)
+ajoutés. Première exécution des nouveaux tests affectée par les mocks fetch
+précédents ; capture du fetch natif avant ces mocks, puis 5/5 réussis. Le
+reproducteur isolé confirme zéro rejet non géré dans les deux cas.
+
+Cible CLI vérifiée : projet `just-compassion`, service `Africa_Live_TV`, rôle
+`DEPLOYMENT_ENV=staging` ; modes locaux et VLC desktop désactivés. Contrôle
+des migrations via SSH CLI : 19 fichiers, 19 appliquées, zéro en attente et
+aucune divergence d'empreinte. Aucun changement de schéma prévu. Le brouillon
+`docs/plan-experience-premium.md` est préservé localement hors publication.
+Preuves nouvelles dans `.local-logs/publication-2026-10-02/`.
+
+## Remédiation RW reçue localement — 1er octobre 2026
+
+RW-001 à RW-010 terminés dans l'ordre A, B, C, D, avec tests pendant les lots.
+Départ `main` / `54e5696`, arbre documentaire sale préservé ; diff applicatif
+et documentaire laissé local pour revue. Secours seulement sur 503 reconnu,
+requêtes 20/8 s, contrats/mesures/dates/cache/provenance validés, cycle de vie
+annulable, périmètre RSS indépendant et URL source de vérité.
+
+Résultats nouveaux : **256 unitaires recensés, 242 réussis, 14 ignorés, zéro
+échec** ; invariants 4/4 ; TypeScript, ESLint (zéro avertissement), cohérence
+migrations et build réussis. E2E dev : 51 réussis, 1 réservé au build, zéro
+échec ; build servi Clerk réel : 1/1 réussi (worker, météo anonyme 401,
+redirection dashboard). Tous sans retry. Les échecs intermédiaires sont
+expliqués dans le [dossier RW](radar-weather-remediation-validation.md).
+
+`.env.local` inchangé, `npm run dev` Clerk initial restauré sur 3001 ;
+africa_live_dev uniquement. Aucune logique DB/garde/quota modifiée : runner
+intégration non requis, les 14 ignorés ne sont pas des succès. Aucun commit,
+push, déploiement, coût, changement distant ou source IPTV. Clerk connecté,
+appareils/amonts actuels et staging non reçus pour RW ; briefing L6 différé.
+
+## Historique : revue Gemini et préparation du backlog RW — 1er octobre 2026
+
+Demande du propriétaire : revoir les modifications Gemini puis rédiger un plan
+détaillé pour son implémentation. **Préparation documentaire terminée ;
+RW-001 à RW-010 restent À faire. Aucun correctif applicatif réalisé.**
+Révisions locales examinées : Radar/RSS `6f7e384`, météo `54e5696` (HEAD).
+
+Constats confirmés : secours navigateur après refus 403, données météo absentes
+acceptées comme 0 °C, date wttr.in remplacée par la collecte et fuseau/jour-nuit
+UTC arbitraires, mauvais périmètre des articles internationaux, provenance et
+disponibilité incohérentes, absence de timeout direct navigateur.
+Le [backlog RW](radar-weather-remediation-backlog.md) consigne les preuves,
+critères d'acceptation, dépendances, scénarios de tests et journal à remplir.
+[Prompt Gemini](gemini-radar-weather-prompt.md).
+
+Validation de l'audit initial : 235 tests recensés, 221 réussis et 14 ignorés ;
+TypeScript/ESLint réussis, zéro avertissement ESLint. Reproductions serveur
+avec fetch simulé et composant navigateur isolé ; synchronisation pays/URL
+réussie dans ce composant. 20/21 flux RSS répondent 200 au relevé ponctuel du
+poste, AIP timeout 8 s ; aucune garantie de disponibilité permanente.
+Build/E2E complets/réception Clerk authentifiée staging non relancés.
+Le succès du déploiement météo `19a9a9ae-6746-4652-b16d-996e4d48aaa9` est
+déclaré dans le compte rendu Gemini, non revérifié par cette revue.
+
+Documents préparés : backlog RW et prompt, liens/état dans le backlog production,
+plan dashboard, checklist, fiche de reprise et `contextellm.md`. Les anciennes réceptions ne
+valident pas les corrections RW futures. Aucun commit/push/déploiement,
+modification de base, source IPTV ou état Railway/OVHcloud/Clerk ; arbre initial
+propre, documentation seule modifiée. Briefing L6 toujours différé.
+
 ## L5 — AL-T05, prototype local ancré — 1er octobre 2026
 
 Expérimentation explicitement retenue par le propriétaire, réalisée et évaluée

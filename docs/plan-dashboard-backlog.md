@@ -1,5 +1,20 @@
 # Africa Live — Plan complet et backlog dashboard
 
+Complément courant du 1er octobre 2026 : **RW-001 à RW-010 terminés localement**,
+[dossier de validation](radar-weather-remediation-validation.md). 242 unitaires
+réussis + 14 ignorés ; 4 invariants, TypeScript/lint/migrations/build réussis ;
+51 E2E dev + 1 scénario build Clerk anonyme réussis. Diff local à revoir,
+sans commit/push/déploiement ni coût. Profils connectés/amonts/staging non reçus
+pour RW ; L5/L6 non relancés. Le paragraphe suivant conserve la préparation historique.
+
+Complément du 1er octobre 2026 après revue Gemini : les changements Radar/RSS
+`6f7e384` et météo `54e5696` demandent une remédiation dédiée.
+[Backlog RW-001 à RW-010](radar-weather-remediation-backlog.md) et
+[prompt Gemini](gemini-radar-weather-prompt.md) préparés ; corrections À faire.
+Ce travail de fiabilité ne relance pas le prototype L5 ni le briefing L6.
+Les preuves historiques ci-dessous ne constituent pas une réception des
+secours météo et filtres modifiés ensuite.
+
 Création : 30 septembre 2026 · Mise à jour : 1er octobre 2026 · Africa/Dakar.
 Statut : L0–L4 implémentés, testés localement et déployés sur staging après
 autorisation. Réception réelle limitée aux profils/appareils disponibles.

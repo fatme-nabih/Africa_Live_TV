@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { withApiErrorHandler, BadRequestError } from '@/lib/api-errors';
 import { getRadarWeather } from '@/lib/live-weather';
 import { authorizeAppRequest } from '@/lib/require-app-access';
+import { getAfricanCountryByCode } from '@/lib/radar-countries';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -16,6 +17,9 @@ export const GET = withApiErrorHandler(async (request: Request) => {
 
   const url = new URL(request.url);
   const code = url.searchParams.get('code') ?? undefined;
+  if (code !== undefined && !getAfricanCountryByCode(code.trim().toUpperCase())) {
+    throw new BadRequestError('Pays météo invalide.', 'INVALID_COUNTRY');
+  }
   const city = url.searchParams.get('city') ?? undefined;
   const latStr = url.searchParams.get('lat');
   const lonStr = url.searchParams.get('lon');
@@ -33,7 +37,7 @@ export const GET = withApiErrorHandler(async (request: Request) => {
     lat = Number(latStr);
     lon = Number(lonStr);
     if (
-      !Number.isFinite(lat) ||
+      !latStr.trim() || !lonStr.trim() || !Number.isFinite(lat) ||
       !Number.isFinite(lon) ||
       lat < -90 ||
       lat > 90 ||

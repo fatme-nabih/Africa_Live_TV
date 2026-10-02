@@ -1,8 +1,74 @@
-# Dashboard — reprise de session au 1er octobre 2026
+# Dashboard — reprise de session au 2 octobre 2026
 
 Cette fiche décrit l’état à la clôture de la session. Lire aussi
 [contextellm.md](../contextellm.md), les règles `AGENTS.md` et le
 [plan détaillé](plan-dashboard-backlog.md) avant de modifier le projet.
+
+## Reprise courante — publication CLI demandée, 2 octobre 2026
+
+Revue du diff effectuée ; six clés des overlays du lecteur corrigées et rejet
+d'annulation de corps HTTP météo géré. Validation actuelle : 244 unitaires
+réussis, 14 ignorés, invariants 4/4, TypeScript/lint/migrations/build réussis.
+Le propriétaire a explicitement autorisé GitHub et Railway par CLI. Livraison
+staging en préparation, suivie dans le
+[dossier de publication](publication-cli-2026-10-02.md). Les migrations distantes
+19/19 ont été vérifiées par SSH CLI, sans migration en attente ni différence.
+Le brouillon premium indépendant reste local. Aucune modification `.env`,
+variable distante, DNS ou plan. Les limites de réception RW restent consignées.
+
+## Reprise historique — RW reçu localement, 1er octobre 2026
+
+**Déconnexion du propriétaire : point d'arrêt enregistré.** La prochaine
+session doit inspecter le diff local, sans recommencer les lots déjà reçus.
+Lire AGENTS.md, contextellm.md et le dossier RW ; exécuter `git status --short`.
+HEAD `54e5696`, aucune publication, arbre sale à préserver. Vérifier le port
+3001/checkout et sa santé : serveur Clerk laissé actif à la clôture, mais une
+déconnexion peut l'arrêter. Si absent, `npm run dev` dans ce projet, sans
+drapeaux MVP ajoutés ni modification de `.env.local`. Les preuves finales sont
+les journaux `unit-received`, `e2e-dev-received`, `e2e-weather-final`,
+`e2e-build-clerk`, `types-received`, `lint-received`, `build` et `restoration`
+sous `.local-logs/rw/`. Aucun ticket RW restant ; revue puis suite explicitement
+demandée, jamais publication automatique. L5/L6 ne sont pas à reprendre ici.
+
+**RW-001 à RW-010 clos localement**, lots A/B/C/D. HEAD reste `54e5696` ;
+changements précédents préservés, diff non committé pour revue. Lire d'abord
+le [dossier de réception RW](radar-weather-remediation-validation.md) et son
+journal par ticket ; le backlog RW et la checklist sont actualisés.
+
+256 unitaires = 242 réussis + 14 intégrations ignorées ; invariants 4/4,
+TypeScript/ESLint/migrations/build verts. E2E dev 51 réussis + 1 réservé build ;
+ce dernier reçu séparément 1/1 avec worker réel et Clerk anonyme (météo 401,
+dashboard redirigé). Aucun profil Clerk connecté ni amont vivant reçu pour RW.
+
+Serveur final `npm run dev`, configuration Clerk initiale sur localhost:3001,
+base africa_live_dev, `.env.local` inchangé. Aucun commit/push/déploiement,
+changement distant ou coût. Captures nouvelles ignorées dans `.local-logs/rw/`,
+captures historiques suivies préservées. Les prochaines actions sont la revue
+du diff puis, seulement sur demande, publication/réception staging authentifiée.
+Ne pas recevoir les handlers Radar via `E2E_ANONYMOUS_MODE=true` : ce mode
+omet le middleware Clerk requis par `auth()`. Ne pas lancer L5/L6 implicitement.
+
+## Historique — revue Gemini Radar/météo, 1er octobre 2026
+
+Les changements Radar/RSS `6f7e384` et météo `54e5696` ont été revus après
+les réceptions L0–L5 ci-dessous. HEAD local : `54e5696`.
+Défauts confirmés : recours navigateur après refus d'accès, mesures/dates
+météo inventées, fuseau/jour-nuit arbitraires, provenance/disponibilité incohérentes,
+classement International dépendant de category et requêtes sans échéance.
+
+À la demande du propriétaire, le
+[plan de correction RW-001 à RW-010](radar-weather-remediation-backlog.md)
+et le [prompt Gemini](gemini-radar-weather-prompt.md) sont préparés.
+**Tous les tickets restent À faire ; seule la documentation est modifiée.**
+Pour une reprise de ces corrections, utiliser ce plan en priorité ; les
+recommandations historiques L5 n'impliquent pas de lancer L5/L6 dans ce travail.
+Les gardes d'accès et le transport direct média restent obligatoires.
+
+L'audit passe 221 tests unitaires (14 ignorés), TypeScript et ESLint. Ses essais
+navigateur sont des tests de composant avec API simulées, sans réception Clerk
+authentifiée staging ni build/E2E complets nouveaux. Le déploiement météo
+`19a9a9ae-6746-4652-b16d-996e4d48aaa9` est déclaré par Gemini, non revérifié.
+Le plan ne donne aucune autorisation de commit/push/déploiement ou de coût.
 
 ## Ce qui est terminé
 

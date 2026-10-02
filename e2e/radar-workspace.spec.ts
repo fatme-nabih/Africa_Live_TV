@@ -1,6 +1,56 @@
 import { expect, test } from '@playwright/test';
 import { fixtureRadar } from './helpers/radar-fixture';
 
+test('RW-007 : onglets et compteurs utilisent le périmètre rédactionnel avec le même filtre pays/24 h', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await fixtureRadar(page, { weatherOk: true });
+  const now = new Date().toISOString();
+  const base = { id: 'rfi', domain: 'example.org', countryCode: 'SN', sourceType: 'rss', publishedAt: now };
+  const articles = [
+    { ...base, title: 'RFI Monde Sénégal', sourceName: 'RFI Monde', url: 'https://example.org/rfi', category: 'Monde', editorialScope: 'international' },
+    { ...base, id: 'rfi-af', title: 'RFI Afrique Sénégal', sourceName: 'RFI Afrique', url: 'https://example.org/rfi-af', category: 'Afrique', editorialScope: 'international' },
+    { ...base, id: 'mali', title: 'MaliJet Sénégal', sourceName: 'MaliJet', url: 'https://example.org/mali', category: 'International', editorialScope: 'africa' },
+    { ...base, id: 'ci', title: 'France 24 Côte d’Ivoire', sourceName: 'France 24', countryCode: 'CI', url: 'https://example.org/f24', category: 'Politique', editorialScope: 'international' },
+  ];
+  await page.route('**/api/live/rss', route => route.fulfill({ json: { articles, undatedArticles: [{ ...articles[0], title: 'RFI sans date', url: 'https://example.org/unknown', publishedAt: null }], sources: [], updatedAt: now } }));
+  await page.goto('/app/live?country=SN');
+  await expect(page.getByRole('button', { name: 'Toutes (3)', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Afrique & National (1)', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'International (2)', exact: true }).click();
+  await expect(page.getByText('RFI Monde Sénégal', { exact: true })).toBeVisible();
+  await expect(page.getByText('RFI Afrique Sénégal', { exact: true })).toBeVisible();
+  await expect(page.getByText('RFI sans date', { exact: true })).toBeVisible();
+  await expect(page.getByText('MaliJet Sénégal', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Afrique & National (1)', exact: true }).click();
+  await expect(page.getByText('MaliJet Sénégal', { exact: true })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Choisir un pays', exact: true }).selectOption('CI');
+  await expect(page.getByRole('button', { name: 'Toutes (1)', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'International (1)', exact: true }).click();
+  await expect(page.getByText('France 24 Côte d’Ivoire', { exact: true })).toBeVisible();
+});
+
+test('RW-008 : météo, villes rapides, URL/historique, RSS et lien TV partagent le pays', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await fixtureRadar(page, { weatherOk: true });
+  await page.goto('/app/live?country=SN&context=weather#feed');
+  const general = page.getByRole('combobox', { name: 'Choisir un pays', exact: true });
+  const weather = page.getByRole('combobox', { name: 'Choisir le pays ou la ville pour la météo', exact: true });
+  await weather.focus(); await expect(weather).toBeFocused(); await weather.selectOption('CI');
+  await expect(general).toHaveValue('CI'); await expect(page).toHaveURL(/country=CI/);
+  await expect(page.getByText('Économie Côte d’Ivoire', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Voir les chaînes du pays', exact: true })).toHaveAttribute('href', '/app?country=CI');
+  await general.selectOption('GH'); await expect(weather).toHaveValue('GH');
+  await expect(page.getByText('Aucune dépêche pour : Ghana', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Abidjan CI', exact: true }).click(); await expect(general).toHaveValue('CI');
+  expect(new URL(page.url()).searchParams.get('context')).toBe('weather'); expect(new URL(page.url()).hash).toBe('#feed');
+  await page.goBack(); await expect(general).toHaveValue('GH'); await expect(weather).toHaveValue('GH');
+  await page.goForward(); await expect(general).toHaveValue('CI'); await page.reload(); await expect(weather).toHaveValue('CI');
+  const options = await weather.locator('option').evaluateAll(nodes => nodes.map(n => ({ code: (n as HTMLOptionElement).value, label: n.textContent! })));
+  expect(new Set(options.map(o => o.code)).size).toBe(options.length);
+  expect(options.map(o => o.label)).toEqual([...options.map(o => o.label)].sort((a, b) => a.localeCompare(b, 'fr')));
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
 test('Pays partagé : lien direct, clavier, retour/précédent, refresh, reset et code invalide', async ({ page }) => {
   await fixtureRadar(page, { weatherOk: true });
   await page.goto('/app/live?country=SN&context=test#feed');
@@ -42,7 +92,7 @@ for (const [width, height] of [[390, 844], [320, 844], [844, 390], [683, 384]]) 
   if (height === 844) {
     expect((await page.getByText('Économie Côte d’Ivoire', { exact: true }).boundingBox())!.y).toBeLessThan(height - 40);
     expect((await page.getByRole('combobox', { name: 'Choisir un pays' }).boundingBox())!.y).toBeLessThan(250);
-    if (width === 390) await page.screenshot({ path: 'docs/screenshots/l2-dashboard-mobile.png', fullPage: false });
+    if (width === 390) await page.screenshot({ path: '.local-logs/rw/screenshots/l2-dashboard-mobile.png', fullPage: false });
   }
   await page.getByRole('combobox', { name: 'Choisir un pays' }).selectOption('GH');
   await expect(page.getByText('Aucune dépêche pour : Ghana', { exact: true })).toBeVisible();
@@ -78,7 +128,7 @@ test('Pays rapides SN→CI : réponses météo et TV obsolètes ignorées', asyn
   await expect(page.getByText('Chaîne SN', { exact: true })).toHaveCount(0);
   await expect(country).toHaveValue('CI');
   await expect(page).toHaveURL(/country=CI/);
-  await expect(page.getByText('Abidjan', { exact: true }).first()).toBeVisible();
+  await expect(page.locator('article').filter({ has: page.locator('#weather-country-select') }).getByText('Abidjan', { exact: true }).last()).toBeVisible();
 });
 
 test('Carte et contrôle partagent le pays ; médias restent accessibles en 2D et 3D', async ({ page }) => {
@@ -101,15 +151,15 @@ test('Carte et contrôle partagent le pays ; médias restent accessibles en 2D e
   await expect(page.getByText('Dépêche Sénégal récente', { exact: true })).toBeVisible();
   expect(errors).toEqual([]);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: 'docs/screenshots/l2-dashboard-desktop.png', fullPage: false });
+  await page.screenshot({ path: '.local-logs/rw/screenshots/l2-dashboard-desktop.png', fullPage: false });
 });
 
 test('Connexion lente : sélection du pays disponible avant la fin des dépêches', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await fixtureRadar(page, { weatherOk: true });
-  await page.route('**/api/live/news', async route => {
+  await page.route('**/api/live/rss', async route => {
     await new Promise(resolve => setTimeout(resolve, 900));
-    await route.fulfill({ json: { articles: [], countries: [], updatedAt: new Date().toISOString() } });
+    await route.fallback();
   });
   await page.goto('/app/live');
   await page.getByRole('combobox', { name: 'Choisir un pays' }).selectOption('CI');
@@ -140,82 +190,56 @@ test('Sources : panne totale, état non configuré/périmé, reprise et annonces
   await expect(panel.getByRole('status')).toHaveText('Sources indisponibles');
   await panel.getByText('Disponibilité et fraîcheur par source', { exact: true }).click();
   await expect(panel.getByRole('table')).toBeVisible();
-  await expect(panel.getByText('à la demande', { exact: true })).toHaveCount(2);
+  await expect(panel.getByText('à la demande', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Feux NASA|Séismes & GDACS/ })).toHaveCount(0);
   await fixtureRadar(page, { weatherOk: true });
   await page.getByRole('button', { name: 'Actualiser', exact: true }).click();
   await expect(panel.getByRole('status')).toHaveText(/Sources disponibles/);
-  await page.route('**/api/live/news', route => route.fulfill({ json: { articles: [], countries: [], updatedAt: new Date().toISOString(), availability: [{ provider: 'GDELT', scope: 'Afrique', status: 'not_configured', fetchedAt: '', lastSuccessAt: null, dataAt: null, cacheExpiresAt: null, count: 0 }] } }));
+  await page.route('**/api/live/rss', route => route.fulfill({ json: { articles: [], sources: [], updatedAt: new Date().toISOString(), availability: [{ provider: 'RSS', scope: 'Afrique', status: 'not_configured', fetchedAt: '', lastSuccessAt: null, dataAt: null, cacheExpiresAt: null, count: 0 }] } }));
   await page.getByRole('button', { name: 'Actualiser', exact: true }).click();
   await expect(panel.getByText('non configuré', { exact: true })).toBeVisible();
   await expect(panel.getByRole('status')).toHaveText(/Couverture partielle/);
   const text = await panel.getByRole('status').textContent();
   await page.waitForTimeout(1100); expect(await panel.getByRole('status').textContent()).toBe(text);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.screenshot({ path: 'docs/screenshots/l2-dashboard-mobile-sources.png', fullPage: false });
+  await page.screenshot({ path: '.local-logs/rw/screenshots/l2-dashboard-mobile-sources.png', fullPage: false });
 });
 
-test('Couches opt-in : invalides exclus, panne isolée, retry, cache, activation concurrente et retour médias', async ({ page }) => {
+test('RW-009 : carte médias 2D/globe sans contrôles ni requêtes FIRMS/USGS, bandeau préservé', async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
   await fixtureRadar(page, { weatherOk: true });
-  let firmsRequests = 0, eventsRequests = 0, fail = true;
-  const now = new Date().toISOString();
-  const metadata = { updatedAt: now, stale: false, availability: [{ provider: 'NASA FIRMS', scope: 'Afrique', status: 'available', fetchedAt: now, lastSuccessAt: now, dataAt: now, cacheExpiresAt: new Date(Date.now() + 30 * 60_000).toISOString(), count: 1 }] };
-  await page.route('**/api/live/firms*', async route => {
-    firmsRequests++;
-    await new Promise(resolve => setTimeout(resolve, 150));
-    await route.fulfill({ status: fail ? 503 : 200, json: { type: 'FeatureCollection', metadata, features: [
-      { type: 'Feature', geometry: { type: 'Point', coordinates: [17.5, 3.5] }, properties: { id: 1, frp: 10, brightness: 320, confidence: 80, date: '2026-09-30', time: '12:00 UTC', dayNight: 'D' } },
-      { type: 'Feature', geometry: { type: 'Point', coordinates: [0, 120] }, properties: { id: 2, frp: 10, brightness: 320, confidence: 80 } },
-    ] } });
-  });
-  await page.route('**/api/live/events*', async route => {
-    eventsRequests++;
-    await route.fulfill({ json: { type: 'FeatureCollection', metadata: { ...metadata, availability: [{ ...metadata.availability[0], provider: 'USGS', status: 'empty', count: 0 }, { ...metadata.availability[0], provider: 'GDACS', status: 'unavailable', count: 0 }] }, features: [] } });
-  });
-  const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+  const layers: string[] = [], errors: string[] = [];
+  page.on('request', request => { if (/\/api\/live\/(firms|events)/.test(request.url())) layers.push(request.url()); });
+  page.on('pageerror', error => errors.push(error.message));
   await page.goto('/app/live');
-  const fires = page.getByRole('button', { name: /Feux NASA/ }), events = page.getByRole('button', { name: /Séismes & GDACS/ });
-  await expect(fires).toHaveAttribute('aria-pressed', 'false'); await expect(events).toHaveAttribute('aria-pressed', 'false');
-  expect(firmsRequests).toBe(0); expect(eventsRequests).toBe(0);
-  await fires.click(); await events.click();
-  await expect(page.getByRole('button', { name: 'Réessayer les feux', exact: true })).toBeVisible();
+  await expect(page.locator('.maplibregl-canvas')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Feux NASA|Séismes & GDACS/ })).toHaveCount(0);
+  const marker = page.locator('.tactical-radar-marker').filter({ hasText: 'Sénégal' });
+  await marker.focus(); await marker.press('Enter');
+  await expect(page.getByRole('combobox', { name: 'Choisir un pays', exact: true })).toHaveValue('SN');
+  const globe = page.getByRole('button', { name: /Globe 3D/ });
+  await globe.click(); await expect(globe).toHaveAttribute('aria-pressed', 'true');
+  await globe.click(); await expect(globe).toHaveAttribute('aria-pressed', 'false');
   await expect(page.getByText('Dépêche Sénégal récente', { exact: true })).toBeVisible();
-  fail = false; await page.getByRole('button', { name: 'Réessayer les feux', exact: true }).click();
-  await expect(page.getByText('1 géométries ou mesures invalides exclues.')).toBeVisible();
-  await expect(fires).toContainText('1');
-  await fires.click(); await fires.click();
-  expect(firmsRequests).toBe(2);
-  const canvas = page.locator('.maplibregl-canvas');
-  await expect(async () => {
-    const bounds = (await canvas.boundingBox())!;
-    await canvas.click({ position: { x: bounds.width / 2, y: bounds.height / 2 } });
-    await expect(page.locator('.tactical-fire-popup')).toBeVisible();
-  }).toPass({ timeout: 5000 });
-  await expect(page.locator('.tactical-fire-popup')).toContainText('Observation 30/09');
-  await events.click(); await events.click(); expect(eventsRequests).toBe(1);
-  await fires.click(); await events.click();
-  await expect(fires).toHaveAttribute('aria-pressed', 'false'); await expect(events).toHaveAttribute('aria-pressed', 'false');
-  await expect(page.locator('.tactical-radar-marker').first()).toBeVisible();
-  expect(errors).toEqual([]);
+  await page.getByText('Marchés et événements · bandeau daté', { exact: true }).click();
+  await expect(page.getByRole('link', { name: 'Source : Économie africaine du bandeau' })).toHaveCount(1);
+  expect(layers).toEqual([]); expect(errors).toEqual([]);
 });
 
-test('Couche désactivée pendant le chargement : réponse tardive ignorée et activation suivante réussie', async ({ page }) => {
+test('RW-009 : panne WebGL réelle du canvas laisse pays, météo et RSS utilisables', async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
   await fixtureRadar(page, { weatherOk: true });
-  let calls = 0;
-  await page.route('**/api/live/firms*', async route => {
-    calls++;
-    const call = calls;
-    if (call === 1) await new Promise(resolve => setTimeout(resolve, 700));
-    await route.fulfill({ json: { type: 'FeatureCollection', features: [], metadata: { updatedAt: new Date().toISOString(), stale: false } } });
+  await page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext;
+    Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', { value: function (this: HTMLCanvasElement, ...args: unknown[]) {
+      if (typeof args[0] === 'string' && /webgl/i.test(args[0])) return null;
+      return Reflect.apply(original, this, args);
+    } });
   });
   await page.goto('/app/live');
-  const fires = page.getByRole('button', { name: /Feux NASA/ });
-  await fires.click(); await expect.poll(() => calls).toBe(1); await fires.click();
-  await expect(fires).toHaveAttribute('aria-pressed', 'false');
-  await page.waitForTimeout(800);
-  await fires.click(); await expect.poll(() => calls).toBe(2);
-  await expect(fires).toContainText('0');
-  await expect(fires).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByText('Dépêche Sénégal récente', { exact: true })).toBeVisible();
+  await expect(page.getByText('WebGL non supporté', { exact: true })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Choisir un pays', exact: true }).selectOption('CI');
+  await expect(page.getByText('Économie Côte d’Ivoire', { exact: true })).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'Choisir le pays ou la ville pour la météo', exact: true })).toHaveValue('CI');
+  await expect(page.getByRole('button', { name: /Feux NASA|Séismes & GDACS/ })).toHaveCount(0);
 });

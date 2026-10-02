@@ -45,9 +45,13 @@ test('Worker bloqué et RSS en panne : pays et fil restent utilisables après na
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   for (let visit = 0; visit < 2; visit++) {
+    await fixtureRadar(page, { rssFails: true });
     await page.goto('/app/live');
     await expect(page.getByText('Carte indisponible. Le fil et le choix du pays restent accessibles.', { exact: true })).toBeVisible();
-    await expect(page.getByText('RSS indisponible(s). Les autres sources restent consultables.').first()).toBeVisible();
+    await expect(page.getByText('Flux RSS des rédactions indisponible', { exact: true })).toBeVisible();
+    await expect(page.getByText('Dépêche Sénégal récente', { exact: true })).toHaveCount(0);
+    await fixtureRadar(page, { weatherOk: true });
+    await page.getByRole('button', { name: 'Actualiser', exact: true }).click();
     await page.getByRole('combobox', { name: 'Choisir un pays' }).selectOption('SN');
     await expect(page.getByText('Dépêche Sénégal récente', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Actualiser', exact: true }).click();
@@ -71,6 +75,9 @@ test('Build servi : module worker réel, dépendance et protection dashboard', a
     worker.onerror = () => { clearTimeout(timer); worker.terminate(); resolve('error'); };
   }));
   expect(result).toBe('ready');
+  const weather = await request.get('/api/live/weather?code=SN');
+  expect(weather.status()).toBe(401);
+  expect((await weather.json()).code).toBe('AUTHENTICATION_REQUIRED');
   await page.goto('/app/live');
   await expect(page).toHaveURL(/sign-in/);
 });

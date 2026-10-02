@@ -1,5 +1,25 @@
 # Africa Live — Plan de préparation à la production
 
+## Remédiation Radar/météo reçue localement — 1er octobre 2026
+
+RW-001 à RW-010 clos localement ; [preuves et limites](radar-weather-remediation-validation.md).
+242 tests unitaires réussis / 14 ignorés, 4 invariants, TypeScript/lint/migrations/
+build réussis ; 51 E2E dev et 1 build séparé réussis. Diff laissé pour revue,
+préparation documentaire précédente conservée. Aucun commit/push/déploiement,
+changement distant ni coût ; réception Clerk connectée et staging non effectuée.
+
+## Historique : plan Radar/météo du 1er octobre 2026
+
+La revue des commits `6f7e384` et `54e5696` confirme des défauts d'accès,
+de validation/fraîcheur/provenance météo et de classement RSS.
+**Plan préparé, corrections non implémentées** :
+[backlog détaillé RW-001 à RW-010](radar-weather-remediation-backlog.md),
+[prompt Gemini à copier-coller](gemini-radar-weather-prompt.md).
+Priorité immédiate RW-001 (P1) : aucun secours météo après refus 401/403/429.
+Les autres tickets P2 font partie de la réception locale requise, avec tests
+et documentation. Aucun commit/push/déploiement ou changement distant autorisé
+par la préparation de ce plan. Les bilans L0–L5 ci-dessous restent historiques.
+
 Complément L5 du 1er octobre : AL-T05 expérimenté/testé et évalué localement,
 recommandation **ajuster avant généralisation** ; [preuves et limites VLC](anchored-player-validation.md).
 Code L5 publié sur staging après autorisation ; prototype activable seulement

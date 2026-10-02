@@ -17,7 +17,7 @@ test('interpretWeatherCode maps WMO codes to French descriptions and semantic ic
   assert.deepEqual(interpretWeatherCode(48), { description: 'Brume sèche / Harmattan', icon: 'fog' });
   assert.deepEqual(interpretWeatherCode(63), { description: 'Pluie modérée', icon: 'rain' });
   assert.deepEqual(interpretWeatherCode(95), { description: 'Orage', icon: 'storm' });
-  assert.deepEqual(interpretWeatherCode(999), { description: 'Conditions variables', icon: 'partly-cloudy' });
+  assert.deepEqual(interpretWeatherCode(999), { description: 'Condition inconnue', icon: 'unknown' });
 });
 
 test('degToCompass correctly converts wind angles to 16 compass directions', () => {
@@ -54,7 +54,7 @@ test('resolveWeatherTarget resolves known quick locations by country code', () =
 
 test('resolveWeatherTarget resolves African countries outside quick list', () => {
   const targetDZ = resolveWeatherTarget({ code: 'DZ' });
-  assert.equal(targetDZ.locationName, 'Algérie');
+  assert.equal(targetDZ.locationName, 'Point de référence · Algérie');
   assert.equal(targetDZ.countryCode, 'DZ');
   assert.equal(targetDZ.region, 'Afrique du Nord');
 });
@@ -81,8 +81,9 @@ test('getRadarWeather fetches, normalizes Open-Meteo responses and caches them',
     latitude: 14.69,
     longitude: -17.44,
     timezone: 'Africa/Dakar',
+    current_units: { time: 'unixtime', temperature_2m: '°C', apparent_temperature: '°C', relative_humidity_2m: '%', wind_speed_10m: 'km/h', wind_direction_10m: '°', precipitation: 'mm' },
     current: {
-      time: '2026-09-29T23:00:00Z',
+      time: Math.floor(Date.now() / 1000),
       interval: 900,
       temperature_2m: 27.8,
       relative_humidity_2m: 84,
@@ -145,8 +146,9 @@ test('getRadarWeather coalesces concurrent requests to the same target', async (
         latitude: 5.36,
         longitude: -4.01,
         timezone: 'Africa/Abidjan',
-        current: {
-          time: '2026-09-29T23:00:00Z',
+        current_units: { time: 'unixtime', temperature_2m: '°C', apparent_temperature: '°C', relative_humidity_2m: '%', wind_speed_10m: 'km/h', wind_direction_10m: '°', precipitation: 'mm' },
+    current: {
+          time: Math.floor(Date.now() / 1000),
           temperature_2m: 26.0,
           relative_humidity_2m: 90,
           apparent_temperature: 29.5,
@@ -195,8 +197,9 @@ test('getRadarWeather serves stale cache if upstream fails within tolerance', as
         latitude: 12.64,
         longitude: -8.0,
         timezone: 'Africa/Bamako',
-        current: {
-          time: '2026-09-29T23:00:00Z',
+        current_units: { time: 'unixtime', temperature_2m: '°C', apparent_temperature: '°C', relative_humidity_2m: '%', wind_speed_10m: 'km/h', wind_direction_10m: '°', precipitation: 'mm' },
+    current: {
+          time: Math.floor(Date.now() / 1000),
           temperature_2m: 31.0,
           relative_humidity_2m: 55,
           apparent_temperature: 34.0,
@@ -267,6 +270,7 @@ test('getRadarWeather falls back to wttr.in when Open-Meteo returns 429', async 
     current_condition: [
       {
         temp_C: '29',
+        weatherCode: '113',
         FeelsLikeC: '33',
         humidity: '75',
         windspeedKmph: '18',
@@ -306,7 +310,11 @@ test('getRadarWeather falls back to wttr.in when Open-Meteo returns 429', async 
     assert.equal(result.current.apparentTemperatureC, 33);
     assert.equal(result.current.relativeHumidityPercent, 75);
     assert.equal(result.current.windSpeedKmh, 18);
-    assert.equal(result.current.weatherDescription, 'Ensoleillé');
+    assert.equal(result.current.weatherDescription, 'Ciel dégagé');
+    assert.equal(result.current.source, 'wttr.in');
+    assert.equal(result.availability[0].provider, 'wttr.in');
+    assert.equal(result.availability[0].status, 'partial');
+    assert.equal(result.current.observedAt, null);
     assert.equal(result.current.weatherIcon, 'clear');
   } finally {
     globalThis.fetch = originalFetch;

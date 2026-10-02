@@ -22,7 +22,7 @@ for (const width of [1366, 390, 683]) test(`L4 réception datée, clavier et ref
   await expect(page.getByRole('button', { name: /Briefing/ })).toBeDisabled();
   expect(briefingRequests).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.screenshot({ path: `docs/screenshots/l4-dashboard-${width}.png` });
+  await page.screenshot({ path: `.local-logs/rw/screenshots/l4-dashboard-${width}.png` });
 });
 
 test('L4 fond cartographique bloqué : choix pays et fil préservés', async ({ page }) => {
@@ -36,13 +36,14 @@ test('L4 fond cartographique bloqué : choix pays et fil préservés', async ({ 
   await expect(page).toHaveURL(/country=SN/);
 });
 
-for (const width of [1366, 390]) test(`L4 observation réelle locale à ${width}px`, async ({ page }) => {
+for (const width of [1366, 390]) test(`RW réception locale en panne simulée à ${width}px`, async ({ page }) => {
   await page.setViewportSize({ width, height: width === 1366 ? 768 : 844 });
+  await fixtureRadar(page, { allFail: true });
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto('/app/live?country=SN');
   await expect(page.getByRole('heading', { name: /Radar Afrique/ })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Disponibilité des sources' }).getByRole('status')).toContainText(/Sources|Couverture/);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
-  await page.screenshot({ path: `docs/screenshots/l4-dashboard-real-${width}.png` });
+  await page.screenshot({ path: `.local-logs/rw/screenshots/l4-dashboard-real-${width}.png` });
 });

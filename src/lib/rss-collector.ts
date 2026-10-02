@@ -12,6 +12,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   // --- Agences et rédactions nationales africaines ---
   {
     id: 'aps',
+    editorialScope: 'africa',
     name: 'APS (Sénégal)',
     domain: 'aps.sn',
     url: 'https://aps.sn/feed/',
@@ -21,6 +22,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   },
   {
     id: 'aip',
+    editorialScope: 'africa',
     name: 'AIP (Côte d’Ivoire)',
     domain: 'aip.ci',
     url: 'https://www.aip.ci/feed/',
@@ -30,6 +32,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   },
   {
     id: 'malijet',
+    editorialScope: 'africa',
     name: 'MaliJet (Mali)',
     domain: 'malijet.com',
     url: 'https://malijet.com/rss.xml',
@@ -39,6 +42,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   },
   {
     id: 'lefaso',
+    editorialScope: 'africa',
     name: 'LeFaso.net (Burkina Faso)',
     domain: 'lefaso.net',
     url: 'https://lefaso.net/spip.php?page=backend',
@@ -48,6 +52,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   },
   {
     id: 'actu_cm',
+    editorialScope: 'africa',
     name: 'Actu Cameroun',
     domain: 'actucameroun.com',
     url: 'https://actucameroun.com/feed/',
@@ -57,6 +62,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   },
   {
     id: 'guineenews',
+    editorialScope: 'africa',
     name: 'Guinéenews (Guinée)',
     domain: 'guineenews.org',
     url: 'https://guineenews.org/feed/',
@@ -66,6 +72,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   },
   {
     id: 'okapi',
+    editorialScope: 'africa',
     name: 'Radio Okapi (RDC)',
     domain: 'radiookapi.net',
     url: 'https://www.radiookapi.net/rss.xml',
@@ -75,6 +82,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   },
   {
     id: 'hespress',
+    editorialScope: 'africa',
     name: 'Hespress FR (Maroc)',
     domain: 'fr.hespress.com',
     url: 'https://fr.hespress.com/feed',
@@ -84,6 +92,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   },
   {
     id: 'tsa',
+    editorialScope: 'africa',
     name: 'TSA (Algérie)',
     domain: 'tsa-algerie.com',
     url: 'https://tsa-algerie.com/feed/',
@@ -93,6 +102,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   },
   {
     id: 'gabonreview',
+    editorialScope: 'africa',
     name: 'Gabon Review',
     domain: 'gabonreview.com',
     url: 'https://gabonreview.com/feed/',
@@ -102,6 +112,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   },
   {
     id: '24haubenin',
+    editorialScope: 'africa',
     name: '24 Heures au Bénin',
     domain: '24haubenin.info',
     url: 'https://24haubenin.info/?page=backend',
@@ -113,6 +124,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   // --- Économie, Analyses & Panafricain ---
   {
     id: 'ecofin',
+    editorialScope: 'africa',
     name: 'Agence Ecofin',
     domain: 'agenceecofin.com',
     url: 'https://www.agenceecofin.com/feed',
@@ -122,6 +134,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   },
   {
     id: 'financialafrik',
+    editorialScope: 'africa',
     name: 'Financial Afrik',
     domain: 'financialafrik.com',
     url: 'https://www.financialafrik.com/feed/',
@@ -131,6 +144,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   },
   {
     id: 'ja',
+    editorialScope: 'africa',
     name: 'Jeune Afrique',
     domain: 'jeuneafrique.com',
     url: 'https://www.jeuneafrique.com/feed/',
@@ -140,6 +154,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   },
   {
     id: 'africanews',
+    editorialScope: 'africa',
     name: 'Africanews (FR)',
     domain: 'fr.africanews.com',
     url: 'https://fr.africanews.com/feed/',
@@ -151,6 +166,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   // --- Rubrique Internationale ---
   {
     id: 'f24_monde',
+    editorialScope: 'international',
     name: 'France 24 Monde',
     domain: 'france24.com',
     url: 'https://www.france24.com/fr/rss',
@@ -160,6 +176,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   },
   {
     id: 'f24_afrique',
+    editorialScope: 'international',
     name: 'France 24 Afrique',
     domain: 'france24.com',
     url: 'https://www.france24.com/fr/afrique/rss',
@@ -169,6 +186,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   },
   {
     id: 'rfi_monde',
+    editorialScope: 'international',
     name: 'RFI Monde',
     domain: 'rfi.fr',
     url: 'https://www.rfi.fr/fr/monde/rss',
@@ -178,6 +196,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   },
   {
     id: 'rfi',
+    editorialScope: 'international',
     name: 'RFI Afrique',
     domain: 'rfi.fr',
     url: 'https://www.rfi.fr/fr/afrique/rss',
@@ -187,6 +206,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   },
   {
     id: 'bbc',
+    editorialScope: 'international',
     name: 'BBC Afrique',
     domain: 'bbc.com',
     url: 'https://feeds.bbci.co.uk/afrique/rss.xml',
@@ -196,6 +216,7 @@ export const RSS_FEEDS: FeedConfig[] = [
   },
   {
     id: 'lemonde_afrique',
+    editorialScope: 'international',
     name: 'Le Monde Afrique',
     domain: 'lemonde.fr',
     url: 'https://www.lemonde.fr/afrique/rss_full.xml',
@@ -380,6 +401,7 @@ export function parseFeedXml(xml: string, feed: FeedConfig): RadarRssArticle[] {
       url: finalUrl,
       domain: feed.domain,
       sourceName: feed.name,
+      editorialScope: feed.editorialScope,
       sourceType: 'rss',
       publishedAt,
       updatedAt: normalizeRadarDate(updatedMatch ? decodeXmlEntities(updatedMatch[1]) : null),

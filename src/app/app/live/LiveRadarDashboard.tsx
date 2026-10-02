@@ -13,10 +13,11 @@ import Player from '@/components/Player';
 import LiveMarketTicker from '@/components/radar/LiveMarketTicker';
 import { canonicalArticleUrl, temporalWindow, formatRadarDate, radarSource } from '@/lib/radar-data';
 import { launchPlayer } from '@/lib/player-window';
-import { AFRICAN_COUNTRIES } from '@/lib/live-osint';
-import { QUICK_WEATHER_LOCATIONS, degToCompass, interpretWeatherCode } from '@/lib/live-weather';
+import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
+import { QUICK_WEATHER_LOCATIONS } from '@/lib/weather-locations';
+import { useLiveWeather } from '@/components/radar/useLiveWeather';
 import type { RadarArticle, RadarCountry } from '@/lib/live-osint-types';
-import type { LiveWeatherSnapshot, WeatherIconType } from '@/lib/live-weather-types';
+import type { WeatherIconType } from '@/lib/live-weather-types';
 import type { RadarRssSnapshot } from '@/lib/rss-collector-types';
 import type { LiveChannelsSummarySnapshot } from '@/lib/live-channels-types';
 import type { Channel } from '@/types/channel';
@@ -62,26 +63,14 @@ const TacticalVectorMap = dynamic(
 const REFRESH_INTERVAL_MS = 5 * 60_000;
 const TIMEZONE = 'Africa/Dakar';
 
-function formatTime(value: string | null | undefined, options: Intl.DateTimeFormatOptions = {}) {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
-  return new Intl.DateTimeFormat('fr-FR', {
-    timeZone: TIMEZONE,
-    hour: '2-digit',
-    minute: '2-digit',
-    ...options,
-  }).format(date);
-}
-
-
 function WeatherIconDisplay({
   icon,
   isDay,
 }: {
   icon: WeatherIconType;
-  isDay: boolean;
+  isDay: boolean | null;
 }) {
+  if (isDay === null || icon === 'unknown') return <Cloud aria-hidden="true" className="h-6 w-6 text-zinc-300" />;
   switch (icon) {
     case 'clear':
       return isDay ? (
@@ -104,12 +93,6 @@ function WeatherIconDisplay({
   }
 }
 
-function isWeatherSnapshot(value: unknown): value is LiveWeatherSnapshot {
-  if (!value || typeof value !== 'object') return false;
-  const data = value as Partial<LiveWeatherSnapshot>;
-  return Boolean(data.current) && Array.isArray(data.quickLocations);
-}
-
 export default function LiveRadarDashboard() {
   return <Suspense fallback={<p className="p-4">Chargement du Radar…</p>}><RadarWorkspace /></Suspense>;
 }
@@ -119,37 +102,13 @@ function RadarWorkspace() {
   const [refreshing, setRefreshing] = useState(false);
   const searchParams = useSearchParams();
   const countryParam = searchParams.get('country');
-  const [userSelectedCountry, setUserSelectedCountry] = useState<string | null | undefined>(undefined);
-  const [prevCountryParam, setPrevCountryParam] = useState(countryParam);
-
-  if (countryParam !== prevCountryParam) {
-    setPrevCountryParam(countryParam);
-    setUserSelectedCountry(undefined);
-  }
-
-  useEffect(() => {
-    const handlePopState = () => {
-      const url = new URL(window.location.href);
-      setUserSelectedCountry(radarCountry(url.searchParams.get('country')));
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
+  const selectedCountry = radarCountry(countryParam);
   const setSelectedCountry = useCallback((code: string | null) => {
-    const validated = radarCountry(code);
-    setUserSelectedCountry(validated);
-    if (typeof window !== 'undefined') {
-      const next = radarCountryUrl(window.location.href, validated);
-      if (next !== window.location.pathname + window.location.search + window.location.hash) {
-        window.history.pushState(null, '', next);
-      }
+    const next = radarCountryUrl(window.location.href, radarCountry(code));
+    if (next !== window.location.pathname + window.location.search + window.location.hash) {
+      window.history.pushState(null, '', next);
     }
   }, []);
-
-  const selectedCountry = userSelectedCountry !== undefined
-    ? userSelectedCountry
-    : radarCountry(countryParam);
   const [mapRequested, setMapRequested] = useState(false);
   const [desktopMap, setDesktopMap] = useState(false);
   const [tickerSources, setTickerSources] = useState<RadarSourceRow[]>([]);
@@ -175,107 +134,8 @@ function RadarWorkspace() {
   const [activePlayChannel, setActivePlayChannel] = useState<Channel | null>(null);
   const [rightPanelTab, setRightPanelTab] = useState<'news' | 'channels'>('news');
 
-  const [selectedCityCode, setSelectedCityCode] = useState<{ code: string; countryContext: string | null } | null>(null);
-  const activeWeatherCode = selectedCityCode?.countryContext === selectedCountry ? selectedCityCode.code : selectedCountry ?? 'SN';
-  const [weather, setWeather] = useState<LiveWeatherSnapshot | null>(null);
-  const [weatherError, setWeatherError] = useState<string | null>(null);
-  const [weatherLoading, setWeatherLoading] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    const controller = new AbortController();
-
-    const loadWeather = async () => {
-      setWeatherLoading(true);
-      setWeather(previous => previous?.current.countryCode === activeWeatherCode ? previous : null);
-      try {
-        const response = await fetch(`/api/live/weather?code=${encodeURIComponent(activeWeatherCode)}`, {
-          signal: controller.signal,
-          cache: 'no-store',
-        });
-        const body: unknown = await response.json();
-        if (response.ok && isWeatherSnapshot(body)) {
-          if (!active) return;
-          setWeather(body);
-          setWeatherError(null);
-          return;
-        }
-        throw new Error('Données météo momentanément indisponibles.');
-      } catch (error) {
-        if (active && !controller.signal.aborted) {
-          // Client-side fallback directly to Open-Meteo
-          try {
-            const loc = QUICK_WEATHER_LOCATIONS.find((l) => l.code === activeWeatherCode) ??
-              AFRICAN_COUNTRIES.find((c) => c.code === activeWeatherCode) ??
-              { latitude: 14.6928, longitude: -17.4467, name: 'Dakar', code: 'SN', region: 'Afrique de l’Ouest' };
-            const lat = 'latitude' in loc ? loc.latitude : 14.6928;
-            const lon = 'longitude' in loc ? loc.longitude : -17.4467;
-            const locName = 'city' in loc ? (loc as { city: string }).city : ('name' in loc ? loc.name : 'Dakar');
-            const countryName = 'countryName' in loc ? (loc as { countryName: string }).countryName : ('name' in loc ? loc.name : 'Afrique');
-
-            const res = await fetch(
-              `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m&timezone=auto&timeformat=unixtime`,
-              { signal: controller.signal }
-            );
-            if (res.ok) {
-              const data = await res.json();
-              if (data && typeof data === 'object' && data.current) {
-                const cur = data.current;
-                const { description, icon } = interpretWeatherCode(cur.weather_code ?? 0);
-                const snapshot: LiveWeatherSnapshot = {
-                  current: {
-                    locationName: locName,
-                    countryCode: activeWeatherCode,
-                    countryName,
-                    region: loc.region ?? 'Afrique',
-                    latitude: lat,
-                    longitude: lon,
-                    timezone: typeof data.timezone === 'string' ? data.timezone : 'Africa/Dakar',
-                    temperatureC: Math.round((cur.temperature_2m ?? 0) * 10) / 10,
-                    apparentTemperatureC: Math.round((cur.apparent_temperature ?? cur.temperature_2m ?? 0) * 10) / 10,
-                    relativeHumidityPercent: Math.round(cur.relative_humidity_2m ?? 0),
-                    windSpeedKmh: Math.round((cur.wind_speed_10m ?? 0) * 10) / 10,
-                    windDirectionDeg: Math.round(cur.wind_direction_10m ?? 0),
-                    windDirectionCompass: degToCompass(cur.wind_direction_10m ?? 0),
-                    weatherCode: cur.weather_code ?? 0,
-                    weatherDescription: description,
-                    weatherIcon: icon,
-                    isDay: cur.is_day === 1 || cur.is_day === true,
-                    precipitationMm: Math.round((cur.precipitation ?? 0) * 10) / 10,
-                    observedAt: new Date((cur.time ?? 0) * 1000).toISOString(),
-                    fetchedAt: new Date().toISOString(),
-                    stale: false,
-                    source: 'Open-Meteo',
-                    attribution: 'Données météo : Open-Meteo (CC BY 4.0)',
-                  },
-                  quickLocations: QUICK_WEATHER_LOCATIONS,
-                  fetchedAt: new Date().toISOString(),
-                  stale: false,
-                };
-                if (!active) return;
-                setWeather(snapshot);
-                setWeatherError(null);
-                return;
-              }
-            }
-          } catch {
-            // Client-side fallback failed as well, proceed to report error
-          }
-          setWeatherError(error instanceof Error ? error.message : 'Erreur de chargement météo.');
-        }
-      } finally {
-        if (active) setWeatherLoading(false);
-      }
-    };
-
-    void loadWeather();
-    const interval = window.setInterval(() => void loadWeather(), 15 * 60_000);
-    return () => {
-      active = false;
-      controller.abort();
-      window.clearInterval(interval);
-    };
-  }, [activeWeatherCode, refreshToken]);
+  const activeWeatherCode = selectedCountry ?? 'SN';
+  const { weather, weatherError, weatherLoading, retryBlocked } = useLiveWeather(activeWeatherCode, refreshToken);
 
   useEffect(() => {
     const tick = () => setClock(new Intl.DateTimeFormat('fr-FR', {
@@ -427,6 +287,7 @@ function RadarWorkspace() {
       sourceType: 'rss',
       sourceName: a.sourceName,
       category: a.category,
+      editorialScope: a.editorialScope,
     }));
   }, [rss]);
 
@@ -446,7 +307,7 @@ function RadarWorkspace() {
   const [scopeTab, setScopeTab] = useState<'all' | 'africa' | 'international'>('all');
 
   const windowed = useMemo(() => temporalWindow(allMergedArticles, a => a.indexedAt, asOf), [allMergedArticles, asOf]);
-  const isInternational = useCallback((a: RadarArticle) => a.category === 'International', []);
+  const isInternational = useCallback((a: RadarArticle) => a.editorialScope === 'international', []);
 
   const baseCountryArticles = useMemo(() => {
     return windowed.recent.filter((a) => !selectedCountry || a.countryCode === selectedCountry);
@@ -738,7 +599,7 @@ function RadarWorkspace() {
                         Fil des dépêches
                       </div>
                       <p className="mt-0.5 text-xs text-zinc-500">
-                        {activeCountry ? `Dépêches liées à : ${activeCountry.name}` : 'Rédactions africaines et internationales vérifiées'} · {visibleArticles.length} résultats datés · 24 h
+                        {activeCountry ? `Dépêches liées à : ${activeCountry.name}` : 'Rédactions africaines et internationales'} · {visibleArticles.length} résultats datés · 24 h
                       </p>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -940,12 +801,12 @@ function RadarWorkspace() {
                 </span>
                 <div>
                   <div className="flex items-center gap-2 text-sm font-bold text-white">
-                    Météo en direct
+                    Météo locale
                     <span className="text-zinc-600 font-normal">·</span>
                     <span className="text-sky-200">{weather?.current.locationName ?? (AFRICAN_COUNTRIES.find((c) => c.code === activeWeatherCode)?.name ?? 'Dakar')}</span>
                   </div>
                   <p className="mt-0.5 text-xs text-zinc-400">
-                    Observation temps réel · Open-Meteo & wttr.in
+                    {weather ? `Observation · ${weather.current.source} · ${weather.current.transport === 'browser' ? 'navigateur' : 'serveur'}` : 'Observation au lieu sélectionné'}
                   </p>
                 </div>
               </div>
@@ -957,30 +818,23 @@ function RadarWorkspace() {
                   value={activeWeatherCode}
                   onChange={(e) => {
                     const code = e.target.value;
-                    setSelectedCityCode({ code, countryContext: code });
                     setSelectedCountry(code);
                   }}
                   className="rounded-xl border border-white/[0.1] bg-black/60 px-2.5 py-1.5 text-xs font-medium text-zinc-200 hover:border-sky-400/40 focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400/50"
                 >
-                  <optgroup label="Grandes capitales">
-                    {QUICK_WEATHER_LOCATIONS.map((loc) => (
-                      <option key={`quick-${loc.code}`} value={loc.code} className="bg-zinc-900 text-zinc-100">
-                        {loc.city} ({loc.countryName})
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Tous les pays africains (54)">
-                    {AFRICAN_COUNTRIES.map((c) => (
-                      <option key={`country-${c.code}`} value={c.code} className="bg-zinc-900 text-zinc-100">
-                        {c.name} ({c.code})
-                      </option>
-                    ))}
+                  <optgroup label={`Pays et territoires africains (${AFRICAN_COUNTRIES.length})`}>
+                    {[...AFRICAN_COUNTRIES].sort((a, b) => a.name.localeCompare(b.name, 'fr')).map((c) => {
+                      const city = QUICK_WEATHER_LOCATIONS.find(loc => loc.code === c.code);
+                      return <option key={c.code} value={c.code} className="bg-zinc-900 text-zinc-100">
+                        {c.name} ({c.code}){city ? ` · ${city.city}` : ' · point de référence'}
+                      </option>;
+                    })}
                   </optgroup>
                 </select>
 
                 {weather?.stale ? (
                   <span className="rounded-full border border-amber-300/20 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-200">
-                    Données en cache
+                    Relevé conservé · périmé
                   </span>
                 ) : weather ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
@@ -988,14 +842,14 @@ function RadarWorkspace() {
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                       <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
                     </span>
-                    En direct
+                    {weather.availability[0].status === 'partial' ? 'Données partielles' : 'Relevé récent'}
                   </span>
                 ) : null}
               </div>
             </div>
 
             {/* Quick city selectors */}
-            <div className="flex gap-1.5 overflow-x-auto border-b border-white/[0.06] bg-black/40 px-4 py-2.5 text-xs no-scrollbar sm:px-5">
+            <div aria-label="Villes rapides" className="flex gap-1.5 overflow-x-auto border-b border-white/[0.06] bg-black/40 px-4 py-2.5 text-xs no-scrollbar sm:px-5">
               {(weather?.quickLocations && weather.quickLocations.length > 0
                 ? weather.quickLocations
                 : QUICK_WEATHER_LOCATIONS
@@ -1006,7 +860,6 @@ function RadarWorkspace() {
                     key={loc.code}
                     type="button"
                     onClick={() => {
-                      setSelectedCityCode({ code: loc.code, countryContext: loc.code });
                       setSelectedCountry(loc.code);
                     }}
                     className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl px-2.5 py-1 text-[11px] font-semibold transition ${
@@ -1024,6 +877,8 @@ function RadarWorkspace() {
 
             {/* Weather body */}
             <div className="p-4 sm:p-5">
+              {weatherError && weather && <p role="status" className="mb-3 text-xs text-amber-200">{weatherError} · Relevé conservé jusqu’à expiration.</p>}
+              {weather?.current.timeAnomaly && <p className="mb-3 text-xs text-amber-200">Horodatage amont légèrement futur.</p>}
               {weatherError && !weather ? (
                 <div className="rounded-xl border border-amber-300/15 bg-amber-300/[0.05] p-4 text-xs text-amber-100/90">
                   <p>{weatherError}</p>
@@ -1032,7 +887,7 @@ function RadarWorkspace() {
                     onClick={() => setRefreshToken((v) => v + 1)}
                     className="mt-2 font-bold text-amber-200 underline underline-offset-4"
                   >
-                    Réessayer
+                    {retryBlocked ? 'Réessayer après le délai' : 'Réessayer'}
                   </button>
                 </div>
               ) : weatherLoading && !weather ? (
@@ -1073,7 +928,7 @@ function RadarWorkspace() {
                         {weather.current.countryName} · {weather.current.region}
                       </div>
                       <div className="mt-1 font-mono text-[10px] text-zinc-500">
-                        {weather.current.timezone}
+                        {weather.current.timezone ?? 'Fuseau inconnu'}
                       </div>
                     </div>
                   </div>
@@ -1125,10 +980,10 @@ function RadarWorkspace() {
                         Relevé
                       </div>
                       <div className="mt-1 font-mono text-xs font-bold text-white tabular-nums">
-                        {formatTime(weather.current.observedAt)}
+                        {weather.current.observedAt ? new Intl.DateTimeFormat('fr-FR', { timeZone: weather.current.timezone ?? 'UTC', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(weather.current.observedAt)) : 'Date d’observation inconnue'}
                       </div>
                       <div className="mt-0.5 text-[10px] text-zinc-400">
-                        Heure locale
+                        {weather.current.timezone ? 'Heure locale' : 'UTC · fuseau du lieu inconnu'}
                       </div>
                     </div>
                   </div>
@@ -1139,14 +994,14 @@ function RadarWorkspace() {
             <div className="border-t border-white/[0.07] bg-black/40 px-4 py-2.5 text-[10px] leading-4 text-zinc-400 sm:px-5 flex flex-wrap items-center justify-between gap-2">
               <span>
                 <a
-                  href="https://open-meteo.com/"
+                  href={weather?.current.source === 'wttr.in' ? 'https://wttr.in/' : 'https://open-meteo.com/'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-semibold text-sky-300 hover:text-sky-200 underline underline-offset-2"
                 >
-                  Données Open-Meteo
+                  {weather?.current.attribution ?? 'Fournisseurs météo'}
                 </a>{' '}
-                · CC BY 4.0 & wttr.in · Relevé d’observation automatisé sans valeur d’alerte officielle de protection civile.
+                · Relevé d’observation automatisé sans valeur d’alerte officielle de protection civile.
               </span>
               <span className="text-zinc-500">Aucun relevé simulé</span>
             </div>
@@ -1562,7 +1417,7 @@ function ArticleRow({
         <ExternalLink aria-hidden="true" className="ml-1.5 inline h-3 w-3 text-zinc-500 group-hover:text-amber-300" />
       </a>
       <div className="mt-2 flex items-center justify-between gap-2">
-        {article.category === 'International' ? (
+        {article.editorialScope === 'international' ? (
           <span className="inline-flex items-center gap-1 text-[9px] font-medium text-sky-400/90">
             <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
             Rubrique internationale

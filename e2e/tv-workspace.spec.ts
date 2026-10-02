@@ -120,7 +120,7 @@ for (const width of [1366, 390, 320]) test(`Navigation et filtres clavier à ${w
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await expect(page.locator('#catalogue').getByRole('button', { name: /^Regarder / }).first()).toBeVisible();
-  await page.screenshot({ path: `docs/screenshots/l3-tv-${width}.png`, fullPage: false });
+  await page.screenshot({ path: `.local-logs/rw/screenshots/l3-tv-${width}.png`, fullPage: false });
 });
 
 test('Catalogue expiré simulé : consultation conservée et lecture interdite', async ({ page }) => {

@@ -1,5 +1,42 @@
 # Checklist de non-régression — lots local et Railway
 
+## Remédiation Radar/météo RW — reçue localement le 1er octobre 2026
+
+Plan du 1er octobre 2026 :
+[tickets, critères et matrice de tests](radar-weather-remediation-backlog.md).
+**Cases reçues localement avec fournisseurs/profils simulés et Clerk anonyme réel sur build.**
+Preuves : [dossier RW](radar-weather-remediation-validation.md) : 242 unitaires réussis, 14 ignorés, 4 invariants, TypeScript/lint/migrations/build ; 51 E2E dev et 1 build réussis. Les profils Clerk connectés, amonts actuels et staging restent hors réception.
+
+- [x] RW-001 : zéro appel météo direct après 401/403/429, HTML, redirection,
+  JSON invalide, échec réseau/timeout interne ou 503 générique ; secours seulement
+  après 503 `LIVE_WEATHER_UNAVAILABLE` valide, gardes/quotas inchangés.
+- [x] RW-001/RW-006 : API interne bornée à 20 s, secours navigateur à 8 s,
+  annulations et sortie de chargement reçues, une tentative directe au plus.
+- [x] RW-002 : contrats partagés et validation réelle de tous les snapshots ;
+  helpers navigateur indépendants du module de fetch/cache serveur.
+- [x] RW-003 : mesures absentes/invalides et corps >100 000 octets rejetés ;
+  zéro réel/température négative conservés, aucun relevé fictif à 0 °C/ciel dégagé.
+- [x] RW-004 : observation séparée de la collecte, date/fuseau inconnus explicites,
+  données anciennes/futures traitées, jour/nuit local reçu dont Nairobi 20 h 30.
+- [x] RW-005 : fournisseur/attribution réels, tableau et widget cohérents,
+  dates et TTL du cache préservés, secours valide et limites d'expiration reçus.
+- [x] RW-006 : réponses/erreurs tardives SN→CI ignorées, timers nettoyés,
+  contrôles persistants en panne, aucune donnée conservée après refus d'accès.
+- [x] RW-007 : périmètre RSS indépendant de category, cas RFI/France 24/MaliJet
+  reçus, déduplication/24 h et compteurs Toutes = Afrique + International.
+- [x] RW-008 : météo/pays/carte/RSS/TV/URL/historique/rechargement/reset reçus
+  dans Next.js réel ; liste française, clavier, 320/390 px et reflow conservés.
+- [x] RW-009 : fixtures GDELT/couches supprimées réconciliées ; tests utiles
+  conservés sans skip de contournement, worker/globe et bandeau préservés.
+- [x] RW-010 : unitaires, invariants, TypeScript, ESLint, migrations et build
+  réussis ; E2E locaux pertinents reçus, comptes exacts et ignorés documentés.
+- [x] RW-010 : dossier `docs/radar-weather-remediation-validation.md` créé,
+  backlog/journal/reprise mis à jour et environnement local restitué ; aucune
+  publication ou réception Clerk réelle non effectuée revendiquée.
+
+Les cases L0–L5 historiques ci-dessous conservent leurs dates et réserves.
+Elles ne valident pas les modifications `6f7e384`/`54e5696` ou les corrections RW.
+
 ## Réception locale L5 — 1er octobre 2026
 
 Preuves et limites : [AL-T05](anchored-player-validation.md). Code L5 livré

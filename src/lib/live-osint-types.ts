@@ -17,6 +17,8 @@ export type RadarArticle = {
   countryCode: string | null;
   sourceType?: 'gdelt' | 'rss';
   sourceName?: string;
+  // Legacy GDELT server articles (ticker/history) have no editorial RSS scope.
+  editorialScope?: 'africa' | 'international';
   category?: string;
 };
 

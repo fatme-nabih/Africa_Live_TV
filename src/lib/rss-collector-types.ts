@@ -9,6 +9,7 @@ export type RadarRssArticle = {
   updatedAt?: string | null;
   countryCode: string | null;
   countryBasis?: 'media' | 'inferred_topic';
+  editorialScope: 'africa' | 'international';
   category: string;
 };
 
@@ -37,6 +38,7 @@ export type FeedConfig = {
   domain: string;
   url: string;
   defaultCountry: string | null;
+  editorialScope: 'africa' | 'international';
   category: string;
   enabled: boolean;
 };

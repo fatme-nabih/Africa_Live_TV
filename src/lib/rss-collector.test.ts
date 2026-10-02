@@ -11,6 +11,36 @@ import {
 } from './rss-collector';
 import type { FeedConfig } from './rss-collector-types';
 
+test('RW-007: editorial scope belongs to the configured newsroom independently of XML subject', () => {
+  for (const [id, category, expected] of [
+    ['rfi_monde', 'Monde', 'international'], ['rfi', 'Afrique', 'international'],
+    ['f24_afrique', 'Politique', 'international'], ['f24_monde', 'Politique', 'international'],
+    ['bbc', 'Afrique', 'international'], ['lemonde_afrique', 'Afrique', 'international'],
+    ['malijet', 'International', 'africa'], ['actu_cm', 'International', 'africa'],
+  ]) {
+    const feed = RSS_FEEDS.find(f => f.id === id)!;
+    const [dated, undated] = parseFeedXml(`<rss><channel><item><title>Dakar</title><link>https://example.org/${id}</link><pubDate>Thu, 01 Oct 2026 17:00:00 GMT</pubDate><category>${category}</category></item><item><title>Bamako</title><link>https://example.org/${id}-unknown</link></item></channel></rss>`, feed);
+    assert.equal(dated.category, category); assert.equal(dated.editorialScope, expected);
+    assert.equal(undated.editorialScope, expected); assert.equal(undated.publishedAt, null);
+  }
+  assert.equal(RSS_FEEDS.filter(f => f.editorialScope === 'international').length, 6);
+});
+
+test('RW-007: duplicate Monde/Afrique URL keeps a deterministic newsroom scope and stable identity', async t => {
+  clearRssCacheForTesting();
+  const at = Date.parse('2026-10-01T17:30:00Z'); t.mock.method(Date, 'now', () => at);
+  t.mock.method(globalThis, 'fetch', async (url: string | URL | Request) => {
+    const shared = String(url).includes('rfi.fr');
+    return new Response(`<rss><channel><item><title>Dakar</title><link>https://example.org/${shared ? 'shared' : encodeURIComponent(String(url))}</link><pubDate>Thu, 01 Oct 2026 17:00:00 GMT</pubDate><category>Monde</category></item></channel></rss>`);
+  });
+  try {
+    const first = await getRadarRss();
+    const shared = first.articles.filter(a => a.url === 'https://example.org/shared');
+    assert.equal(shared.length, 1); assert.equal(shared[0].editorialScope, 'international');
+    assert.equal((await getRadarRss()).articles.find(a => a.url === shared[0].url)?.id, shared[0].id);
+  } finally { clearRssCacheForTesting(); }
+});
+
 test('decodeXmlEntities unescapes entities, decodes CDATA and strips HTML tags', () => {
   assert.equal(
     decodeXmlEntities('<![CDATA[Économie &amp; Marché]]>'),
@@ -45,6 +75,7 @@ test('parseFeedXml parses RSS 2.0 items accurately', () => {
     url: 'https://example.com/rss',
     defaultCountry: null,
     category: 'Général',
+    editorialScope: 'africa',
     enabled: true,
   };
 
@@ -86,6 +117,7 @@ test('parseFeedXml parses Atom 1.0 entries accurately', () => {
     url: 'https://atom.org/feed',
     defaultCountry: 'CI',
     category: 'Afrique',
+    editorialScope: 'africa',
     enabled: true,
   };
 

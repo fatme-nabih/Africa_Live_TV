@@ -804,26 +804,30 @@ export default function Player({ channelId, channelName = '', anchored = false, 
     >
       <div className="group/player relative flex aspect-video w-full items-center justify-center bg-black">
         <AnimatePresence>
-          <LoadingOverlay loading={loading} waitingForUser={waitingForUser} />
+          <LoadingOverlay key="loading" loading={loading} waitingForUser={waitingForUser} />
           <AwaitingUserOverlay 
+            key="awaiting-user"
             waitingForUser={waitingForUser} 
             phase={state.phase} 
             failureCategory={state.failure?.category} 
             onPlay={() => startPlayback(true)} 
           />
           <FailureOverlay 
+            key="failure"
             visibleFailure={visibleFailure} 
             attemptId={state.attemptId} 
             engine={state.engine} 
             openExternalPlayer={openExternalPlayer} 
             tryAnotherSource={tryAnotherSource} 
           />
-          <ExternalOpeningOverlay phase={state.phase} />
+          <ExternalOpeningOverlay key="external-opening" phase={state.phase} />
           <ExternalOpenedOverlay 
+            key="external-opened"
             externalOpened={externalOpened} 
             openExternalPlayer={openExternalPlayer} 
           />
           <ExternalSuggestedOverlay 
+            key="external-suggested"
             externalSuggested={externalSuggested} 
             externalOpened={externalOpened} 
             phase={state.phase} 
