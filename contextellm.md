@@ -21,14 +21,23 @@ mot de passe, identifiant de paiement, clé Clerk ou URL de flux média.
   `reader.cancel()` géré, deux tests de corps HTTP réels ajoutés. Le reproducteur
   timeout/annulation ne produit plus aucun rejet non géré. Les tests utilisent
   le fetch natif capturé avant les mocks précédents du même fichier.
-- Le propriétaire autorise maintenant la mise à jour GitHub et Railway via CLI.
-  Publication en préparation sur staging uniquement ; 19 migrations appliquées,
-  zéro en attente et aucune différence d'empreinte, contrôlés par SSH CLI.
-  Nouvelle validation : 244 unitaires réussis, 14 ignorés, invariants 4/4,
-  TypeScript/lint/migrations/build réussis. Le
-  [dossier de publication CLI](docs/publication-cli-2026-10-02.md) suit la livraison.
+- Mise à jour GitHub et Railway CLI autorisée puis effectuée : `main`, commit
+  applicatif `51c0bc8`, Railway staging
+  `f0816583-e6a0-4115-bd54-d4cb0709acb1` **SUCCESS**, instance RUNNING.
+  Réception à 19:22 UTC : 287 fichiers applicatifs identiques par SSH CLI ;
+  deux domaines santé 200, météo anonyme 401, dashboard 307 vers connexion,
+  **9/9 E2E distants**. Migrations avant/après : 19/19, zéro en attente,
+  empreintes identiques. Validation locale : 244 unitaires réussis, 14 ignorés,
+  invariants 4/4, TypeScript/lint/migrations/build réussis. Lire le
+  [dossier de publication CLI](docs/publication-cli-2026-10-02.md).
   Le brouillon `docs/plan-experience-premium.md` apparu ensuite reste local.
-  Aucun changement de variable, DNS, plan, coût supplémentaire ou fichier `.env`.
+  Aucun changement de variable, DNS, plan ou fichier `.env`. Aucun service
+  payant supplémentaire souscrit ; l'usage du déploiement n'a pas été chiffré.
+- Point de reprise actuel : GitHub et Railway staging publiés ; un commit
+  documentaire de clôture consigne les preuves sans nouveau changement
+  applicatif. Aucun ticket RW restant. Le serveur dev demeure sur 3001,
+  santé 200, Clerk initial. Les profils connectés/amonts/appareils restent
+  hors réception ; ne pas lancer L5/L6 ni promouvoir staging implicitement.
 
 ## État de reprise historique — 1er octobre 2026
 

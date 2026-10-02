@@ -1,6 +1,13 @@
 # Africa Live — Plan complet et backlog dashboard
 
-Complément courant du 1er octobre 2026 : **RW-001 à RW-010 terminés localement**,
+Complément courant du 2 octobre 2026 : **RW publiés sur GitHub et Railway staging**
+après autorisation. Applicatif `51c0bc8`, Railway CLI
+`f0816583-e6a0-4115-bd54-d4cb0709acb1` SUCCESS ; **9/9 E2E distants**, santé 200,
+météo anonyme 401 et dashboard 307. 244 unitaires réussis, 14 ignorés et contrôles
+locaux verts. [Dossier CLI](publication-cli-2026-10-02.md). Aucun nouveau travail
+L5/L6 ni lancement de production ; limites profils/amonts/appareils conservées.
+
+Complément historique du 1er octobre 2026 : **RW-001 à RW-010 terminés localement**,
 [dossier de validation](radar-weather-remediation-validation.md). 242 unitaires
 réussis + 14 ignorés ; 4 invariants, TypeScript/lint/migrations/build réussis ;
 51 E2E dev + 1 scénario build Clerk anonyme réussis. Diff local à revoir,

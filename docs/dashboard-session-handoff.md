@@ -4,17 +4,22 @@ Cette fiche décrit l’état à la clôture de la session. Lire aussi
 [contextellm.md](../contextellm.md), les règles `AGENTS.md` et le
 [plan détaillé](plan-dashboard-backlog.md) avant de modifier le projet.
 
-## Reprise courante — publication CLI demandée, 2 octobre 2026
+## Reprise courante — publication CLI reçue, 2 octobre 2026
 
 Revue du diff effectuée ; six clés des overlays du lecteur corrigées et rejet
 d'annulation de corps HTTP météo géré. Validation actuelle : 244 unitaires
 réussis, 14 ignorés, invariants 4/4, TypeScript/lint/migrations/build réussis.
-Le propriétaire a explicitement autorisé GitHub et Railway par CLI. Livraison
-staging en préparation, suivie dans le
-[dossier de publication](publication-cli-2026-10-02.md). Les migrations distantes
-19/19 ont été vérifiées par SSH CLI, sans migration en attente ni différence.
+Le propriétaire a explicitement autorisé GitHub et Railway par CLI. Applicatif
+publié sur `main` au commit `51c0bc8` ; Railway staging
+`f0816583-e6a0-4115-bd54-d4cb0709acb1` **SUCCESS**, instance RUNNING à 19:22 UTC.
+[Dossier de publication](publication-cli-2026-10-02.md) : 287 fichiers identiques
+par SSH, **9 E2E distants réussis**, santé 200 sur les deux domaines, météo
+anonyme 401, dashboard 307. Les migrations distantes 19/19 ont été vérifiées
+avant/après par SSH CLI, sans migration en attente ni différence.
 Le brouillon premium indépendant reste local. Aucune modification `.env`,
-variable distante, DNS ou plan. Les limites de réception RW restent consignées.
+variable distante, DNS ou plan. Serveur dev conservé sur 3001, santé 200.
+Un commit documentaire de clôture publie les preuves sans nouveau code à livrer.
+Les profils connectés, amonts et appareils non reçus restent consignés.
 
 ## Reprise historique — RW reçu localement, 1er octobre 2026
 

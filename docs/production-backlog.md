@@ -1,6 +1,17 @@
 # Africa Live — Plan de préparation à la production
 
-## Remédiation Radar/météo reçue localement — 1er octobre 2026
+## Remédiation Radar/météo publiée sur staging — 2 octobre 2026
+
+Publication expressément demandée par le propriétaire : GitHub `main`,
+applicatif `51c0bc8` ; Railway CLI
+`f0816583-e6a0-4115-bd54-d4cb0709acb1` SUCCESS. Santé 200 sur les deux domaines,
+météo anonyme 401, dashboard 307 ; **9/9 E2E distants** et 287 fichiers identiques
+par SSH. Validation locale actuelle : 244 unitaires réussis, 14 ignorés,
+invariants 4/4, TypeScript/lint/migrations/build réussis. Migrations 19/19 avant/
+après, sans différence. [Preuves et limites](publication-cli-2026-10-02.md).
+Profils connectés, amonts et appareils non reçus ; staging demeure staging.
+
+## Historique : remédiation reçue localement — 1er octobre 2026
 
 RW-001 à RW-010 clos localement ; [preuves et limites](radar-weather-remediation-validation.md).
 242 tests unitaires réussis / 14 ignorés, 4 invariants, TypeScript/lint/migrations/

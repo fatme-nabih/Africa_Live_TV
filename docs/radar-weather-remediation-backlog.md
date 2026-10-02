@@ -1,8 +1,11 @@
 # Radar et météo — plan de correction pour Gemini
 
 Date : 1er octobre 2026 · Fuseau : Africa/Dakar.
-État : **RW-001 à RW-010 terminés et reçus localement ; aucun déploiement**.
-Révisions examinées : `6f7e384` et `54e5696` ; HEAD local `54e5696`.
+État actualisé le 2 octobre : **RW-001 à RW-010 terminés, publiés sur staging**
+après demande explicite. GitHub applicatif `51c0bc8` ; Railway CLI
+`f0816583-e6a0-4115-bd54-d4cb0709acb1` SUCCESS, 9/9 E2E distants.
+[Dossier de publication](publication-cli-2026-10-02.md). Limites de réception
+connectée/amonts/appareils conservées. Révisions de départ : `6f7e384`, `54e5696`.
 
 Ce plan traite les défauts confirmés lors de la revue du Radar/RSS et des
 secours météo. Il complète le [backlog production](production-backlog.md),
@@ -21,8 +24,10 @@ Le fournisseur de secours et les boutons météo persistants sont à conserver.
 La préparation initiale a été suivie de l'implémentation locale demandée par
 le propriétaire, dans l'ordre A, B, C, D. Le
 [dossier de réception](radar-weather-remediation-validation.md) consigne les
-fichiers, résultats exacts et limites. Aucun commit, push ou déploiement autorisé
-ni effectué. Les constats et preuves de départ restent historiques ci-dessous.
+fichiers, résultats exacts et limites. À la clôture locale du 1er octobre,
+aucun commit, push ou déploiement n'était autorisé ni effectué. La demande
+du 2 octobre autorise la publication CLI décrite ci-dessus. Les constats et
+preuves de départ restent historiques ci-dessous.
 
 ### Contraintes à conserver
 

@@ -20,13 +20,20 @@ Reproduction isolée dans `weather-abort-repro.cjs`, dans le même dossier ignor
 Serveur Clerk sur 3001 maintenu dans une session de terminal ; aucun commit,
 push, déploiement, changement distant, coût ou modification de `.env.local`.
 
-### Publication CLI demandée ensuite — 2 octobre 2026, en préparation
+### Publication CLI reçue ensuite — 2 octobre 2026, 19:22 UTC
 
 Validation finale actuelle : 244 tests unitaires réussis, 14 ignorés, zéro échec ;
 invariants 4/4, TypeScript, lint, migrations et build réussis. Le build a été
 effectué dans un snapshot isolé pour préserver le serveur dev. Le
 [dossier de publication CLI](publication-cli-2026-10-02.md) consigne le périmètre,
-les limites et les preuves, puis recevra les résultats distants effectifs.
+les limites et les preuves effectives : GitHub `main`, applicatif `51c0bc8` ;
+Railway CLI `f0816583-e6a0-4115-bd54-d4cb0709acb1` SUCCESS, instance RUNNING.
+287 fichiers applicatifs/configuration/migrations identiques par SHA-256 SSH.
+Deux domaines santé processus/base 200, météo anonyme 401 et dashboard 307.
+**9/9 E2E distants réussis**, aucun ignoré, aucune transaction réelle/session
+connectée. Migrations encore 19/19 après déploiement, zéro en attente.
+Serveur dev sur 3001 conservé, `.env.local` identique avant/après. Un commit
+documentaire de clôture publie les résultats sans changement applicatif.
 
 Le propriétaire autorise la publication GitHub et Railway du diff RW et de la
 correction du lecteur. Le P2 météo est corrigé avant publication : rejet de

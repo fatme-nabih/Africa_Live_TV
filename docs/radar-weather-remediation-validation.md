@@ -1,5 +1,12 @@
 # Radar et météo — réception locale RW-001 à RW-010
 
+**Actualisation du 2 octobre : publication CLI autorisée et reçue**, GitHub
+applicatif `51c0bc8` et Railway staging
+`f0816583-e6a0-4115-bd54-d4cb0709acb1` SUCCESS ; 9/9 E2E distants, santé 200,
+météo anonyme 401 et dashboard 307. Validation actuelle : 244 unitaires réussis,
+14 ignorés. [Preuves complètes](publication-cli-2026-10-02.md). Le bilan suivant
+conserve la réception locale historique du 1er octobre et ses limites.
+
 1er octobre 2026 · Africa/Dakar (UTC) · code de départ `main` / `54e5696`.
 Clôture et restitution finale : **23:52 Africa/Dakar**.
 Point d'arrêt avant déconnexion enregistré dans `contextellm.md` et la fiche
@@ -136,7 +143,7 @@ l'annulation d'un corps fetch natif et ajouté deux tests HTTP réels. Validatio
 actualisée : **244 unitaires réussis, 14 ignorés, zéro échec**, invariants 4/4,
 TypeScript/lint/migrations/build réussis. Les six clés des overlays du lecteur
 sont également corrigées. Publication GitHub et Railway staging maintenant
-autorisée par le propriétaire ; son état effectif et ses preuves figurent dans
+autorisée par le propriétaire et effectuée ; ses preuves figurent dans
 le [dossier CLI](publication-cli-2026-10-02.md). Les déclarations de non-publication
 ci-dessous décrivent la clôture historique du 1er octobre.
 

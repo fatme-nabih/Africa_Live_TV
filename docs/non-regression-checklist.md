@@ -1,5 +1,21 @@
 # Checklist de non-régression — lots local et Railway
 
+## Publication CLI reçue — 2 octobre 2026
+
+[Dossier et limites](publication-cli-2026-10-02.md), applicatif `51c0bc8`, Railway
+staging `f0816583-e6a0-4115-bd54-d4cb0709acb1` SUCCESS après autorisation.
+
+- [x] Annulation de corps HTTP natif : aucun rejet non géré, deux cas réels reçus.
+- [x] Overlays lecteur : six clés distinctes, quatre cas de composant reçus.
+- [x] 244 unitaires réussis, 14 ignorés ; invariants 4/4, TypeScript/lint/migrations/build.
+- [x] 287 fichiers applicatifs/configuration/migrations identiques sur le conteneur.
+- [x] Deux domaines santé processus/base 200 ; météo anonyme 401, dashboard 307.
+- [x] 9 E2E distants réussis sans skip ; widgets Clerk et worker réels, aucun paiement.
+- [x] Migrations avant/après 19/19, zéro en attente et empreintes identiques.
+- [x] Serveur local sur 3001 conservé, santé 200 ; `.env.local` inchangé.
+- [ ] Profils Clerk connectés standard/expiré/suspendu : non reçus.
+- [ ] Amonts actuels et appareils/VLC réels : non reçus par cette publication.
+
 ## Remédiation Radar/météo RW — reçue localement le 1er octobre 2026
 
 Plan du 1er octobre 2026 :
