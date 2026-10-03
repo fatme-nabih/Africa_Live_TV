@@ -1,5 +1,8 @@
 # Prompt de reprise — Africa Live « Expérience Premium », lot P3 et suivants
 
+> **Historique** : ce prompt a servi à la session P3 (terminée, committée en local). Le prompt à utiliser maintenant est
+> [prompt-reprise-premium-p4.md](prompt-reprise-premium-p4.md).
+
 À coller tel quel dans une **nouvelle session** Claude Code, dossier
 `C:\Users\GAMER PC\Africa_Live_TV`. Préparé le 3 octobre 2026, après le bilan du
 lot P2. Le prompt initial (P0 → P5) reste dans

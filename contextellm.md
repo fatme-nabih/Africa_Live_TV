@@ -2,9 +2,9 @@
 
 Dernière mise à jour : 3 octobre 2026, fuseau Africa/Dakar.
 
-## Expérience Premium — Lot P3 « Radar vivant » fait en local (3 octobre 2026)
+## Expérience Premium — Lot P3 « Radar vivant » fait et committé en local (3 octobre 2026)
 
-- **Fait et vérifié localement, non committé, non publié** (UX-301 → 308). Détail, mesures et limites : section « Lot P3 » de
+- **Fait, vérifié et committé en local (`412574d`, suivi d'un commit documentaire), non poussé, non publié** (UX-301 → 308). Arbre propre. Détail, mesures et limites : section « Lot P3 » de
   [production-progress.md](docs/production-progress.md) ; plan à jour : [plan-experience-premium.md](docs/plan-experience-premium.md) §5.1.
   Captures : `docs/screenshots/premium-p3-*`.
 - `LiveRadarDashboard.tsx` : 1 383 → 250 lignes ; composants et hooks dans `src/components/radar/`, logique pure testée dans
@@ -21,8 +21,9 @@ Dernière mise à jour : 3 octobre 2026, fuseau Africa/Dakar.
   E2E mode MVP (14 specs, --workers=1) : 134 tests, 132 réussis, 1 ignoré (test « build servi »), 1 échec de test (course dans le nouveau spec radar-live), corrigé puis rejoué 10/10, E2E mode Clerk (dev, anonyme) : 8/8 (auth-entry, payment).
 - Limites : pas de séisme dans la tuile d'alerte (USGS retiré en RW-009) ; APS n'a pas d'image dans son flux ; mesures simulées sur
   Edge de bureau (aucun appareil réel) ; Clerk connecté, VLC réel et flux amont hors réception.
-- Suite : **attendre le feu vert du propriétaire pour P4** (Landing, tarifs, compte : UX-401 → 407 + UX-212, UX-214), puis P5.
-  Le propriétaire peut demander le commit de P3 (seul lot non committé).
+- Suite : **P4 après le feu vert du propriétaire** (Landing, tarifs, compte : UX-401 → 407 + UX-212, UX-214), puis P5. Repères de code
+  et décisions en attente : [plan §5.2](docs/plan-experience-premium.md). **Prompt à coller dans une nouvelle session :
+  [prompt-reprise-premium-p4.md](docs/prompt-reprise-premium-p4.md).** Push et déploiement de P3 : seulement sur demande explicite.
 - Environnement laissé : serveur `npm run dev` sur 3001 en mode **Clerk** (santé 200, `/app` anonyme → 307), ligne technique
   `africa-live-local-user` et événements de test supprimés (compteurs de tables identiques). Scripts de travail non versionnés dans
   `.local-logs/p3/` (mesures de carte, CPU au repos, rendus React, captures) en plus de `.local-logs/premium/`.
@@ -59,7 +60,7 @@ mot de passe, identifiant de paiement, clé Clerk ou URL de flux média.
   transparent conservé via `BrandBackdrop`, polices Unbounded + Manrope,
   signature « Le live qui vient à vous », contexte Sénégal).
 - Prompt de passation initial : [prompt-sonnet-experience-premium.md](docs/prompt-sonnet-experience-premium.md).
-  **Prompt de reprise à coller dans une nouvelle session : [prompt-reprise-premium-p3.md](docs/prompt-reprise-premium-p3.md).**
+  (historique) prompt P3 : [prompt-reprise-premium-p3.md](docs/prompt-reprise-premium-p3.md). **Prompt de reprise actuel à coller dans une nouvelle session : [prompt-reprise-premium-p4.md](docs/prompt-reprise-premium-p4.md).**
 - Avancement : [plan-experience-premium.md](docs/plan-experience-premium.md) §5.1 (fait / reste à faire / questions
   ouvertes), colonne « État » du §6, reliquats UX-209 (suite), UX-212, UX-213, UX-214, §8.1 « Pièges connus ».
 - **Lot P0 terminé et vérifié localement le 2 octobre 2026**, non committé, non publié.

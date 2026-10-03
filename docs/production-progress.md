@@ -969,7 +969,7 @@ pm run simulate:incident\ (simulate-incident.ts) pour générer des événements
 ## Expérience Premium — Lot P0 « Hygiène et socle design » — 2 octobre 2026
 
 Périmètre : refonte du socle visuel selon [plan-experience-premium.md](plan-experience-premium.md)
-(§0 décisions, §4 design system). Aucun commit, push, déploiement, migration,
+(§0 décisions, §4 design system). Committé en local sur demande du propriétaire (`412574d`), non poussé ; aucun déploiement, migration,
 changement `.env*`, Railway, Clerk ou DNS. Playback (`src/lib/playback-*`), accès,
 éligibilité, quotas et API inchangés ; seules des classes CSS ont été modifiées
 dans `Player.tsx` et `PlayerOverlays.tsx`.
@@ -1276,7 +1276,7 @@ Contrôle visuel (Edge, 360 / 768 / 1366 px) : Edge, 0 débordement horizontal, 
 
 ### Reste à faire — Expérience Premium (au 3 octobre 2026, après le lot P3)
 
-P0, P1 et P2 sont publiés ; P3 est fait et vérifié localement, non committé. Restent 15 tickets (P4 Landing/tarifs/compte
+P0, P1 et P2 sont publiés ; P3 est fait, vérifié et committé en local (`412574d`), non poussé, non publié. Restent 15 tickets (P4 Landing/tarifs/compte
 UX-401 → 407, P5 Aimants et finition UX-501 → 508) et 4 reliquats (UX-209 suite, UX-212, UX-213, UX-214). Plan à jour :
 [plan-experience-premium.md](plan-experience-premium.md) §5.1, §6 « Reliquats » et §8.1 « Pièges connus ». Prochain lot : **P4**, après
 le feu vert du propriétaire.

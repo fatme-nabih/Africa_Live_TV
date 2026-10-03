@@ -3,8 +3,8 @@
 ## Expérience Premium P3 — reçue localement le 3 octobre 2026
 
 Plan : [plan-experience-premium.md](plan-experience-premium.md) §5.1. Preuves, mesures et limites :
-[production-progress.md](production-progress.md), section « Lot P3 ». **Cases reçues en local uniquement (dev, port 3001), sans commit
-ni déploiement ; Railway staging inchangé (P0–P2 y sont publiés).** À rejouer à la fin de chaque lot suivant (P4, P5).
+[production-progress.md](production-progress.md), section « Lot P3 ». **Cases reçues en local uniquement (dev, port 3001) ; P3 committé en local (`412574d`), non poussé ni déployé ;
+Railway staging inchangé (P0–P2 y sont publiés).** À rejouer à la fin de chaque lot suivant (P4, P5).
 
 - [x] `npx tsc --noEmit` 0 erreur ; `npm run lint` 0 ; build réussi (Next.js, Turbopack).
 - [x] `npm test` : 341 tests, 327 réussis, 14 ignorés (intégrations PostgreSQL), 0 échec ; invariants 4/4.
