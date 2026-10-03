@@ -71,14 +71,14 @@ export default function CategoryTabs({
   };
 
   return (
-    <nav aria-label="Accès rapide aux catégories" className="relative w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 p-1.5 shadow-xl backdrop-blur-xl">
+    <nav aria-label="Accès rapide aux catégories" className="relative w-full overflow-hidden rounded-2xl border border-line bg-surface-1/80 p-1.5 shadow-xl">
       {/* Scroll Left Button */}
       {canScrollLeft && (
         <button
           type="button"
           onClick={() => scrollBy(-200)}
           aria-label="Faire défiler vers la gauche"
-          className="absolute left-2 top-1/2 z-20 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-black/80 text-zinc-300 shadow-md backdrop-blur transition hover:border-amber-400/40 hover:text-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+          className="absolute left-2 top-1/2 z-20 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full border border-line bg-black/80 text-text shadow-md transition hover:border-al-gold/40 hover:text-al-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -90,7 +90,7 @@ export default function CategoryTabs({
           type="button"
           onClick={() => scrollBy(200)}
           aria-label="Faire défiler vers la droite"
-          className="absolute right-2 top-1/2 z-20 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-black/80 text-zinc-300 shadow-md backdrop-blur transition hover:border-amber-400/40 hover:text-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+          className="absolute right-2 top-1/2 z-20 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full border border-line bg-black/80 text-text shadow-md transition hover:border-al-gold/40 hover:text-al-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
@@ -113,22 +113,22 @@ export default function CategoryTabs({
               type="button"
               onClick={() => onSelectPreset(preset)}
               aria-pressed={isActive}
-              className={`relative flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+              className={`relative flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold ${
                 isActive
-                  ? 'border border-amber-400/40 bg-gradient-to-r from-emerald-500/15 via-amber-400/20 to-rose-500/15 text-white font-bold shadow-sm backdrop-blur-sm'
-                  : 'border border-transparent bg-white/[0.02] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.05] hover:border-white/10 font-medium'
+                  ? 'border border-al-gold bg-al-gold/10 text-text font-bold'
+                  : 'border border-transparent bg-white/[0.02] text-text-muted hover:text-text hover:bg-white/[0.05] hover:border-line font-medium'
               }`}
             >
               <Icon
                 className={`h-3.5 w-3.5 transition-transform duration-200 ${
-                  isActive ? 'scale-105 text-amber-300' : 'text-zinc-500'
+                  isActive ? 'scale-105 text-al-gold' : 'text-text-muted'
                 } ${preset.id === 'favorites' && isActive ? 'fill-current' : ''}`}
               />
               <span>{preset.label}</span>
               {preset.id === 'favorites' && favoritesCount > 0 && (
                 <span
-                  className={`ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                    isActive ? 'bg-amber-400/20 text-amber-200 border border-amber-400/30' : 'bg-white/10 text-zinc-300'
+                  className={`ml-0.5 rounded-full px-1.5 py-0.5 text-xs font-bold ${
+                    isActive ? 'bg-al-gold/20 text-text border border-al-gold/30' : 'bg-white/10 text-text'
                   }`}
                 >
                   {favoritesCount}
@@ -137,7 +137,7 @@ export default function CategoryTabs({
               {isActive && (
                 <motion.div
                   layoutId="activeCategoryGlow"
-                  className="absolute inset-0 rounded-xl pointer-events-none ring-1 ring-amber-400/30"
+                  className="absolute inset-0 rounded-xl pointer-events-none ring-1 ring-al-gold/30"
                   transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
                 />
               )}

@@ -1,10 +1,9 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { UserButton } from '@clerk/nextjs';
 import { getAdministratorAccess } from '@/lib/admin-access';
-import AppNavigation, { AppBrand, NavigationProvider } from '@/components/AppNavigation';
-import BrandWatermark from '@/components/BrandWatermark';
+import AppShell from '@/components/shell/AppShell';
+import BrandBackdrop from '@/components/brand/BrandBackdrop';
 import AdminSupportQueue from '@/components/AdminSupportQueue';
+import { ButtonLink } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,33 +17,27 @@ export default async function AdminPage() {
   }
 
   return (
-    <main className="relative min-h-screen bg-black px-5 py-10 text-zinc-100 overflow-hidden">
-      <BrandWatermark />
+    <AppShell admin>
+    <main className="relative flex-1 bg-black px-5 py-10 text-text overflow-hidden">
+      <BrandBackdrop variant="quiet" />
 
       <div className="relative z-10 mx-auto max-w-4xl">
-        <nav className="mb-10 flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.08] pb-5">
-          <AppBrand />
-          <NavigationProvider admin={true}><AppNavigation /></NavigationProvider>
-          <UserButton />
-        </nav>
-        <section className="rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-6 sm:p-10 shadow-xl shadow-black/40">
-          <p className="text-xs font-semibold uppercase tracking-widest text-amber-300">Administration</p>
-          <h1 className="mt-4 text-3xl font-black text-white">Bienvenue dans votre espace administrateur</h1>
-          <p className="mt-5 text-sm leading-relaxed text-zinc-300">
+        <section className="rounded-2xl border border-line bg-surface-1/80 p-6 sm:p-10 shadow-xl shadow-black/40">
+          <p className="text-xs font-semibold uppercase tracking-widest text-al-gold">Administration</p>
+          <h1 className="font-display mt-4 text-3xl font-bold text-text">Bienvenue dans votre espace administrateur</h1>
+          <p className="mt-5 text-sm leading-relaxed text-text">
             Votre rôle administrateur est confirmé par Clerk. Cet espace est réservé aux comptes administrateurs actifs.
           </p>
-          <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+          <p className="mt-3 text-sm leading-relaxed text-text-muted">
             Les demandes du formulaire Contact sont conservées ici. Les décisions de traitement et les désactivations de sources sont journalisées.
           </p>
-          <Link
-            href="/account"
-            className="mt-8 inline-block rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/20 via-amber-400/25 to-rose-500/20 hover:from-emerald-500/30 hover:via-amber-400/35 hover:to-rose-500/30 px-5 py-2.5 text-xs sm:text-sm font-bold text-amber-100 shadow-md backdrop-blur-md transition active:scale-[0.99]"
-          >
+          <ButtonLink href="/account" variant="primary" className="mt-8">
             Mon compte
-          </Link>
+          </ButtonLink>
         </section>
         <AdminSupportQueue />
       </div>
     </main>
+    </AppShell>
   );
 }

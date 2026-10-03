@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { fixtureRadar } from './helpers/radar-fixture';
+import { selectCountry } from './helpers/country';
 
 const servedBuild = process.env.RADAR_BUILD_TEST === 'true';
 
@@ -29,10 +30,10 @@ for (const width of [1366, 390, 320]) test(`Radar : dates, identités, filtre et
   await page.getByRole('combobox', { name: 'Périmètre du bandeau' }).selectOption('World');
   await expect(page.getByRole('link', { name: 'Source : Événement mondial' })).toHaveCount(1);
   await expect(page.locator('[aria-hidden="true"][inert]')).toHaveCount(1);
-  await page.getByRole('combobox', { name: 'Choisir un pays' }).selectOption('SN');
+  await selectCountry(page, 'SN');
   await expect(page.getByText('Économie Côte d’Ivoire', { exact: true })).toHaveCount(0);
   await expect(page.getByText('Dépêche Sénégal récente', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Briefing — bientôt' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: /Briefing/ })).toHaveCount(0);
   expect(briefing).toEqual([]);
   expect(errors).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -52,7 +53,7 @@ test('Worker bloqué et RSS en panne : pays et fil restent utilisables après na
     await expect(page.getByText('Dépêche Sénégal récente', { exact: true })).toHaveCount(0);
     await fixtureRadar(page, { weatherOk: true });
     await page.getByRole('button', { name: 'Actualiser', exact: true }).click();
-    await page.getByRole('combobox', { name: 'Choisir un pays' }).selectOption('SN');
+    await selectCountry(page, 'SN');
     await expect(page.getByText('Dépêche Sénégal récente', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Actualiser', exact: true }).click();
     await expect(page.getByText('Dépêche Sénégal récente', { exact: true })).toHaveCount(1);

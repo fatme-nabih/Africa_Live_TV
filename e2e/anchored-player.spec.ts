@@ -12,7 +12,7 @@ async function fixture(page: Page, options: { expired?: boolean; late?: boolean;
     playbackMode: i === 3 ? 'EXTERNAL' : 'BROWSER', availabilityStatus: 'READY',
   }));
   await page.addInitScript(() => {
-    localStorage.setItem('iptv_vlc_notice_dismissed', 'true');
+    localStorage.setItem('al_vlc_notice_dismissed', 'true');
     const removed: HTMLVideoElement[] = [];
     Object.assign(window, { l5Removed: removed });
     new MutationObserver(records => {

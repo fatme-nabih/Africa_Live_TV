@@ -78,7 +78,7 @@ test('Afrique → Tout et favoris persistants/vides, sans supprimer le catalogue
   await page.getByRole('button', { name: 'Charger plus de chaînes' }).click();
   await expect(page.locator('#catalogue').getByRole('button', { name: /^Regarder / })).toHaveCount(38);
   await page.getByRole('button', { name: 'Tout le catalogue', exact: true }).click();
-  await page.getByRole('button', { name: 'Ajouter Alpha 00 aux favoris', exact: true }).click();
+  await page.locator('#catalogue').getByRole('button', { name: 'Ajouter Alpha 00 aux favoris', exact: true }).click();
   await page.getByRole('button', { name: /^Favoris/ }).click();
   await expect(page.locator('#catalogue').getByRole('button', { name: /^Regarder / })).toHaveCount(1);
   await page.reload();
@@ -95,7 +95,7 @@ for (const width of [1366, 390, 320]) test(`Navigation et filtres clavier à ${w
   await page.goto('/app/live?country=SN');
   const nav = page.getByRole('navigation', { name: 'Navigation principale' });
   await expect(nav.getByRole('link', { name: 'TV', exact: true })).toHaveAttribute('href', '/app?country=SN');
-  await expect(nav.getByRole('link', { name: 'Dashboard', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(nav.getByRole('link', { name: 'Radar', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(nav.getByRole('link', { name: 'Administration' })).toHaveCount(0);
   await nav.getByRole('link', { name: 'TV', exact: true }).click();
   await expect(page).toHaveURL(/\/app\?country=SN$/);

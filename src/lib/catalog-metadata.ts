@@ -6,19 +6,19 @@ const categories: Record<string, string> = {
   Culture: 'Culture', Lifestyle: 'Art de vivre', Shop: 'Téléachat', Comedy: 'Comédie', Animation: 'Animation',
   Classic: 'Classiques', Outdoor: 'Plein air', Travel: 'Voyage', Family: 'Famille', Cooking: 'Cuisine',
   Auto: 'Automobile', Weather: 'Météo', Science: 'Sciences', Public: 'Service public', Relax: 'Détente',
-  unknown: 'Catégorie non renseignée',
 };
 const aliases = new Map(Object.entries(categories).flatMap(([code, label]) => [[key(code), code], [key(label), code]]));
-for (const alias of ['undefined', 'unknown', 'non renseignee', '']) aliases.set(alias, 'unknown');
+// Sans catégorie exploitable, une chaîne est présentée comme généraliste (pas de code brut ni de « non renseignée »).
+for (const alias of ['undefined', 'unknown', 'non renseignee', '']) aliases.set(alias, 'General');
 aliases.set('actualites', 'News'); aliases.set('sport', 'Sports'); aliases.set('movie', 'Movies');
 aliases.set('informations', 'News'); aliases.set('info', 'News');
 
 export function categoryCodes(raw: string | null | undefined): string[] {
-  if (!raw?.trim()) return ['unknown'];
+  if (!raw?.trim()) return ['General'];
   return [...new Set(raw.split(/[;|,]/).map(token => aliases.get(key(token)) ?? key(token)))];
 }
 export function categoryLabel(code: string) {
-  return categories[code] ?? `Catégorie non reconnue (${code})`;
+  return categories[code] ?? 'Autre catégorie';
 }
 export function categoryLabels(raw: string | null | undefined) {
   return categoryCodes(raw).map(categoryLabel).join(' · ');
@@ -37,8 +37,8 @@ export function catalogLanguageCodes(raw: string | null | undefined) {
 }
 export function catalogLanguageLabel(code: string) {
   if (code === 'unknown') return 'Langue non renseignée';
-  try { const name = languageNames.of(code); return name && name !== code ? name : `Code langue inconnu (${code})`; }
-  catch { return `Code langue inconnu (${code})`; }
+  try { const name = languageNames.of(code); return name && name !== code ? name : 'Autre langue'; }
+  catch { return 'Autre langue'; }
 }
 export function metadataValuesMatching(rows: (string | null)[], code: string, kind: 'category' | 'language') {
   const parse = kind === 'category' ? categoryCodes : catalogLanguageCodes;

@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import { getCurrentAccessDecision } from '@/lib/access-control';
 import { canBrowseCatalog } from '@/lib/access-policy';
 import { getAdministratorAccess } from '@/lib/admin-access';
-import { NavigationProvider } from '@/components/AppNavigation';
+import AppShell from '@/components/shell/AppShell';
 
 export const metadata: Metadata = {
   title: 'Africa Live — Catalogue unifié',
@@ -26,5 +26,5 @@ export default async function AppLayout({
   }
 
   const admin = await getAdministratorAccess();
-  return <NavigationProvider admin={admin.allowed}>{children}</NavigationProvider>;
+  return <AppShell admin={admin.allowed}>{children}</AppShell>;
 }

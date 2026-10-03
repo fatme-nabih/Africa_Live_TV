@@ -16,6 +16,8 @@ import {
   ExternalSuggestedOverlay,
 } from './player/PlayerOverlays';
 import { EmptyChannelState } from './player/EmptyChannelState';
+import PlayerControls, { useIdleVisibility, usePlayerShortcuts } from './player/PlayerControls';
+import { useEcoMode } from '@/components/tv/hooks';
 
 import {
   buildMobileVlcUrl,
@@ -61,6 +63,12 @@ interface PlayerProps {
   onExternalHandoff?: () => void;
   initialVolume?: number;
   onVolumePreference?: (volume: number) => void;
+  /** Zapping : chaînes voisines dans la liste d'où vient la sélection (null = pas de voisin de ce côté). */
+  zapping?: { previous: (() => void) | null; next: (() => void) | null };
+  /** Après un zapping, VLC ne se lance jamais seul : une chaîne qui l'exige affiche le bouton « Lancer VLC ». */
+  manualExternal?: boolean;
+  /** Appelé une fois par tentative, dès que l'image démarre (ou que VLC est ouvert). Alimente « Reprendre ». */
+  onPlaybackStarted?: () => void;
 }
 
 type ActiveAttempt = {
@@ -79,11 +87,18 @@ function telemetryEngine(engine: PlayerEngine | null | undefined): TelemetryPlay
     : null;
 }
 
-export default function Player({ channelId, channelName = '', anchored = false, onExternalHandoff, initialVolume = 1, onVolumePreference }: PlayerProps) {
+export default function Player({ channelId, channelName = '', anchored = false, onExternalHandoff, initialVolume = 1, onVolumePreference, zapping, manualExternal = false, onPlaybackStarted }: PlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [paused, setPaused] = useState(true);
   const [volume, setVolume] = useState(initialVolume);
   const [fullscreenError, setFullscreenError] = useState('');
+  const [muted, setMuted] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [pipAvailable, setPipAvailable] = useState(false);
+  const eco = useEcoMode();
+  const onPlaybackStartedRef = useRef(onPlaybackStarted);
+  useEffect(() => { onPlaybackStartedRef.current = onPlaybackStarted; });
   const webAttemptCountRef = useRef(0);
   const automaticDecisionsRef = useRef(new Set<string>());
   const externalLaunchRequestedRef = useRef(false);
@@ -367,6 +382,9 @@ export default function Player({ channelId, channelName = '', anchored = false, 
       dispatch({ type: 'ENGINE_SELECTED', engine: 'hls.js' });
       const hls = new Hls({
         autoStartLoad: false,
+        // Le contrôleur d'interstitiels de hls.js relance startLoad() après le manifeste et contourne autoStartLoad:false ;
+        // les flux IPTV n'en utilisent pas, et sans lui aucun segment n'est téléchargé avant « Lire maintenant ».
+        enableInterstitialPlayback: false,
         maxBufferLength: 30,
         liveSyncDurationCount: 3,
         backBufferLength: 30,
@@ -536,12 +554,13 @@ export default function Player({ channelId, channelName = '', anchored = false, 
   }, [emitForActiveAttempt, failCurrentAttempt, stopStartupTimeout]);
 
   useEffect(() => {
-    if (anchored) return;
+    // Éco data : le flux est prêt mais ne charge aucun segment tant que l'utilisateur n'a pas touché « Lire maintenant ».
+    if (anchored || eco) return;
     if (state.phase !== 'ready' || !state.attemptId) return;
     if (autoPlayAttemptIdsRef.current.has(state.attemptId)) return;
     autoPlayAttemptIdsRef.current.add(state.attemptId);
     startPlayback(false);
-  }, [anchored, startPlayback, state.attemptId, state.phase]);
+  }, [anchored, eco, startPlayback, state.attemptId, state.phase]);
 
   const handlePlaying = useCallback(() => {
     setPaused(false);
@@ -554,6 +573,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
       emitForActiveAttempt('started', {
         startupTimeMs: Math.round(performance.now() - attempt.startedAt),
       });
+      onPlaybackStartedRef.current?.();
     }
     if (attempt && bufferingAttemptRef.current === attempt.attemptId) {
       bufferingAttemptRef.current = null;
@@ -663,6 +683,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
             activeAttemptRef.current = null;
           }
           dispatch({ type: 'EXTERNAL_OPENED' });
+          onPlaybackStartedRef.current?.();
         })
         .catch((error: unknown) => {
           if (selectedChannelIdRef.current !== channelId) return;
@@ -741,6 +762,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
         };
         telemetryRef.current?.emit(attempt, 'opened', { playerEngine: 'vlc' });
         dispatch({ type: 'EXTERNAL_OPENED' });
+        onPlaybackStartedRef.current?.();
       })
       .catch((error: unknown) => {
         if (selectedChannelIdRef.current !== channelId) return;
@@ -764,14 +786,80 @@ export default function Player({ channelId, channelName = '', anchored = false, 
     if (anchored) return;
     if (state.channelId !== channelId) return;
     if (state.phase === 'external-required') {
-      openExternalPlayer();
+      if (!manualExternal) openExternalPlayer();
     } else if (state.phase === 'exhausted' && state.engine !== 'vlc' && state.attemptId && source && state.failure?.category !== 'autoplay') {
       if (automaticDecisionsRef.current.has(state.attemptId)) return;
       automaticDecisionsRef.current.add(state.attemptId);
       if (webAttemptCountRef.current < MAX_AUTOMATIC_WEB_ATTEMPTS) tryAnotherSource();
-      else openExternalPlayer();
+      else if (!manualExternal) openExternalPlayer();
     }
-  }, [anchored, channelId, openExternalPlayer, source, state.attemptId, state.channelId, state.engine, state.failure?.category, state.phase, tryAnotherSource]);
+  }, [anchored, channelId, manualExternal, openExternalPlayer, source, state.attemptId, state.channelId, state.engine, state.failure?.category, state.phase, tryAnotherSource]);
+
+  const togglePlay = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (!video.paused) { video.pause(); return; }
+    // Reprise après une pause : le flux est déjà prêt, la machine d'état n'a rien à décider.
+    if (state.phase === 'playing') void video.play().catch(() => undefined);
+    else if (state.phase === 'ready' || state.phase === 'awaiting-user') startPlayback(true);
+  }, [startPlayback, state.phase]);
+
+  const toggleMute = useCallback(() => {
+    const video = videoRef.current;
+    if (video) video.muted = !video.muted;
+  }, []);
+
+  const changeVolume = useCallback((value: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.volume = value;
+    video.muted = value === 0;
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    setFullscreenError('');
+    const container = containerRef.current as (HTMLDivElement & { webkitRequestFullscreen?: () => void }) | null;
+    const video = videoRef.current as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null;
+    if (document.fullscreenElement) { void document.exitFullscreen().catch(() => undefined); return; }
+    const action = container?.requestFullscreen?.();
+    if (action) { void action.catch(() => setFullscreenError('Le plein écran a été refusé par le navigateur.')); return; }
+    // iOS Safari ne met en plein écran que l'élément vidéo lui-même.
+    if (video?.webkitEnterFullscreen) video.webkitEnterFullscreen();
+    else setFullscreenError('Le plein écran est indisponible sur ce navigateur.');
+  }, []);
+
+  const togglePip = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (document.pictureInPictureElement) void document.exitPictureInPicture().catch(() => undefined);
+    else void video.requestPictureInPicture?.().catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    const update = () => setFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener('fullscreenchange', update);
+    return () => document.removeEventListener('fullscreenchange', update);
+  }, []);
+  useEffect(() => {
+    queueMicrotask(() => setPipAvailable(Boolean(document.pictureInPictureEnabled)));
+  }, []);
+
+  const loadingNow = state.phase === 'resolving' || state.phase === 'loading' || state.phase === 'external-opening';
+  const controlsActive = !anchored && Boolean(source) && !loadingNow && state.phase !== 'ready' && state.phase !== 'awaiting-user'
+    && state.phase !== 'exhausted' && state.phase !== 'external-required' && state.phase !== 'external-ready' && state.phase !== 'external-opened';
+  const uiVisible = useIdleVisibility(containerRef, paused || helpOpen);
+  usePlayerShortcuts({
+    enabled: controlsActive,
+    helpOpen,
+    onTogglePlay: togglePlay,
+    onToggleMute: toggleMute,
+    onToggleFullscreen: toggleFullscreen,
+    onTogglePip: pipAvailable ? togglePip : () => undefined,
+    onToggleHelp: () => setHelpOpen(open => !open),
+    onCloseHelp: () => setHelpOpen(false),
+    onPrevious: zapping?.previous ?? undefined,
+    onNext: zapping?.next ?? undefined,
+  });
 
   if (!channelId) {
     return <EmptyChannelState />;
@@ -789,18 +877,13 @@ export default function Player({ channelId, channelName = '', anchored = false, 
   );
   const visibleFailure = state.phase === 'exhausted' && !externalSuggested ? state.failure : null;
   const showError = Boolean(visibleFailure);
-  const mode = externalSuggested || externalReady || externalOpened
-    ? 'Lecteur VLC'
-    : state.engine === 'vlc' ? 'VLC'
-      : state.engine ? 'Navigateur'
-        : source ? 'Préparation' : 'Indisponible';
 
   return (
     <motion.div
       ref={containerRef}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-black/60 shadow-2xl backdrop-blur-xl"
+      className="flex flex-col overflow-hidden rounded-2xl border border-line bg-black/60 shadow-2xl"
     >
       <div className="group/player relative flex aspect-video w-full items-center justify-center bg-black">
         <AnimatePresence>
@@ -839,8 +922,9 @@ export default function Player({ channelId, channelName = '', anchored = false, 
 
         <video
           ref={videoRef}
-          controls
+          controls={anchored}
           playsInline
+          onDoubleClick={anchored ? undefined : toggleFullscreen}
           onPlaying={handlePlaying}
           onPlay={() => { if (anchored) hlsRef.current?.startLoad(-1); }}
           onTimeUpdate={handleTimeUpdate}
@@ -851,26 +935,49 @@ export default function Player({ channelId, channelName = '', anchored = false, 
             if (video) {
               const value = video.muted ? 0 : video.volume;
               setVolume(value);
+              setMuted(video.muted);
               onVolumePreference?.(value);
             }
           }}
           className={`h-full w-full object-contain ${loading || waitingForUser || showError || externalSuggested || externalReady || externalOpened ? 'pointer-events-none' : ''}`}
         />
+        {controlsActive && (
+          <PlayerControls
+            visible={uiVisible}
+            paused={paused}
+            muted={muted}
+            volume={volume}
+            fullscreen={fullscreen}
+            pipAvailable={pipAvailable}
+            helpOpen={helpOpen}
+            onTogglePlay={togglePlay}
+            onToggleMute={toggleMute}
+            onVolumeChange={changeVolume}
+            onToggleFullscreen={toggleFullscreen}
+            onTogglePip={togglePip}
+            onToggleHelp={() => setHelpOpen(open => !open)}
+            onPrevious={zapping ? (zapping.previous ?? (() => undefined)) : undefined}
+            onNext={zapping ? (zapping.next ?? (() => undefined)) : undefined}
+            hasPrevious={Boolean(zapping?.previous)}
+            hasNext={Boolean(zapping?.next)}
+          />
+        )}
+        {fullscreenError && !anchored && <p role="status" className="absolute left-3 top-3 z-20 rounded-control bg-black/80 px-3 py-1.5 text-xs text-text">{fullscreenError}</p>}
       </div>
 
       {anchored && (
-        <div className="flex flex-wrap items-center gap-3 border-t border-white/10 bg-black p-3 text-xs">
+        <div className="flex flex-wrap items-center gap-3 border-t border-line bg-black p-3 text-xs">
           <button type="button" disabled={!source || loading || externalSuggested || showError}
             onClick={() => {
               if (videoRef.current?.paused) startPlayback(true);
               else { videoRef.current?.pause(); hlsRef.current?.stopLoad(); }
             }}
-            className="rounded-lg border border-white/20 px-3 py-2 focus-visible:ring-2 focus-visible:ring-amber-400 disabled:opacity-40">
+            className="rounded-lg border border-white/20 px-3 py-2 focus-visible:ring-2 focus-visible:ring-al-gold disabled:opacity-40">
             {paused ? 'Lire' : 'Pause'}
           </button>
           <label className="flex items-center gap-2">Volume
             <input aria-label="Volume" type="range" min="0" max="1" step="0.05" value={volume}
-              className="w-24 accent-amber-400 focus-visible:ring-2 focus-visible:ring-amber-400"
+              className="w-24 accent-al-yellow focus-visible:ring-2 focus-visible:ring-al-gold"
               onChange={event => {
                 const video = videoRef.current;
                 if (!video) return;
@@ -879,7 +986,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
                 setVolume(video.volume);
               }} />
           </label>
-          <button type="button" className="rounded-lg border border-white/20 px-3 py-2 focus-visible:ring-2 focus-visible:ring-amber-400"
+          <button type="button" className="rounded-lg border border-white/20 px-3 py-2 focus-visible:ring-2 focus-visible:ring-al-gold"
             onClick={() => {
               setFullscreenError('');
               const action = document.fullscreenElement ? document.exitFullscreen() : containerRef.current?.requestFullscreen?.();
@@ -890,30 +997,28 @@ export default function Player({ channelId, channelName = '', anchored = false, 
         </div>
       )}
 
-      <div className="flex flex-col gap-3.5 border-t border-white/[0.07] bg-white/[0.02] p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3.5 border-t border-line bg-white/[0.02] p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center gap-1 rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-red-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-              DIRECT
+          <div className="mb-1 flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-pill border border-al-green/30 bg-al-green/10 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-al-green">
+              <span className="live-dot" aria-hidden="true" />
+              Direct
             </span>
-            <span className="text-[11px] text-zinc-500">•</span>
-            <span className="text-xs text-zinc-400 font-medium">Mode : {mode}</span>
+            {(externalSuggested || externalReady || externalOpened || state.engine === 'vlc') && (
+              <span className="inline-flex items-center rounded-pill border border-line-gold bg-al-gold/10 px-2.5 py-0.5 text-xs font-semibold text-al-gold">Lecteur VLC</span>
+            )}
           </div>
-          <h3 className="truncate text-lg sm:text-xl font-bold tracking-tight text-white">{displayedChannelName}</h3>
-          <p className="mt-2 truncate text-xs text-zinc-400">
-            {source ? 'Source sélectionnée' : 'Source indisponible'}
-          </p>
-          <p className="mt-1 text-xs font-semibold text-zinc-300">Mode effectif : {mode}</p>
+          <h3 className="truncate font-display text-lg font-bold tracking-tight text-text sm:text-xl">{displayedChannelName}</h3>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-          {(externalSuggested || externalReady || externalOpened || state.engine === 'vlc') && (
+          {/* En attente de choix (external-required), l'écran central propose déjà « Lancer VLC » : pas de doublon « Relancer ». */}
+          {(externalSuggested || externalReady || externalOpened || state.engine === 'vlc') && state.phase !== 'external-required' && (
             <button
               type="button"
               onClick={() => openExternalPlayer(true)}
               disabled={state.phase === 'external-opening'}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-amber-400/40 bg-amber-400/15 hover:bg-amber-400/25 px-4 py-2 text-xs sm:text-sm font-bold text-amber-300 shadow-sm transition disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-al-gold/40 bg-al-gold/15 hover:bg-al-gold/25 px-4 py-2 text-xs sm:text-sm font-bold text-al-gold shadow-sm transition disabled:opacity-50"
             >
               {state.phase === 'external-opening' ? (
                 <LoaderCircle className="h-4 w-4 animate-spin" />

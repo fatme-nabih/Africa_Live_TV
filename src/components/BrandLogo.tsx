@@ -8,7 +8,7 @@ export default function BrandLogo({ className = 'h-20 w-20' }: { className?: str
       width={640}
       height={640}
       sizes="144px"
-      className={`shrink-0 object-contain ${className}`}
+      className={`shrink-0 rounded-full object-contain ${className}`}
       preload
     />
   );

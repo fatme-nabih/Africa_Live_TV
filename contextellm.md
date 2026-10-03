@@ -1,13 +1,74 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 2 octobre 2026, fuseau Africa/Dakar.
+Dernière mise à jour : 3 octobre 2026, fuseau Africa/Dakar.
 
 Ce document permet à une nouvelle session de reprendre le travail sans
 réinterpréter l'historique. Il ne contient volontairement aucun secret, cookie,
 mot de passe, identifiant de paiement, clé Clerk ou URL de flux média.
 
+## Expérience Premium — P0 à P2 faits, P3 en attente (3 octobre 2026)
+
+- Diff RW committé et publié par le propriétaire (`51c0bc8`, `1aa85b5`),
+  Railway staging mis à jour. Vision UX/design validée.
+- Plan de référence : [plan-experience-premium.md](docs/plan-experience-premium.md)
+  (§0 décisions : identité = logo noir + vert/jaune/rouge + or, grand logo
+  transparent conservé via `BrandBackdrop`, polices Unbounded + Manrope,
+  signature « Le live qui vient à vous », contexte Sénégal).
+- Prompt de passation initial : [prompt-sonnet-experience-premium.md](docs/prompt-sonnet-experience-premium.md).
+  **Prompt de reprise à coller dans une nouvelle session : [prompt-reprise-premium-p3.md](docs/prompt-reprise-premium-p3.md).**
+- Avancement : [plan-experience-premium.md](docs/plan-experience-premium.md) §5.1 (fait / reste à faire / questions
+  ouvertes), colonne « État » du §6, reliquats UX-209 (suite), UX-212, UX-213, UX-214, §8.1 « Pièges connus ».
+- **Lot P0 terminé et vérifié localement le 2 octobre 2026**, non committé, non publié.
+  Détail, preuves et limites : section « Expérience Premium — Lot P0 » de
+  [production-progress.md](docs/production-progress.md) ; état par ticket dans la
+  colonne « État » du plan. Nouveau socle : jetons et polices dans `globals.css` et
+  `layout.tsx`, `src/components/ui/`, `src/components/brand/` (BrandBackdrop, BrandMark,
+  Wordmark, GoldRing, KenteBand, Silhouettes), `src/lib/storage-keys.ts`, page de revue
+  `/app/ui` (développement seulement). Captures : `docs/screenshots/premium-p0-*`.
+- **Lot P1 terminé et vérifié localement le 2 octobre 2026**, non committé, non publié : coquille
+  unique `src/components/shell/` (AppShell, AppHeader, NavLinks, CountryPicker, ClockBadge, PageTransition),
+  barre basse mobile, pays dans l'URL, horloge locale, Briefing masqué, transitions. Détail dans la section
+  « Lot P1 » de [production-progress.md](docs/production-progress.md).
+- **Lot P2 terminé et vérifié localement le 2 octobre 2026**, non committé, non publié : TV « streaming »
+  (UX-201 → 211). `src/components/tv/` (ChannelTile, ChannelRail, TvRows, HelpLine, ActiveFilterChips),
+  `src/components/player/PlayerControls.tsx`, `src/components/shell/EcoToggle.tsx`, libs `recent-channels`,
+  `eco-mode`, `share-links`, `channel-fallback`, `zap-list`, `tv-rows`, `channel-labels`. Seule modification
+  d'API : ordre « Afrique d'abord » et curseur à rang de `/api/channels` (UX-208, testé). Piège hls.js : le
+  contrôleur d'interstitiels contournait `autoStartLoad:false` ; `Player.tsx` le désactive
+  (`enableInterstitialPlayback:false`). UX-209 partiel (barre latérale desktop conservée). Détail et preuves :
+  section « Lot P2 » de [production-progress.md](docs/production-progress.md) ; captures
+  `docs/screenshots/premium-p2-*`.
+- Suite : **attendre le feu vert du propriétaire pour P3** (Radar « vivant », UX-301 → 308 ; commencer par le
+  découpage UX-301 avec les E2E radar inchangés). Puis P4 (UX-401 → 407), P5 (UX-501 → 508). Réserves :
+  `/account` et `/admin` à capturer avec une session Clerk (UX-214) ; widgets Clerk encore en anglais (UX-405) ;
+  couleurs éditoriales du Radar conservées jusqu'à P3 ; contrôle du lecteur ancré encore brut (UX-213).
+- **Arbre de travail** : P0, P1 et P2 sont modifiés/ajoutés mais **non committés** (≈ 190 fichiers). Le propriétaire
+  n'a pas encore décidé de les committer ; ne rien committer sans demande explicite, ne jamais nettoyer par une
+  commande Git destructive. `docs/screenshots/l5-anchored-*.png` sont réécrits par l'E2E `anchored-player` :
+  les restaurer depuis `HEAD` après un passage.
+- Mode du serveur dev laissé sur 3001 à la fin de P2 : Clerk (`npm run dev` sans drapeaux MVP, onglet terminal
+  « dev server (Clerk) »), santé 200, `/app` en anonyme → 307. Pour les E2E et captures MVP, il faut redémarrer
+  avec `LOCAL_DEV_MODE=true NEXT_PUBLIC_LOCAL_DEV_MODE=true` et insérer la ligne technique `africa-live-local-user`
+  (`clerk_user_id='local-development'`) dans `africa_live_dev` ; la retirer ensuite (ainsi que ses événements et
+  sessions de lecture de test) et remettre le serveur en mode Clerk. Les scripts de travail non versionnés sont dans
+  `.local-logs/premium/` (ignoré par Git) : `local-user.cjs add|remove`, `cleanup-local-user.cjs`, `shots.cjs`
+  (captures 360/768/1366), `edit-helper.cjs` (remplacements CRLF-tolérants). Ils peuvent être recréés ; la procédure
+  est décrite dans le prompt de reprise.
+- Dernière vérification complète (fin de P2, 2 octobre 2026) : `tsc` 0 erreur, `lint` 0, `npm test` 321 tests
+  (307 réussis, 14 ignorés, 0 échec), invariants 4/4, `build` réussi, E2E MVP 108 réussis + 1 ignoré, E2E Clerk 8/8.
+
 ## Complément de reprise — 2 octobre 2026
 
+- À la demande du propriétaire, base Railway copiée vers `africa_live_dev`
+  uniquement, réception à 19:39 UTC : 14 505 chaînes, 15 646 sources,
+  22 tables publiques + journal Drizzle, 19 migrations, 2 utilisateurs et
+  29 favoris. Ancien local sauvegardé/chiffré et restauration isolée vérifiée ;
+  export Railway en lecture seule, restauration temporaire locale puis bascule
+  transactionnelle. Empreintes de toutes les tables restaurées identiques au
+  snapshot ; catalogue/données métier Railway vérifiés inchangés avant/après.
+  Aucune écriture distante, migration, variable, publication ou état Railway
+  modifié. Serveur dev relancé sur 3001, santé 200, gardes Clerk conservées.
+  [Dossier de synchronisation locale](docs/local-database-sync-2026-10-02.md).
 - Diff RW revu, fichiers existants préservés. Le serveur absent a été relancé ;
   après un nouvel arrêt sans erreur consignée, `npm run dev` est maintenant
   maintenu dans une session de terminal sur 3001, avec Clerk initial.

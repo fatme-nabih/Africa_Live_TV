@@ -35,7 +35,8 @@ test('HLS is decoded in the browser and never opens VLC', async ({ page }) => {
   await page.route('**/api/playback/resolutions', route => route.fulfill({ json: resolved('test-browser', 'https://media.fixture.test/index.m3u8') }));
   await page.goto('/player/test-browser');
   await expect.poll(() => page.locator('video').evaluate(video => (video as HTMLVideoElement).currentTime)).toBeGreaterThan(0);
-  await expect(page.getByText('Mode effectif : Navigateur')).toBeVisible();
+  await expect(page.getByText('Direct', { exact: true })).toBeVisible();
+  await expect(page.getByText('Lecteur VLC')).toHaveCount(0);
   expect(intents).toHaveLength(0);
 });
 

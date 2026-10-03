@@ -168,6 +168,17 @@ ces comptes. Appareils physiques, Safari/HLS natif, lecteur d'écran et plein é
 mobile système non reçus ; tailles mobiles et Fullscreen API sont simulées dans
 Edge. Le petit écran exige du défilement : mesurer ce compromis avec les utilisateurs.
 
+**Suite Premium P2 (2 octobre 2026, UX-206, local, non publié).** Le zapping précédent/suivant
+n'est plus propre au lecteur ancré : la modale et la fenêtre séparée zappent dans la liste d'où
+vient le clic (rangée ou grille de la TV ; liste transmise à la fenêtre séparée par
+`zap-list.ts`, 60 chaînes, validité 6 h), au clavier (← →) et aux boutons. Après un zapping, une
+chaîne qui exige VLC n'ouvre jamais VLC seule : l'écran propose « Lancer VLC » ; un choix direct
+d'une chaîne VLC le lance toujours une seule fois. La réserve de fond ci-dessus **reste
+valable** : le navigateur ne peut ni arrêter ni piloter un VLC déjà ouvert, et le critère « un
+seul flux, tous lecteurs externes inclus » n'est pas reçu. Détail : [production-progress.md](production-progress.md),
+section « Lot P2 », tickets UX-205 et UX-206. Le contrôle d'activation du lecteur ancré sera
+habillé avec le design system en UX-213 (P5), sans changer son comportement.
+
 Retour arrière fonctionnel immédiat : désactiver/recharger. Pour une revue de
 code, isoler les changements de ce lot ; aucune restauration de DB nécessaire.
 Ne pas supprimer les gardes AL-C01/C02 ni employer un nettoyage Git destructif.

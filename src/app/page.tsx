@@ -25,7 +25,11 @@ import {
 } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import BrandLogo from '@/components/BrandLogo';
-import BrandWatermark from '@/components/BrandWatermark';
+import BrandBackdrop from '@/components/brand/BrandBackdrop';
+import GoldRing from '@/components/brand/GoldRing';
+import KenteBand from '@/components/brand/KenteBand';
+import Wordmark from '@/components/brand/Wordmark';
+import { ButtonLink } from '@/components/ui';
 import LandingDashboardPreview from '@/components/LandingDashboardPreview';
 import { isAnonymousE2EMode, isLocalDevMode } from '@/lib/local-dev';
 
@@ -104,44 +108,42 @@ export default async function HomePage() {
   ];
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-black text-zinc-100 selection:bg-yellow-400 selection:text-black">
+    <main className="relative min-h-screen overflow-hidden bg-black text-text selection:bg-al-yellow selection:text-black">
       {/* Brand transparent background watermark */}
-      <BrandWatermark />
+      <BrandBackdrop variant="hero" />
 
       {/* Ambient background glows with tricolor accents */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[650px] w-[950px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-emerald-500/10 via-yellow-400/8 to-red-500/10 blur-[140px]" />
-      <div className="pointer-events-none absolute top-[40%] right-[-10%] -z-10 h-[500px] w-[500px] rounded-full bg-amber-500/5 blur-[130px]" />
+      <div className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[650px] w-[950px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-al-green/10 via-al-yellow/8 to-al-red/10 blur-[140px]" />
+      <div className="pointer-events-none absolute top-[40%] right-[-10%] -z-10 h-[500px] w-[500px] rounded-full bg-al-gold/5 blur-[130px]" />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Sticky Header */}
-        <header className="sticky top-0 z-50 flex min-h-16 sm:min-h-20 items-center justify-between gap-4 border-b border-white/[0.08] bg-black/60 backdrop-blur-2xl">
+        <header className="sticky top-0 z-50 flex min-h-16 sm:min-h-20 items-center justify-between gap-4 border-b border-line bg-black/60 backdrop-blur-2xl">
           <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-tricolor-bar opacity-80" />
           <Link href="/" aria-label="Africa Live, accueil" className="group flex items-center gap-3">
-            <div className="relative flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-white/[0.03] p-1.5 ring-1 ring-white/10 transition-all group-hover:ring-amber-400/40">
-              <BrandLogo className="h-full w-full drop-shadow-[0_2px_10px_rgba(250,204,21,0.25)]" />
-            </div>
-            <div>
-              <span className="text-xl font-black tracking-tight text-white">
-                Africa Live<span className="text-amber-400">.</span>
-              </span>
-              <span className="hidden text-[10px] font-semibold tracking-wider text-amber-400/80 uppercase sm:block">
-                Veille Panafricaine
+            <GoldRing className="size-11 sm:size-12">
+              <BrandLogo className="size-10 sm:size-11" />
+            </GoldRing>
+            <div className="flex flex-col gap-1.5">
+              <Wordmark className="text-base sm:text-xl" />
+              <span className="hidden text-xs font-semibold text-al-gold sm:block">
+                Le live qui vient à vous
               </span>
             </div>
           </Link>
 
           {/* Navigation links & CTA */}
           <nav aria-label="Navigation principale" className="flex items-center gap-3 sm:gap-6 text-sm font-semibold">
-            <Link href="#features" className="hidden text-zinc-400 transition hover:text-white md:block">
+            <Link href="#features" className="hidden text-text-muted transition hover:text-text md:block">
               Fonctionnalités
             </Link>
-            <Link href="#categories" className="hidden text-zinc-400 transition hover:text-white md:block">
+            <Link href="#categories" className="hidden text-text-muted transition hover:text-text md:block">
               Catégories
             </Link>
-            <Link href="#pricing" className="text-amber-300 transition hover:text-yellow-200 font-semibold">
+            <Link href="#pricing" className="hidden text-al-gold transition hover:text-text font-semibold sm:block">
               Tarifs
             </Link>
-            <Link href="#faq" className="hidden text-zinc-400 transition hover:text-white md:block">
+            <Link href="#faq" className="hidden text-text-muted transition hover:text-text md:block">
               FAQ
             </Link>
 
@@ -152,33 +154,30 @@ export default async function HomePage() {
                 {sessionClaims?.metadata?.role === 'admin' && (
                   <Link
                     href="/admin"
-                    className="hidden rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-xs font-semibold text-amber-300 transition hover:bg-amber-400/20 sm:block"
+                    className="hidden rounded-xl border border-al-gold/30 bg-al-gold/10 px-3 py-1.5 text-xs font-semibold text-al-gold transition hover:bg-al-gold/20 sm:block"
                   >
                     Administration
                   </Link>
                 )}
-                <Link
-                  href="/app/live"
-                  className="rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/20 via-amber-400/25 to-rose-500/20 hover:from-emerald-500/30 hover:via-amber-400/35 hover:to-rose-500/30 px-4 py-2 text-xs sm:text-sm font-bold text-amber-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 shadow-sm backdrop-blur-sm"
-                >
-                  Ouvrir le dashboard
-                </Link>
+                <ButtonLink href="/app/live" variant="secondary" size="sm">
+                  <span className="sm:hidden">Dashboard</span>
+                  <span className="hidden sm:inline">Ouvrir le dashboard</span>
+                </ButtonLink>
                 <UserButton />
               </div>
             ) : (
               <div className="flex items-center gap-2 sm:gap-3">
                 <Link
                   href="/sign-in"
-                  className="px-3 py-1.5 text-xs sm:text-sm font-medium text-zinc-300 transition hover:text-white"
+                  className="whitespace-nowrap px-2 py-3 text-xs font-medium text-text transition hover:text-al-gold sm:px-3 sm:text-sm"
                 >
                   Se connecter
                 </Link>
-                <Link
-                  href="/sign-up"
-                  className="rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/20 via-amber-400/25 to-rose-500/20 hover:from-emerald-500/30 hover:via-amber-400/35 hover:to-rose-500/30 px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-amber-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 shadow-sm backdrop-blur-sm"
-                >
-                  Commencer
-                </Link>
+                <span className="hidden sm:block">
+                  <ButtonLink href="/sign-up" variant="secondary" size="sm">
+                    Commencer
+                  </ButtonLink>
+                </span>
               </div>
             )}
           </nav>
@@ -188,22 +187,25 @@ export default async function HomePage() {
         <section className="relative grid gap-12 pt-12 pb-20 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:py-24">
           <div>
             {/* Live Pulse Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3.5 py-1 text-xs font-semibold text-amber-300 backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 rounded-full border border-al-gold/30 bg-al-gold/10 px-3.5 py-1 text-xs font-semibold text-al-gold">
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-al-green opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-al-green" />
               </span>
-              <span>RADAR PANAFRICAIN • Actualités, carte & direct</span>
+              <span>Dalal ak jàmm · Actualités, carte et direct</span>
             </div>
 
             {/* Headline */}
-            <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-[64px] lg:leading-[1.1]">
+            <h1 className="font-display mt-6 text-4xl font-bold tracking-tight text-text sm:text-6xl lg:text-[64px] lg:leading-[1.1]">
               L’Afrique{' '}
-              <span className="text-gradient-gold">à portée de regard.</span>
+              <span className="relative inline-block text-al-yellow">
+                à portée de regard.
+                <span aria-hidden="true" className="bg-tricolor-bar absolute -bottom-1.5 left-0 h-1 w-full rounded-pill" />
+              </span>
             </h1>
 
             {/* Subhead */}
-            <p className="mt-6 max-w-xl text-base sm:text-lg leading-relaxed text-zinc-300">
+            <p className="mt-6 max-w-xl text-base sm:text-lg leading-relaxed text-text">
               Explorez l’Afrique depuis un dashboard de veille : carte interactive, dépêches,
               météo et marchés. Retrouvez les chaînes TV du pays quand vous souhaitez passer au direct.
             </p>
@@ -212,7 +214,7 @@ export default async function HomePage() {
             <div className="mt-8 flex flex-wrap items-center gap-3 sm:gap-4">
               <Link
                 href={userId ? '/app/live' : '/sign-up'}
-                className="inline-flex items-center gap-2.5 rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/25 via-amber-400/30 to-rose-500/25 hover:from-emerald-500/35 hover:via-amber-400/40 hover:to-rose-500/35 px-6 py-3.5 text-sm sm:text-base font-bold text-white transition backdrop-blur-md shadow-lg shadow-black/40 hover:scale-[1.01] active:scale-[0.98]"
+                className="inline-flex items-center gap-2.5 rounded-xl border border-transparent bg-al-yellow hover:brightness-110 px-6 py-3.5 text-sm sm:text-base font-bold text-black transition shadow-lg shadow-black/40 hover:scale-[1.01] active:scale-[0.98]"
               >
                 <span>{userId ? 'Accéder au dashboard' : 'Profiter de 5 jours d’essai gratuit'}</span>
                 <ArrowRight size={17} />
@@ -220,27 +222,27 @@ export default async function HomePage() {
               {!userId && (
                 <Link
                   href="/sign-in"
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-5 py-3.5 text-sm sm:text-base font-semibold text-zinc-200 backdrop-blur-md transition hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+                  className="inline-flex items-center gap-2 rounded-xl border border-line bg-white/[0.04] px-5 py-3.5 text-sm sm:text-base font-semibold text-text transition hover:border-white/20 hover:bg-white/[0.08] hover:text-text"
                 >
-                  <Sparkles size={16} className="text-amber-400" />
+                  <Sparkles size={16} className="text-al-gold" />
                   <span>J’ai déjà un compte</span>
                 </Link>
               )}
             </div>
 
             {/* Reassurance pills */}
-            <div className="mt-8 flex flex-wrap items-center gap-y-2.5 gap-x-6 text-xs text-zinc-300">
-              <span className="flex items-center gap-1.5 font-bold text-yellow-300">
-                <Gift size={15} className="text-yellow-400 shrink-0" /> Profitez de 5 jours d’essai sans engagement
+            <div className="mt-8 flex flex-wrap items-center gap-y-2.5 gap-x-6 text-xs text-text">
+              <span className="flex items-center gap-1.5 font-bold text-al-gold">
+                <Gift size={15} className="text-al-gold shrink-0" /> Profitez de 5 jours d’essai sans engagement
               </span>
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={15} className="text-yellow-400" /> Dès 990 FCFA/mois sans prélèvement auto
+                <CheckCircle2 size={15} className="text-al-gold" /> Dès 990 FCFA/mois sans prélèvement auto
               </span>
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={15} className="text-emerald-400" /> Wave, Orange Money & CB
+                <CheckCircle2 size={15} className="text-al-green" /> Wave, Orange Money & CB
               </span>
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={15} className="text-emerald-400" /> Web HLS & Lecteur VLC 1-clic
+                <CheckCircle2 size={15} className="text-al-green" /> Web HLS & Lecteur VLC 1-clic
               </span>
             </div>
           </div>
@@ -248,39 +250,41 @@ export default async function HomePage() {
           <LandingDashboardPreview href={userId ? '/app/live' : '/sign-up'} />
         </section>
 
+        <KenteBand className="my-2 w-full" />
+
         {/* Live Metrics Grid */}
-        <section aria-label="Statistiques" className="border-y border-white/[0.08] py-10 my-4">
+        <section aria-label="Statistiques" className="border-y border-line py-10 my-4">
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
             {metrics.map(({ label, value, icon: Icon, detail }) => (
               <div
                 key={label}
-                className="group relative rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-5 transition-all hover:border-amber-400/30 hover:bg-white/[0.02]"
+                className="group relative rounded-2xl border border-line bg-surface-1/80 p-5 transition-all hover:border-al-gold/30 hover:bg-white/[0.02]"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl font-black tracking-tight text-gradient-gold sm:text-4xl">
+                  <span className="font-display text-lg font-bold leading-tight tracking-tight text-al-yellow sm:text-3xl">
                     {value}
                   </span>
-                  <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 p-2 text-amber-300 group-hover:scale-110 transition-transform">
+                  <div className="rounded-xl border border-al-gold/20 bg-al-gold/10 p-2 text-al-gold group-hover:scale-110 transition-transform">
                     <Icon size={20} />
                   </div>
                 </div>
-                <h3 className="mt-2 text-sm font-bold text-white">{label}</h3>
-                <p className="mt-0.5 text-xs text-zinc-400">{detail}</p>
+                <h3 className="mt-2 text-sm font-bold text-text">{label}</h3>
+                <p className="mt-0.5 text-xs text-text-muted">{detail}</p>
               </div>
             ))}
           </div>
         </section>
 
         {/* Dashboard features */}
-        <section id="features" className="py-20 border-t border-white/[0.08]">
+        <section id="features" className="py-20 border-t border-line">
           <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-amber-400">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-al-gold">
               Votre dashboard au quotidien
             </h2>
-            <p className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+            <p className="font-display mt-2 text-3xl font-bold tracking-tight text-text sm:text-4xl">
               Explorez, informez-vous, puis regardez
             </p>
-            <p className="mt-3 text-sm text-zinc-400">
+            <p className="mt-3 text-sm text-text-muted">
               La veille au centre de votre expérience, avec la télévision accessible depuis le même espace.
             </p>
           </div>
@@ -289,18 +293,18 @@ export default async function HomePage() {
             {features.map(({ icon: Icon, title, description, badge }) => (
               <div
                 key={title}
-                className="relative rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-7 transition hover:border-white/20 hover:bg-white/[0.02]"
+                className="relative rounded-2xl border border-line bg-surface-1/80 p-7 transition hover:border-white/20 hover:bg-white/[0.02]"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-amber-400/20 bg-amber-400/10 text-amber-300">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-al-gold/20 bg-al-gold/10 text-al-gold">
                     <Icon size={22} />
                   </div>
-                  <span className="rounded-full bg-white/[0.04] px-3 py-1 text-[11px] font-semibold text-zinc-300 border border-white/[0.08]">
+                  <span className="rounded-full bg-white/[0.04] px-3 py-1 text-xs font-semibold text-text border border-line">
                     {badge}
                   </span>
                 </div>
-                <h3 className="mt-6 text-xl font-bold text-white">{title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-zinc-400">{description}</p>
+                <h3 className="font-display mt-6 text-xl font-bold text-text">{title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-text-muted">{description}</p>
               </div>
             ))}
           </div>
@@ -309,13 +313,13 @@ export default async function HomePage() {
         {/* Secondary TV categories */}
         <section id="categories" className="py-20">
           <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-amber-400">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-al-gold">
               La TV, en complément
             </h2>
-            <p className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+            <p className="font-display mt-2 text-3xl font-bold tracking-tight text-text sm:text-4xl">
               Retrouvez aussi vos chaînes favorites
             </p>
-            <p className="mt-3 text-sm text-zinc-400">
+            <p className="mt-3 text-sm text-text-muted">
               De Dakar à Nairobi, de Kinshasa à Johannesburg, trouvez vos émissions favorites classées par genre.
             </p>
           </div>
@@ -324,14 +328,14 @@ export default async function HomePage() {
             {categories.map(({ name, icon: Icon, count, desc }) => (
               <div
                 key={name}
-                className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-6 transition-all duration-300 hover:border-amber-400/40 hover:bg-white/[0.02] hover:-translate-y-1 shadow-lg shadow-black/40"
+                className="group relative overflow-hidden rounded-2xl border border-line bg-surface-1/80 p-6 transition-all duration-300 hover:border-al-gold/40 hover:bg-white/[0.02] hover:-translate-y-1 shadow-lg shadow-black/40"
               >
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-amber-400/20 bg-amber-400/10 text-amber-300 transition-colors group-hover:bg-amber-400/20 group-hover:text-amber-200">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-al-gold/20 bg-al-gold/10 text-al-gold transition-colors group-hover:bg-al-gold/20 group-hover:text-text">
                   <Icon size={22} />
                 </div>
-                <h3 className="mt-5 text-lg font-bold text-white">{name}</h3>
-                <p className="text-xs font-semibold text-amber-300/90 mt-1">{count}</p>
-                <p className="mt-3 text-xs leading-5 text-zinc-400">{desc}</p>
+                <h3 className="font-display mt-5 text-lg font-bold text-text">{name}</h3>
+                <p className="text-xs font-semibold text-al-gold/90 mt-1">{count}</p>
+                <p className="mt-3 text-xs leading-5 text-text-muted">{desc}</p>
               </div>
             ))}
           </div>
@@ -340,56 +344,56 @@ export default async function HomePage() {
         {/* TV playback options */}
 
         <section className="py-16">
-          <div className="relative overflow-hidden rounded-3xl border border-white/[0.1] bg-black/40 backdrop-blur-2xl p-8 sm:p-12 shadow-2xl">
+          <div className="relative overflow-hidden rounded-3xl border border-line bg-surface-1/80 p-8 sm:p-12 shadow-2xl">
             {/* Ambient accent halo */}
-            <div className="absolute -inset-10 bg-gradient-to-r from-emerald-500/10 via-amber-500/10 to-rose-500/10 opacity-50 blur-3xl pointer-events-none" />
+            <div className="absolute -inset-10 bg-gradient-to-r from-al-green/10 via-al-yellow/10 to-al-red/10 opacity-50 blur-3xl pointer-events-none" />
 
             <div className="relative z-10 grid gap-8 lg:grid-cols-2 lg:items-center">
               <div>
-                <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-300">
+                <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-al-gold">
                   <MonitorPlay size={16} /> Flexibilité Absolue
                 </span>
-                <h2 className="mt-3 text-3xl font-black text-white sm:text-4xl">
+                <h2 className="font-display mt-3 text-3xl font-bold text-text sm:text-4xl">
                   Regardez sur le Web ou lancez dans VLC
                 </h2>
-                <p className="mt-4 text-base leading-relaxed text-zinc-300">
+                <p className="mt-4 text-base leading-relaxed text-text">
                   Certains flux utilisent des protocoles ou codecs avancés. Africa Live vous donne le choix :
                   lisez instantanément dans votre navigateur via notre lecteur HLS haute performance, ou d’un clic,
                   ouvrez le flux natif dans VLC Player pour profiter de votre configuration home-cinéma.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <div className="flex items-center gap-2 rounded-xl bg-black/50 px-3.5 py-2 text-xs font-medium text-zinc-300 border border-white/[0.08] backdrop-blur-md">
-                    <CheckCircle2 size={15} className="text-emerald-400" />
+                  <div className="flex items-center gap-2 rounded-xl bg-surface-1/80 px-3.5 py-2 text-xs font-medium text-text border border-line">
+                    <CheckCircle2 size={15} className="text-al-green" />
                     Lecteur Web HLS intégré
                   </div>
-                  <div className="flex items-center gap-2 rounded-xl bg-black/50 px-3.5 py-2 text-xs font-medium text-zinc-300 border border-white/[0.08] backdrop-blur-md">
-                    <CheckCircle2 size={15} className="text-emerald-400" />
+                  <div className="flex items-center gap-2 rounded-xl bg-surface-1/80 px-3.5 py-2 text-xs font-medium text-text border border-line">
+                    <CheckCircle2 size={15} className="text-al-green" />
                     Lancement VLC 1-clic direct
                   </div>
-                  <div className="flex items-center gap-2 rounded-xl bg-black/50 px-3.5 py-2 text-xs font-medium text-zinc-300 border border-white/[0.08] backdrop-blur-md">
-                    <CheckCircle2 size={15} className="text-emerald-400" />
+                  <div className="flex items-center gap-2 rounded-xl bg-surface-1/80 px-3.5 py-2 text-xs font-medium text-text border border-line">
+                    <CheckCircle2 size={15} className="text-al-green" />
                     Zéro publicité injectée
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col gap-4 rounded-2xl border border-white/[0.08] bg-black/50 p-6 backdrop-blur-xl">
-                <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
-                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Options de visionnage</span>
-                  <span className="text-[10px] rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 font-bold">100% direct</span>
+              <div className="flex flex-col gap-4 rounded-2xl border border-line bg-surface-1/80 p-6">
+                <div className="flex items-center justify-between border-b border-line pb-4">
+                  <span className="text-xs font-bold uppercase tracking-wider text-text-muted">Options de visionnage</span>
+                  <span className="text-xs rounded bg-al-green/20 text-al-green border border-al-green/30 px-2 py-0.5 font-bold">100% direct</span>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-amber-400/30 bg-amber-400/10 p-4 text-center backdrop-blur-md">
-                    <Tv size={26} className="mx-auto text-amber-300" />
-                    <p className="mt-2 text-sm font-bold text-white">Lecteur Navigateur</p>
-                    <p className="mt-1 text-[11px] text-zinc-400">Instantané, aucun réglage</p>
+                  <div className="rounded-xl border border-al-gold/30 bg-al-gold/10 p-4 text-center">
+                    <Tv size={26} className="mx-auto text-al-gold" />
+                    <p className="mt-2 text-sm font-bold text-text">Lecteur Navigateur</p>
+                    <p className="mt-1 text-xs text-text-muted">Instantané, aucun réglage</p>
                   </div>
-                  <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 text-center backdrop-blur-md hover:border-white/20 transition">
-                    <ExternalLink size={26} className="mx-auto text-zinc-300" />
-                    <p className="mt-2 text-sm font-bold text-white">VLC Media Player</p>
-                    <p className="mt-1 text-[11px] text-zinc-400">1-clic vers l’app desktop</p>
+                  <div className="rounded-xl border border-line bg-white/[0.03] p-4 text-center hover:border-white/20 transition">
+                    <ExternalLink size={26} className="mx-auto text-text" />
+                    <p className="mt-2 text-sm font-bold text-text">VLC Media Player</p>
+                    <p className="mt-1 text-xs text-text-muted">1-clic vers l’app desktop</p>
                   </div>
                 </div>
-                <p className="text-[11px] text-center text-zinc-400">
+                <p className="text-xs text-center text-text-muted">
                   Lecture web selon le format du flux, avec VLC conseillé sur ordinateur lorsque nécessaire.
                 </p>
               </div>
@@ -398,43 +402,43 @@ export default async function HomePage() {
         </section>
 
         {/* Pricing & Subscription Section */}
-        <section id="pricing" className="py-20 border-t border-white/[0.08]">
+        <section id="pricing" className="py-20 border-t border-line">
           <div className="text-center max-w-2xl mx-auto">
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-amber-300 backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 rounded-full border border-al-gold/30 bg-al-gold/10 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-al-gold">
               <Sparkles size={14} /> Tarifs Clairs & Sans Surprise
             </div>
-            <h2 className="mt-3 text-3xl font-black text-white sm:text-4xl">
+            <h2 className="font-display mt-3 text-3xl font-bold text-text sm:text-4xl">
               Choisissez votre formule d&apos;abonnement
             </h2>
-            <p className="mt-3 text-sm text-zinc-400">
+            <p className="mt-3 text-sm text-text-muted">
               Profitez d&apos;un accès illimité à l&apos;intégralité du bouquet panafricain.
               Paiement instantané et sécurisé par Mobile Money local ou carte bancaire.
             </p>
 
             {/* Payment Methods Badges Bar */}
-            <div className="mt-6 inline-flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-white/[0.08] bg-black/40 px-5 py-2.5 text-xs text-zinc-300 backdrop-blur-xl">
-              <span className="font-semibold text-zinc-400">Moyens de paiement acceptés :</span>
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#1da1f2]/10 border border-[#1da1f2]/30 px-2.5 py-1 text-[11px] font-bold text-[#38bdf8]">
+            <div className="mt-6 inline-flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-line bg-surface-1/80 px-5 py-2.5 text-xs text-text">
+              <span className="font-semibold text-text-muted">Moyens de paiement acceptés :</span>
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#1da1f2]/10 border border-[#1da1f2]/30 px-2.5 py-1 text-xs font-bold text-[#38bdf8]">
                 <Smartphone size={13} /> Wave
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#ff7900]/10 border border-[#ff7900]/30 px-2.5 py-1 text-[11px] font-bold text-[#fb923c]">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#ff7900]/10 border border-[#ff7900]/30 px-2.5 py-1 text-xs font-bold text-[#fb923c]">
                 <Smartphone size={13} /> Orange Money
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 text-[11px] font-bold text-emerald-400">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-al-green/10 border border-al-green/30 px-2.5 py-1 text-xs font-bold text-al-green">
                 <CreditCard size={13} /> Visa / Mastercard
               </span>
-              <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-zinc-500">
+              <span className="hidden sm:inline-flex items-center gap-1 text-xs text-text-muted">
                 • Sécurisé par NabooPay
               </span>
             </div>
 
             {/* Trial Offer Callout */}
-            <div className="mt-8 mx-auto max-w-2xl rounded-2xl border border-amber-400/30 bg-gradient-to-r from-emerald-500/10 via-amber-500/10 to-rose-500/10 p-5 text-center shadow-lg shadow-black/40 backdrop-blur-xl">
-              <div className="flex items-center justify-center gap-2 text-sm font-black text-amber-300">
-                <Gift size={18} className="text-amber-400 shrink-0" />
+            <div className="mt-8 mx-auto max-w-2xl rounded-2xl border border-line-gold bg-surface-1 p-5 text-center shadow-lg shadow-black/40">
+              <div className="flex items-center justify-center gap-2 text-sm font-black text-al-gold">
+                <Gift size={18} className="text-al-gold shrink-0" />
                 <span>Profitez de 5 jours d’essai sans engagement !</span>
               </div>
-              <p className="mt-2 text-xs leading-relaxed text-zinc-300">
+              <p className="mt-2 text-xs leading-relaxed text-text">
                 Créez votre compte en 30 secondes sans renseigner de carte bancaire. Vous bénéficiez d&apos;un accès complet et immédiat pendant 5 jours. Vous ne réglez votre forfait qu&apos;une fois totalement convaincu.
               </p>
             </div>
@@ -442,44 +446,44 @@ export default async function HomePage() {
 
           <div className="mt-14 grid gap-8 max-w-4xl mx-auto md:grid-cols-2 items-stretch">
             {/* Forfait Mensuel */}
-            <div className="relative flex flex-col justify-between rounded-3xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-8 transition duration-200 hover:border-white/20 shadow-xl">
+            <div className="relative flex flex-col justify-between rounded-3xl border border-line bg-surface-1/80 p-8 transition duration-200 hover:border-white/20 shadow-xl">
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="rounded-full bg-white/[0.04] border border-white/[0.08] px-3 py-1 text-xs font-semibold text-zinc-300">
+                  <span className="rounded-full bg-white/[0.04] border border-line px-3 py-1 text-xs font-semibold text-text">
                     Formule Découverte
                   </span>
-                  <span className="text-xs text-zinc-500 font-mono">Sans engagement</span>
+                  <span className="text-xs text-text-muted font-mono">Sans engagement</span>
                 </div>
-                <h3 className="mt-5 text-2xl font-bold text-white">Forfait Mensuel</h3>
-                <p className="mt-2 text-xs text-zinc-400">
+                <h3 className="font-display mt-5 text-2xl font-bold text-text">Forfait Mensuel</h3>
+                <p className="mt-2 text-xs text-text-muted">
                   Accès complet pendant 30 jours. Renouvellement libre selon vos envies.
                 </p>
 
                 <div className="mt-6 flex items-baseline gap-2">
-                  <span className="text-4xl sm:text-5xl font-black text-white">990</span>
-                  <span className="text-lg font-bold text-amber-400">FCFA</span>
-                  <span className="text-xs text-zinc-500 font-medium">/ mois (30 jours)</span>
+                  <span className="font-display text-4xl sm:text-5xl font-bold text-text">990</span>
+                  <span className="text-lg font-bold text-al-gold">FCFA</span>
+                  <span className="text-xs text-text-muted font-medium">/ mois (30 jours)</span>
                 </div>
 
-                <div className="mt-8 border-t border-white/[0.08] pt-6 space-y-3.5 text-xs text-zinc-300">
+                <div className="mt-8 border-t border-line pt-6 space-y-3.5 text-xs text-text">
                   <div className="flex items-center gap-2.5">
-                    <Check size={16} className="text-emerald-400 shrink-0" />
+                    <Check size={16} className="text-al-green shrink-0" />
                     <span><strong>11 700+ chaînes</strong> en accès illimité</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <Check size={16} className="text-emerald-400 shrink-0" />
+                    <Check size={16} className="text-al-green shrink-0" />
                     <span>Lecteur Web HLS + bascule 1-clic vers VLC</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <Check size={16} className="text-emerald-400 shrink-0" />
+                    <Check size={16} className="text-al-green shrink-0" />
                     <span>Recherche rapide, filtres et favoris synchronisés</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <Check size={16} className="text-emerald-400 shrink-0" />
+                    <Check size={16} className="text-al-green shrink-0" />
                     <span>Zéro publicité injectée</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <Check size={16} className="text-emerald-400 shrink-0" />
+                    <Check size={16} className="text-al-green shrink-0" />
                     <span>Activation immédiate après paiement</span>
                   </div>
                 </div>
@@ -488,60 +492,60 @@ export default async function HomePage() {
               <div className="mt-8 pt-4">
                 <Link
                   href="/pricing"
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/25 py-3 text-sm font-semibold text-white transition backdrop-blur-md active:scale-[0.99]"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/25 py-3 text-sm font-semibold text-text transition active:scale-[0.99]"
                 >
                   <span>Souscrire au Mensuel (990 FCFA)</span>
                   <ArrowRight size={15} />
                 </Link>
-                <p className="mt-2 text-center text-[10px] text-zinc-500">
+                <p className="mt-2 text-center text-xs text-text-muted">
                   Paiement instantané Wave, Orange Money ou CB
                 </p>
               </div>
             </div>
 
             {/* Forfait Annuel */}
-            <div className="relative flex flex-col justify-between rounded-3xl border border-amber-400/40 bg-black/50 backdrop-blur-2xl p-8 shadow-2xl shadow-black/50 transition duration-200 hover:border-amber-400/60">
+            <div className="relative flex flex-col justify-between rounded-3xl border border-al-gold/40 bg-black/50 p-8 shadow-2xl shadow-black/50 transition duration-200 hover:border-al-gold/60">
               {/* Highlight ribbon */}
-              <div className="absolute -top-3.5 right-6 rounded-full border border-amber-400/40 bg-gradient-to-r from-emerald-500/40 via-amber-400/50 to-rose-500/40 px-4 py-1 text-[11px] font-black uppercase tracking-wider text-amber-100 shadow-lg backdrop-blur-md">
+              <div className="absolute -top-3.5 right-6 rounded-full bg-al-gold px-4 py-1 text-xs font-bold uppercase tracking-wider text-black shadow-lg">
                 ★ 2 Mois Offerts • Plus Économique
               </div>
 
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="rounded-full bg-amber-400/10 border border-amber-400/30 px-3 py-1 text-xs font-bold text-amber-300">
+                  <span className="rounded-full bg-al-gold/10 border border-al-gold/30 px-3 py-1 text-xs font-bold text-al-gold">
                     Forfait Annuel Africa Live
                   </span>
                 </div>
-                <h3 className="mt-5 text-2xl font-black text-white">Forfait Annuel</h3>
-                <p className="mt-2 text-xs text-zinc-300">
+                <h3 className="font-display mt-5 text-2xl font-bold text-text">Forfait Annuel</h3>
+                <p className="mt-2 text-xs text-text">
                   12 mois de télévision en continu au prix de 10 mois. La tranquillité totale pour toute l&apos;année.
                 </p>
 
                 <div className="mt-6 flex items-baseline gap-2">
-                  <span className="text-4xl sm:text-5xl font-black text-white">9 900</span>
-                  <span className="text-lg font-bold text-amber-400">FCFA</span>
-                  <span className="text-xs text-zinc-400 font-medium">/ an (12 mois)</span>
+                  <span className="font-display text-4xl sm:text-5xl font-bold text-text">9 900</span>
+                  <span className="text-lg font-bold text-al-gold">FCFA</span>
+                  <span className="text-xs text-text-muted font-medium">/ an (12 mois)</span>
                 </div>
 
-                <div className="mt-8 border-t border-amber-400/20 pt-6 space-y-3.5 text-xs text-zinc-200">
+                <div className="mt-8 border-t border-al-gold/20 pt-6 space-y-3.5 text-xs text-text">
                   <div className="flex items-center gap-2.5">
-                    <Check size={16} className="text-amber-400 shrink-0" />
+                    <Check size={16} className="text-al-gold shrink-0" />
                     <span><strong>Tout le catalogue 11 700+ chaînes</strong> sans restriction</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <Check size={16} className="text-amber-400 shrink-0" />
+                    <Check size={16} className="text-al-gold shrink-0" />
                     <span><strong>Économisez 1 980 FCFA</strong> par rapport au forfait mensuel</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <Check size={16} className="text-amber-400 shrink-0" />
+                    <Check size={16} className="text-al-gold shrink-0" />
                     <span>Compatibilité PC, Mac, Smartphone et Tablettes</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <Check size={16} className="text-amber-400 shrink-0" />
+                    <Check size={16} className="text-al-gold shrink-0" />
                     <span>Priorité réseau et support client dédié</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <Check size={16} className="text-amber-400 shrink-0" />
+                    <Check size={16} className="text-al-gold shrink-0" />
                     <span>Paiement sécurisé unique sans prélèvement imprévu</span>
                   </div>
                 </div>
@@ -550,12 +554,12 @@ export default async function HomePage() {
               <div className="mt-8 pt-4">
                 <Link
                   href="/pricing"
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/25 via-amber-400/30 to-rose-500/25 hover:from-emerald-500/35 hover:via-amber-400/40 hover:to-rose-500/35 py-3 text-sm font-bold text-amber-100 shadow-lg shadow-black/40 transition active:scale-[0.99] backdrop-blur-md"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-transparent bg-al-yellow hover:brightness-110 py-3 text-sm font-bold text-black shadow-lg shadow-black/40 transition active:scale-[0.99]"
                 >
                   <span>Souscrire à l&apos;Annuel (9 900 FCFA)</span>
                   <ArrowRight size={15} />
                 </Link>
-                <p className="mt-2 text-center text-[10px] text-amber-300/80 font-medium">
+                <p className="mt-2 text-center text-xs text-al-gold/80 font-medium">
                   Réglez facilement en quelques secondes via NabooPay
                 </p>
               </div>
@@ -563,21 +567,21 @@ export default async function HomePage() {
           </div>
 
           {/* How payment works banner */}
-          <div className="mt-12 max-w-4xl mx-auto rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-6 sm:p-8">
-            <h4 className="text-sm font-bold uppercase tracking-wider text-amber-400 text-center sm:text-left flex items-center gap-2 justify-center sm:justify-start">
+          <div className="mt-12 max-w-4xl mx-auto rounded-2xl border border-line bg-surface-1/80 p-6 sm:p-8">
+            <h4 className="text-sm font-bold uppercase tracking-wider text-al-gold text-center sm:text-left flex items-center gap-2 justify-center sm:justify-start">
               <ShieldCheck size={18} /> Comment fonctionne le règlement ?
             </h4>
-            <div className="mt-5 grid gap-6 sm:grid-cols-3 text-xs text-zinc-400">
+            <div className="mt-5 grid gap-6 sm:grid-cols-3 text-xs text-text-muted">
               <div className="flex flex-col gap-1.5">
-                <span className="font-bold text-white text-sm">1. Choisissez votre forfait</span>
+                <span className="font-bold text-text text-sm">1. Choisissez votre forfait</span>
                 <p>Sélectionnez l&apos;abonnement mensuel (990 FCFA) ou annuel (9 900 FCFA) selon votre convenance.</p>
               </div>
               <div className="flex flex-col gap-1.5">
-                <span className="font-bold text-white text-sm">2. Validez sur votre téléphone</span>
+                <span className="font-bold text-text text-sm">2. Validez sur votre téléphone</span>
                 <p>Renseignez votre numéro Wave ou Orange Money sur la passerelle sécurisée NabooPay et confirmez l&apos;opération.</p>
               </div>
               <div className="flex flex-col gap-1.5">
-                <span className="font-bold text-white text-sm">3. Regardez instantanément</span>
+                <span className="font-bold text-text text-sm">3. Regardez instantanément</span>
                 <p>Votre compte est immédiatement activé. Profitez de vos programmes en direct dès la confirmation.</p>
               </div>
             </div>
@@ -585,12 +589,12 @@ export default async function HomePage() {
         </section>
 
         {/* FAQ Accordion Section */}
-        <section id="faq" className="py-20 border-t border-white/[0.08]">
+        <section id="faq" className="py-20 border-t border-line">
           <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-amber-400">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-al-gold">
               Questions Fréquentes
             </h2>
-            <p className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+            <p className="font-display mt-2 text-3xl font-bold tracking-tight text-text sm:text-4xl">
               Tout ce que vous devez savoir
             </p>
           </div>
@@ -599,15 +603,15 @@ export default async function HomePage() {
             {faqs.map(({ q, a }, idx) => (
               <details
                 key={idx}
-                className="group rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-6 [&_summary::-webkit-details-marker]:none transition hover:border-amber-400/30"
+                className="group rounded-2xl border border-line bg-surface-1/80 p-6 [&_summary::-webkit-details-marker]:none transition hover:border-al-gold/30"
               >
-                <summary className="flex cursor-pointer items-center justify-between gap-4 font-bold text-white select-none">
+                <summary className="flex cursor-pointer items-center justify-between gap-4 font-bold text-text select-none">
                   <span className="text-base sm:text-lg">{q}</span>
-                  <span className="rounded-full bg-white/[0.04] p-1.5 text-zinc-400 group-open:rotate-180 group-open:text-amber-400 transition-transform duration-200">
+                  <span className="rounded-full bg-white/[0.04] p-1.5 text-text-muted group-open:rotate-180 group-open:text-al-gold transition-transform duration-200">
                     <ChevronDown size={18} />
                   </span>
                 </summary>
-                <p className="mt-4 text-sm leading-relaxed text-zinc-400">{a}</p>
+                <p className="mt-4 text-sm leading-relaxed text-text-muted">{a}</p>
               </details>
             ))}
           </div>
@@ -615,22 +619,22 @@ export default async function HomePage() {
 
         {/* Bottom CTA Banner */}
         <section className="py-16">
-          <div className="relative overflow-hidden rounded-3xl border border-amber-400/30 bg-black/50 backdrop-blur-2xl p-10 text-center sm:py-16 shadow-2xl">
+          <div className="relative overflow-hidden rounded-3xl border border-al-gold/30 bg-black/50 p-10 text-center sm:py-16 shadow-2xl">
             {/* Tricolor ambient glow */}
-            <div className="absolute -inset-10 bg-gradient-to-r from-emerald-500/10 via-amber-500/10 to-rose-500/10 opacity-60 blur-3xl pointer-events-none" />
+            <div className="absolute -inset-10 bg-gradient-to-r from-al-green/10 via-al-yellow/10 to-al-red/10 opacity-60 blur-3xl pointer-events-none" />
 
             <div className="relative z-10">
-              <BrandLogo className="mx-auto h-20 w-20 drop-shadow-[0_4px_15px_rgba(250,204,21,0.25)]" />
-              <h2 className="mt-6 text-3xl font-black text-white sm:text-5xl">
+              <BrandLogo className="mx-auto h-20 w-20 drop-shadow-[0_4px_15px_rgba(252,209,22,0.25)]" />
+              <h2 className="font-display mt-6 text-3xl font-bold text-text sm:text-5xl">
                 Prêt à explorer l’Afrique autrement ?
               </h2>
-              <p className="mx-auto mt-4 max-w-xl text-base text-zinc-300">
+              <p className="mx-auto mt-4 max-w-xl text-base text-text">
                 Rejoignez votre dashboard de veille panafricaine et retrouvez le direct TV depuis un seul espace.
               </p>
               <div className="mt-8 flex justify-center">
                 <Link
                   href={userId ? '/app/live' : '/sign-up'}
-                  className="inline-flex items-center gap-3 rounded-xl border border-amber-400/50 bg-gradient-to-r from-emerald-500/25 via-amber-400/30 to-rose-500/25 hover:from-emerald-500/35 hover:via-amber-400/40 hover:to-rose-500/35 px-7 py-3 text-base font-bold text-white shadow-lg shadow-black/40 backdrop-blur-md transition hover:scale-[1.01] active:scale-[0.98]"
+                  className="inline-flex items-center gap-3 rounded-xl border border-transparent bg-al-yellow hover:brightness-110 px-7 py-3 text-base font-bold text-black shadow-lg shadow-black/40 transition hover:scale-[1.01] active:scale-[0.98]"
                 >
                   <span>{userId ? 'Ouvrir mon dashboard' : 'Commencer maintenant'}</span>
                   <ArrowRight size={17} />
@@ -641,27 +645,27 @@ export default async function HomePage() {
         </section>
 
         {/* Footer */}
-        <footer className="border-t border-white/10 py-10 text-xs text-zinc-500">
+        <footer className="border-t border-line py-10 text-xs text-text-muted">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <BrandLogo className="h-8 w-8" />
-              <span className="text-sm font-bold text-zinc-300">Africa Live</span>
-              <span>— Un regard sur l’Afrique.</span>
+              <Wordmark className="text-sm" />
+              <span>— Le live qui vient à vous.</span>
             </div>
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-zinc-400">
-              <Link href="#features" className="hover:text-white transition">Fonctionnalités</Link>
-              <Link href="#categories" className="hover:text-white transition">Catégories</Link>
-              <Link href="/pricing" className="hover:text-yellow-400 transition font-medium">Tarifs</Link>
-              <Link href="#faq" className="hover:text-white transition">FAQ</Link>
-              <Link href="/contact" className="hover:text-white transition">Contact</Link>
-              <Link href="/cgu" className="hover:text-white transition">CGU & Vente</Link>
-              <Link href="/privacy" className="hover:text-white transition">Confidentialité</Link>
-              <Link href={userId ? '/account' : '/sign-in'} className="hover:text-yellow-400 transition">
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-text-muted">
+              <Link href="#features" className="hover:text-text transition">Fonctionnalités</Link>
+              <Link href="#categories" className="hover:text-text transition">Catégories</Link>
+              <Link href="/pricing" className="hover:text-al-gold transition font-medium">Tarifs</Link>
+              <Link href="#faq" className="hover:text-text transition">FAQ</Link>
+              <Link href="/contact" className="hover:text-text transition">Contact</Link>
+              <Link href="/cgu" className="hover:text-text transition">CGU & Vente</Link>
+              <Link href="/privacy" className="hover:text-text transition">Confidentialité</Link>
+              <Link href={userId ? '/account' : '/sign-in'} className="hover:text-al-gold transition">
                 {userId ? 'Mon compte' : 'Se connecter'}
               </Link>
             </div>
           </div>
-          <div className="mt-8 flex flex-col sm:flex-row justify-between gap-2 border-t border-white/5 pt-6 text-[11px] text-zinc-600">
+          <div className="mt-8 flex flex-col sm:flex-row justify-between gap-2 border-t border-white/5 pt-6 text-xs text-text-muted">
             <p>© {new Date().getFullYear()} Africa Live. Tous droits réservés.</p>
             <p>Lecture depuis la source lorsque le flux est disponible et compatible.</p>
           </div>

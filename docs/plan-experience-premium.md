@@ -1,0 +1,522 @@
+# Africa Live — Rapport d'expérience et plan « Premium »
+
+Date : 2 octobre 2026 (mis à jour le 3 octobre 2026 : P0, P1, P2 faits) · Africa/Dakar · HEAD `1aa85b5` + lots P0–P2 non committés.
+Périmètre : lecture du code (`src/app`, `src/components`, `globals.css`),
+captures réelles de `docs/screenshots` (staging connecté, TV 1366/390, L5),
+audits existants (`audit-produit-professionnel.md`, `audit-agencement-dashboard.md`).
+Ce document propose ; le propriétaire décide. Il ne déploie rien. L'avancement est en §5.1, la colonne « État » du §6 fait foi par ticket.
+
+Contraintes intangibles reprises telles quelles : pas de relais/conversion/stockage
+média, contrôles d'accès et d'éligibilité côté serveur inchangés, pas de migration
+sans ticket dédié, pas de commit/push/déploiement implicite.
+
+---
+
+## 0. Décisions du propriétaire — 2 octobre 2026 (prioritaires sur la suite)
+
+État : diff RW committé et publié (`51c0bc8`, `1aa85b5` sur GitHub `main`),
+Railway staging mis à jour par le propriétaire. Domaine `africatv.sn` acquis,
+production non lancée. Base locale resynchronisée depuis Railway (14 505 chaînes).
+
+1. **Vision validée** (§3) et plan P0 → P5 retenu. Exécution déléguée à une
+   nouvelle session ; prompt : [prompt-sonnet-experience-premium.md](prompt-sonnet-experience-premium.md).
+2. **Le logo est l'identité.** Carte de l'Afrique tricolore vert/jaune/rouge,
+   acacia, éléphant, lion, couronne, anneau or, mot « Africa_Live » en italique
+   gras, **fond noir**. Toute l'interface en découle : noir profond + vert,
+   jaune, rouge + or comme liant.
+3. **Le grand logo transparent reste** sur les pages : il est signature, pas
+   décor parasite. Il est harmonisé (un composant, trois intensités, en couleur
+   très atténuée avec vignette) au lieu d'être supprimé — remplace UX-005.
+4. **Signature : « Le live qui vient à vous ».** Ton panafricain, chaleureux,
+   fier, ancré au Sénégal (Teranga), ouvert à toute l'Afrique et à la diaspora.
+5. **Typographie libre, africaine et moderne** : choix arrêté en §4.0.
+
+### 0.1 Contexte marketing Sénégal → décisions UX
+
+| Réalité du terrain | Conséquence produit |
+|---|---|
+| Usage majoritairement mobile Android, data payante | Mobile d'abord, mode « Éco data » (fond de carte léger, pas d'autoplay, images réduites) |
+| WhatsApp est le canal de partage n°1 | Bouton « Partager sur WhatsApp » sur dépêches et chaînes (lien `wa.me` texte + URL publique) |
+| Wave et Orange Money dominent | Logos Wave/OM/CB visibles dès la landing et les tarifs, prix en FCFA |
+| Football (Lions de la Teranga, CAN), lutte, musique (mbalax, afrobeats) | Rangées TV « Sport », « Musique » mises en avant ; mots-clés de recherche suggérés |
+| Diaspora (France, Italie, Espagne, États-Unis) | Heure locale de l'appareil, Dakar en second ; pays suivis |
+| Fierté panafricaine, Teranga | Micro-touches wolof sobres : accueil « Dalal ak jàmm », 404 « hors antenne » ; jamais au détriment de la clarté en français |
+
+---
+
+## 1. Synthèse exécutive
+
+Africa Live a des **fondations techniques de niveau professionnel** (contrats Zod,
+machine d'état de lecture, quotas, télémétrie, 250+ tests, E2E). Le produit, lui,
+**ressemble encore à un outil interne** : il expose sa mécanique (« sujet inféré »,
+« MapLibre GL », « Titre publié · source RSS », « Mode effectif : Navigateur »)
+au lieu de raconter l'Afrique.
+
+Trois constats dominent :
+
+1. **Pas de système de design.** 421 occurrences de `amber-400`, 122 tailles de
+   police arbitraires (`text-[10px]`, `[11px]`), en-têtes recodés dans chaque page
+   (7 `<header>` différents), boutons gradients recopiés à la main, police Arial.
+   Résultat : chaque page est « presque » cohérente, jamais tout à fait.
+2. **Pas de boucle d'habitude.** Rien ne fait revenir : pas d'historique
+   « Reprendre », pas de « Ma sélection » sur le dashboard, pas de zapping,
+   pas de « Depuis votre dernière visite ». L'utilisateur arrive, cherche,
+   repart.
+3. **Densité sans hiérarchie.** Le dashboard affiche tout au même niveau
+   (4 métriques, bandeau de couverture, onglets, filtres, carte, météo, marchés).
+   Il manque *une* chose qui saute aux yeux : « ce qui se passe maintenant ».
+
+La solution proposée tient en une phrase :
+**« Un écran qui vit, une TV qui zappe, une identité qui se reconnaît. »**
+
+| Axe | Aujourd'hui | Cible |
+|---|---|---|
+| Identité | Arial, or partout, filigrane derrière le contenu | Typo affirmée, palette à rôles, tricolore réservé aux moments forts |
+| Dashboard | Grille de widgets égaux | « À la une » + carte héroïque + fil vivant |
+| TV | Catalogue filtrable | Expérience TV : Reprendre, rangées, zapping, mini-lecteur |
+| Confiance | Jargon technique visible | États humains (« En direct », « Ouvre dans VLC ») + détails à la demande |
+| Fidélisation | Aucune | Historique, favoris pays, « depuis votre visite », PWA installable |
+
+---
+
+## 2. Diagnostic détaillé
+
+### 2.1 Système visuel (transversal)
+
+| # | Constat | Preuve | Impact |
+|---|---|---|---|
+| D0 | Logo traité en filigrane gris (`grayscale`) : la tricolore du logo n'irrigue pas l'UI, remplacée par un doré générique | `BrandWatermark.tsx` | Identité diluée |
+| D1 | Police système Arial, aucune `next/font` | `globals.css` `--font-geist-sans: Arial` | Rendu générique, manque de caractère |
+| D2 | Couleur accent unique sur-utilisée | 421 × `amber-400`, 109 × `amber-300`, mélange `yellow-*`/`amber-*` | Plus rien n'est mis en valeur quand tout est doré |
+| D3 | Rouge = marque *et* erreur *et* direct | `rose-500` dans tricolore, 404, badge DIRECT | Ambiguïté sémantique |
+| D4 | Micro-typographie illisible | 122 × `text-[9-11px]`, capitales espacées partout | Fatigue, accessibilité, zoom mobile |
+| D5 | Filigrane `BrandWatermark` sur 15 pages | Visible derrière les cartes TV (capture l3) | Bruit visuel, effet « template » |
+| D6 | Boutons recodés | gradients `from-emerald-500/20 via-amber-400/25…` copiés landing/404/header | Divergences, maintenance |
+| D7 | 7 en-têtes distincts | landing, TV, dashboard, compte, tarifs, contact, admin | Navigation qui « saute » entre pages |
+| D8 | Glassmorphism `backdrop-blur` empilé | panneaux blur dans panneaux blur | Coût GPU sur mobile d'entrée de gamme, contraste faible |
+| D9 | Traces de l'ancienne marque | `lumina_all_access_*`, `public/lumina-tv-*.png`, `ChatGPT Image…png`, clés `iptv_*` | Non professionnel si visible (URLs, devtools) |
+| D10 | Deux manifestes PWA divergents | `site.webmanifest` (logo-192) vs `manifest.ts` (africa-live-icon-192) | Icône d'installation incertaine |
+
+### 2.2 Landing (`src/app/page.tsx`, 672 lignes)
+
+- Promesses chiffrées hétérogènes : « 11 700+ chaînes », « 1 400+ actualités »,
+  alors que le dashboard affiche 371 chaînes africaines. Risque de crédibilité ;
+  le chiffre doit venir de la base (ou disparaître).
+- Hero : l'aperçu du dashboard est une icône dans un cercle (capture
+  `landing-dashboard-local`) — c'est le moment où il faut **montrer** le produit.
+- 4 « métriques » qui n'en sont pas (« Afrique », « Multi-sources », « Par ville »).
+- Deux icônes `Globe2` pour deux idées différentes.
+- FAQ longue, ton commercial parfois excessif (« dans la seconde », « authenticité totale »).
+
+### 2.3 Dashboard Radar (`LiveRadarDashboard.tsx`, 1 440 lignes)
+
+- Composant monolithique : état, fetch, rendu, météo, marchés et chaînes
+  dans un seul fichier. Freine toute évolution du design.
+- Hiérarchie plate : sélecteur pays pleine largeur (natif `<select>` de 54 pays),
+  puis 4 métriques de *volume* (« 40 résultats chargés ») qui n'aident pas à décider.
+- Jargon exposé : « Couverture partielle · 16/19 sources », « sujet inféré »,
+  « pays du média », « 2D / Globe 3D · MapLibre GL », « GDELT (0) ».
+- Bouton « Briefing — bientôt » désactivé en permanence : promesse non tenue visible.
+- Horloge « Heure de Dakar » imposée à un public panafricain/diaspora.
+- Libellés de carte en anglais (fond ArcGIS) dans une interface française.
+- Pas d'images dans les dépêches : liste de titres très textuelle.
+
+Points forts à conserver : clic pays → chaînes du pays, badge « 19 chaînes »
+sur une dépêche, filtres par source, carte 2D/3D, états d'erreur explicites.
+
+### 2.4 TV (`src/app/app/page.tsx`, 764 lignes)
+
+- Cartes sans logo → grands rectangles vides (capture `l3-tv-real-desktop`) :
+  l'écran le plus important paraît « cassé ».
+- Bandeau VLC + encart « Prêt pour le direct » occupent le premier écran avant
+  la première chaîne.
+- Pas d'historique, pas de « Reprendre », pas de rangées thématiques ;
+  pas de zapping hors prototype L5 local.
+- Lecteur : contrôles natifs, pas de raccourcis clavier, pas de Picture-in-Picture,
+  pas de chaîne précédente/suivante, pas de mini-lecteur persistant entre pages.
+- Catégories brutes (`Business;News`, « Catégorie non renseignée »),
+  codes langue non traduits (audit du 30/09 toujours valable).
+- 20+ `useState` dans la page : favoris, fenêtres, lecteur ancré, notices…
+
+### 2.5 Compte, tarifs, 404, auth
+
+- Compte : `UserProfile` Clerk brut + carte d'accès ; pas d'activité
+  (favoris, temps regardé, pays suivis) — rien de personnel.
+- Tarifs : bon contenu, mais bouton « Payer avec NabooPay » met le prestataire
+  avant le bénéfice ; pas de comparaison visuelle mensuel/annuel (« 2 mois offerts »).
+- 404 « Page hors antenne » : bonne idée de ton, à généraliser (erreurs, vides).
+- Clerk : apparence réglée sur `#fbbf24` mais pas sur la typo/arrondis du futur système.
+
+### 2.6 Accessibilité et performance (rapide)
+
+- Bonnes bases : skip-link, `aria-*`, focus visible, `prefers-reduced-motion`.
+- À corriger : contrastes `zinc-500` sur fond noir translucide, textes 9–10 px,
+  cibles tactiles < 44 px (boutons nav `py-2 text-[11px]`).
+- `framer-motion` chargé pour des transitions simples (6 composants).
+- Carte : tuiles satellite ArcGIS lourdes par défaut sur mobile/3G.
+
+---
+
+## 3. Vision « Solution ultime »
+
+### 3.1 Principes
+
+1. **Le contenu d'abord, la mécanique à la demande.** Chaque détail technique
+   passe derrière un « i » ou un panneau « Sources ».
+2. **Une couleur = un rôle.** Or = action principale. Émeraude = en direct / sain.
+   Rouge = alerte uniquement. Tricolore = signature (barre haute, chargement, moments clés).
+3. **Toujours quelque chose de neuf.** Chaque visite affiche ce qui a changé.
+4. **Un geste pour regarder.** De n'importe où, une chaîne se lance en 1 clic
+   et continue pendant la navigation.
+5. **Simplicité.** On supprime avant d'ajouter : moins de bandeaux, moins de compteurs.
+
+### 3.2 Architecture d'expérience cible
+
+```
+┌ Barre unique (toutes pages connectées) ─────────────────────────────────┐
+│ Logo · Radar · TV · [Recherche universelle ⌘K] · Pays suivi ▾ · Avatar │
+└─────────────────────────────────────────────────────────────────────────┘
+ RADAR  /app/live
+ ┌ À la une (pays choisi) ──────────┐ ┌ Carte héroïque ──────────────────┐
+ │ 3 dépêches majeures + images     │ │ pays cliquables, pulsations      │
+ │ « 12 nouvelles depuis 8 h »      │ │ = activité 24 h                  │
+ └──────────────────────────────────┘ └──────────────────────────────────┘
+ ┌ Fil vivant ───────┐ ┌ En direct du pays ─────┐ ┌ Météo · Marchés ──────┐
+ │ filtres en chips  │ │ 4 chaînes, ▶ immédiat  │ │ compacts, repliables  │
+ └───────────────────┘ └────────────────────────┘ └───────────────────────┘
+ TV  /app
+ [Reprendre ▶▶▶]  [Mes favoris]  [Sénégal en direct]  [Info]  [Sport]  …
+ Recherche + filtres en tiroir, grille complète en bas.
+ MINI-LECTEUR flottant persistant (Radar ↔ TV), zapping ← →, PiP.
+```
+
+### 3.3 Les « aimants » qui font rester
+
+| Aimant | Description | Coût |
+|---|---|---|
+| **Reprendre** | Rangée des 10 dernières chaînes (localStorage puis compte) | Faible |
+| **Mini-lecteur persistant** | La lecture continue quand on passe du Radar à la TV | Moyen |
+| **Zapping** | ← / → et boutons précédent/suivant dans la liste courante | Faible (base L5) |
+| **Depuis votre visite** | Pastille « 12 nouvelles » par pays suivi | Faible (horodatage local) |
+| **Pays suivis** | 1–5 pays épinglés : Radar s'ouvre dessus, rangées TV dédiées | Faible → Moyen (compte) |
+| **Recherche universelle ⌘K** | Pays, chaînes, dépêches, villes météo dans une palette | Moyen |
+| **Mode Mur TV** | 2×2 chaînes muettes, clic = son (desktop) | Moyen, flag |
+| **Briefing du matin** | Réactivation L6 : 5 points par pays suivi | Selon L6 |
+| **PWA installable** | Icône écran d'accueil, splash, raccourcis Radar/TV | Faible |
+
+---
+
+## 4. Système de design « Africa Live DS »
+
+### 4.0 Typographie retenue
+
+| Rôle | Police | Pourquoi |
+|---|---|---|
+| Titres, marque, chiffres-clés | **Unbounded** (600–800) | Large, ronde, affirmée : énergie « affiche de concert / sound system » africaine moderne ; superbe en capitales courtes |
+| Texte, interface | **Manrope** (400–700) | Très lisible petit, moderne, accents français complets, chiffres tabulaires |
+| Accent wordmark | Unbounded *italique simulée* interdite → utiliser le logo image pour le mot « Africa Live » ; en texte, `Africa Live` en Unbounded 700 avec « Live » en jaune |
+
+Chargement `next/font/google` (auto-hébergé au build, `display: 'swap'`,
+sous-ensemble `latin` + `latin-ext`), variables `--font-display` / `--font-sans`.
+Unbounded uniquement ≥ 18 px (titres, chiffres, badges marque) ; jamais en corps de texte.
+
+### 4.1 Jetons « Africa Live » (dans `globals.css` via `@theme`)
+
+Couleurs tirées du logo (vert, jaune, rouge saturés + anneau or sur noir).
+
+```css
+@theme {
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+  --font-display: var(--font-unbounded), var(--font-manrope), sans-serif;
+
+  /* Noirs du logo */
+  --color-ink: #000000;          /* fond page (OLED) */
+  --color-surface-1: #0b0b0c;    /* cartes */
+  --color-surface-2: #141416;    /* cartes surélevées, champs */
+  --color-surface-3: #1c1c1f;    /* survol */
+  --color-line: rgb(255 255 255 / .08);
+  --color-line-gold: rgb(212 167 44 / .35);
+
+  /* Texte */
+  --color-text: #f5f5f4;
+  --color-text-muted: #a8a29e;   /* ≥ 4.5:1 sur surface-1 */
+  --color-text-faint: #78716c;   /* légendes ≥ 14 px uniquement */
+
+  /* Tricolore du logo */
+  --color-al-green: #12b54a;     /* EN DIRECT, succès, actif */
+  --color-al-yellow: #fcd116;    /* action principale (texte noir dessus) */
+  --color-al-red: #e8112d;       /* alertes, erreurs, destructif */
+  --color-al-gold: #d4a72c;      /* anneau or : bordures marque, focus, sélection */
+
+  --radius-card: 1.25rem; --radius-control: .875rem; --radius-pill: 9999px;
+  --text-xs: .75rem;             /* plancher 12 px */
+}
+```
+
+**Rôles (règle d'or : une couleur = un sens)**
+- **Jaune** `al-yellow` : *un seul* bouton principal par écran (texte noir), lien actif.
+- **Vert** `al-green` : point « EN DIRECT » pulsant, états sains, onglet actif secondaire.
+- **Rouge** `al-red` : erreurs, alertes séisme/météo, suppression. Jamais décoratif seul.
+- **Or** `al-gold` : liant premium — bordure de la carte sélectionnée, anneau focus
+  (`outline: 2px solid var(--color-al-gold)`), filet sous les titres de section.
+- **Tricolore** (dégradé vert→jaune→rouge) : signature uniquement — barre de 2 px
+  en haut de la coquille, barre de progression/chargement, soulignement du titre hero,
+  bande « kente » (§4.4). Interdit sur les fonds de cartes et le texte courant.
+
+Règles : fonds opaques `surface-1/2` (flou réservé à la barre et aux overlays),
+plancher 12 px, capitales espacées réservées aux sur-titres courts.
+
+### 4.4 Motifs de marque
+
+- **`BrandBackdrop`** (remplace `BrandWatermark`) : le grand logo en couleur,
+  centré, `opacity` 0.06 (`hero`), 0.035 (`app`), 0.02 (`quiet` : lecteur, admin),
+  masque radial (vignette) pour qu'il s'efface sous le contenu, halo tricolore
+  très flou derrière. Plus de `grayscale`. Désactivé si `prefers-reduced-transparency`
+  et en mode Éco data (`quiet` statique).
+- **Anneau or** : arc fin doré (comme le cercle du logo) autour de l'avatar,
+  du pays sélectionné sur la carte et de la chaîne en lecture.
+- **Bande kente** : séparateur décoratif fin (SVG inline en `mask`, losanges et
+  bandes vert/jaune/rouge/or, 6 px) sous l'en-tête hero de la landing et en pied de page.
+  Une seule occurrence par écran.
+- **Silhouettes** (acacia, éléphant, lion) : réservées aux états vides et à la 404
+  (illustration SVG monochrome or à 40 %), jamais en fond de contenu.
+
+### 4.2 Composants partagés (`src/components/ui/`)
+
+`Button` (primary / secondary / ghost / danger, tailles sm/md/lg, 44 px tactile),
+`Badge` (live / vlc / info / warn), `Card`, `SectionHeader`, `Tabs`, `Chip`,
+`EmptyState`, `ErrorState`, `Skeleton`, `Sheet` (tiroir mobile), `Tooltip`,
+`AppShell` (barre unique + slot), `CountryPicker` (recherche + drapeaux),
+`ChannelTile` (logo de repli généré : initiales sur dégradé de la couleur du pays).
+
+### 4.3 Voix et vocabulaire
+
+| Avant | Après |
+|---|---|
+| Sujet inféré / pays du média | *(supprimé ; info dans le panneau Sources)* |
+| Couverture partielle · 16/19 sources | « 3 sources momentanément muettes » (lien détails) |
+| Mode effectif : Navigateur | *(supprimé)* |
+| Chaînes référencées 130 web · 147 VLC | « 371 chaînes · 130 dans le navigateur » |
+| Briefing — bientôt | *(masqué jusqu'à L6)* |
+| Catégorie non renseignée / Undefined | « Généraliste » |
+| Payer avec NabooPay | « Activer pour 990 FCFA » + logos Wave/OM/CB |
+
+---
+
+## 5. Plan de réalisation
+
+Six lots, chacun livrable seul, testé (unitaires + E2E existants + nouveaux),
+documenté dans `production-progress.md`. Estimations en jours-dev effectifs.
+
+| Lot | Thème | Durée | Valeur | État (3 octobre 2026) |
+|---|---|---|---|---|
+| **P0** | Hygiène et socle design | 3 j | Cohérence immédiate | ✅ Fait et vérifié (02/10) |
+| **P1** | Coquille unique et navigation | 3 j | Fluidité inter-pages | ✅ Fait et vérifié (02/10) |
+| **P2** | TV « streaming » | 5 j | Rétention n°1 | ✅ Fait et vérifié (02/10) ; UX-209 partiel |
+| **P3** | Radar « vivant » | 5 j | Identité du produit | ⏭ **Prochain lot**, en attente du feu vert du propriétaire |
+| **P4** | Landing, tarifs, compte | 3 j | Conversion | À faire |
+| **P5** | Aimants avancés et finition | 5 j | Habitude, différenciation | À faire |
+
+Ordre recommandé : P0 → P1 → P2 → P3 → P4 → P5. P2 avant P3 car le gain
+de rétention est le plus rapide et la base L5 (zapping) existe déjà.
+
+### 5.1 État d'avancement et reste à faire (mis à jour le 3 octobre 2026)
+
+**Fait, vérifié localement, non committé** (arbre de travail volontairement sale,
+voir §8) : P0, P1 et P2, soit 26 tickets faits et 1 partiel (UX-209) sur 50. Preuves,
+limites et captures : sections « Expérience Premium — Lot P0 / P1 / P2 » de
+[production-progress.md](production-progress.md) ; captures
+`docs/screenshots/premium-p0-*`, `premium-p1-*`, `premium-p2-*`.
+Dernière vérification complète (fin de P2) : `tsc` 0 erreur, `lint` 0, `npm test`
+321 tests (307 réussis, 14 ignorés, 0 échec), invariants 4/4, `build` réussi,
+E2E mode MVP 108 réussis + 1 ignoré, E2E mode Clerk 8/8.
+
+**Reste à faire** (23 tickets + 4 reliquats), dans cet ordre, un lot à la fois :
+
+| Lot | Tickets | Points d'attention |
+|---|---|---|
+| **P3 Radar vivant** (8) | UX-301 (découpage de `LiveRadarDashboard.tsx` **d'abord**), 302 → 308 | Les E2E radar (`radar-workspace`, `radar-weather`, `radar-reliability`, `dashboard-reception`) vérifient des libellés : les mettre à jour dans le même ticket avec une assertion équivalente. UX-302 : image `og:image` de l'éditeur chargée par le navigateur, aucun cache serveur. UX-305 : le fond sombre léger est déjà le défaut en mode Éco (`TacticalVectorMap.tsx`) ; mesurer le rendu mobile avant/après. UX-306 réutilise la modale de lecture et le zapping de P2 (`InlinePlayerModal`, `Player` avec `zapping`). Les dépêches ont déjà un bouton WhatsApp (`ShareArticleLink`). |
+| **P4 Landing, tarifs, compte** (7) | UX-401 → 407 + reliquats UX-212, UX-214 | Chiffres de la landing issus de la base, jamais en dur. Parcours NabooPay inchangé (E2E paiement simulé verts). UX-404 « Mon activité » peut réutiliser `recent-channels`, favoris, pays récents. UX-405 : widgets Clerk encore en anglais. |
+| **P5 Aimants et finition** (8) | UX-501 → 508 + reliquats UX-209 (suite), UX-213 | UX-501 mini-lecteur persistant : touche au lecteur, donc E2E lecture obligatoires, une seule source active. UX-502 : la barre de recherche (Ctrl K) existe déjà pour le catalogue TV. UX-503 : la synchronisation au compte est un **ticket de migration séparé**, sauvegarde Railway préalable. UX-505 : mesurer le poids JS de la TV avant/après. UX-508 : audit a11y + Lighthouse, rapport daté dans `docs/`. |
+
+**Reliquats identifiés pendant P0–P2** (à traiter dans le lot indiqué ; détail en §6) :
+UX-209 (tiroir unique des filtres, suite), UX-212 (Éco data visible sur mobile),
+UX-213 (contrôle du lecteur ancré à harmoniser), UX-214 (capturer `/account` et
+`/admin` avec une session Clerk — action du propriétaire).
+
+**Questions ouvertes pour le propriétaire** :
+1. Committer P0–P2 avant P3 ? ~190 fichiers sont modifiés ou ajoutés, non committés ;
+   le risque de perte ou de mélange augmente à chaque lot. Aucun commit n'est fait
+   sans demande explicite.
+2. Fournir une session Clerk (ou valider lui-même) pour capturer `/account` et
+   `/admin` (UX-214).
+3. Faire valider sur appareil Android réel le lecteur (raccourcis, PiP, plein écran)
+   et le mode Éco data : seuls Edge et Chromium sont testés.
+
+---
+
+## 6. Backlog détaillé
+
+Priorités : **P1** indispensable, **P2** important, **P3** confort.
+Taille : S ≤ ½ j, M ≈ 1 j, L ≈ 2–3 j.
+
+### Lot P0 — Hygiène et socle design
+
+| ID | Prio | Taille | Ticket | Critères d'acceptation | État |
+|---|---|---|---|---|---|
+| UX-001 | P1 | M | Jetons de design dans `globals.css` (`@theme`), palette à rôles | Couleurs/rayons/typo référencés par jetons ; aucun hex nouveau dans les composants | ✅ P0 — 02/10/2026 |
+| UX-002 | P1 | S | Polices Unbounded (titres) + Manrope (texte) via `next/font/google` (§4.0) | Plus d'Arial ; pas de CLS mesurable ; auto-hébergées au build | ✅ P0 — 02/10/2026 |
+| UX-003 | P1 | L | Bibliothèque `src/components/ui` : Button, Badge, Card, Chip, Tabs, SectionHeader, EmptyState, ErrorState, Skeleton | Stories ou page `/app/ui` dev-only ; utilisés par ≥ 3 pages | ✅ P0 — 02/10/2026 |
+| UX-004 | P1 | M | Plancher 12 px : remplacer `text-[9-11px]` | `grep text-\[(9|10|11)px\]` = 0 ; zoom 200 % sans chevauchement | ✅ P0 — 02/10/2026 |
+| UX-005 | P1 | M | `BrandBackdrop` (§4.4) remplace `BrandWatermark` sur les 15 pages : logo couleur, 3 intensités, vignette | Logo visible et harmonieux ; texte des cartes ≥ 4.5:1 par-dessus | ✅ P0 — 02/10/2026 |
+| UX-009 | P2 | S | Bande kente + anneau or + illustrations silhouettes (états vides, 404) | SVG inline, < 4 Ko chacun | ✅ P0 — 02/10/2026 |
+| UX-010 | P1 | S | Signature « Le live qui vient à vous » : métadonnées, landing, manifeste | `layout.tsx`, OG, `manifest.ts` alignés | ✅ P0 — 02/10/2026 |
+| UX-006 | P2 | S | Nettoyer `public/` (ChatGPT*, lumina-*) et unifier le manifeste (`manifest.ts` seul) | Une seule source d'icônes ; aucune 404 d'icône | ✅ P0 — 02/10/2026 |
+| UX-007 | P3 | S | Renommer clés `iptv_*` → `al_*` avec migration localStorage transparente | Favoris existants conservés (test unitaire) | ✅ P0 — 02/10/2026 |
+| UX-008 | P3 | S | Identifiants produit `lumina_*` : alias affiché « Africa Live Mensuel/Annuel » (sans changer l'ID NabooPay ni la base) | Aucun libellé « lumina » visible | ✅ P0 — 02/10/2026 |
+
+### Lot P1 — Coquille unique et navigation
+
+| ID | Prio | Taille | Ticket | Critères d'acceptation | État |
+|---|---|---|---|---|---|
+| UX-101 | P1 | L | `AppShell` : barre unique (logo, Radar, TV, recherche, pays suivi, compte) pour Radar/TV/Compte/Admin/Tarifs | 1 seul composant d'en-tête ; E2E navigation verts | ✅ P1 — 02/10/2026 |
+| UX-102 | P1 | M | Navigation mobile en barre basse (Radar · TV · Recherche · Compte) | Cibles ≥ 44 px ; 320 px sans débordement | ✅ P1 — 02/10/2026 |
+| UX-103 | P1 | M | `CountryPicker` : recherche, drapeaux, pays récents, remplace le `<select>` natif | Clavier complet ; pays conservé entre Radar et TV (URL) | ✅ P1 — 02/10/2026 |
+| UX-104 | P2 | S | Horloge : heure locale de l'utilisateur, Dakar en info-bulle | Fuseau détecté ; test unitaire de format | ✅ P1 — 02/10/2026 |
+| UX-105 | P2 | S | Masquer « Briefing — bientôt » tant que L6 inactif | Aucun bouton désactivé permanent | ✅ P1 — 02/10/2026 |
+| UX-106 | P2 | M | Transitions de page légères (View Transitions API, repli sans animation) | Respect `prefers-reduced-motion` | ✅ P1 — 02/10/2026 |
+
+### Lot P2 — TV « streaming »
+
+| ID | Prio | Taille | Ticket | Critères d'acceptation | État |
+|---|---|---|---|---|---|
+| UX-201 | P1 | M | `ChannelTile` : logo ou repli généré (initiales + dégradé pays), ratio 16:9, état « Navigateur/VLC » en badge discret | Aucune carte vide ; captures 390/1366 | ✅ P2 — 02/10/2026 |
+| UX-202 | P1 | M | Rangée **Reprendre** (10 dernières chaînes, localStorage) en tête de `/app` | Apparaît après 1 lecture ; effaçable ; sans migration | ✅ P2 — 02/10/2026 |
+| UX-203 | P1 | L | Accueil TV en rangées : Reprendre · Favoris · Pays suivi en direct · Info · Sport · Musique ; grille complète sous « Tout le catalogue » | Rangées défilables clavier/tactile ; requêtes existantes réutilisées | ✅ P2 — 02/10/2026 |
+| UX-204 | P1 | M | Bandeau VLC et encart « Prêt pour le direct » fusionnés en une ligne d'aide repliable | Première chaîne visible au-dessus de la ligne de flottaison à 1366×768 | ✅ P2 — 02/10/2026 |
+| UX-205 | P1 | L | Lecteur : contrôles maison (lecture, volume, plein écran, PiP, précédent/suivant), raccourcis `Espace`, `M`, `F`, `←/→` | Machine d'état inchangée ; tests playback verts ; aide raccourcis `?` | ✅ P2 — 02/10/2026 |
+| UX-206 | P2 | L | Généraliser le zapping L5 aux modales/lecteur séparé, VLC en sortie propre | Réserves de `anchored-player-validation.md` levées | ✅ P2 — 02/10/2026 |
+| UX-207 | P2 | M | Normalisation des libellés : catégories composées, « Undefined », codes langue → noms français | Table de correspondance testée ; aucun code brut affiché | ✅ P2 — 02/10/2026 |
+| UX-208 | P2 | M | Tri par défaut « Afrique d'abord » puis pertinence | Les 30 premières chaînes de « Tout » majoritairement africaines | ✅ P2 — 02/10/2026 |
+| UX-210 | P1 | S | Partage WhatsApp (dépêche, chaîne) via `https://wa.me/?text=` (titre + URL publique, aucune donnée perso) | Ouvre WhatsApp mobile/web ; pas d'URL de flux média partagée | ✅ P2 — 02/10/2026 |
+| UX-211 | P2 | M | Mode « Éco data » (préférence locale) : pas d'autoplay, fond de carte léger, images de dépêches désactivées, `BrandBackdrop` quiet | Toggle dans Compte et barre ; respecté partout | ✅ P2 — 02/10/2026 |
+| UX-209 | P3 | M | Filtres en tiroir unique (mobile et desktop) avec chips actives retirables | Nombre de filtres visible ; « Tout effacer » | 🟡 P2 partiel — 02/10/2026 (pastilles, compteur, « Tout effacer » ; barre latérale desktop conservée) |
+
+### Lot P3 — Radar « vivant »
+
+| ID | Prio | Taille | Ticket | Critères d'acceptation | État |
+|---|---|---|---|---|---|
+| UX-301 | P1 | L | Découper `LiveRadarDashboard.tsx` : `useRadarData`, `NewsFeed`, `CountryChannels`, `WeatherCard`, `MarketsCard`, `RadarHeader` | Fichier racine < 300 lignes ; E2E radar inchangés et verts | À faire |
+| UX-302 | P1 | M | Bloc **À la une** : 3 dépêches les plus récentes/multi-sources du pays, avec image `og:image` si fournie par le flux RSS | Pas de stockage d'image ; repli typographique | À faire |
+| UX-303 | P1 | M | Remplacer les 4 métriques de volume par : « Nouvelles depuis votre visite », « Chaînes en direct du pays », « Alerte météo/séisme » | Chaque tuile cliquable vers son contenu | À faire |
+| UX-304 | P1 | M | Langage humain : supprimer jargon visible, panneau « Sources et fraîcheur » regroupant RSS/GDELT/couverture | Revue des libellés ; aucun nom de librairie dans l'UI | À faire |
+| UX-305 | P2 | M | Carte : fond sombre vectoriel par défaut (léger), satellite en option ; libellés FR si le style le permet ; pulsation des pays selon activité 24 h | Temps de rendu carte mobile réduit (mesure avant/après) | À faire |
+| UX-306 | P2 | M | Dépêche → « Regarder le direct du pays » ouvre le mini-lecteur sans quitter le Radar | Parcours E2E clic dépêche → lecture | À faire |
+| UX-307 | P2 | S | Météo et marchés compacts et repliables, état mémorisé | Préférence locale | À faire |
+| UX-308 | P3 | M | Rafraîchissement doux : nouvelles dépêches annoncées par une pastille « 3 nouvelles ↑ » au lieu de repousser la liste | Pas de saut de défilement | À faire |
+
+### Lot P4 — Landing, tarifs, compte
+
+| ID | Prio | Taille | Ticket | Critères d'acceptation | État |
+|---|---|---|---|---|---|
+| UX-401 | P1 | M | Hero avec vraie capture (ou animation statique) du Radar + TV, chiffres réels issus de la base au build/ISR | Aucun chiffre en dur ; capture à jour | À faire |
+| UX-402 | P1 | S | Remplacer les « métriques » par 3 bénéfices clairs ; supprimer les doublons d'icônes | Relecture copy | À faire |
+| UX-403 | P1 | M | Tarifs : carte annuelle mise en avant (« 2 mois offerts »), CTA orienté bénéfice, logos moyens de paiement, FAQ courte | Parcours NabooPay inchangé ; E2E paiement simulé vert | À faire |
+| UX-404 | P2 | M | Compte : « Mon activité » (pays suivis, favoris, dernières chaînes), état d'accès en jauge (jours restants) | Données déjà disponibles ; pas de migration | À faire |
+| UX-405 | P2 | S | Clerk `appearance` aligné sur jetons (police, rayons, couleurs) | Captures sign-in/sign-up cohérentes | À faire |
+| UX-406 | P2 | S | États vides/erreurs avec le ton « hors antenne » sur toutes les pages | Composants `EmptyState`/`ErrorState` partout | À faire |
+| UX-407 | P3 | S | FAQ resserrée (6 → 5 questions courtes, ton factuel) | Aucune promesse non vérifiable | À faire |
+
+### Lot P5 — Aimants avancés et finition
+
+| ID | Prio | Taille | Ticket | Critères d'acceptation | État |
+|---|---|---|---|---|---|
+| UX-501 | P1 | L | **Mini-lecteur persistant** dans `AppShell` (layout `/app`), survit Radar ↔ TV | Une seule source active ; arrêt propre ; quotas respectés | À faire |
+| UX-502 | P1 | L | **Recherche universelle ⌘K** : pays, chaînes, dépêches, villes | Réutilise API existantes ; < 300 ms perçu ; clavier complet | À faire |
+| UX-503 | P2 | M | **Pays suivis** (1–5) en local, puis synchronisés au compte (ticket migration séparé) | Radar et TV s'ouvrent sur le pays principal | À faire |
+| UX-504 | P2 | M | PWA : manifeste unique, raccourcis Radar/TV, écran hors-ligne « hors antenne » | Lighthouse PWA installable | À faire |
+| UX-505 | P2 | M | Micro-interactions sobres : favori (pop), live dot, squelettes animés ; retrait de `framer-motion` là où CSS suffit | Bundle JS TV réduit (mesure) | À faire |
+| UX-506 | P3 | L | **Mur TV 2×2** (desktop, flag) | Un seul flux sonore ; respect des quotas de lecture | À faire |
+| UX-507 | P3 | — | Briefing du matin = lot L6 existant, branché sur Pays suivis | Selon `plan-dashboard-backlog.md` | À faire |
+| UX-508 | P2 | M | Audit a11y final (axe + clavier + lecteur d'écran) et Lighthouse ≥ 90 perf/a11y sur Radar et TV | Rapport daté dans `docs/` | À faire |
+
+### Reliquats identifiés pendant P0–P2
+
+Rien n'y est bloquant ; chaque reliquat est rattaché au lot où il coûte le moins.
+
+| ID | Lot | Prio | Taille | Ticket | Critères d'acceptation | État |
+|---|---|---|---|---|---|---|
+| UX-209 (suite) | P5 | P3 | M | Filtres en tiroir unique desktop + mobile : retirer la barre latérale desktop au profit du tiroir mobile existant (pastilles, compteur et « Tout effacer » sont faits en P2) | Un seul panneau de filtres ; E2E `tv-workspace`, `catalogue`, `tv-streaming` équivalents et verts ; première chaîne toujours visible à 1366×768 | À faire |
+| UX-212 | P4 | P2 | S | « Éco data » découvrable sur mobile : la bascule est cachée dans la barre sous 640 px et n'existe que dans Compte | Accès en ≤ 2 gestes depuis la TV à 360 px ; état annoncé (`aria-pressed`) ; E2E | À faire |
+| UX-213 | P5 | P2 | S | Contrôle du lecteur ancré (« Activer le lecteur ancré » + case « VLC et mes autres lecteurs sont arrêtés ») : habiller avec `Button`/`Chip` du design system, libellés humains, sans changer le comportement L5 | Aucune régression `anchored-player.spec` ; captures 360/1366 | À faire |
+| UX-214 | P4 | P2 | S | Capturer `/account` et `/admin` avec une session Clerk (non faisable en anonyme) | Captures `premium-p4-account-*` et `premium-p4-admin-*` ; **nécessite le propriétaire** | À faire |
+
+---
+
+## 7. Mesure du succès
+
+À suivre via la télémétrie existante (`playback-telemetry`) et des événements
+UI légers, sans données personnelles supplémentaires :
+
+| Indicateur | Pourquoi |
+|---|---|
+| Temps jusqu'à la première lecture (depuis l'arrivée) | Efficacité du parcours TV |
+| % de sessions avec ≥ 2 chaînes regardées (zapping) | Engagement TV |
+| % de retours J+1 / J+7 | Effet des aimants |
+| Clics dépêche → direct pays | Valeur unique Radar + TV |
+| Conversion essai → abonnement | Effet landing/tarifs |
+| Lighthouse perf/a11y Radar et TV | Qualité perçue |
+
+---
+
+## 8. Risques et garde-fous
+
+- **Régression lecture** : UX-205/206/501 touchent le lecteur → aucun changement
+  de `playback-machine`/résolution sans tests dédiés ; E2E lecture obligatoires.
+- **Persistance** : Reprendre et Pays suivis commencent en local ; toute
+  synchronisation compte = ticket migration séparé, sauvegarde Railway préalable.
+- **Images de dépêches** : uniquement l'URL fournie par l'éditeur, chargée par
+  le navigateur ; aucune mise en cache serveur (cohérent avec la politique média).
+- **Promesses commerciales** : chiffres uniquement issus de la base ; pas de
+  « garanti », « instantané » sans preuve.
+- **Arbre de travail** : le diff RW est committé (`51c0bc8`, `1aa85b5`) mais P0, P1 et P2
+  ne le sont pas : l'arbre est sale par construction (≈ 190 fichiers). Ne jamais utiliser de
+  commande Git destructive pour « nettoyer » ; inspecter `git status --short` avant d'éditer.
+  Un commit local n'est fait que sur demande explicite ; push et déploiement Railway idem.
+- **Libellés et E2E** : `e2e/dashboard-reception`, `radar-*`, `tv-workspace`,
+  `local-mvp` vérifient des textes visibles ; tout changement de libellé met à
+  jour le test dans le même ticket, sans affaiblir l'assertion.
+
+### 8.1 Pièges connus (appris pendant P0–P2)
+
+- **hls.js 1.6.16** : le contrôleur d'interstitiels rappelle `startLoad()` après le manifeste
+  et contourne `autoStartLoad: false`. `Player.tsx` passe `enableInterstitialPlayback: false` ;
+  ne pas le retirer sans rejouer le test « Éco data » (aucun segment avant « Lire maintenant »).
+- **Quotas de `/api/channels`** : 120 requêtes d'entrée et 60 de page par minute. Les rangées de
+  la TV chargent à la demande et gardent 5 min en session (`al_tv_rows`) ; en E2E MVP,
+  `--workers=1` et éviter les rafales de requêtes réelles (429 sinon).
+- **Rangées de la TV** : les rangées sont paresseuses ; une rangée sous la ligne de flottaison n'a
+  pas de chaînes tant qu'elle n'est pas proche de l'écran (le test doit viser une rangée visible).
+- **Doublons accessibles** : les rangées dupliquent des tuiles du catalogue ; cibler `#catalogue`
+  ou une rangée par son nom (`getByRole('region', { name })`) dans les E2E, et utiliser
+  `exact: true` (« Lancer VLC » ≠ « Relancer VLC »).
+- **Windows / Git Bash** : une route `/app` passée en argument est réécrite en chemin de disque
+  (passer `app`, sans barre initiale) ; `$` et accents dans `node -e` ou les heredocs
+  cassent (écrire un fichier `.cjs`) ; les fichiers CRLF exigent des remplacements tolérants ;
+  `docs/screenshots/l5-anchored-*.png` sont réécrits par l'E2E `anchored-player` (restaurer depuis
+  `HEAD` après coup) ; un E2E peut échouer sur un verrou de fichier Windows transitoire (relancer).
+- **Deux modes locaux** : Clerk (défaut, `npm run dev`) et MVP (`LOCAL_DEV_MODE=true
+  NEXT_PUBLIC_LOCAL_DEV_MODE=true`, ligne technique `africa-live-local-user` à insérer dans
+  `africa_live_dev` puis à retirer). Les E2E MVP exigent `E2E_REUSE_SERVER=true` et le serveur MVP
+  sur 3001 ; les E2E Clerk (`auth-entry`, `payment`) le serveur Clerk. Redémarrer le serveur
+  Clerk à la fin de chaque lot.
+
+## 9. Prochaine étape
+
+1. Le propriétaire répond aux trois questions ouvertes du §5.1 (commit de P0–P2, session
+   Clerk, test Android réel) et donne son feu vert pour **P3**.
+2. Nouvelle session : coller [prompt-reprise-premium-p3.md](prompt-reprise-premium-p3.md)
+   (annonce du plan de lot en 5 lignes, un lot à la fois, bilan fait / vérifié / limites,
+   attente du feu vert).
+3. P3 commence par UX-301 (découpage de `LiveRadarDashboard.tsx`, 1 383 lignes au 3 octobre) avec les E2E
+   radar inchangés et verts avant d'ajouter le moindre bloc nouveau.

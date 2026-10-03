@@ -1,16 +1,49 @@
 @import "tailwindcss";
 
+/*
+ * Africa Live DS — jetons issus du logo (noir profond, vert / jaune / rouge, anneau or).
+ * Règle d'or : une couleur = un rôle.
+ *   jaune  → UNE action principale par écran (texte noir dessus) et lien actif
+ *   vert   → EN DIRECT, états sains
+ *   rouge  → alertes et erreurs uniquement
+ *   or     → liant premium : bordures de marque, focus, sélection
+ *   tricolore → signature seulement (barre haute, chargement, soulignement hero, bande kente)
+ */
+@theme {
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+  --font-display: var(--font-unbounded), var(--font-manrope), sans-serif;
+
+  /* Noirs du logo */
+  --color-ink: #000000; /* fond de page (OLED) */
+  --color-surface-1: #0b0b0c; /* cartes */
+  --color-surface-2: #141416; /* cartes surélevées, champs */
+  --color-surface-3: #1c1c1f; /* survol */
+  --color-line: rgb(255 255 255 / 0.08);
+  --color-line-gold: rgb(212 167 44 / 0.35);
+
+  /* Texte */
+  --color-text: #f5f5f4;
+  --color-text-muted: #a8a29e; /* ≥ 4.5:1 sur surface-1 */
+  --color-text-faint: #78716c; /* légendes ≥ 14 px uniquement */
+
+  /* Tricolore du logo */
+  --color-al-green: #12b54a;
+  --color-al-yellow: #fcd116;
+  --color-al-red: #e8112d;
+  --color-al-gold: #d4a72c;
+  /* Rouge du logo éclairci pour le texte d'erreur sur fond noir (≥ 4.5:1) */
+  --color-al-red-soft: #ff6b7d;
+
+  --radius-card: 1.25rem;
+  --radius-control: 0.875rem;
+  --radius-pill: 9999px;
+  --text-xs: 0.75rem; /* plancher typographique : 12 px */
+}
+
 :root {
-  --background: #000000; /* Pure OLED black */
-  --foreground: #f4f4f5;
-  --font-geist-sans: Arial, Helvetica, sans-serif;
-  --font-geist-mono: Consolas, monospace;
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --africa-emerald: #10b981;
-  --africa-gold: #facc15;
-  --africa-amber: #f59e0b;
-  --africa-red: #ef4444;
+  --background: var(--color-ink);
+  --foreground: var(--color-text);
+  --tricolor: linear-gradient(90deg, var(--color-al-green) 0%, var(--color-al-yellow) 50%, var(--color-al-red) 100%);
 }
 
 @theme inline {
@@ -18,16 +51,31 @@
   --color-foreground: var(--foreground);
 }
 
+html {
+  color-scheme: dark;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--font-sans);
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
 }
 
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+::selection {
+  background: rgb(212 167 44 / 0.35);
+  color: var(--color-text);
+}
+
 :focus-visible {
-  outline: 2px solid #facc15;
+  outline: 2px solid var(--color-al-gold);
   outline-offset: 2px;
 }
 
@@ -40,142 +88,162 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgb(255 255 255 / 0.15);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(250, 204, 21, 0.4);
+  background: rgb(212 167 44 / 0.5);
 }
 
-/* Glassmorphism & Transparent Utilities */
+/* Fonds opaques : le flou est réservé à la barre et aux overlays. */
 .glass-panel {
-  background: rgba(8, 9, 12, 0.55);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-line);
 }
 
 .glass-panel-subtle {
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgb(255 255 255 / 0.02);
+  border: 1px solid var(--color-line);
 }
 
 .glass-panel-gold {
-  background: rgba(12, 12, 16, 0.55);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(250, 204, 21, 0.2);
-  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.8), 0 0 20px -5px rgba(250, 204, 21, 0.08);
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-line-gold);
+  box-shadow: 0 8px 32px -8px rgb(0 0 0 / 0.8);
 }
 
-/* African Tricolor Accents (Vert, Jaune, Rouge) */
+/* Signature tricolore (barre haute, chargement, soulignement hero) */
 .bg-tricolor-bar {
-  background: linear-gradient(90deg, #10b981 0%, #facc15 50%, #ef4444 100%);
+  background: var(--tricolor);
 }
 
-.bg-tricolor-gradient-subtle {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(250, 204, 21, 0.06) 50%, rgba(239, 68, 68, 0.08) 100%);
-}
-
-.text-gradient-gold {
-  background: linear-gradient(135deg, #ffffff 0%, #fde047 50%, #f59e0b 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.text-gradient-africa {
-  background: linear-gradient(135deg, #34d399 0%, #facc15 50%, #f87171 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.text-gradient-emerald {
-  background: linear-gradient(135deg, #a7f3d0 0%, #34d399 50%, #059669 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* Modern, Streamlined, Transparent Buttons */
+/* Boutons — jetons uniquement */
 .btn-glass {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #f4f4f5;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-line);
+  color: var(--color-text);
+  transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
 }
 .btn-glass:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(250, 204, 21, 0.3);
-  color: #ffffff;
-  transform: translateY(-1px);
+  background: var(--color-surface-3);
+  border-color: var(--color-line-gold);
 }
 .btn-glass:active {
   transform: scale(0.98);
 }
 
 .btn-brand-subtle {
-  background: rgba(250, 204, 21, 0.1);
-  border: 1px solid rgba(250, 204, 21, 0.25);
-  color: #fde047;
+  background: rgb(212 167 44 / 0.1);
+  border: 1px solid var(--color-line-gold);
+  color: var(--color-al-gold);
   font-weight: 600;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
 }
 .btn-brand-subtle:hover {
-  background: rgba(250, 204, 21, 0.18);
-  border-color: rgba(250, 204, 21, 0.45);
-  color: #ffffff;
-  box-shadow: 0 0 16px -2px rgba(250, 204, 21, 0.25);
+  background: rgb(212 167 44 / 0.18);
+  border-color: var(--color-al-gold);
+  color: var(--color-text);
 }
 .btn-brand-subtle:active {
   transform: scale(0.98);
 }
 
-.btn-brand-primary {
-  background: linear-gradient(135deg, #10b981 0%, #facc15 50%, #ef4444 100%);
-  background-size: 150% auto;
-  color: #000000;
-  font-weight: 700;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 16px -3px rgba(250, 204, 21, 0.3);
-}
-.btn-brand-primary:hover {
-  background-position: right center;
-  box-shadow: 0 6px 20px -2px rgba(250, 204, 21, 0.45);
-  transform: translateY(-1px);
-}
-.btn-brand-primary:active {
-  transform: scale(0.98);
-}
-
-/* Retaining .btn-gold for compatibility but making it sleeker, less massive */
+.btn-brand-primary,
 .btn-gold {
-  background: linear-gradient(135deg, #fde047 0%, #facc15 60%, #eab308 100%);
+  background: var(--color-al-yellow);
   color: #000000;
   font-weight: 700;
-  box-shadow: 0 4px 16px -3px rgba(250, 204, 21, 0.3);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: filter 0.2s, transform 0.2s;
 }
+.btn-brand-primary:hover,
 .btn-gold:hover {
-  background: linear-gradient(135deg, #fef08a 0%, #fde047 50%, #facc15 100%);
-  box-shadow: 0 6px 22px 0 rgba(250, 204, 21, 0.45);
+  filter: brightness(1.08);
   transform: translateY(-1px);
 }
+.btn-brand-primary:active,
 .btn-gold:active {
   transform: scale(0.98);
 }
 
-/* Ambient glow accents */
-.glow-gold {
-  box-shadow: 0 0 20px -5px rgba(250, 204, 21, 0.25);
+/* Point « EN DIRECT » */
+@keyframes live-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  80%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
 }
-.glow-emerald {
-  box-shadow: 0 0 20px -5px rgba(16, 185, 129, 0.25);
+.live-dot {
+  position: relative;
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--color-al-green);
 }
-.glow-tricolor {
-  box-shadow: 0 0 25px -5px rgba(250, 204, 21, 0.15), 0 0 40px -10px rgba(16, 185, 129, 0.1);
+.live-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--color-al-green);
+  animation: live-pulse 1.8s ease-out infinite;
+}
+
+/* Squelettes */
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-surface-2);
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.05), transparent);
+  animation: skeleton-shimmer 1.6s infinite;
+}
+
+/* Logo de fond : couleur très atténuée, effacé par une vignette (BrandBackdrop) */
+.brand-backdrop-logo {
+  opacity: var(--backdrop-opacity, 0.035);
+  mix-blend-mode: screen; /* le logo a un fond noir : il disparaît sur le noir */
+  -webkit-mask-image: radial-gradient(closest-side, #000 52%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 52%, transparent 100%);
+}
+.brand-backdrop-halo {
+  background: radial-gradient(
+    closest-side,
+    rgb(18 181 74 / 0.1),
+    rgb(252 209 22 / 0.06) 45%,
+    rgb(232 17 45 / 0.07) 70%,
+    transparent 100%
+  );
+}
+/* Mode Éco data (préférence locale, UX-211) : fond statique, plus discret. */
+html[data-eco='true'] .brand-backdrop-logo {
+  --backdrop-opacity: 0.02;
+}
+html[data-eco='true'] .brand-backdrop-halo {
+  display: none;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .brand-backdrop-halo {
+    display: none;
+  }
+  .brand-backdrop-logo {
+    --backdrop-opacity: 0.02;
+  }
 }
 
 /* Financial & OSINT Ticker Marquee Animation */
@@ -207,4 +275,87 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* MapLibre impose Helvetica Neue / Arial : on aligne la carte sur la police de l'application. */
+html .maplibregl-map,
+html .maplibregl-popup,
+html .maplibregl-ctrl {
+  font-family: var(--font-sans);
+}
+
+/* Transitions de page légères (View Transitions API). Sans support : changement de page sans animation. */
+::view-transition {
+  pointer-events: none;
+}
+/* La barre haute reste ancrée : seul le contenu de la page se fond. */
+::view-transition-group(app-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(app-header) {
+  display: none;
+}
+::view-transition-new(app-header) {
+  animation: none;
+}
+::view-transition-old(.al-page-out) {
+  animation: 120ms ease-in both al-page-fade-out;
+}
+::view-transition-new(.al-page-in) {
+  animation: 180ms ease-out 60ms both al-page-fade-in;
+}
+@keyframes al-page-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes al-page-fade-in {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+html[data-eco='true']::view-transition-old(*),
+html[data-eco='true']::view-transition-new(*),
+html[data-eco='true']::view-transition-group(*) {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+}
+
+/* Apparition douce des tuiles (CSS seul : pas de bibliothèque d'animation sur la grille). */
+@keyframes tile-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.tile-fade > * {
+  animation: tile-fade-in 0.25s ease-out both;
+}
+
+/* Mode Éco data : animations au repos, y compris le voyant « en direct » et le bandeau défilant. */
+html[data-eco='true'] .tile-fade > *,
+html[data-eco='true'] .animate-ticker-scroll,
+html[data-eco='true'] .skeleton::after {
+  animation: none;
+}
+html[data-eco='true'] .live-dot::after {
+  display: none;
 }

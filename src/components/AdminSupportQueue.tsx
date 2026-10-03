@@ -99,35 +99,35 @@ export default function AdminSupportQueue() {
   }
 
   return (
-    <section className="mt-8 rounded-2xl border border-white/[0.08] bg-black/40 p-5 shadow-xl shadow-black/40 sm:p-7">
+    <section className="mt-8 rounded-2xl border border-line bg-surface-1/80 p-5 shadow-xl shadow-black/40 sm:p-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-amber-300">File interne</p>
-          <h2 className="mt-2 text-xl font-bold text-white">Demandes de support et de retrait</h2>
-          <p className="mt-1 text-xs text-zinc-400">Les 100 demandes les plus récentes et l’historique de traitement.</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-al-gold">File interne</p>
+          <h2 className="font-display mt-2 text-xl font-bold text-text">Demandes de support et de retrait</h2>
+          <p className="mt-1 text-xs text-text-muted">Les 100 demandes les plus récentes et l’historique de traitement.</p>
         </div>
-        <button type="button" onClick={() => void refresh()} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-zinc-200 hover:bg-white/5">Actualiser</button>
+        <button type="button" onClick={() => void refresh()} className="rounded-lg border border-line px-3 py-2 text-xs font-semibold text-text hover:bg-white/5">Actualiser</button>
       </div>
 
-      {error && <p role="alert" className="mt-4 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-200">{error}</p>}
-      {loading ? <p className="mt-5 text-sm text-zinc-400">Chargement…</p> : requests.length === 0 ? <p className="mt-5 text-sm text-zinc-400">Aucune demande enregistrée.</p> : (
+      {error && <p role="alert" className="mt-4 rounded-lg border border-al-red/30 bg-al-red/10 p-3 text-xs text-text">{error}</p>}
+      {loading ? <p className="mt-5 text-sm text-text-muted">Chargement…</p> : requests.length === 0 ? <p className="mt-5 text-sm text-text-muted">Aucune demande enregistrée.</p> : (
         <ul className="mt-5 space-y-4">
           {requests.map((item) => (
-            <li key={item.id} className="rounded-xl border border-white/10 bg-black/40 p-4 sm:p-5">
+            <li key={item.id} className="rounded-xl border border-line bg-surface-1/80 p-4 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm font-bold text-white">{subjectLabels[item.subject] ?? item.subject}</p>
-                  <p className="mt-1 text-xs text-zinc-300">{item.name} · <a className="text-amber-300 underline" href={`mailto:${item.email}`}>{item.email}</a></p>
+                  <p className="text-sm font-bold text-text">{subjectLabels[item.subject] ?? item.subject}</p>
+                  <p className="mt-1 text-xs text-text">{item.name} · <a className="text-al-gold underline" href={`mailto:${item.email}`}>{item.email}</a></p>
                 </div>
-                <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-2.5 py-1 text-[11px] font-semibold text-amber-200">{statusLabels[item.status] ?? item.status}</span>
+                <span className="rounded-full border border-al-gold/20 bg-al-gold/10 px-2.5 py-1 text-xs font-semibold text-text">{statusLabels[item.status] ?? item.status}</span>
               </div>
-              {item.channelName && <p className="mt-3 text-xs text-zinc-200"><strong>Chaîne :</strong> {item.channelName}</p>}
-              {item.sourceUrl && <p className="mt-1 break-all text-[11px] text-zinc-400"><strong>Source signalée :</strong> {item.sourceUrl}</p>}
-              <p className="mt-3 whitespace-pre-wrap text-xs leading-relaxed text-zinc-300">{item.message}</p>
-              <p className="mt-3 text-[11px] text-zinc-500">Reçue le {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(item.createdAt))} · Réf. {item.id}</p>
+              {item.channelName && <p className="mt-3 text-xs text-text"><strong>Chaîne :</strong> {item.channelName}</p>}
+              {item.sourceUrl && <p className="mt-1 break-all text-xs text-text-muted"><strong>Source signalée :</strong> {item.sourceUrl}</p>}
+              <p className="mt-3 whitespace-pre-wrap text-xs leading-relaxed text-text">{item.message}</p>
+              <p className="mt-3 text-xs text-text-muted">Reçue le {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(item.createdAt))} · Réf. {item.id}</p>
 
               {item.events.length > 1 && (
-                <details className="mt-3 text-xs text-zinc-400">
+                <details className="mt-3 text-xs text-text-muted">
                   <summary className="cursor-pointer">Historique ({item.events.length} événements)</summary>
                   <ol className="mt-2 space-y-2 pl-4">
                     {item.events.slice(1).map((event) => (
@@ -142,17 +142,17 @@ export default function AdminSupportQueue() {
               )}
 
               {item.status !== 'sources_disabled' && item.status !== 'closed_no_action' && (
-                <div className="mt-4 space-y-3 border-t border-white/10 pt-4">
-                  <label className="block text-[11px] font-medium text-zinc-400" htmlFor={`note-${item.id}`}>
+                <div className="mt-4 space-y-3 border-t border-line pt-4">
+                  <label className="block text-xs font-medium text-text-muted" htmlFor={`note-${item.id}`}>
                     Note interne (obligatoire pour clôturer ou désactiver)
                     <textarea id={`note-${item.id}`} rows={2} maxLength={1_000} value={notes[item.id] ?? item.resolutionNote ?? ''}
                       onChange={(event) => setNotes((current) => ({ ...current, [item.id]: event.target.value }))}
-                      className="mt-1 block w-full rounded-lg border border-white/10 bg-black/60 p-2.5 text-xs text-white focus:border-amber-400 focus:outline-none" />
+                      className="mt-1 block w-full rounded-lg border border-line bg-black/60 p-2.5 text-xs text-text focus:border-al-gold focus:outline-none" />
                   </label>
                   <div className="flex flex-wrap gap-2">
-                    <button type="button" disabled={busyId === item.id} onClick={() => void act(item.id, 'in_review')} className="rounded-lg border border-white/15 px-3 py-2 text-[11px] font-semibold text-zinc-200 disabled:opacity-50">Prendre en revue</button>
-                    {item.subject === 'removal' && <button type="button" disabled={busyId === item.id} onClick={() => void act(item.id, 'disable_reported_sources')} className="rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-[11px] font-semibold text-amber-100 disabled:opacity-50">Désactiver les sources signalées</button>}
-                    <button type="button" disabled={busyId === item.id} onClick={() => void act(item.id, 'close_no_action')} className="rounded-lg border border-white/15 px-3 py-2 text-[11px] font-semibold text-zinc-200 disabled:opacity-50">Clôturer sans retrait</button>
+                    <button type="button" disabled={busyId === item.id} onClick={() => void act(item.id, 'in_review')} className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-text disabled:opacity-50">Prendre en revue</button>
+                    {item.subject === 'removal' && <button type="button" disabled={busyId === item.id} onClick={() => void act(item.id, 'disable_reported_sources')} className="rounded-lg border border-al-gold/40 bg-al-gold/10 px-3 py-2 text-xs font-semibold text-text disabled:opacity-50">Désactiver les sources signalées</button>}
+                    <button type="button" disabled={busyId === item.id} onClick={() => void act(item.id, 'close_no_action')} className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-text disabled:opacity-50">Clôturer sans retrait</button>
                   </div>
                 </div>
               )}

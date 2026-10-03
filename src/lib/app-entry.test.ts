@@ -25,6 +25,9 @@ function loadComponent(entry: string, boundaries: Record<string, unknown>) {
 test('Clerk fallback after sign-in/sign-up is dashboard; explicit deep-link redirections remain SDK-owned', () => {
   const Layout = loadComponent('src/app/layout.tsx', {
     '@/lib/local-dev': { isLocalDevMode: () => false }, '@clerk/nextjs': { ClerkProvider: 'clerk-provider' },
+    // next/font/google n'existe que sous le compilateur Next : on simule uniquement la variable CSS exposée.
+    'next/script': { __esModule: true, default: 'script' },
+    'next/font/google': { Manrope: () => ({ variable: 'font-manrope' }), Unbounded: () => ({ variable: 'font-unbounded' }) },
   }) as (props: { children: string }) => React.ReactElement<{ children: React.ReactElement<{ children: React.ReactElement<Record<string, unknown>> }> }>;
   const provider = Layout({ children: 'app' }).props.children.props.children;
   assert.equal(provider.props.signInFallbackRedirectUrl, '/app/live');

@@ -20,7 +20,7 @@ test.describe('catalogue, filtres, favoris et lecteur', () => {
 
     const search = page.getByRole('searchbox', { name: 'Recherche' });
     const searchRequest = page.waitForRequest(
-      (request) => request.url().endsWith('/api/channels') && request.method() === 'POST',
+      (request) => request.url().endsWith('/api/channels') && request.method() === 'POST' && request.postDataJSON()?.search === '%_',
     );
     await search.fill('%_');
     const request = await searchRequest;
@@ -29,7 +29,7 @@ test.describe('catalogue, filtres, favoris et lecteur', () => {
     await search.fill('');
 
     const favoritesFilterRequest = page.waitForRequest(
-      (candidate) => candidate.url().endsWith('/api/channels') && candidate.method() === 'POST' && candidate.postDataJSON().favoritesOnly === true,
+      (candidate) => candidate.url().endsWith('/api/channels') && candidate.method() === 'POST' && candidate.postDataJSON().favoritesOnly === true && candidate.postDataJSON().limit === 30,
     );
     await page.getByRole('button', { name: 'Mes favoris' }).click();
     expect((await favoritesFilterRequest).postDataJSON()).toMatchObject({ favoritesOnly: true });

@@ -16,11 +16,14 @@ import { channels, streams, userFavorites } from '@/db/schema';
 import { catalogRequestSchema, catalogResponseSchema } from '@/lib/api-contracts';
 import { readBoundedJson } from '@/lib/bounded-json';
 import {
+  AFRICAN_COUNTRY_CODES,
+  africaRank,
   catalogCursorContext,
   decodeCatalogCursor,
   encodeCatalogCursor,
   escapeLikePattern,
   normalizeCatalogSearch,
+  usesAfricaFirstOrder,
 } from '@/lib/catalog-query';
 import {
   resolveChannelAvailability,
@@ -98,6 +101,12 @@ export const POST = withApiErrorHandler(async (request: Request) => {
   } catch {
     throw new BadRequestError('Le curseur de pagination est invalide.', 'INVALID_CATALOG_CURSOR');
   }
+  // Ordre par défaut : Afrique d'abord, puis nom. Un curseur sans rang ne peut pas continuer cet ordre.
+  const africaFirst = usesAfricaFirstOrder({ search, favoritesOnly });
+  if (cursor && africaFirst !== (cursor.rank !== undefined)) {
+    throw new BadRequestError('Le curseur de pagination est invalide.', 'INVALID_CATALOG_CURSOR');
+  }
+  const rankColumn = sql<number>`case when ${inArray(channels.countryCode, [...AFRICAN_COUNTRY_CODES])} then 0 else 1 end`;
 
   const conditions: SQL[] = [
     eq(channels.active, true),
@@ -154,16 +163,22 @@ export const POST = withApiErrorHandler(async (request: Request) => {
 
   while (visibleRows.length < limit + 1 && !exhausted) {
     const cursorCondition = scanCursor
-      ? or(
-          gt(channels.name, scanCursor.name),
-          and(eq(channels.name, scanCursor.name), gt(channels.id, scanCursor.id)),
-        )
+      ? africaFirst && scanCursor.rank !== undefined
+        ? or(
+            gt(rankColumn, scanCursor.rank),
+            and(eq(rankColumn, scanCursor.rank), gt(channels.name, scanCursor.name)),
+            and(eq(rankColumn, scanCursor.rank), eq(channels.name, scanCursor.name), gt(channels.id, scanCursor.id)),
+          )
+        : or(
+            gt(channels.name, scanCursor.name),
+            and(eq(channels.name, scanCursor.name), gt(channels.id, scanCursor.id)),
+          )
       : undefined;
     const rows = await db
       .select()
       .from(channels)
       .where(cursorCondition ? and(baseWhere, cursorCondition) : baseWhere)
-      .orderBy(asc(channels.name), asc(channels.id))
+      .orderBy(...(africaFirst ? [asc(rankColumn)] : []), asc(channels.name), asc(channels.id))
       .limit(scanBatchSize);
 
     if (rows.length === 0) {
@@ -172,7 +187,9 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     }
 
     const lastScannedChannel = rows.at(-1)!;
-    scanCursor = { name: lastScannedChannel.name, id: lastScannedChannel.id };
+    scanCursor = africaFirst
+      ? { name: lastScannedChannel.name, id: lastScannedChannel.id, rank: africaRank(lastScannedChannel.countryCode) }
+      : { name: lastScannedChannel.name, id: lastScannedChannel.id };
     exhausted = rows.length < scanBatchSize;
 
     const channelIds = rows.map((channel) => channel.id);
@@ -234,7 +251,9 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     canPlay: authorization.decision.hasAccess,
     nextCursor: hasMore && lastChannel
       ? encodeCatalogCursor(
-          { name: lastChannel.name, id: lastChannel.id },
+          africaFirst
+            ? { name: lastChannel.name, id: lastChannel.id, rank: africaRank(lastChannel.countryCode) }
+            : { name: lastChannel.name, id: lastChannel.id },
           cursorContext,
         )
       : null,

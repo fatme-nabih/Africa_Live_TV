@@ -49,10 +49,10 @@ export default function LiveMarketTicker({ onSelectCountry, onSourcesChange, ref
       seen.add(id);
       const rawUrl = canonicalArticleUrl(alert.url ?? '');
       const safeUrl = /^https?:\/\//i.test(rawUrl) ? rawUrl : null;
-      result.push({ id, content: <span className="inline-flex items-center gap-2 text-xs text-zinc-200">
+      result.push({ id, content: <span className="inline-flex items-center gap-2 text-xs text-text">
         <strong>{alert.title}</strong>
         {alert.countryCode && alert.scope === 'Africa' && <button type="button" onClick={() => onSelectCountry?.(alert.countryCode!)} className="rounded bg-white/10 px-1">{alert.countryCode}</button>}
-        <span className="text-[10px] text-zinc-400">{alert.source ?? 'Source inconnue'} · {alert.dateKind === 'event' ? 'Événement' : 'Publication'} {formatRadarDate(alert.timestamp)} · {alert.scope === 'Africa' ? 'Afrique' : 'Monde / lieu non classé'}</span>
+        <span className="text-xs text-text-muted">{alert.source ?? 'Source inconnue'} · {alert.dateKind === 'event' ? 'Événement' : 'Publication'} {formatRadarDate(alert.timestamp)} · {alert.scope === 'Africa' ? 'Afrique' : 'Monde / lieu non classé'}</span>
         {safeUrl && <a href={safeUrl} target="_blank" rel="noopener noreferrer" aria-label={`Source : ${alert.title}`}><ExternalLink className="h-3 w-3" /></a>}
       </span> });
     }
@@ -60,23 +60,23 @@ export default function LiveMarketTicker({ onSelectCountry, onSourcesChange, ref
       const id = `quote:${quote.symbol}`;
       if (seen.has(id)) continue;
       seen.add(id);
-      result.push({ id, content: <span className="inline-flex items-center gap-2 text-xs text-zinc-200"><strong>{quote.label}</strong><span>{formatMarketPrice(quote.price, quote.currency, quote.unit)}</span><span>{formatVariation(quote.changePercent24h).text}</span><span className="text-[10px] text-zinc-400">Monde · {quote.source} · Dernière séance {formatRadarDate(quote.updatedAt)}</span></span> });
+      result.push({ id, content: <span className="inline-flex items-center gap-2 text-xs text-text"><strong>{quote.label}</strong><span>{formatMarketPrice(quote.price, quote.currency, quote.unit)}</span><span>{formatVariation(quote.changePercent24h).text}</span><span className="text-xs text-text-muted">Monde · {quote.source} · Dernière séance {formatRadarDate(quote.updatedAt)}</span></span> });
     }
     for (const rate of data.forex) {
       const id = `forex:${rate.pair}`;
       if (seen.has(id)) continue;
       seen.add(id);
-      result.push({ id, content: <span className="inline-flex items-center gap-2 text-xs text-amber-200"><strong>{rate.pair}</strong><span>{rate.rate.toFixed(3)}</span><span className="text-[10px] text-zinc-400">{rate.isPegged ? 'Parité fixe · ' + rate.source : 'Monde · ' + rate.source + ' · ' + formatRadarDate(rate.updatedAt)}</span></span> });
+      result.push({ id, content: <span className="inline-flex items-center gap-2 text-xs text-text"><strong>{rate.pair}</strong><span>{rate.rate.toFixed(3)}</span><span className="text-xs text-text-muted">{rate.isPegged ? 'Parité fixe · ' + rate.source : 'Monde · ' + rate.source + ' · ' + formatRadarDate(rate.updatedAt)}</span></span> });
     }
     return result;
   }, [data, scope, onSelectCountry]);
   const degraded = error || data?.availability?.some(source => ['stale', 'unavailable', 'partial'].includes(source.status));
 
-  return <section aria-label="Bandeau des marchés et événements" className={`border-t border-white/[0.08] bg-black/40 backdrop-blur-xl ${className}`}>
-    <div className="flex flex-wrap items-center gap-2 px-3 py-2 text-[11px] text-zinc-300">
-      <label>Périmètre du bandeau <select aria-label="Périmètre du bandeau" value={scope} onChange={event => setScope(event.target.value as 'Africa' | 'World')} className="rounded bg-zinc-900 px-2 py-1"><option value="Africa">Afrique</option><option value="World">Monde</option></select></label>
-      <span className="text-zinc-500">Cotations mondiales identifiées séparément</span>
-      <span role="status" className={degraded ? 'text-amber-200' : 'text-zinc-400'}>{loading ? 'Chargement du bandeau…' : degraded ? 'Bandeau partiel · sources indisponibles ou cache ancien' : items.length ? 'Dates et sources affichées' : 'Aucun résultat fourni par les sources consultées'}</span>
+  return <section aria-label="Bandeau des marchés et événements" className={`border-t border-line bg-black/40 ${className}`}>
+    <div className="flex flex-wrap items-center gap-2 px-3 py-2 text-xs text-text">
+      <label>Périmètre du bandeau <select aria-label="Périmètre du bandeau" value={scope} onChange={event => setScope(event.target.value as 'Africa' | 'World')} className="rounded bg-surface-2 px-2 py-1"><option value="Africa">Afrique</option><option value="World">Monde</option></select></label>
+      <span className="text-text-muted">Cotations mondiales identifiées séparément</span>
+      <span role="status" className={degraded ? 'text-text' : 'text-text-muted'}>{loading ? 'Chargement du bandeau…' : degraded ? 'Bandeau partiel · sources indisponibles ou cache ancien' : items.length ? 'Dates et sources affichées' : 'Aucun résultat fourni par les sources consultées'}</span>
       <button type="button" aria-label={paused ? 'Reprendre le défilement' : 'Mettre en pause'} onClick={() => setPaused(value => !value)} className="ml-auto rounded p-2 hover:bg-white/10">{paused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}</button>
       <button type="button" aria-label="Actualiser les cotations" disabled={loading} onClick={() => setRefresh(value => value + 1)} className="rounded p-2 hover:bg-white/10"><RefreshCw className="h-3 w-3" /></button>
     </div>
@@ -86,6 +86,6 @@ export default function LiveMarketTicker({ onSelectCountry, onSourcesChange, ref
         <div aria-hidden="true" inert className="flex gap-8 motion-reduce:hidden">{items.map(item => <div key={`copy:${item.id}`} className="shrink-0">{item.content}</div>)}</div>
       </div>
     </div>}
-    {data?.availability && <details className="px-3 pb-2 text-[10px] text-zinc-400"><summary>Sources du bandeau</summary><ul>{data.availability.map((source, index) => <li key={`${source.provider}:${index}`}>{source.provider} : {radarStatusLabel(source.status)} · dernier succès {formatRadarDate(source.lastSuccessAt)} · données {formatRadarDate(source.dataAt)}</li>)}</ul></details>}
+    {data?.availability && <details className="px-3 pb-2 text-xs text-text-muted"><summary>Sources du bandeau</summary><ul>{data.availability.map((source, index) => <li key={`${source.provider}:${index}`}>{source.provider} : {radarStatusLabel(source.status)} · dernier succès {formatRadarDate(source.lastSuccessAt)} · données {formatRadarDate(source.dataAt)}</li>)}</ul></details>}
   </section>;
 }

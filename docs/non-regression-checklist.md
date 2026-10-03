@@ -1,5 +1,31 @@
 # Checklist de non-régression — lots local et Railway
 
+## Expérience Premium P0–P2 — reçue localement le 2 octobre 2026
+
+Plan : [plan-experience-premium.md](plan-experience-premium.md) §5.1. Preuves et limites :
+[production-progress.md](production-progress.md), sections « Lot P0 », « Lot P1 » et « Lot P2 ».
+**Cases reçues en local uniquement (dev, port 3001), sans commit ni déploiement ; Railway staging inchangé.**
+À rejouer à la fin de chaque lot suivant (P3, P4, P5).
+
+- [x] `npx tsc --noEmit` 0 erreur ; `npm run lint` 0 ; `npm run build` réussi.
+- [x] `npm test` : 321 tests, 307 réussis, 14 ignorés (intégrations PostgreSQL), 0 échec ; invariants 4/4.
+- [x] E2E mode MVP (13 specs, `--workers=1`) : 108 réussis, 1 ignoré (test « build servi »).
+- [x] E2E mode Clerk anonyme (`auth-entry`, `payment`) : 8/8.
+- [x] Aucun relais, conversion ni stockage de média ; images de dépêches chargées par le navigateur
+  depuis l'éditeur, sans cache serveur ; aucun lien de partage ne contient une URL de flux.
+- [x] Machine de lecture (`src/lib/playback-*`), accès, éligibilité et quotas inchangés ; la seule
+  modification d'API est l'ordre « Afrique d'abord » et son curseur signé (UX-208, testés).
+- [x] Aucune migration, aucun changement `.env*`, Railway, Clerk ou DNS.
+- [x] Contrôle visuel 360 / 768 / 1366 px : 0 débordement horizontal, 0 texte < 12 px, 0 erreur de page
+  (`docs/screenshots/premium-p0-*`, `-p1-*`, `-p2-*`).
+- [x] Éco data : aucun segment téléchargé avant « Lire maintenant » (`enableInterstitialPlayback: false`).
+- [x] Zapping : une chaîne qui exige VLC ne le lance jamais pendant un zapping ; un choix direct le lance
+  une seule fois.
+- [ ] Profils Clerk connectés ; pages `/account` et `/admin` capturées (UX-214) : non reçus.
+- [ ] Appareils Android/iOS réels, Safari/HLS natif, PiP et plein écran mobile, lecteur d'écran : non reçus.
+- [ ] VLC réel et flux amont actuels pendant le zapping : non reçus (VLC simulé dans les E2E).
+- [ ] Mesures Lighthouse et poids JS avant/après : prévues en UX-505 et UX-508 (P5).
+
 ## Publication CLI reçue — 2 octobre 2026
 
 [Dossier et limites](publication-cli-2026-10-02.md), applicatif `51c0bc8`, Railway

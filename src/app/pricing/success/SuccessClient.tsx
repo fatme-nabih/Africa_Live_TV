@@ -98,15 +98,15 @@ export default function SuccessClient() {
 
   if (!orderId || displayStatus === 'error') {
     return (
-      <div className="rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-8 text-center shadow-2xl">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-rose-500/20 bg-rose-500/10 text-rose-400">
+      <div className="rounded-2xl border border-line bg-surface-1/80 p-8 text-center shadow-2xl">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-al-red/20 bg-al-red/10 text-al-red-soft">
           <XCircle className="h-8 w-8" />
         </div>
-        <h1 className="mb-2 text-2xl font-black text-white">Statut indisponible</h1>
-        <p className="mb-6 text-xs text-zinc-400 leading-relaxed">
+        <h1 className="font-display mb-2 text-2xl font-bold text-text">Statut indisponible</h1>
+        <p className="mb-6 text-xs text-text-muted leading-relaxed">
           Cette transaction ne peut pas être affichée depuis votre compte.
         </p>
-        <Link href="/pricing" className="inline-block rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] px-5 py-2.5 text-xs font-semibold text-white transition backdrop-blur-md">
+        <Link href="/pricing" className="inline-block rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] px-5 py-2.5 text-xs font-semibold text-text transition">
           Retour aux offres
         </Link>
       </div>
@@ -115,15 +115,15 @@ export default function SuccessClient() {
 
   if (displayStatus === 'completed') {
     return (
-      <div className="rounded-2xl border border-emerald-500/30 bg-black/40 backdrop-blur-xl p-8 text-center shadow-2xl">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400">
+      <div className="rounded-2xl border border-al-green/30 bg-black/40 p-8 text-center shadow-2xl">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-al-green/20 bg-al-green/10 text-al-green">
           <CheckCircle2 className="h-8 w-8" />
         </div>
-        <h1 className="mb-2 text-2xl font-black text-white">Paiement réussi</h1>
-        <p className="mb-6 text-xs text-zinc-300 leading-relaxed">Votre abonnement Africa Live est désormais actif.</p>
+        <h1 className="font-display mb-2 text-2xl font-bold text-text">Paiement réussi</h1>
+        <p className="mb-6 text-xs text-text leading-relaxed">Votre abonnement Africa Live est désormais actif.</p>
         <Link
           href="/app/live"
-          className="inline-block rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/25 via-amber-400/30 to-rose-500/25 hover:from-emerald-500/35 hover:via-amber-400/40 hover:to-rose-500/35 px-6 py-2.5 text-xs sm:text-sm font-bold text-amber-100 shadow-md backdrop-blur-md transition active:scale-[0.99]"
+          className="inline-block rounded-xl border border-transparent bg-al-yellow hover:brightness-110 px-6 py-2.5 text-xs sm:text-sm font-bold text-black shadow-md transition active:scale-[0.99]"
         >
           Ouvrir le dashboard
         </Link>
@@ -133,15 +133,15 @@ export default function SuccessClient() {
 
   if (displayStatus === 'failed' || displayStatus === 'canceled') {
     return (
-      <div className="rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-8 text-center shadow-2xl">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-rose-500/20 bg-rose-500/10 text-rose-400">
+      <div className="rounded-2xl border border-line bg-surface-1/80 p-8 text-center shadow-2xl">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-al-red/20 bg-al-red/10 text-al-red-soft">
           <XCircle className="h-8 w-8" />
         </div>
-        <h1 className="mb-2 text-2xl font-black text-white">Paiement non abouti</h1>
-        <p className="mb-6 text-xs text-zinc-400 leading-relaxed">Le paiement a échoué ou a été annulé.</p>
+        <h1 className="font-display mb-2 text-2xl font-bold text-text">Paiement non abouti</h1>
+        <p className="mb-6 text-xs text-text-muted leading-relaxed">Le paiement a échoué ou a été annulé.</p>
         <Link
           href="/pricing"
-          className="inline-block rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] px-5 py-2.5 text-xs font-semibold text-white transition backdrop-blur-md"
+          className="inline-block rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] px-5 py-2.5 text-xs font-semibold text-text transition"
         >
           Retour aux offres
         </Link>
@@ -151,17 +151,17 @@ export default function SuccessClient() {
 
   if (displayStatus === 'timeout') {
     return (
-      <div className="rounded-2xl border border-amber-400/30 bg-black/40 backdrop-blur-xl p-8 text-center shadow-2xl">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-400/20 bg-amber-400/10 text-amber-400">
+      <div className="rounded-2xl border border-al-gold/30 bg-black/40 p-8 text-center shadow-2xl">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-al-gold/20 bg-al-gold/10 text-al-gold">
           <Clock className="h-8 w-8" />
         </div>
-        <h1 className="mb-2 text-2xl font-black text-white">Confirmation en attente</h1>
-        <p className="mb-6 text-xs text-zinc-400 leading-relaxed">
+        <h1 className="font-display mb-2 text-2xl font-bold text-text">Confirmation en attente</h1>
+        <p className="mb-6 text-xs text-text-muted leading-relaxed">
           Ne recommencez pas le paiement. La vérification automatique continue en arrière-plan.
         </p>
         <button
           onClick={() => dispatch({ type: 'manual_retry' })}
-          className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] px-5 py-2.5 text-xs font-semibold text-white transition backdrop-blur-md"
+          className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] px-5 py-2.5 text-xs font-semibold text-text transition"
         >
           <RefreshCw className="h-3.5 w-3.5" />
           <span>Vérifier maintenant</span>
@@ -171,12 +171,12 @@ export default function SuccessClient() {
   }
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl p-8 text-center shadow-2xl">
-      <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-400/20 bg-amber-400/10 text-amber-400 animate-pulse">
+    <div className="rounded-2xl border border-line bg-surface-1/80 p-8 text-center shadow-2xl">
+      <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-al-gold/20 bg-al-gold/10 text-al-gold animate-pulse">
         <Clock className="h-8 w-8" />
       </div>
-      <h1 className="mb-2 text-2xl font-black text-white">Paiement en cours</h1>
-      <p className="text-xs text-zinc-400 leading-relaxed">La confirmation est en cours de vérification automatique...</p>
+      <h1 className="font-display mb-2 text-2xl font-bold text-text">Paiement en cours</h1>
+      <p className="text-xs text-text-muted leading-relaxed">La confirmation est en cours de vérification automatique...</p>
     </div>
   );
 }

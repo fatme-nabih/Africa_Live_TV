@@ -9,6 +9,7 @@ import {
   type StyleSpecification,
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { effectiveEco, readEcoRaw, readSaveData } from '@/lib/eco-mode';
 import { checkMapWorker, MAP_WORKER_URL } from '@/lib/map-worker';
 import type { RadarCountry } from '@/lib/live-osint-types';
 import { AFRICAN_COUNTRIES } from '@/lib/live-osint';
@@ -108,7 +109,9 @@ export default function TacticalVectorMap({
   const [isSupported] = useState(() => isWebGLSupported());
   const [isLoaded, setIsLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
-  const [basemapMode, setBasemapMode] = useState<BasemapMode>('satellite');
+  // Éco data : fond vectoriel sombre (léger) au lieu des tuiles satellite, qui restent un choix explicite.
+  const [basemapMode, setBasemapMode] = useState<BasemapMode>(() => (effectiveEco(readEcoRaw(), readSaveData()) ? 'dark' : 'satellite'));
+  const initialBasemapRef = useRef(basemapMode);
 
   const handleSwitchBasemap = (mode: BasemapMode) => {
     if (mode === basemapMode || !mapRef.current) return;
@@ -179,7 +182,7 @@ export default function TacticalVectorMap({
 
         const map = new MapLibreMap({
           container: mapContainerRef.current,
-          style: BASEMAP_STYLES.satellite,
+          style: BASEMAP_STYLES[initialBasemapRef.current],
           center: AFRICA_CENTER,
           zoom: AFRICA_DEFAULT_ZOOM,
           minZoom: 1.5,
@@ -291,10 +294,10 @@ export default function TacticalVectorMap({
 
       const size = Math.min(36, Math.max(22, 18 + count * 1.2));
       const badgeBorder = isSelected
-        ? 'border-amber-400 bg-amber-400 text-black shadow-[0_0_15px_rgba(250,204,21,0.8)]'
+        ? 'border-al-gold bg-al-yellow text-black shadow-[0_0_15px_rgba(252,209,22,0.8)]'
         : hasChannels
-        ? 'border-emerald-400 bg-[#081510] text-emerald-300 ring-2 ring-amber-400/40'
-        : 'border-emerald-300/80 bg-[#081510] text-emerald-200';
+        ? 'border-al-green bg-surface-1 text-al-green ring-2 ring-al-gold/40'
+        : 'border-al-green/80 bg-surface-1 text-text';
 
       el.innerHTML = `
         <div class="relative flex items-center justify-center transition-transform duration-200 group-hover:scale-110 ${
@@ -302,40 +305,40 @@ export default function TacticalVectorMap({
         }">
           ${
             isSelected
-              ? '<span class="absolute -inset-2 rounded-full bg-amber-400/30 animate-ping"></span>'
+              ? '<span class="absolute -inset-2 rounded-full bg-al-gold/30 animate-ping"></span>'
               : hasChannels
-              ? '<span class="absolute -inset-1.5 rounded-full border border-dashed border-amber-400/60 animate-[spin_12s_linear_infinite]"></span>'
+              ? '<span class="absolute -inset-1.5 rounded-full border border-dashed border-al-gold/60 animate-[spin_12s_linear_infinite]"></span>'
               : ''
           }
-          <div style="width: ${size}px; height: ${size}px;" class="relative flex items-center justify-center rounded-full border-2 text-[10px] font-black transition-all ${badgeBorder}">
+          <div style="width: ${size}px; height: ${size}px;" class="relative flex items-center justify-center rounded-full border-2 text-xs font-black transition-all ${badgeBorder}">
             <span>${count > 0 ? count : ''}</span>
             ${
               hasChannels && count === 0
-                ? '<span class="text-[9px]">📺</span>'
+                ? '<span class="text-xs">📺</span>'
                 : ''
             }
           </div>
           ${
             hasChannels && count > 0
-              ? '<span class="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-400 text-[8px] font-black text-black ring-1 ring-black">📺</span>'
+              ? '<span class="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-al-yellow text-xs font-black text-black ring-1 ring-black">📺</span>'
               : ''
           }
           <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 ${
             isSelected ? 'block' : 'hidden group-hover:block'
           } whitespace-nowrap rounded-lg border ${
             isSelected
-              ? 'border-amber-400/60 bg-black/95 shadow-[0_0_20px_rgba(251,191,36,0.35)] ring-1 ring-amber-400/30'
-              : 'border-white/10 bg-black/90 shadow-xl'
-          } px-2.5 py-1.5 text-[10px] font-bold text-white backdrop-blur-md z-50">
+              ? 'border-al-gold/60 bg-black/95 shadow-[0_0_20px_rgba(212,167,44,0.35)] ring-1 ring-al-gold/30'
+              : 'border-line bg-black/90 shadow-xl'
+          } px-2.5 py-1.5 text-xs font-bold text-text z-50">
             <div class="flex items-center gap-1.5">
-              <span class="${isSelected ? 'text-amber-300' : 'text-white'}">${country.name}</span>
+              <span class="${isSelected ? 'text-al-gold' : 'text-text'}">${country.name}</span>
               ${
                 channelCount > 0
-                  ? `<span class="rounded bg-amber-400/20 px-1 py-0.2 text-[8px] font-black text-amber-300">📺 ${channelCount}</span>`
+                  ? `<span class="rounded bg-al-gold/20 px-1 py-0.2 text-xs font-black text-al-gold">📺 ${channelCount}</span>`
                   : ''
               }
             </div>
-            <div class="text-[9px] font-normal text-zinc-400 mt-0.5">${count} dépêche(s)${
+            <div class="text-xs font-normal text-text-muted mt-0.5">${count} dépêche(s)${
               channelCount > 0 ? ` · ${channelCount} TV référencées` : ''
             }</div>
           </div>
@@ -428,9 +431,9 @@ export default function TacticalVectorMap({
 
   if (!isSupported || mapError) {
     return (
-      <div className="flex h-[480px] w-full flex-col items-center justify-center rounded-xl bg-zinc-950 p-6 text-center text-zinc-400">
-        <Compass className="mb-3 h-10 w-10 text-amber-400" />
-        <p role="status" className="text-sm font-bold text-white">{mapError ?? 'WebGL non supporté'}</p>
+      <div className="flex h-[480px] w-full flex-col items-center justify-center rounded-xl bg-surface-1 p-6 text-center text-text-muted">
+        <Compass className="mb-3 h-10 w-10 text-al-gold" />
+        <p role="status" className="text-sm font-bold text-text">{mapError ?? 'WebGL non supporté'}</p>
         <p className="mt-1 text-xs">
           {mapError ? 'Vous pouvez sélectionner un pays et consulter les dépêches ci-dessous.' : 'Votre navigateur ou affichage ne supporte pas l’accélération matérielle WebGL.'}
         </p>
@@ -439,20 +442,20 @@ export default function TacticalVectorMap({
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-xl border border-white/[0.08] bg-black/60">
+    <div className="relative w-full overflow-hidden rounded-xl border border-line bg-black/60">
       {/* Tactical Header Overlay */}
-      <div className="relative z-10 flex flex-wrap items-center gap-2 border-b border-white/[0.08] bg-black/60 backdrop-blur-xl p-2">
+      <div className="relative z-10 flex flex-wrap items-center gap-2 border-b border-line bg-black/60 p-2">
         {/* Style de fond de carte (Satellite Réel / Relief Couleurs / Sombre) */}
-        <div className="flex items-center rounded-xl border border-white/10 bg-black/60 p-0.5 shadow-xl backdrop-blur-md">
+        <div className="flex items-center rounded-xl border border-line bg-black/60 p-0.5 shadow-xl">
           <button
             type="button"
             onClick={() => handleSwitchBasemap('satellite')}
             aria-pressed={basemapMode === 'satellite'}
             title="Vue Satellite Réelle en couleurs (ESRI World Imagery + Frontières)"
-            className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+            className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold ${
               basemapMode === 'satellite'
-                ? 'border border-emerald-400/40 bg-emerald-500/20 text-emerald-200 shadow-sm'
-                : 'text-zinc-400 hover:text-white'
+                ? 'border border-al-green/40 bg-al-green/20 text-text shadow-sm'
+                : 'text-text-muted hover:text-text'
             }`}
           >
             <span>🛰️ Satellite</span>
@@ -462,10 +465,10 @@ export default function TacticalVectorMap({
             onClick={() => handleSwitchBasemap('liberty')}
             aria-pressed={basemapMode === 'liberty'}
             title="Vue Relief & Couleurs vives (OpenFreeMap Topo)"
-            className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+            className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold ${
               basemapMode === 'liberty'
-                ? 'border border-amber-400/40 bg-amber-500/20 text-amber-200 shadow-sm'
-                : 'text-zinc-400 hover:text-white'
+                ? 'border border-al-gold/40 bg-al-gold/20 text-text shadow-sm'
+                : 'text-text-muted hover:text-text'
             }`}
           >
             <span>🗺️ Couleurs</span>
@@ -475,10 +478,10 @@ export default function TacticalVectorMap({
             onClick={() => handleSwitchBasemap('dark')}
             aria-pressed={basemapMode === 'dark'}
             title="Vue Tactique Sombre nocturne"
-            className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+            className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold ${
               basemapMode === 'dark'
-                ? 'border border-white/20 bg-white/10 text-zinc-100 shadow-sm'
-                : 'text-zinc-400 hover:text-white'
+                ? 'border border-white/20 bg-white/10 text-text shadow-sm'
+                : 'text-text-muted hover:text-text'
             }`}
           >
             <span>🎯 Sombre</span>
@@ -492,18 +495,18 @@ export default function TacticalVectorMap({
           aria-pressed={isGlobeMode}
           disabled={!isLoaded}
           title={isGlobeMode ? 'Basculer en vue 2D tactique (Mercator)' : 'Basculer en vue Globe 3D immersif'}
-          className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[10px] font-bold shadow-lg backdrop-blur-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+          className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-bold shadow-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold ${
             isGlobeMode
-              ? 'border-emerald-400/60 bg-emerald-500/25 text-emerald-200 shadow-[0_0_15px_rgba(16,185,129,0.35)] ring-1 ring-emerald-400/40'
-              : 'border-white/10 bg-white/[0.04] text-zinc-400 hover:border-amber-400/40 hover:bg-white/[0.08] hover:text-zinc-200'
+              ? 'border-al-green/60 bg-al-green/25 text-text shadow-[0_0_15px_rgba(18,181,74,0.35)] ring-1 ring-al-green/40'
+              : 'border-line bg-white/[0.04] text-text-muted hover:border-al-gold/40 hover:bg-white/[0.08] hover:text-text'
           }`}
         >
           <Globe2
             aria-hidden="true"
-            className={`h-3 w-3 ${isGlobeMode ? 'text-emerald-400' : 'text-zinc-500'}`}
+            className={`h-3 w-3 ${isGlobeMode ? 'text-al-green' : 'text-text-muted'}`}
           />
           <span>Globe 3D</span>
-          <span className="text-[9px] uppercase font-black">{isGlobeMode ? 'ON' : 'OFF'}</span>
+          <span className="text-xs uppercase font-black">{isGlobeMode ? 'ON' : 'OFF'}</span>
         </button>
 
       </div>
@@ -514,9 +517,9 @@ export default function TacticalVectorMap({
         onClick={handleRecenter}
         title="Recadrer sur l'Afrique"
         aria-label="Recadrer la carte sur le continent africain"
-        className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/75 px-2.5 py-1.5 text-[11px] font-bold text-zinc-200 shadow-xl backdrop-blur-md transition hover:border-emerald-400/40 hover:bg-black hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+        className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-lg border border-line bg-black/75 px-2.5 py-1.5 text-xs font-bold text-text shadow-xl transition hover:border-al-green/40 hover:bg-black hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-green"
       >
-        <RotateCcw className="h-3 w-3 text-emerald-400" />
+        <RotateCcw className="h-3 w-3 text-al-green" />
         <span>Recadrer</span>
       </button>
 
@@ -524,23 +527,23 @@ export default function TacticalVectorMap({
       <div
         ref={mapContainerRef}
         className="h-[460px] sm:h-[520px] w-full"
-        style={{ background: '#0a0e0c' }}
+        style={{ background: 'var(--color-surface-1)' }}
       />
 
       {/* Tactical Map Footer Legend */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.06] bg-black/40 px-3 py-2 text-[10px] text-zinc-400">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line bg-black/40 px-3 py-2 text-xs text-text-muted">
         <div className="flex flex-wrap items-center gap-3">
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+            <span className="h-2 w-2 rounded-full bg-al-green" />
             Pays du média / sujet inféré
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full border border-dashed border-amber-400" />
+            <span className="h-2.5 w-2.5 rounded-full border border-dashed border-al-gold" />
             Chaîne TV référencée
           </span>
           {isGlobeMode && (
-            <span className="inline-flex items-center gap-1.5 text-emerald-300">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-emerald-400/40 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 text-al-green">
+              <span className="h-2 w-2 rounded-full bg-al-green ring-2 ring-al-green/40 animate-pulse" />
               Globe 3D actif (Clic droit + glisser pour incliner)
             </span>
           )}
@@ -550,12 +553,12 @@ export default function TacticalVectorMap({
             <button
               type="button"
               onClick={() => onSelectCountry(null)}
-              className="font-semibold text-emerald-300 hover:text-white"
+              className="font-semibold text-al-green hover:text-text"
             >
               Effacer le filtre
             </button>
           )}
-          <span className="text-zinc-600">Zoom molette & glisser activés</span>
+          <span className="text-text-muted">Zoom molette & glisser activés</span>
         </div>
       </div>
     </div>

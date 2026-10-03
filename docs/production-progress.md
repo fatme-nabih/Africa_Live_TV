@@ -951,3 +951,229 @@ Statut : terminé.
 - Création du script \
 pm run simulate:incident\ (simulate-incident.ts) pour générer des événements critiques (\db.pool.connection_failed\, \process.uncaught_exception\, \xternal.provider.failed\) permettant de tester les Log Drains sans créer de véritable panne applicative.
 - Création du document \docs/production-operations.md\ définissant la procédure d'alerte, les métriques (JSON events), les politiques de sauvegarde (RPO: 24h, RTO: 2h), et détaillant explicitement le fonctionnement du rollback de l'infrastructure sur Railway.
+
+
+## Expérience Premium — Lot P0 « Hygiène et socle design » — 2 octobre 2026
+
+Périmètre : refonte du socle visuel selon [plan-experience-premium.md](plan-experience-premium.md)
+(§0 décisions, §4 design system). Aucun commit, push, déploiement, migration,
+changement `.env*`, Railway, Clerk ou DNS. Playback (`src/lib/playback-*`), accès,
+éligibilité, quotas et API inchangés ; seules des classes CSS ont été modifiées
+dans `Player.tsx` et `PlayerOverlays.tsx`.
+
+| Ticket | État | Preuve |
+|---|---|---|
+| UX-001 jetons | Fait | `@theme` de `globals.css` selon §4.1 (+ `al-red-soft` #ff6b7d, rouge éclairci pour le texte d'erreur : 7,2:1 sur surface-1 contre 4,26:1 pour #e8112d). `.btn-*` et `.glass-*` réécrits sur les jetons ; classes mortes `text-gradient-*`, `glow-*` supprimées. 0 occurrence d'`amber/yellow/emerald/rose/red/orange/zinc-*` dans `src/`. |
+| UX-002 polices | Fait | Unbounded + Manrope via `next/font/google` (`--font-display`, `--font-sans`, `swap`). Aucun Arial ; MapLibre, qui imposait Helvetica Neue, est aligné sur la police de l'application. CLS mesuré à 0,0000 sur landing, tarifs et contact (360 et 1366 px, mode dev). |
+| UX-003 bibliothèque UI | Fait | `src/components/ui/` : Button/ButtonLink, Badge, Card, Chip, Tabs (clavier), SectionHeader, EmptyState, ErrorState, Skeleton. Page de revue `/app/ui` (404 en production). Utilisés sur 8 pages ou composants (landing, 404, admin, compte, contact, erreur de paiement, TV, grille de chaînes). Sans nouvelle dépendance. |
+| UX-004 plancher 12 px | Fait | `grep text-\[(8\|9\|10\|11)px\]` : 0 (122 remplacées). Mesure DOM : 0 texte < 12 px sur toutes les pages capturées. Le zoom natif 200 % n'a pas été rejoué ; l'équivalent 683×384 reste couvert par `radar-workspace`. |
+| UX-005 BrandBackdrop | Fait | `BrandWatermark` supprimé ; `BrandBackdrop` (hero 0,06 / app 0,035 / quiet 0,02, logo en couleur, vignette radiale, halo tricolore en dégradé radial sans filtre blur) sur les 15 pages. Contraste calculé au point le plus clair estimé du fond (logo + halo) : 16,1:1 pour le texte, 7,0:1 pour le texte atténué ; le jeton `text-faint` (4,1:1) n'est plus utilisé pour du texte de moins de 14 px. |
+| UX-006 public/ et manifeste | Fait | 4 `ChatGPT*`, 3 `lumina-tv-*` et `site.webmanifest` supprimés après grep (aucune référence hors documentation). Manifeste unique `src/app/manifest.ts`. Toutes les icônes référencées répondent 200 ; anciennes URLs 404. |
+| UX-007 clés `al_*` | Fait | `src/lib/storage-keys.ts` + 5 tests unitaires ; migration vérifiée dans Edge (anciennes clés copiées puis supprimées, avis VLC conservé). E2E `anchored-player` utilise la nouvelle clé. |
+| UX-008 « lumina » | Fait | Aucun libellé visible (landing, tarifs, `/app/live`, `/app`, `/app/ui`). Identifiants NabooPay et base inchangés. |
+| UX-009 kente, anneau or, silhouettes | Fait | `KenteBand`, `GoldRing`, `Silhouettes` (acacia, éléphant, lion), `Wordmark`, `BrandMark` ; utilisés sur la landing, la 404, l'en-tête applicatif, la connexion et les états vides. |
+| UX-010 signature | Fait | « Le live qui vient à vous » : titre, description, Open Graph, manifeste, en-tête et pied de la landing ; « Dalal ak jàmm » dans l'accroche d'accueil. |
+
+Ajustements liés (non listés au plan) : voyants « EN DIRECT » et « En cours » passés du
+rouge au vert ; boutons à dégradé tricolore remplacés par un seul bouton principal jaune ;
+`backdrop-blur` retiré hors barres collantes et overlays ; libellés des indicateurs du
+Radar raccourcis sur mobile (« Dépêches · 24 h », « Médias », « Pays », « Chaînes ») et
+pastille « sources RSS » masquée sur mobile, pour tenir le test 320×844 du fil prioritaire.
+Le bouton « Briefing — bientôt » reste visible (UX-105, lot P1).
+
+Vérification (code final) :
+
+| Contrôle | Résultat |
+|---|---|
+| `npx tsc --noEmit` | 0 erreur |
+| `npm run lint` | 0 erreur, 0 avertissement |
+| `npm test` | 263 tests : 249 réussis, 14 ignorés (intégrations PostgreSQL), 0 échec (référence 258 : +5 `storage-keys`) |
+| `npm run test:invariants` | 4/4 |
+| `npm run build` | Réussi (Next.js 16.3.5, Turbopack) |
+| E2E mode MVP local (dev, 3001) | 81 réussis, 1 ignoré (test « build servi »), 0 échec : local-mvp, catalogue, tv-workspace, tv-contract, radar-workspace, radar-weather, radar-reliability, dashboard-reception, local-playback, local-playback-api, anchored-player |
+| E2E mode Clerk (dev, anonyme) | 8/8 : auth-entry, payment |
+
+Un premier passage a échoué sur `radar-workspace` « Fil prioritaire sans carte 320×844 »
+(2e dépêche à 877 px au lieu de < 804 px) : la typographie 12 px alourdissait le haut de page
+mobile. Corrigé par la mise en page (pas par le test) ; passage complet ensuite.
+
+Contrôle visuel (Edge, 360 / 768 / 1366 px, 0 débordement horizontal, 0 erreur de page) :
+`docs/screenshots/premium-p0-<page>-<largeur>.png` pour `landing`, `pricing`, `sign-in`,
+`404` (MVP) et `404-public` (Clerk), `contact`, `cgu`, `privacy`, `app-live`, `app-tv`, `ui-kit`.
+
+Limites et réserves :
+- `/account` n'a pas été capturé : il exige une session Clerk (anonyme → redirection vers la
+  connexion ; en mode MVP → redirection vers `/app/live`). Aucun identifiant n'a été saisi. Ses
+  classes ont été migrées avec les mêmes jetons et la page compile ; capture à faire avec
+  le compte du propriétaire.
+- Les widgets Clerk (connexion/inscription) restent en anglais ; harmonisation prévue UX-405.
+- Les couleurs éditoriales du Radar (sky, teal, indigo…, une par rédaction) et les couches de
+  carte (`radar-layers.ts`, `live-disasters.ts`) sont conservées jusqu'au lot P3.
+- La landing garde ses métriques et ses promesses actuelles (UX-401/402 au lot P4).
+- Pour le contrôle MVP, la ligne technique `africa-live-local-user` a dû être réinsérée dans
+  `africa_live_dev` (la resynchronisation Railway du jour l'avait retirée), comme le fait
+  `setup:local`. Elle a été supprimée en fin de lot avec ses 4 événements et 2 sessions de lecture de
+  test : `users` = 2, `user_favorites` = 29, catalogue inchangé (14 505 chaînes, 15 646
+  sources). Les E2E ayant tourné sur cette base, les empreintes complètes ne sont plus
+  garanties identiques au snapshot du dossier de synchronisation.
+- Les E2E réécrivent trois captures historiques `docs/screenshots/l5-anchored-*.png` ; elles
+  ont été restaurées à l'identique depuis `HEAD`.
+
+
+## Expérience Premium — Lot P1 « Coquille unique et navigation » — 2 octobre 2026
+
+Périmètre : [plan-experience-premium.md](plan-experience-premium.md) UX-101 à UX-106, après le feu vert
+du propriétaire sur le bilan P0. Aucun commit, push, déploiement, migration, changement `.env*`,
+Railway, Clerk ou DNS. Playback, accès, éligibilité, quotas et API inchangés ; la capacité
+administrateur reste calculée par le serveur (`app/app/layout.tsx`) et transmise en propriété.
+
+| Ticket | État | Preuve |
+|---|---|---|
+| UX-101 AppShell | Fait | `src/components/shell/` : `AppShell` (coquille), `AppHeader` (barre unique : logo, Radar, TV, Rechercher, pays, heure, compte), `NavLinks`, `MobileTabBar`. Monté dans `app/app/layout.tsx` (Radar, TV, `/app/ui`) et sur Compte, Admin, Tarifs. `AppNavigation.tsx` supprimé ; les en-têtes propres du Radar, de la TV, du Compte, de l'Admin et des Tarifs aussi. Un seul `<header>` de navigation (`getByRole('banner')` = 1, vérifié). Tarifs s'adapte à la session (`mode="auto"` : visiteur ou membre). Restent hors périmètre : landing, contact, CGU, confidentialité (en-têtes publics) et la fenêtre de lecteur séparé. |
+| UX-102 barre basse mobile | Fait | Radar · TV · Recherche · Compte (+ Admin si administrateur), sous 768 px. Cibles mesurées ≥ 44 × 44 px à 360 et 320 px, aucun débordement, `aria-current`, zone de sécurité iOS. Une seule barre visible par largeur (même repère « Navigation principale »). |
+| UX-103 CountryPicker | Fait | Combobox ARIA (saisie + liste) remplaçant le `<select>` de 54 pays : recherche sans accents ni apostrophes, noms d'usage (RDC, noms anglais), drapeaux, 3 pays récents (`al_recent_countries`), bouton « Réinitialiser le pays ». Clavier : ↑ ↓ Début Fin Entrée Échap Tab, `aria-activedescendant`. Le pays vit dans l'URL : il suit le Radar vers la TV et inversement, historique compris. Sur la TV il pilote le filtre pays du catalogue. |
+| UX-104 horloge | Fait | `src/lib/clock.ts` : heure locale de l'appareil, Dakar en info-bulle et pour les lecteurs d'écran ; fuseau inconnu → Dakar ; 6 tests unitaires + 2 E2E (Paris : 22:37 / « Dakar : 20:37 (GMT) » ; Dakar : « Heure de Dakar »). |
+| UX-105 Briefing masqué | Fait | Bouton « Briefing — bientôt » retiré. Les deux E2E qui l'exigeaient désactivé exigent désormais son absence (`toHaveCount(0)`) et l'absence de toute requête `/api/live/briefing`. |
+| UX-106 transitions | Fait | `PageTransition` (React `ViewTransition`, fondu 120/180 ms) dans le Radar et la TV ; barre haute ancrée (`view-transition-name`), `::view-transition { pointer-events: none }`, neutralisé sous `prefers-reduced-motion` et en mode Éco. Sans support navigateur, la page change sans animation. |
+
+Autres changements : bouton « Rechercher » (Ctrl K) qui active la recherche de la TV sans recharger
+ou y conduit (`?focus=search`, retiré de l'URL), focus du champ rendu robuste face au tiroir
+mobile ; barre d'outils propre à la TV (filtres mobile, nombre de chaînes, grille/liste) conservée
+sous la barre commune ; bouton flottant de la TV remonté au-dessus de la barre basse ; lien
+d'évitement « Aller au contenu ».
+
+E2E et tests mis à jour avec des assertions équivalentes :
+- `e2e/helpers/country.ts` (`selectCountry`, `expectCountry`, `countryPicker`) remplace
+  `selectOption` / `toHaveValue('SN')` dans `radar-workspace`, `dashboard-reception`,
+  `radar-reliability` ; le test clavier « Début + Entrée » devient « ↓ + Début + Entrée ».
+- `tv-workspace` : l'entrée « Dashboard » s'appelle « Radar » ; le nom accessible du logo
+  (« Dashboard Africa Live », `/app/live`) est conservé.
+- `src/lib/app-navigation.test.ts` rend désormais le vrai `NavLinks` (en-tête et barre basse) avec les
+  mêmes garanties : pays conservé, page courante, Admin absent hors capacité serveur.
+- `src/lib/radar-access.test.ts` : le simulacre de l'ancien composant devient celui d'`AppShell` ;
+  les assertions sur `children` et `admin` du layout sont inchangées.
+- Nouveau `e2e/app-shell.spec.ts` (11 scénarios) ; nouveaux tests unitaires `clock`, `country-picker`,
+  `shell-nav`.
+
+Vérification (code final) :
+
+| Contrôle | Résultat |
+|---|---|
+| `npx tsc --noEmit` | 0 erreur |
+| `npm run lint` | 0 erreur, 0 avertissement |
+| `npm test` | 284 tests : 270 réussis, 14 ignorés (intégrations PostgreSQL), 0 échec (référence P0 : 263, soit +21) |
+| `npm run test:invariants` | 4/4 |
+| `npm run build` | Réussi (Next.js 16.3.5, Turbopack) |
+| E2E mode MVP local (dev, 3001) | 92 réussis, 1 ignoré (test « build servi »), 0 échec |
+| E2E mode Clerk (dev, anonyme) | 8/8 : auth-entry, payment |
+
+Contrôle visuel (Edge, 360 / 768 / 1366 px, 0 débordement horizontal, 0 texte < 12 px, 0 erreur de page) :
+`docs/screenshots/premium-p1-<page>-<largeur>.png` pour `app-live`, `app-tv`, `ui-kit`, `404`, `pricing`,
+`landing`, `sign-in`, `404-public`, plus `picker-open-360` et `picker-open-1366` (liste ouverte).
+Deux défauts trouvés à l'œil et corrigés avant clôture : barre haute qui débordait à 768 px (nom du
+logo masqué entre 768 et 1023 px, sélecteur plus étroit, « Local » au lieu de « Version locale »
+sous 1024 px) et bouton « Commencer » visible à 360 px sur Tarifs.
+
+Limites et réserves :
+- `/account` et `/admin` n'ont pas pu être capturés (session Clerk requise, aucun identifiant saisi) ; ils
+  utilisent la même coquille, compilent et sont couverts par les tests de navigation et de layout.
+  Sur `/pricing`, un administrateur connecté ne voit pas l'entrée Admin (page cliente, capacité
+  serveur non transmise).
+- Les drapeaux sont des emojis : ils s'affichent en lettres (« SN ») sous Windows et en drapeaux sur
+  Android, iOS et macOS, public visé.
+- « Rechercher » ouvre pour l'instant la recherche du catalogue TV ; la palette universelle (pays,
+  dépêches, villes) est UX-502 (lot P5). Le pays « suivi » synchronisé au compte est UX-503.
+- Les animations de transition n'ont pas été capturées visuellement : sont vérifiés la navigation en
+  mouvement réduit et la présence des règles (ancrage de la barre, passage des clics, neutralisation).
+- Pour les E2E et captures MVP, la ligne technique `africa-live-local-user` a été réinsérée dans
+  `africa_live_dev`, puis supprimée avec ses 4 événements et 2 sessions de lecture de test ; compteurs
+  identiques à ceux d'après P0 (`users` 2, `user_favorites` 29). Les trois captures historiques
+  `docs/screenshots/l5-anchored-*.png`, réécrites par un E2E, ont été restaurées depuis `HEAD`.
+
+## Expérience Premium — Lot P2 « TV streaming » — 2 octobre 2026
+
+Périmètre : [plan-experience-premium.md](plan-experience-premium.md) UX-201 à UX-211, après le feu vert
+du propriétaire sur le bilan P1. Aucun commit, push, déploiement, migration, changement `.env*`,
+Railway, Clerk ou DNS. Aucun relais, conversion ni stockage de média : le navigateur et VLC lisent
+toujours la source amont ; les images de dépêches ne passent par aucun cache serveur. Machine de
+lecture (`src/lib/playback-*`), accès, éligibilité et quotas inchangés. Seule exception de
+l'API, prévue au ticket UX-208 : l'ordre et le curseur du catalogue (voir ci-dessous).
+
+| Ticket | État | Preuve |
+|---|---|---|
+| UX-201 ChannelTile | Fait | `src/components/tv/ChannelTile.tsx` : 16:9, logo ou repli généré (`channel-fallback.ts` : initiales + dégradé stable par pays), badge « VLC » discret, favori et partage au-dessus de la carte, cibles ≥ 36 px visibles et zone tactile élargie. Aucune carte vide. Grille et liste (`ChannelGrid.tsx`) l'utilisent. |
+| UX-202 Reprendre | Fait | `recent-channels.ts` : 10 dernières chaînes lues, `localStorage` (`al_recent_channels`), seuls les champs publics sont gardés, effaçable d'un clic, aucune migration. Une chaîne n'y entre qu'après une lecture réellement démarrée. |
+| UX-203 Accueil en rangées | Fait | `TvRows.tsx`, `ChannelRail.tsx`, `tv-rows.ts` : Reprendre · Favoris · Pays en direct · Info · Sport · Musique, puis « Tout le catalogue » (grille complète et filtres inchangés). Requêtes `/api/channels` existantes réutilisées (12 chaînes par rangée), chargées à la demande à l'approche de l'écran, gardées 5 min en session (`al_tv_rows`) pour rester sous les quotas. Focus itinérant : une seule tuile par rangée dans l'ordre de tabulation, ← → Début Fin entre chaînes. |
+| UX-204 Ligne d'aide | Fait | `HelpLine.tsx` : bandeau VLC et encart « Prêt pour le direct » fusionnés en une ligne repliable (« En savoir plus », « Obtenir VLC », masquable). La première chaîne est au-dessus de la ligne de flottaison à 1366 × 768 (capture `premium-p2-app-tv-1366.png`). |
+| UX-205 Contrôles du lecteur | Fait | `PlayerControls.tsx` : lecture/pause, précédent/suivant, son + volume, aide `?`, PiP, plein écran (repli WebKit), barre qui s'efface au repos. Raccourcis Espace/K, M, F, P, ←/→, `?`, Échap (l'aide d'abord) ; ils laissent champs, curseurs et boutons focalisés tranquilles. Contrôles natifs retirés hors mode ancré. Machine d'état inchangée. |
+| UX-206 Zapping | Fait | Le zapping de la modale suit la liste d'où vient le clic (rangée ou grille) ; la fenêtre séparée reçoit cette liste (`zap-list.ts`, 60 chaînes max, validité 6 h). Une chaîne qui exige VLC ne le lance jamais pendant un zapping : l'écran central propose « Lancer VLC » (`manualExternal`). Un choix direct d'une chaîne VLC le lance une seule fois comme avant. ← → zappent même quand la chaîne courante est dans VLC. |
+| UX-207 Libellés | Fait | `catalog-metadata.ts` : « unknown », « undefined », « non renseignée », vide → « Généralistes » ; catégorie ou langue non reconnue → « Autre catégorie » / « Autre langue » ; catégories composées éclatées. `channel-labels.ts` : deux chaînes de même nom reçoivent un libellé accessible unique. Aucun code brut affiché. |
+| UX-208 Afrique d'abord | Fait | `/api/channels` : sans recherche ni filtre favoris, tri par (rang Afrique 0/1, nom, id) ; le curseur signé porte le rang (`rank`) et un curseur d'un autre périmètre reste refusé (400). Vérifié sur les données réelles : la page 1 de « Tout » compte ≥ 25 chaînes africaines sur 30 et la pagination est identique quelle que soit la taille de page. Tests : `catalog-order.test.ts`, `tv-contract.spec.ts`. |
+| UX-209 Filtres | Partiel | `ActiveFilterChips.tsx` : pastilles retirables, compteur de filtres, « Tout effacer ». Le tiroir unique desktop + mobile n'est pas fait : la barre latérale desktop est conservée (tiroir mobile existant). |
+| UX-210 Partage WhatsApp | Fait | `share-links.ts` : `https://wa.me/?text=` avec titre + URL publique du lecteur Africa Live (chaîne) ou de l'article de l'éditeur + origine Africa Live (dépêche). Jamais d'URL de flux ; aucune donnée personnelle. |
+| UX-211 Éco data | Fait | `eco-mode.ts`, `EcoToggle.tsx` : bascule dans la barre (≥ 640 px) et dans Compte ; `Save-Data` active le mode par défaut, le choix de l'utilisateur reste prioritaire ; appliqué avant l'affichage (`html[data-eco]`, script de démarrage). Effets : pas de lecture automatique (le flux est préparé, aucun segment n'est téléchargé avant « Lire maintenant »), logos remplacés par les initiales, pas d'images de dépêches, carte du Radar ouverte sur le fond sombre léger, `BrandBackdrop` calme, transitions coupées. |
+
+Défauts trouvés en cours de lot et corrigés :
+- hls.js 1.6.16 relançait `startLoad()` malgré `autoStartLoad: false` : son contrôleur d'interstitiels
+  rappelle `startLoadingPrimaryAt` après le manifeste (diagnostiqué par trace d'appel). `Player.tsx`
+  passe `enableInterstitialPlayback: false` (aucun flux IPTV n'en utilise) ; sans cela, « Éco data »
+  téléchargeait déjà 4 segments avant « Lire maintenant ». Test E2E : 0 segment servi avant le clic.
+- Les flèches de zapping ne fonctionnaient pas quand la chaîne courante se lisait dans VLC ; elles sont
+  désormais indépendantes de l'état de lecture (les autres raccourcis restent inactifs dans VLC).
+- Doublon « Relancer VLC » en bas du lecteur pendant l'attente du choix « Lancer VLC » : retiré dans cet état.
+- Deux chaînes homonymes (« 2M Monde » ×2) rompaient l'unicité des noms accessibles : libellé unique.
+
+E2E et tests mis à jour avec des assertions équivalentes :
+- `catalogue.spec` : les attentes de requêtes ciblent la recherche saisie (`search === '%_'`) et la page de
+  30 chaînes du filtre favoris, les rangées émettant aussi des requêtes ; boutons de défilement nommés
+  « Faire défiler vers la gauche/droite » pour ne pas entrer en collision avec « Mes favoris ».
+- `local-playback.spec` : « Mode effectif : Navigateur » (libellé technique supprimé du plan) devient
+  « Direct » visible + absence de l'écran « Lecteur VLC » + `currentTime > 0` déjà exigé.
+- `tv-contract.spec` : la catégorie sans valeur est « General » (plus « unknown ») ; ajout de l'assertion
+  Afrique d'abord (≥ 25 chaînes africaines sur 30).
+- `tv-workspace.spec` : actions de favori scopées à `#catalogue` (les rangées dupliquent les tuiles).
+- `src/lib/app-entry.test.ts` : frontière `next/script` ajoutée à la liste des imports autorisés.
+- Nouveaux : `e2e/tv-streaming.spec.ts` (16 scénarios), `e2e/helpers/tv-fixture.ts` (catalogue, VLC et flux
+  HLS simulés) ; tests unitaires `recent-channels`, `eco-mode`, `share-links`, `channel-fallback`,
+  `zap-list`, `tv-rows`, `channel-labels`, `catalog-order`, `catalog-metadata`, `storage-keys`.
+
+Vérification (code final) :
+
+| Contrôle | Résultat |
+|---|---|
+| `npx tsc --noEmit` | 0 erreur |
+| `npm run lint` | 0 erreur, 0 avertissement |
+| `npm test` | 321 tests : 307 réussis, 14 ignorés (intégrations PostgreSQL), 0 échec (référence P1 : 284, soit +37) |
+| `npm run test:invariants` | 4/4 |
+| `npm run build` | Réussi (Next.js 16.3.5, Turbopack) |
+| E2E mode MVP local (dev, 3001) | 108 réussis, 1 ignoré (test « build servi »), 0 échec — app-shell, local-mvp, catalogue, tv-workspace, tv-contract, radar-workspace, radar-weather, radar-reliability, dashboard-reception, local-playback, local-playback-api, anchored-player, tv-streaming |
+| E2E mode Clerk (dev, anonyme) | 8/8 : auth-entry, payment |
+
+Contrôle visuel (Edge, 360 / 768 / 1366 px, 0 débordement horizontal, 0 texte < 12 px, 0 erreur de page) :
+`docs/screenshots/premium-p2-<page>-<largeur>.png` pour `app-tv`, `app-live`, `ui-kit`, `404`, `landing`,
+`pricing`, `sign-in`, `cgu`, `404-public`, plus (données simulées) `tv-rows`, `player-modal`,
+`player-vlc-zap` et `tv-eco` à 360 et 1366 px (le lecteur modal en lecture, un zapping vers une chaîne
+VLC, la TV en mode Éco). Un passage de ces captures par un spec temporaire a été supprimé après usage.
+
+Limites et réserves :
+- UX-209 est partiel : la barre latérale desktop reste (pastilles, compteur et « Tout effacer » sont faits).
+- VLC ne peut être ni arrêté ni piloté depuis le navigateur : le zapping se contente de ne plus jamais
+  le lancer seul. Une chaîne VLC déjà ouverte reste ouverte dans VLC.
+- La bascule Éco data est cachée dans la barre sous 640 px (place) ; elle reste dans Compte.
+- `enableInterstitialPlayback: false` désactive les interstitiels HLS (publicités insérées côté serveur) :
+  sans objet pour le catalogue IPTV actuel, à rouvrir si un flux en utilisait.
+- Les drapeaux sont des emojis : lettres sous Windows, drapeaux sur Android/iOS. `/account` et `/admin`
+  restent à capturer avec une session Clerk (l'interrupteur Éco de Compte est couvert par les tests).
+- Les transitions et le fondu des tuiles n'ont pas été capturés visuellement.
+- Pour les E2E et captures MVP, la ligne technique `africa-live-local-user` a été réinsérée dans
+  `africa_live_dev` puis supprimée avec ses événements et sessions de test ; compteurs identiques
+  (`users` 2, `user_favorites` 29). Les trois captures historiques `docs/screenshots/l5-anchored-*.png`,
+  réécrites par un E2E, ont été restaurées depuis `HEAD`.
+
+### Reste à faire — Expérience Premium (au 3 octobre 2026)
+
+P0, P1 et P2 sont faits et vérifiés localement, non committés. Restent 23 tickets (P3 Radar vivant UX-301 →
+308, P4 Landing/tarifs/compte UX-401 → 407, P5 Aimants et finition UX-501 → 508) et 4 reliquats (UX-209 suite,
+UX-212, UX-213, UX-214). Plan à jour : [plan-experience-premium.md](plan-experience-premium.md) §5.1, §6
+« Reliquats » et §8.1 « Pièges connus ». Prochain lot : **P3**, après le feu vert du propriétaire ; prompt de
+reprise : [prompt-reprise-premium-p3.md](prompt-reprise-premium-p3.md).

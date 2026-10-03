@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { Pool } from 'pg';
 import { assertLocalE2ETarget } from '../src/lib/integration-test-safety';
 import { catalogLanguageCodes } from '../src/lib/catalog-metadata';
+import { AFRICAN_COUNTRIES } from '../src/lib/radar-countries';
 
 test('Contrat TV réel : composites, langues, facettes, Afrique/Tout et curseur contextualisé sans mutation des imports', async ({ page, baseURL }) => {
   assertLocalE2ETarget(process.env, baseURL);
@@ -16,7 +17,7 @@ test('Contrat TV réel : composites, langues, facettes, Afrique/Tout et curseur 
     const facets = await page.request.get('/api/filters'); expect(facets.status()).toBe(200);
     const options = await facets.json();
     expect(options.groups).toContain('News'); expect(options.groups).toContain('Business');
-    expect(options.groups).toContain('unknown'); expect(options.groups).not.toContain('Business;News');
+    expect(options.groups).toContain('General'); expect(options.groups).not.toContain('unknown'); expect(options.groups).not.toContain('Business;News');
     expect(options.languages).toContain('fr'); expect(options.languages).not.toContain('fra');
     expect(options.languages).toContain('unknown');
     const post = (body: Record<string, unknown>) => page.request.post('/api/channels', { data: body, headers: { Origin: baseURL! } });
@@ -34,6 +35,8 @@ test('Contrat TV réel : composites, langues, facettes, Afrique/Tout et curseur 
     }
     const all = await post({}); expect(all.status()).toBe(200); const first = await all.json();
     expect(first.channels).toHaveLength(30); expect(first.nextCursor).toBeTruthy();
+    const africanCodes = new Set(AFRICAN_COUNTRIES.map(item => item.code));
+    expect(first.channels.filter((channel: { countryCode: string | null }) => channel.countryCode && africanCodes.has(channel.countryCode)).length).toBeGreaterThanOrEqual(25);
     const wrongScope = await post({ cursor: first.nextCursor, region: 'africa' }); expect(wrongScope.status()).toBe(400);
     const more = await post({ cursor: first.nextCursor }); expect(more.status()).toBe(200);
     expect((await more.json()).channels.every((channel: { id: string }) => !first.channels.some((old: { id: string }) => old.id === channel.id))).toBe(true);

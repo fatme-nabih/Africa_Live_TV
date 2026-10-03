@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { fixtureRadar } from './helpers/radar-fixture';
+import { countryPicker, selectCountry } from './helpers/country';
 import { assertLocalE2ETarget } from '../src/lib/integration-test-safety';
 
 test.beforeAll(({ baseURL }) => { assertLocalE2ETarget(process.env, baseURL); });
@@ -13,13 +14,13 @@ for (const width of [1366, 390, 683]) test(`L4 réception datée, clavier et ref
   page.on('request', request => { if (request.url().includes('/api/live/briefing')) briefingRequests.push(request.url()); });
   await page.goto('/app/live?country=SN');
   await expect(page.getByText('Dépêche Sénégal récente', { exact: true })).toBeVisible();
-  const country = page.getByRole('combobox', { name: /Choisir un pays/ });
+  const country = countryPicker(page);
   await country.focus();
   await expect(country).toBeFocused();
-  await country.selectOption('CI');
+  await selectCountry(page, 'CI');
   await expect(page).toHaveURL(/country=CI/);
   await expect(page.getByText('Économie Côte d’Ivoire', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Briefing/ })).toBeDisabled();
+  await expect(page.getByRole('button', { name: /Briefing/ })).toHaveCount(0);
   expect(briefingRequests).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: `.local-logs/rw/screenshots/l4-dashboard-${width}.png` });
@@ -31,7 +32,7 @@ test('L4 fond cartographique bloqué : choix pays et fil préservés', async ({ 
   await page.route('**/ArcGIS/rest/services/**/MapServer/tile/**', route => route.abort());
   await page.goto('/app/live');
   await expect(page.getByText('Carte indisponible. Le fil et le choix du pays restent accessibles.', { exact: true })).toBeVisible({ timeout: 15000 });
-  await page.getByRole('combobox', { name: /Choisir un pays/ }).selectOption('SN');
+  await selectCountry(page, 'SN');
   await expect(page.getByText('Dépêche Sénégal récente', { exact: true })).toBeVisible();
   await expect(page).toHaveURL(/country=SN/);
 });

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { fixtureRadar } from './helpers/radar-fixture';
+import { countryPicker, expectCountry, selectCountry } from './helpers/country';
 
 test('RW-007 : onglets et compteurs utilisent le périmètre rédactionnel avec le même filtre pays/24 h', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -23,7 +24,7 @@ test('RW-007 : onglets et compteurs utilisent le périmètre rédactionnel avec 
   await expect(page.getByText('MaliJet Sénégal', { exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Afrique & National (1)', exact: true }).click();
   await expect(page.getByText('MaliJet Sénégal', { exact: true })).toBeVisible();
-  await page.getByRole('combobox', { name: 'Choisir un pays', exact: true }).selectOption('CI');
+  await selectCountry(page, 'CI');
   await expect(page.getByRole('button', { name: 'Toutes (1)', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'International (1)', exact: true }).click();
   await expect(page.getByText('France 24 Côte d’Ivoire', { exact: true })).toBeVisible();
@@ -33,18 +34,17 @@ test('RW-008 : météo, villes rapides, URL/historique, RSS et lien TV partagent
   await page.setViewportSize({ width: 390, height: 844 });
   await fixtureRadar(page, { weatherOk: true });
   await page.goto('/app/live?country=SN&context=weather#feed');
-  const general = page.getByRole('combobox', { name: 'Choisir un pays', exact: true });
   const weather = page.getByRole('combobox', { name: 'Choisir le pays ou la ville pour la météo', exact: true });
   await weather.focus(); await expect(weather).toBeFocused(); await weather.selectOption('CI');
-  await expect(general).toHaveValue('CI'); await expect(page).toHaveURL(/country=CI/);
+  await expectCountry(page, 'CI'); await expect(page).toHaveURL(/country=CI/);
   await expect(page.getByText('Économie Côte d’Ivoire', { exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Voir les chaînes du pays', exact: true })).toHaveAttribute('href', '/app?country=CI');
-  await general.selectOption('GH'); await expect(weather).toHaveValue('GH');
+  await selectCountry(page, 'GH'); await expect(weather).toHaveValue('GH');
   await expect(page.getByText('Aucune dépêche pour : Ghana', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Abidjan CI', exact: true }).click(); await expect(general).toHaveValue('CI');
+  await page.getByRole('button', { name: 'Abidjan CI', exact: true }).click(); await expectCountry(page, 'CI');
   expect(new URL(page.url()).searchParams.get('context')).toBe('weather'); expect(new URL(page.url()).hash).toBe('#feed');
-  await page.goBack(); await expect(general).toHaveValue('GH'); await expect(weather).toHaveValue('GH');
-  await page.goForward(); await expect(general).toHaveValue('CI'); await page.reload(); await expect(weather).toHaveValue('CI');
+  await page.goBack(); await expectCountry(page, 'GH'); await expect(weather).toHaveValue('GH');
+  await page.goForward(); await expectCountry(page, 'CI'); await page.reload(); await expect(weather).toHaveValue('CI');
   const options = await weather.locator('option').evaluateAll(nodes => nodes.map(n => ({ code: (n as HTMLOptionElement).value, label: n.textContent! })));
   expect(new Set(options.map(o => o.code)).size).toBe(options.length);
   expect(options.map(o => o.label)).toEqual([...options.map(o => o.label)].sort((a, b) => a.localeCompare(b, 'fr')));
@@ -54,25 +54,25 @@ test('RW-008 : météo, villes rapides, URL/historique, RSS et lien TV partagent
 test('Pays partagé : lien direct, clavier, retour/précédent, refresh, reset et code invalide', async ({ page }) => {
   await fixtureRadar(page, { weatherOk: true });
   await page.goto('/app/live?country=SN&context=test#feed');
-  const country = page.getByRole('combobox', { name: 'Choisir un pays' });
-  await expect(country).toHaveValue('SN');
+  const country = countryPicker(page);
+  await expectCountry(page, 'SN');
   await expect(page.getByText('Dépêche Sénégal récente', { exact: true })).toBeVisible();
   await country.focus(); await expect(country).toBeFocused();
-  await country.press('Home'); await country.press('Enter');
-  await expect(country).toHaveValue('');
-  await country.selectOption('CI');
+  await country.press('ArrowDown'); await country.press('Home'); await country.press('Enter');
+  await expectCountry(page, null);
+  await selectCountry(page, 'CI');
   await expect(page).toHaveURL(/country=CI/);
   expect(new URL(page.url()).searchParams.get('context')).toBe('test');
   expect(new URL(page.url()).hash).toBe('#feed');
   await expect(page.getByText('Économie Côte d’Ivoire', { exact: true })).toBeVisible();
-  await page.reload(); await expect(country).toHaveValue('CI');
-  await country.selectOption('SN'); await page.goBack(); await expect(country).toHaveValue('CI');
-  await page.goForward(); await expect(country).toHaveValue('SN');
+  await page.reload(); await expectCountry(page, 'CI');
+  await selectCountry(page, 'SN'); await page.goBack(); await expectCountry(page, 'CI');
+  await page.goForward(); await expectCountry(page, 'SN');
   await page.getByRole('button', { name: 'Réinitialiser le pays', exact: true }).click();
   expect(new URL(page.url()).searchParams.has('country')).toBe(false);
   expect(new URL(page.url()).searchParams.get('context')).toBe('test');
   await page.goto('/app/live?country=ZZ');
-  await expect(country).toHaveValue('');
+  await expectCountry(page, null);
   await expect(page.getByText('Pays inconnu dans le lien : vue Afrique affichée.')).toBeVisible();
 });
 
@@ -94,10 +94,10 @@ for (const [width, height] of [[390, 844], [320, 844], [844, 390], [683, 384]]) 
     expect((await page.getByRole('combobox', { name: 'Choisir un pays' }).boundingBox())!.y).toBeLessThan(250);
     if (width === 390) await page.screenshot({ path: '.local-logs/rw/screenshots/l2-dashboard-mobile.png', fullPage: false });
   }
-  await page.getByRole('combobox', { name: 'Choisir un pays' }).selectOption('GH');
+  await selectCountry(page, 'GH');
   await expect(page.getByText('Aucune dépêche pour : Ghana', { exact: true })).toBeVisible();
   await expect(page.getByText('Comment lire le radar', { exact: true })).toBeVisible();
-  await page.getByRole('combobox', { name: 'Choisir un pays' }).selectOption('SN');
+  await selectCountry(page, 'SN');
   await expect(article).toBeVisible();
   await page.getByRole('button', { name: 'Afficher la carte', exact: true }).click();
   await expect(page.getByText('Carte indisponible. Le fil et le choix du pays restent accessibles.', { exact: true })).toBeVisible();
@@ -120,13 +120,12 @@ test('Pays rapides SN→CI : réponses météo et TV obsolètes ignorées', asyn
     await route.fulfill({ json: { channels: [{ id: code, name: `Chaîne ${code}`, countryCode: code, logoUrl: null, groupTitle: null, playbackMode: 'BROWSER', availabilityStatus: 'READY' }], total: 1, canPlay: true } });
   });
   await page.goto('/app/live');
-  const country = page.getByRole('combobox', { name: 'Choisir un pays' });
-  await country.selectOption('SN'); await country.selectOption('CI');
+  await selectCountry(page, 'SN'); await selectCountry(page, 'CI');
   await page.getByRole('button', { name: /Chaînes TV/ }).click();
   await expect(page.getByText('Chaîne CI', { exact: true })).toBeVisible();
   await page.waitForTimeout(900);
   await expect(page.getByText('Chaîne SN', { exact: true })).toHaveCount(0);
-  await expect(country).toHaveValue('CI');
+  await expectCountry(page, 'CI');
   await expect(page).toHaveURL(/country=CI/);
   await expect(page.locator('article').filter({ has: page.locator('#weather-country-select') }).getByText('Abidjan', { exact: true }).last()).toBeVisible();
 });
@@ -142,12 +141,12 @@ test('Carte et contrôle partagent le pays ; médias restent accessibles en 2D e
   expect((await page.getByText('Fil des dépêches', { exact: true }).boundingBox())!.y).toBeLessThan(768);
   await marker.focus(); await marker.press('Enter');
   await expect(page).toHaveURL(/country=SN/);
-  await expect(page.getByRole('combobox', { name: 'Choisir un pays' })).toHaveValue('SN');
+  await expectCountry(page, 'SN');
   const globe = page.getByRole('button', { name: /Globe 3D/ });
   await globe.click(); await expect(globe).toHaveAttribute('aria-pressed', 'true');
   await globe.click(); await expect(globe).toHaveAttribute('aria-pressed', 'false');
   await page.getByRole('button', { name: 'Recadrer la carte sur le continent africain' }).click();
-  await expect(page.getByRole('combobox', { name: 'Choisir un pays' })).toHaveValue('');
+  await expectCountry(page, null);
   await expect(page.getByText('Dépêche Sénégal récente', { exact: true })).toBeVisible();
   expect(errors).toEqual([]);
   await page.evaluate(() => window.scrollTo(0, 0));
@@ -162,7 +161,7 @@ test('Connexion lente : sélection du pays disponible avant la fin des dépêche
     await route.fallback();
   });
   await page.goto('/app/live');
-  await page.getByRole('combobox', { name: 'Choisir un pays' }).selectOption('CI');
+  await selectCountry(page, 'CI');
   await expect(page).toHaveURL(/country=CI/);
   await expect(page.getByText('Économie Côte d’Ivoire', { exact: true })).toBeVisible();
   await expect(page.locator('.maplibregl-canvas')).toHaveCount(0);
@@ -216,7 +215,7 @@ test('RW-009 : carte médias 2D/globe sans contrôles ni requêtes FIRMS/USGS, b
   await expect(page.getByRole('button', { name: /Feux NASA|Séismes & GDACS/ })).toHaveCount(0);
   const marker = page.locator('.tactical-radar-marker').filter({ hasText: 'Sénégal' });
   await marker.focus(); await marker.press('Enter');
-  await expect(page.getByRole('combobox', { name: 'Choisir un pays', exact: true })).toHaveValue('SN');
+  await expectCountry(page, 'SN');
   const globe = page.getByRole('button', { name: /Globe 3D/ });
   await globe.click(); await expect(globe).toHaveAttribute('aria-pressed', 'true');
   await globe.click(); await expect(globe).toHaveAttribute('aria-pressed', 'false');
@@ -238,7 +237,7 @@ test('RW-009 : panne WebGL réelle du canvas laisse pays, météo et RSS utilisa
   });
   await page.goto('/app/live');
   await expect(page.getByText('WebGL non supporté', { exact: true })).toBeVisible();
-  await page.getByRole('combobox', { name: 'Choisir un pays', exact: true }).selectOption('CI');
+  await selectCountry(page, 'CI');
   await expect(page.getByText('Économie Côte d’Ivoire', { exact: true })).toBeVisible();
   await expect(page.getByRole('combobox', { name: 'Choisir le pays ou la ville pour la météo', exact: true })).toHaveValue('CI');
   await expect(page.getByRole('button', { name: /Feux NASA|Séismes & GDACS/ })).toHaveCount(0);

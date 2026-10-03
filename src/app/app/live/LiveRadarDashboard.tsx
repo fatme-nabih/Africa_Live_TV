@@ -6,9 +6,9 @@ import { useSearchParams } from 'next/navigation';
 import RadarSourcesPanel from '@/components/radar/RadarSourcesPanel';
 import { radarCountry, radarCountryUrl, sourcePlaceholder, type RadarSourceRow } from '@/lib/radar-workspace';
 import Link from 'next/link';
-import AppNavigation, { AppBrand } from '@/components/AppNavigation';
-import BrandWatermark from '@/components/BrandWatermark';
-import LocalAccountControls from '@/components/LocalAccountControls';
+import BrandBackdrop from '@/components/brand/BrandBackdrop';
+import PageTransition from '@/components/shell/PageTransition';
+import { ShareArticleLink } from '@/components/tv/ChannelTile';
 import Player from '@/components/Player';
 import LiveMarketTicker from '@/components/radar/LiveMarketTicker';
 import { canonicalArticleUrl, temporalWindow, formatRadarDate, radarSource } from '@/lib/radar-data';
@@ -40,7 +40,6 @@ import {
   Radar,
   RefreshCw,
   Rss,
-  Sparkles,
   Sun,
   Tv,
   Wind,
@@ -52,16 +51,15 @@ const TacticalVectorMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[460px] sm:h-[520px] w-full flex-col items-center justify-center rounded-xl border border-white/[0.08] bg-black/40 backdrop-blur-sm p-6 text-center text-zinc-500">
-        <div className="mb-3 h-8 w-8 animate-spin rounded-full border-2 border-emerald-400 border-t-transparent" />
-        <p className="text-xs font-bold text-zinc-400">Chargement de la carte vectorielle tactique...</p>
+      <div className="flex h-[460px] sm:h-[520px] w-full flex-col items-center justify-center rounded-xl border border-line bg-surface-1/80 p-6 text-center text-text-muted">
+        <div className="mb-3 h-8 w-8 animate-spin rounded-full border-2 border-al-green border-t-transparent" />
+        <p className="text-xs font-bold text-text-muted">Chargement de la carte vectorielle tactique...</p>
       </div>
     ),
   },
 );
 
 const REFRESH_INTERVAL_MS = 5 * 60_000;
-const TIMEZONE = 'Africa/Dakar';
 
 function WeatherIconDisplay({
   icon,
@@ -70,26 +68,26 @@ function WeatherIconDisplay({
   icon: WeatherIconType;
   isDay: boolean | null;
 }) {
-  if (isDay === null || icon === 'unknown') return <Cloud aria-hidden="true" className="h-6 w-6 text-zinc-300" />;
+  if (isDay === null || icon === 'unknown') return <Cloud aria-hidden="true" className="h-6 w-6 text-text" />;
   switch (icon) {
     case 'clear':
       return isDay ? (
-        <Sun aria-hidden="true" className="h-6 w-6 text-amber-300" />
+        <Sun aria-hidden="true" className="h-6 w-6 text-al-gold" />
       ) : (
         <Moon aria-hidden="true" className="h-6 w-6 text-sky-200" />
       );
     case 'partly-cloudy':
-      return <CloudSun aria-hidden="true" className="h-6 w-6 text-amber-200" />;
+      return <CloudSun aria-hidden="true" className="h-6 w-6 text-text" />;
     case 'cloudy':
-      return <Cloud aria-hidden="true" className="h-6 w-6 text-zinc-300" />;
+      return <Cloud aria-hidden="true" className="h-6 w-6 text-text" />;
     case 'rain':
       return <CloudRain aria-hidden="true" className="h-6 w-6 text-sky-300" />;
     case 'storm':
-      return <CloudLightning aria-hidden="true" className="h-6 w-6 text-yellow-300" />;
+      return <CloudLightning aria-hidden="true" className="h-6 w-6 text-al-gold" />;
     case 'fog':
-      return <CloudFog aria-hidden="true" className="h-6 w-6 text-amber-200/90" />;
+      return <CloudFog aria-hidden="true" className="h-6 w-6 text-text/90" />;
     default:
-      return <CloudSun aria-hidden="true" className="h-6 w-6 text-zinc-300" />;
+      return <CloudSun aria-hidden="true" className="h-6 w-6 text-text" />;
   }
 }
 
@@ -121,7 +119,6 @@ function RadarWorkspace() {
     return () => media.removeEventListener('change', update);
   }, []);
   const [refreshToken, setRefreshToken] = useState(0);
-  const [clock, setClock] = useState('');
 
   const [asOf, setAsOf] = useState(0);
   const [summaryError, setSummaryError] = useState(false);
@@ -136,18 +133,6 @@ function RadarWorkspace() {
 
   const activeWeatherCode = selectedCountry ?? 'SN';
   const { weather, weatherError, weatherLoading, retryBlocked } = useLiveWeather(activeWeatherCode, refreshToken);
-
-  useEffect(() => {
-    const tick = () => setClock(new Intl.DateTimeFormat('fr-FR', {
-      timeZone: TIMEZONE,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    }).format(new Date()));
-    tick();
-    const interval = window.setInterval(tick, 1_000);
-    return () => window.clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -356,106 +341,57 @@ function RadarWorkspace() {
   const activeCountry = AFRICAN_COUNTRIES.find((country) => country.code === selectedCountry) ?? null;
 
   return (
-    <main className="relative min-h-screen bg-black text-zinc-100 flex flex-col selection:bg-yellow-400/25 selection:text-yellow-100">
+    <PageTransition>
+    <main className="relative flex-1 bg-black text-text flex flex-col selection:bg-al-gold/25 selection:text-text">
       {/* Brand transparent background watermark */}
-      <BrandWatermark />
-
-      <header className="sticky top-0 z-40 border-b border-white/[0.07] bg-black/50 px-4 py-2.5 shadow-2xl backdrop-blur-2xl sm:px-6 sm:py-3">
-        <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-tricolor-bar opacity-80" />
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2">
-          <AppBrand />
-          <AppNavigation country={selectedCountry} />
-
-          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-            <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-zinc-400 sm:flex">
-              <span aria-hidden="true" className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span className="text-[11px] font-bold tracking-wider uppercase text-zinc-400">HEURE DE DAKAR</span>
-              <span className="font-mono tabular-nums text-zinc-200">{clock || '—'}</span>
-              <span className="text-zinc-500">GMT</span>
-            </div>
-            <LocalAccountControls />
-
-          </div>
-        </div>
-      </header>
+      <BrandBackdrop variant="app" />
 
       <div className="mx-auto max-w-7xl w-full flex-1 px-3 pb-8 pt-3 sm:px-6 sm:pt-4 md:px-6">
         <section className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-zinc-100 sm:text-2xl">Radar Afrique</h1>
-            <p className="mt-0.5 text-xs text-zinc-400">Dépêches, météo et télévisions par pays.</p>
+            <h1 className="font-display text-xl font-bold tracking-tight text-text sm:text-2xl">Radar Afrique</h1>
+            <p className="mt-0.5 text-xs text-text-muted">Dépêches, météo et télévisions par pays.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              disabled
-              title="Le briefing reste désactivé jusqu’à sa prochaine implémentation."
-              className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-1.5 text-xs font-medium text-zinc-500 cursor-not-allowed"
-            >
-              <Sparkles aria-hidden="true" className="h-3.5 w-3.5" />
-              <span>Briefing — bientôt</span>
-            </button>
-            <button
-              type="button"
               onClick={() => setRefreshToken(value => value + 1)}
               disabled={refreshing}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-amber-400/40 px-3 py-1.5 text-xs font-semibold text-zinc-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 shadow-sm"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-white/[0.04] hover:bg-white/[0.08] hover:border-al-gold/40 px-3 py-1.5 text-xs font-semibold text-text transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold shadow-sm"
             >
-              <RefreshCw aria-hidden="true" className={`h-3.5 w-3.5 text-amber-400 ${refreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw aria-hidden="true" className={`h-3.5 w-3.5 text-al-gold ${refreshing ?'animate-spin' : ''}`} />
               <span>{refreshing ? 'Actualisation…' : 'Actualiser'}</span>
             </button>
           </div>
         </section>
 
-        <section aria-label="Sélection du pays" className="relative mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-white/[0.08] bg-black/40 p-2.5 sm:p-3 shadow-xl backdrop-blur-xl">
-          <label htmlFor="radar-country" className="text-xs font-bold text-zinc-300">Choisir un pays</label>
-          <select
-            id="radar-country"
-            aria-label="Choisir un pays"
-            aria-describedby="radar-country-help"
-            value={selectedCountry ?? ''}
-            onChange={event => setSelectedCountry(event.target.value || null)}
-            className="min-w-0 flex-1 rounded-xl border border-white/[0.08] bg-white/[0.03] p-2 text-xs text-zinc-100 hover:border-white/20 focus-visible:border-amber-400/60 focus-visible:bg-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/40"
-          >
-            <option value="" className="bg-zinc-900 text-zinc-100">Afrique · tous les pays</option>
-            {AFRICAN_COUNTRIES.map(country => (
-              <option key={country.code} value={country.code} className="bg-zinc-900 text-zinc-100">{country.name}</option>
-            ))}
-          </select>
-          {selectedCountry && (
-            <button
-              type="button"
-              onClick={() => setSelectedCountry(null)}
-              className="inline-flex items-center gap-1 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-300 transition hover:bg-amber-400/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-            >
-              Réinitialiser le pays
-            </button>
-          )}
-          <p id="radar-country-help" className="sr-only">Sélectionnez au clavier ou tapez le début du nom dans la liste. Le pays est conservé dans le lien ; la carte utilise le même choix.</p>
-          {countryParam && !selectedCountry && <p role="status" className="w-full text-xs text-amber-200">Pays inconnu dans le lien : vue Afrique affichée.</p>}
-        </section>
+        {countryParam && !selectedCountry && <p role="status" className="mb-3 rounded-control border border-line-gold bg-surface-1 px-3 py-2 text-xs text-text">Pays inconnu dans le lien : vue Afrique affichée.</p>}
 
-        <section aria-label="Indicateurs de veille" className="mb-4 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+        <section aria-label="Indicateurs de veille" className="mb-3 grid grid-cols-2 gap-2 sm:mb-4 sm:gap-3 lg:grid-cols-4">
           <MetricCard
             label="Résultats chargés · 24 h"
+            shortLabel="Dépêches · 24 h"
             value={rss ? String(visibleArticles.length) : '—'}
             icon={<Newspaper className="h-5 w-5" />}
             accentColor="amber"
           />
           <MetricCard
             label="Médias & Rédactions"
+            shortLabel="Médias"
             value={rss ? String(domainsCount) : '—'}
             icon={<Radar className="h-5 w-5" />}
             accentColor="emerald"
           />
           <MetricCard
             label="Pays représentés"
+            shortLabel="Pays"
             value={rss ? String(new Set(visibleArticles.map(a => a.countryCode).filter(Boolean)).size) : '—'}
             icon={<MapPin className="h-5 w-5" />}
             accentColor="rose"
           />
           <MetricCard
             label="Chaînes référencées"
+            shortLabel="Chaînes"
             value={channelsSummary ? String(channelsSummary.totalChannels) : '—'}
             subLabel={channelsSummary ? `${channelsSummary.totalDirectWeb} web · ${channelsSummary.totalDirectVlc ?? 0} VLC` : undefined}
             icon={<Tv className="h-5 w-5" />}
@@ -466,30 +402,30 @@ function RadarWorkspace() {
         <RadarSourcesPanel sources={sourceRows} />
 
         <section className="grid grid-cols-1 gap-4 xl:grid-cols-12 xl:gap-5">
-          <article aria-label="Fil et chaînes du pays" className="relative flex min-h-[520px] flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 shadow-2xl backdrop-blur-xl xl:col-span-5">
+          <article aria-label="Fil et chaînes du pays" className="relative flex min-h-[520px] flex-col overflow-hidden rounded-2xl border border-line bg-surface-1/80 shadow-2xl xl:col-span-5">
             <div className="h-[2px] w-full bg-tricolor-bar absolute top-0 left-0 right-0 opacity-80" />
             {/* Embedded PiP Mini-Player Dock */}
             {activePlayChannel && (
-              <div className="border-b border-white/[0.08] bg-black/90 p-3 sm:p-4">
+              <div className="border-b border-line bg-black/90 p-3 sm:p-4">
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2">
                     <span className="relative flex h-2 w-2 shrink-0">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-al-green opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-al-green" />
                     </span>
-                    <span className="truncate text-xs font-bold text-white">
+                    <span className="truncate text-xs font-bold text-text">
                       EN DIRECT : {activePlayChannel.name}
                     </span>
                     {activeCountry && (
-                      <span className="hidden sm:inline-block rounded border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[9px] text-zinc-400">
+                      <span className="hidden sm:inline-block rounded border border-line bg-white/[0.04] px-1.5 py-0.5 text-xs text-text-muted">
                         {activeCountry.name}
                       </span>
                     )}
                     <span
-                      className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${
+                      className={`rounded px-1.5 py-0.5 text-xs font-bold uppercase ${
                         activePlayChannel.playbackMode === 'BROWSER'
-                          ? 'border border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
-                          : 'border border-amber-400/20 bg-amber-400/10 text-amber-300'
+                          ? 'border border-al-green/20 bg-al-green/10 text-al-green'
+                          : 'border border-al-gold/20 bg-al-gold/10 text-al-gold'
                       }`}
                     >
                       {activePlayChannel.playbackMode === 'BROWSER' ? 'Web' : 'VLC'}
@@ -501,9 +437,9 @@ function RadarWorkspace() {
                       onClick={() => handleOpenPopout(activePlayChannel)}
                       title="Ouvrir dans une fenêtre popout"
                       aria-label="Ouvrir dans une fenêtre popout"
-                      className="flex h-7 items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] px-2 text-[10px] font-semibold text-zinc-300 transition hover:border-amber-400/40 hover:bg-white/[0.08] hover:text-white"
+                      className="flex h-7 items-center gap-1 rounded-lg border border-line bg-white/[0.04] px-2 text-xs font-semibold text-text transition hover:border-al-gold/40 hover:bg-white/[0.08] hover:text-text"
                     >
-                      <ExternalLink className="h-3 w-3 text-amber-300" />
+                      <ExternalLink className="h-3 w-3 text-al-gold" />
                       <span className="hidden sm:inline">Fenêtre</span>
                     </button>
                     <button
@@ -511,43 +447,43 @@ function RadarWorkspace() {
                       onClick={() => setActivePlayChannel(null)}
                       title="Fermer le lecteur direct"
                       aria-label="Fermer le lecteur direct"
-                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-zinc-400 transition hover:border-red-400/40 hover:text-white"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-line bg-white/[0.04] text-text-muted transition hover:border-al-red/40 hover:text-text"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>
-                <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-black shadow-2xl">
+                <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-line bg-black shadow-2xl">
                   <Player channelId={activePlayChannel.id} channelName={activePlayChannel.name} />
                 </div>
               </div>
             )}
 
             {/* Navigation Tabs : Dépêches vs Chaînes en direct */}
-            <div className="flex items-center justify-between border-b border-white/[0.07] bg-black/40 px-3 py-2 sm:px-4">
+            <div className="flex items-center justify-between border-b border-line bg-black/40 px-3 py-2 sm:px-4">
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => setRightPanelTab('news')}
-                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold ${
                     rightPanelTab === 'news'
-                      ? 'border border-amber-400/40 bg-gradient-to-r from-emerald-500/15 via-amber-400/20 to-rose-500/15 text-white font-bold shadow-sm backdrop-blur-sm'
-                      : 'border border-transparent bg-white/[0.02] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.05] hover:border-white/10 font-medium'
+                      ? 'border border-al-gold bg-al-gold/10 text-text font-bold'
+                      : 'border border-transparent bg-white/[0.02] text-text-muted hover:text-text hover:bg-white/[0.05] hover:border-line font-medium'
                   }`}
                 >
-                  <Newspaper className="h-3.5 w-3.5 text-amber-300" />
+                  <Newspaper className="h-3.5 w-3.5 text-al-gold" />
                   <span>Dépêches ({tabCounts.all})</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setRightPanelTab('channels')}
-                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold ${
                     rightPanelTab === 'channels'
-                      ? 'border border-amber-400/40 bg-gradient-to-r from-emerald-500/15 via-amber-400/20 to-rose-500/15 text-white font-bold shadow-sm backdrop-blur-sm'
-                      : 'border border-transparent bg-white/[0.02] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.05] hover:border-white/10 font-medium'
+                      ? 'border border-al-gold bg-al-gold/10 text-text font-bold'
+                      : 'border border-transparent bg-white/[0.02] text-text-muted hover:text-text hover:bg-white/[0.05] hover:border-line font-medium'
                   }`}
                 >
-                  <Tv className="h-3.5 w-3.5 text-emerald-400" />
+                  <Tv className="h-3.5 w-3.5 text-al-green" />
                   <span>
                     Chaînes TV (
                     {selectedCountry
@@ -559,13 +495,13 @@ function RadarWorkspace() {
               </div>
 
               {activeCountry && (
-                <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
-                  <span className="font-semibold text-emerald-300">{activeCountry.name}</span>
+                <div className="flex items-center gap-1.5 text-xs text-text-muted">
+                  <span className="font-semibold text-al-green">{activeCountry.name}</span>
                   <button
                     type="button"
                     onClick={() => setSelectedCountry(null)}
                     aria-label={`Retirer le filtre ${activeCountry.name}`}
-                    className="flex h-5 w-5 items-center justify-center rounded-md text-zinc-400 hover:bg-white/10 hover:text-white"
+                    className="flex h-5 w-5 items-center justify-center rounded-md text-text-muted hover:bg-white/10 hover:text-text"
                   >
                     ×
                   </button>
@@ -589,23 +525,23 @@ function RadarWorkspace() {
               />
             ) : (
               <>
-                <div className="flex flex-col gap-2.5 border-b border-white/[0.07] px-4 py-3 sm:px-5">
+                <div className="flex flex-col gap-2.5 border-b border-line px-4 py-3 sm:px-5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="flex items-center gap-2 text-sm font-bold text-white">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-300/10 text-amber-200">
+                      <div className="flex items-center gap-2 text-sm font-bold text-text">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-al-gold/10 text-text">
                           <Newspaper aria-hidden="true" className="h-3.5 w-3.5" />
                         </span>
                         Fil des dépêches
                       </div>
-                      <p className="mt-0.5 text-xs text-zinc-500">
+                      <p className="mt-0.5 text-xs text-text-muted">
                         {activeCountry ? `Dépêches liées à : ${activeCountry.name}` : 'Rédactions africaines et internationales'} · {visibleArticles.length} résultats datés · 24 h
                       </p>
                     </div>
                     <div className="flex items-center gap-1.5">
                       {rss && (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-bold text-emerald-300">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                        <span className="hidden items-center gap-1 rounded-full border border-al-green/20 bg-al-green/10 px-2 py-0.5 text-xs font-bold text-al-green sm:inline-flex">
+                          <span className="h-1.5 w-1.5 rounded-full bg-al-green" />
                           {rss.availability?.filter(source => source.status === 'available' || source.status === 'empty').length ?? rss.sources.length} sources RSS
                         </span>
                       )}
@@ -613,14 +549,14 @@ function RadarWorkspace() {
                   </div>
 
                   {/* Scope filter tabs: Toutes / Afrique & National / International */}
-                  <div className="flex items-center gap-1 rounded-xl border border-white/[0.08] bg-black/50 p-1">
+                  <div className="flex items-center gap-1 rounded-xl border border-line bg-surface-1/80 p-1">
                     <button
                       type="button"
                       onClick={() => setScopeTab('all')}
-                      className={`flex-1 rounded-lg px-2 py-1 text-xs font-semibold transition ${
+                      className={`flex-auto rounded-lg px-1.5 py-1 text-xs font-semibold leading-tight transition sm:px-2 ${
                         scopeTab === 'all'
-                          ? 'border border-amber-400/40 bg-amber-400/15 text-amber-200 shadow-sm'
-                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
+                          ? 'border border-al-gold/40 bg-al-gold/15 text-text shadow-sm'
+                          : 'text-text-muted hover:text-text hover:bg-white/[0.04]'
                       }`}
                     >
                       Toutes ({tabCounts.all})
@@ -628,10 +564,10 @@ function RadarWorkspace() {
                     <button
                       type="button"
                       onClick={() => setScopeTab('africa')}
-                      className={`flex-1 rounded-lg px-2 py-1 text-xs font-semibold transition ${
+                      className={`flex-auto rounded-lg px-1.5 py-1 text-xs font-semibold leading-tight transition sm:px-2 ${
                         scopeTab === 'africa'
-                          ? 'border border-emerald-400/40 bg-emerald-400/15 text-emerald-200 shadow-sm'
-                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
+                          ? 'border border-al-green/40 bg-al-green/15 text-text shadow-sm'
+                          : 'text-text-muted hover:text-text hover:bg-white/[0.04]'
                       }`}
                     >
                       Afrique & National ({tabCounts.africa})
@@ -639,10 +575,10 @@ function RadarWorkspace() {
                     <button
                       type="button"
                       onClick={() => setScopeTab('international')}
-                      className={`flex-1 rounded-lg px-2 py-1 text-xs font-semibold transition ${
+                      className={`flex-auto rounded-lg px-1.5 py-1 text-xs font-semibold leading-tight transition sm:px-2 ${
                         scopeTab === 'international'
                           ? 'border border-sky-400/40 bg-sky-400/15 text-sky-200 shadow-sm'
-                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
+                          : 'text-text-muted hover:text-text hover:bg-white/[0.04]'
                       }`}
                     >
                       International ({tabCounts.intl})
@@ -651,35 +587,35 @@ function RadarWorkspace() {
                 </div>
 
                 {activeCountry && (
-                  <div className="flex items-center justify-between border-b border-emerald-200/10 bg-emerald-300/[0.05] px-4 py-2 text-xs">
+                  <div className="flex items-center justify-between border-b border-al-green/10 bg-al-green/[0.05] px-4 py-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <span className="text-emerald-100">Filtre pays : <strong>{activeCountry.name}</strong></span>
+                      <span className="text-text">Filtre pays : <strong>{activeCountry.name}</strong></span>
                       {channelsSummary?.countries[activeCountry.code]?.channelCount ? (
                         <button
                           type="button"
                           onClick={() => setRightPanelTab('channels')}
-                          className="inline-flex items-center gap-1 rounded-md border border-amber-400/30 bg-amber-400/10 px-1.5 py-0.5 text-[9px] font-bold text-amber-300 transition hover:bg-amber-400/20"
+                          className="inline-flex items-center gap-1 rounded-md border border-al-gold/30 bg-al-gold/10 px-1.5 py-0.5 text-xs font-bold text-al-gold transition hover:bg-al-gold/20"
                         >
                           <Tv className="h-2.5 w-2.5" />
                           <span>{channelsSummary.countries[activeCountry.code].channelCount} chaînes TV</span>
                         </button>
                       ) : null}
                     </div>
-                    <button type="button" onClick={() => setSelectedCountry(null)} className="text-zinc-400 hover:text-white">Tout afficher</button>
+                    <button type="button" onClick={() => setSelectedCountry(null)} className="text-text-muted hover:text-text">Tout afficher</button>
                   </div>
                 )}
 
                 {newsError && rss && (
-                  <div role="status" className="border-b border-amber-200/10 bg-amber-200/[0.04] px-4 py-2 text-[11px] text-amber-100/80 sm:px-5">
+                  <div role="status" className="border-b border-al-gold/10 bg-al-gold/[0.04] px-4 py-2 text-xs text-text/80 sm:px-5">
                     {newsError} Les dernières dépêches chargées restent consultables.
                   </div>
                 )}
 
                 <div aria-live="polite" className="flex-1 divide-y divide-white/[0.055] overflow-y-auto xl:max-h-[515px]">
                   {newsError && !rss ? (
-                    <div className="m-4 rounded-xl border border-amber-300/15 bg-amber-300/[0.05] p-4 text-sm text-amber-100/80">
+                    <div className="m-4 rounded-xl border border-al-gold/15 bg-al-gold/[0.05] p-4 text-sm text-text/80">
                       <p>{newsError}</p>
-                      <button type="button" onClick={() => setRefreshToken((value) => value + 1)} className="mt-3 font-bold text-amber-200 underline underline-offset-4">Réessayer</button>
+                      <button type="button" onClick={() => setRefreshToken((value) => value + 1)} className="mt-3 font-bold text-text underline underline-offset-4">Réessayer</button>
                     </div>
                   ) : !rss ? (
                     <div className="space-y-3 p-4" aria-label="Chargement des dépêches">
@@ -687,13 +623,13 @@ function RadarWorkspace() {
                     </div>
                   ) : visibleArticles.length === 0 ? (
                     <div className="p-8 text-center">
-                      <Newspaper aria-hidden="true" className="mx-auto h-7 w-7 text-zinc-600" />
-                      <p className="mt-3 text-sm font-bold text-zinc-300">
+                      <Newspaper aria-hidden="true" className="mx-auto h-7 w-7 text-text-faint" />
+                      <p className="mt-3 text-sm font-bold text-text">
                         {activeCountry
                           ? `Aucune dépêche pour : ${activeCountry.name}`
                           : 'Aucune dépêche dans ce filtre'}
                       </p>
-                      <p className="mt-1 text-xs text-zinc-500">
+                      <p className="mt-1 text-xs text-text-muted">
                         {activeCountry
                           ? scopeTab !== 'all' && tabCounts.all > 0
                             ? `Ce pays a ${tabCounts.all} dépêche(s) dans d'autres rubriques.`
@@ -705,7 +641,7 @@ function RadarWorkspace() {
                           <button
                             type="button"
                             onClick={() => setScopeTab('all')}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/40 bg-emerald-400/10 px-3 py-1.5 text-xs font-bold text-emerald-300 transition hover:bg-emerald-400/20"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-al-green/40 bg-al-green/10 px-3 py-1.5 text-xs font-bold text-al-green transition hover:bg-al-green/20"
                           >
                             Toutes les rubriques ({tabCounts.all})
                           </button>
@@ -714,7 +650,7 @@ function RadarWorkspace() {
                           <button
                             type="button"
                             onClick={() => setSelectedCountry(null)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-300 transition hover:bg-amber-400/20"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-al-gold/40 bg-al-gold/10 px-3 py-1.5 text-xs font-bold text-al-gold transition hover:bg-al-gold/20"
                           >
                             Effacer le filtre pays
                           </button>
@@ -735,37 +671,37 @@ function RadarWorkspace() {
                   )}
                 </div>
 
-                {visibleUnknownArticles.length > 0 && <section aria-label="Dépêches sans date" className="border-t border-amber-300/20">
-                  <h2 className="p-3 text-xs text-amber-200">Date inconnue · {visibleUnknownArticles.length} titres exclus des compteurs 24 h</h2>
+                {visibleUnknownArticles.length > 0 && <section aria-label="Dépêches sans date" className="border-t border-al-gold/20">
+                  <h2 className="p-3 text-xs text-text">Date inconnue · {visibleUnknownArticles.length} titres exclus des compteurs 24 h</h2>
                   {visibleUnknownArticles.map(article => <ArticleRow key={canonicalArticleUrl(article.url)} article={article} country={AFRICAN_COUNTRIES.find(country => country.code === article.countryCode)} onSelectCountry={setSelectedCountry} />)}
                 </section>}
-                <div className="border-t border-white/[0.07] px-4 py-3 text-[10px] leading-4 text-zinc-500 sm:px-5">
+                <div className="border-t border-line px-4 py-3 text-xs leading-4 text-text-muted sm:px-5">
                   Les liens ouvrent les publications d’origine. Africa Live affiche les titres et métadonnées de veille, sans reprendre le contenu des articles.
                 </div>
               </>
             )}
           </article>
-          <article aria-label="Carte du Radar" className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 shadow-2xl backdrop-blur-xl xl:col-span-7">
+          <article aria-label="Carte du Radar" className="relative overflow-hidden rounded-2xl border border-line bg-surface-1/80 shadow-2xl xl:col-span-7">
             <div className="h-[2px] w-full bg-tricolor-bar absolute top-0 left-0 right-0 opacity-80" />
-            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-white/[0.07] px-4 py-4 sm:px-5">
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
               <div>
-                <div className="flex items-center gap-2 text-sm font-bold text-white">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-emerald-400/30 bg-emerald-400/10 text-emerald-300">
+                <div className="flex items-center gap-2 text-sm font-bold text-text">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-al-green/30 bg-al-green/10 text-al-green">
                     <Radar aria-hidden="true" className="h-4 w-4" />
                   </span>
                   Carte des médias et du catalogue
                 </div>
-                <p className="mt-1.5 text-xs text-zinc-400">
+                <p className="mt-1.5 text-xs text-text-muted">
                   Médias et chaînes de télévision africaines géolocalisées par pays.
                 </p>
               </div>
-              <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+              <span className="rounded-full border border-al-green/30 bg-al-green/10 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-al-green">
                 2D / Globe 3D · MapLibre GL
               </span>
             </div>
 
             <div className="p-2 sm:p-3">
-              {!desktopMap && <button type="button" aria-expanded={mapRequested} aria-controls="radar-map" onClick={() => setMapRequested(value => !value)} className="mb-2 rounded-xl border border-emerald-400/30 bg-emerald-400/10 hover:bg-emerald-400/20 px-3 py-1.5 text-xs font-semibold text-emerald-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400">{mapRequested ? 'Masquer la carte' : 'Afficher la carte'}</button>}
+              {!desktopMap && <button type="button" aria-expanded={mapRequested} aria-controls="radar-map" onClick={() => setMapRequested(value => !value)} className="mb-2 rounded-xl border border-al-green/30 bg-al-green/10 hover:bg-al-green/20 px-3 py-1.5 text-xs font-semibold text-text transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold">{mapRequested ? 'Masquer la carte' : 'Afficher la carte'}</button>}
               <div id="radar-map">{showMap ? (
               <TacticalVectorMap
                 countries={AFRICAN_COUNTRIES}
@@ -775,11 +711,11 @@ function RadarWorkspace() {
                 onSelectCountry={(code) => setSelectedCountry(code)}
                 onSelectCountryForChannels={handleSelectCountryForChannels}
               />
-              ) : <p className="p-3 text-xs text-zinc-400">Carte à la demande. Le choix du pays et les dépêches fonctionnent sans elle.</p>}</div>
+              ) : <p className="p-3 text-xs text-text-muted">Carte à la demande. Le choix du pays et les dépêches fonctionnent sans elle.</p>}</div>
             </div>
 
-            <div className="border-t border-white/[0.07] bg-black/40 px-4 py-3 text-[11px] leading-5 text-zinc-400 sm:px-5">
-              <Info aria-hidden="true" className="mr-1.5 inline h-3.5 w-3.5 align-[-2px] text-amber-300/80" />
+            <div className="border-t border-line bg-black/40 px-4 py-3 text-xs leading-5 text-text-muted sm:px-5">
+              <Info aria-hidden="true" className="mr-1.5 inline h-3.5 w-3.5 align-[-2px] text-al-gold/80" />
               Fonds de carte Satellite haute résolution (Esri), Topographique (OpenFreeMap) et OpenStreetMap sous licence libre. Les marqueurs situent les médias indexés et les télévisions référencées.
             </div>
           </article>
@@ -787,25 +723,25 @@ function RadarWorkspace() {
 
         </section>
 
-        <details className="mt-4 overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 shadow-xl backdrop-blur-xl">
-          <summary className="cursor-pointer p-3 sm:p-4 text-xs font-bold text-zinc-200 hover:text-white transition">Marchés et événements · bandeau daté</summary>
+        <details className="mt-4 overflow-hidden rounded-2xl border border-line bg-surface-1/80 shadow-xl">
+          <summary className="cursor-pointer p-3 sm:p-4 text-xs font-bold text-text hover:text-text transition">Marchés et événements · bandeau daté</summary>
           <LiveMarketTicker onSelectCountry={setSelectedCountry} onSourcesChange={setTickerSources} refreshToken={refreshToken} />
         </details>
         <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5">
-          <article className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 shadow-2xl backdrop-blur-xl lg:col-span-7">
+          <article className="relative overflow-hidden rounded-2xl border border-line bg-surface-1/80 shadow-2xl lg:col-span-7">
             <div className="h-[2px] w-full bg-tricolor-bar absolute top-0 left-0 right-0 opacity-80" />
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] px-4 py-4 sm:px-5">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
               <div className="flex items-center gap-2.5">
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-sky-400/30 bg-sky-400/10 text-sky-300">
                   <CloudSun aria-hidden="true" className="h-4 w-4" />
                 </span>
                 <div>
-                  <div className="flex items-center gap-2 text-sm font-bold text-white">
+                  <div className="flex items-center gap-2 text-sm font-bold text-text">
                     Météo locale
-                    <span className="text-zinc-600 font-normal">·</span>
+                    <span className="text-text-faint font-normal">·</span>
                     <span className="text-sky-200">{weather?.current.locationName ?? (AFRICAN_COUNTRIES.find((c) => c.code === activeWeatherCode)?.name ?? 'Dakar')}</span>
                   </div>
-                  <p className="mt-0.5 text-xs text-zinc-400">
+                  <p className="mt-0.5 text-xs text-text-muted">
                     {weather ? `Observation · ${weather.current.source} · ${weather.current.transport === 'browser' ? 'navigateur' : 'serveur'}` : 'Observation au lieu sélectionné'}
                   </p>
                 </div>
@@ -820,12 +756,12 @@ function RadarWorkspace() {
                     const code = e.target.value;
                     setSelectedCountry(code);
                   }}
-                  className="rounded-xl border border-white/[0.1] bg-black/60 px-2.5 py-1.5 text-xs font-medium text-zinc-200 hover:border-sky-400/40 focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400/50"
+                  className="rounded-xl border border-line bg-black/60 px-2.5 py-1.5 text-xs font-medium text-text hover:border-sky-400/40 focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400/50"
                 >
                   <optgroup label={`Pays et territoires africains (${AFRICAN_COUNTRIES.length})`}>
                     {[...AFRICAN_COUNTRIES].sort((a, b) => a.name.localeCompare(b.name, 'fr')).map((c) => {
                       const city = QUICK_WEATHER_LOCATIONS.find(loc => loc.code === c.code);
-                      return <option key={c.code} value={c.code} className="bg-zinc-900 text-zinc-100">
+                      return <option key={c.code} value={c.code} className="bg-surface-2 text-text">
                         {c.name} ({c.code}){city ? ` · ${city.city}` : ' · point de référence'}
                       </option>;
                     })}
@@ -833,14 +769,14 @@ function RadarWorkspace() {
                 </select>
 
                 {weather?.stale ? (
-                  <span className="rounded-full border border-amber-300/20 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-200">
+                  <span className="rounded-full border border-al-gold/20 bg-al-gold/10 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-text">
                     Relevé conservé · périmé
                   </span>
                 ) : weather ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-al-green/20 bg-al-green/10 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-al-green">
                     <span className="relative flex h-1.5 w-1.5">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-al-green opacity-75" />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-al-green" />
                     </span>
                     {weather.availability[0].status === 'partial' ? 'Données partielles' : 'Relevé récent'}
                   </span>
@@ -849,7 +785,7 @@ function RadarWorkspace() {
             </div>
 
             {/* Quick city selectors */}
-            <div aria-label="Villes rapides" className="flex gap-1.5 overflow-x-auto border-b border-white/[0.06] bg-black/40 px-4 py-2.5 text-xs no-scrollbar sm:px-5">
+            <div aria-label="Villes rapides" className="flex gap-1.5 overflow-x-auto border-b border-line bg-black/40 px-4 py-2.5 text-xs no-scrollbar sm:px-5">
               {(weather?.quickLocations && weather.quickLocations.length > 0
                 ? weather.quickLocations
                 : QUICK_WEATHER_LOCATIONS
@@ -862,14 +798,14 @@ function RadarWorkspace() {
                     onClick={() => {
                       setSelectedCountry(loc.code);
                     }}
-                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl px-2.5 py-1 text-[11px] font-semibold transition ${
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl px-2.5 py-1 text-xs font-semibold transition ${
                       isActive
                         ? 'border border-sky-300/40 bg-sky-400/20 text-sky-100 shadow-sm'
-                        : 'border border-transparent bg-white/[0.03] text-zinc-400 hover:border-white/10 hover:bg-white/[0.06] hover:text-zinc-200'
+                        : 'border border-transparent bg-white/[0.03] text-text-muted hover:border-line hover:bg-white/[0.06] hover:text-text'
                     }`}
                   >
                     <span>{loc.city}</span>
-                    <span className="font-mono text-[9px] text-zinc-500">{loc.code}</span>
+                    <span className="font-mono text-xs text-text-muted">{loc.code}</span>
                   </button>
                 );
               })}
@@ -877,15 +813,15 @@ function RadarWorkspace() {
 
             {/* Weather body */}
             <div className="p-4 sm:p-5">
-              {weatherError && weather && <p role="status" className="mb-3 text-xs text-amber-200">{weatherError} · Relevé conservé jusqu’à expiration.</p>}
-              {weather?.current.timeAnomaly && <p className="mb-3 text-xs text-amber-200">Horodatage amont légèrement futur.</p>}
+              {weatherError && weather && <p role="status" className="mb-3 text-xs text-text">{weatherError} · Relevé conservé jusqu’à expiration.</p>}
+              {weather?.current.timeAnomaly && <p className="mb-3 text-xs text-text">Horodatage amont légèrement futur.</p>}
               {weatherError && !weather ? (
-                <div className="rounded-xl border border-amber-300/15 bg-amber-300/[0.05] p-4 text-xs text-amber-100/90">
+                <div className="rounded-xl border border-al-gold/15 bg-al-gold/[0.05] p-4 text-xs text-text/90">
                   <p>{weatherError}</p>
                   <button
                     type="button"
                     onClick={() => setRefreshToken((v) => v + 1)}
-                    className="mt-2 font-bold text-amber-200 underline underline-offset-4"
+                    className="mt-2 font-bold text-text underline underline-offset-4"
                   >
                     {retryBlocked ? 'Réessayer après le délai' : 'Réessayer'}
                   </button>
@@ -907,10 +843,10 @@ function RadarWorkspace() {
                       </div>
                       <div>
                         <div className="flex items-baseline gap-2">
-                          <span className="text-3xl font-black tracking-tight text-white tabular-nums sm:text-4xl">
+                          <span className="font-display text-3xl font-bold tracking-tight text-text tabular-nums sm:text-4xl">
                             {weather.current.temperatureC}°C
                           </span>
-                          <span className="text-xs font-semibold text-zinc-400">
+                          <span className="text-xs font-semibold text-text-muted">
                             Ressenti {weather.current.apparentTemperatureC}°C
                           </span>
                         </div>
@@ -921,13 +857,13 @@ function RadarWorkspace() {
                     </div>
 
                     <div className="text-left sm:text-right">
-                      <div className="text-sm font-bold text-zinc-100">
+                      <div className="text-sm font-bold text-text">
                         {weather.current.locationName}
                       </div>
-                      <div className="text-xs text-zinc-400">
+                      <div className="text-xs text-text-muted">
                         {weather.current.countryName} · {weather.current.region}
                       </div>
-                      <div className="mt-1 font-mono text-[10px] text-zinc-500">
+                      <div className="mt-1 font-mono text-xs text-text-muted">
                         {weather.current.timezone ?? 'Fuseau inconnu'}
                       </div>
                     </div>
@@ -935,54 +871,54 @@ function RadarWorkspace() {
 
                   {/* Metrics grid */}
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
-                    <div className="rounded-xl border border-white/[0.08] bg-black/30 backdrop-blur-sm p-3">
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                    <div className="rounded-xl border border-line bg-surface-1/80 p-3">
+                      <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-text-muted">
                         <Wind className="h-3 w-3 text-sky-300" />
                         Vent
                       </div>
-                      <div className="mt-1 text-sm font-black text-white tabular-nums">
-                        {weather.current.windSpeedKmh} <span className="text-[10px] font-normal text-zinc-400">km/h</span>
+                      <div className="mt-1 text-sm font-black text-text tabular-nums">
+                        {weather.current.windSpeedKmh} <span className="text-xs font-normal text-text-muted">km/h</span>
                       </div>
-                      <div className="mt-0.5 text-[10px] text-zinc-400">
+                      <div className="mt-0.5 text-xs text-text-muted">
                         {weather.current.windDirectionCompass} ({weather.current.windDirectionDeg}°)
                       </div>
                     </div>
 
-                    <div className="rounded-xl border border-white/[0.08] bg-black/30 backdrop-blur-sm p-3">
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                        <Droplets className="h-3 w-3 text-emerald-300" />
+                    <div className="rounded-xl border border-line bg-surface-1/80 p-3">
+                      <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-text-muted">
+                        <Droplets className="h-3 w-3 text-al-green" />
                         Humidité
                       </div>
-                      <div className="mt-1 text-sm font-black text-white tabular-nums">
-                        {weather.current.relativeHumidityPercent} <span className="text-[10px] font-normal text-zinc-400">%</span>
+                      <div className="mt-1 text-sm font-black text-text tabular-nums">
+                        {weather.current.relativeHumidityPercent} <span className="text-xs font-normal text-text-muted">%</span>
                       </div>
-                      <div className="mt-0.5 text-[10px] text-zinc-400">
+                      <div className="mt-0.5 text-xs text-text-muted">
                         Hygrométrie
                       </div>
                     </div>
 
-                    <div className="rounded-xl border border-white/[0.08] bg-black/30 backdrop-blur-sm p-3">
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                    <div className="rounded-xl border border-line bg-surface-1/80 p-3">
+                      <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-text-muted">
                         <CloudRain className="h-3 w-3 text-indigo-300" />
                         Pluie
                       </div>
-                      <div className="mt-1 text-sm font-black text-white tabular-nums">
-                        {weather.current.precipitationMm} <span className="text-[10px] font-normal text-zinc-400">mm</span>
+                      <div className="mt-1 text-sm font-black text-text tabular-nums">
+                        {weather.current.precipitationMm} <span className="text-xs font-normal text-text-muted">mm</span>
                       </div>
-                      <div className="mt-0.5 text-[10px] text-zinc-400">
+                      <div className="mt-0.5 text-xs text-text-muted">
                         Précipitations
                       </div>
                     </div>
 
-                    <div className="rounded-xl border border-white/[0.08] bg-black/30 backdrop-blur-sm p-3">
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                        <Compass className="h-3 w-3 text-amber-300" />
+                    <div className="rounded-xl border border-line bg-surface-1/80 p-3">
+                      <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-text-muted">
+                        <Compass className="h-3 w-3 text-al-gold" />
                         Relevé
                       </div>
-                      <div className="mt-1 font-mono text-xs font-bold text-white tabular-nums">
+                      <div className="mt-1 font-mono text-xs font-bold text-text tabular-nums">
                         {weather.current.observedAt ? new Intl.DateTimeFormat('fr-FR', { timeZone: weather.current.timezone ?? 'UTC', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(weather.current.observedAt)) : 'Date d’observation inconnue'}
                       </div>
-                      <div className="mt-0.5 text-[10px] text-zinc-400">
+                      <div className="mt-0.5 text-xs text-text-muted">
                         {weather.current.timezone ? 'Heure locale' : 'UTC · fuseau du lieu inconnu'}
                       </div>
                     </div>
@@ -991,7 +927,7 @@ function RadarWorkspace() {
               ) : null}
             </div>
 
-            <div className="border-t border-white/[0.07] bg-black/40 px-4 py-2.5 text-[10px] leading-4 text-zinc-400 sm:px-5 flex flex-wrap items-center justify-between gap-2">
+            <div className="border-t border-line bg-black/40 px-4 py-2.5 text-xs leading-4 text-text-muted sm:px-5 flex flex-wrap items-center justify-between gap-2">
               <span>
                 <a
                   href={weather?.current.source === 'wttr.in' ? 'https://wttr.in/' : 'https://open-meteo.com/'}
@@ -1003,80 +939,84 @@ function RadarWorkspace() {
                 </a>{' '}
                 · Relevé d’observation automatisé sans valeur d’alerte officielle de protection civile.
               </span>
-              <span className="text-zinc-500">Aucun relevé simulé</span>
+              <span className="text-text-muted">Aucun relevé simulé</span>
             </div>
           </article>
 
-          <article className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 p-4 sm:p-5 lg:col-span-5 shadow-2xl backdrop-blur-xl">
+          <article className="relative overflow-hidden rounded-2xl border border-line bg-surface-1/80 p-4 sm:p-5 lg:col-span-5 shadow-2xl">
             <div className="h-[2px] w-full bg-tricolor-bar absolute top-0 left-0 right-0 opacity-80" />
-            <div className="flex items-center gap-2 text-sm font-bold text-white">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-amber-400/30 bg-amber-400/10 text-amber-300"><Info aria-hidden="true" className="h-4 w-4" /></span>
+            <div className="flex items-center gap-2 text-sm font-bold text-text">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-al-gold/30 bg-al-gold/10 text-al-gold"><Info aria-hidden="true" className="h-4 w-4" /></span>
               Comment lire le radar
             </div>
-            <details className="mt-3 text-xs text-zinc-300"><summary className="cursor-pointer font-semibold text-zinc-300 hover:text-amber-300 transition">Définitions, fenêtre et limites</summary><div className="mt-2 space-y-3 text-xs leading-5 text-zinc-400">
+            <details className="mt-3 text-xs text-text"><summary className="cursor-pointer font-semibold text-text hover:text-al-gold transition">Définitions, fenêtre et limites</summary><div className="mt-2 space-y-3 text-xs leading-5 text-text-muted">
               <p>{asOf ? <>Fenêtre commune : {formatRadarDate(windowed.window.from)} — {formatRadarDate(windowed.window.asOf)}.</> : 'Fenêtre en cours de chargement.'} Dépêches d’agences de presse africaines vérifiées.</p>
-              <p><strong className="text-zinc-200">TV référencées.</strong> Candidates web/VLC selon les contrôles du résolveur ; la lecture est vérifiée à l’ouverture. VLC inclut les candidates web.</p>
-              <p><strong className="text-zinc-200">Veille, pas alerte officielle.</strong> Le nombre d’articles indexés ne mesure ni la gravité ni la véracité d’une situation.</p>
-              <p><strong className="text-zinc-200">Origine rédactionnelle.</strong> Les flux RSS identifient l’agence de presse émettrice et le pays d’origine de publication.</p>
-              <p><strong className="text-zinc-200">Retour au terrain.</strong> Le bouton « TV » donne accès au catalogue complet et à ses lecteurs habituels.</p>
+              <p><strong className="text-text">TV référencées.</strong> Candidates web/VLC selon les contrôles du résolveur ; la lecture est vérifiée à l’ouverture. VLC inclut les candidates web.</p>
+              <p><strong className="text-text">Veille, pas alerte officielle.</strong> Le nombre d’articles indexés ne mesure ni la gravité ni la véracité d’une situation.</p>
+              <p><strong className="text-text">Origine rédactionnelle.</strong> Les flux RSS identifient l’agence de presse émettrice et le pays d’origine de publication.</p>
+              <p><strong className="text-text">Retour au terrain.</strong> Le bouton « TV » donne accès au catalogue complet et à ses lecteurs habituels.</p>
             </div>
             </details>
             <Link
               href={activeCountry ? `/app?country=${activeCountry.code}` : '/app'}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl border border-amber-400/40 bg-gradient-to-r from-emerald-500/15 via-amber-400/20 to-rose-500/15 hover:from-emerald-500/25 hover:via-amber-400/30 hover:to-rose-500/25 px-4 py-2 text-xs font-bold text-amber-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 shadow-sm backdrop-blur-sm"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl border border-transparent bg-al-yellow hover:brightness-110 px-4 py-2 text-xs font-bold text-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold shadow-sm"
             >
               {selectedCountry ? 'Voir les chaînes du pays' : 'Voir toutes les chaînes'} <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" />
             </Link>
           </article>
         </section>
 
-        <footer className="mt-7 flex flex-col gap-2 border-t border-white/[0.07] pt-4 text-[10px] leading-5 text-zinc-600 sm:flex-row sm:items-center sm:justify-between">
+        <footer className="mt-7 flex flex-col gap-2 border-t border-line pt-4 text-xs leading-5 text-text-muted sm:flex-row sm:items-center sm:justify-between">
           <span>Flux RSS officiels rédactions africaines · actualisé régulièrement</span>
           <span>Le service ne confirme pas les faits rapportés par les sources.</span>
         </footer>
       </div>
 
     </main>
+    </PageTransition>
   );
 }
 
 function MetricCard({
   label,
+  shortLabel,
   value,
   subLabel,
   icon,
   accentColor = 'amber',
 }: {
   label: string;
+  shortLabel?: string;
   value: string;
   subLabel?: string;
   icon: ReactNode;
   accentColor?: 'emerald' | 'amber' | 'rose';
 }) {
   const iconBorderBg = {
-    emerald: 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300',
-    amber: 'border-amber-400/30 bg-amber-400/10 text-amber-300',
-    rose: 'border-rose-400/30 bg-rose-400/10 text-rose-300',
+    emerald: 'border-al-green/30 bg-al-green/10 text-al-green',
+    amber: 'border-al-gold/30 bg-al-gold/10 text-al-gold',
+    rose: 'border-al-red/30 bg-al-red/10 text-al-red-soft',
   }[accentColor];
 
   return (
-    <div className="relative overflow-hidden flex min-w-0 items-center gap-3 rounded-2xl border border-white/[0.08] bg-black/40 p-3 sm:p-4 shadow-xl backdrop-blur-xl">
+    <div className="relative overflow-hidden flex min-w-0 items-center gap-3 rounded-2xl border border-line bg-surface-1/80 p-2.5 sm:p-4 shadow-xl">
       <span className={`hidden sm:flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl border shadow-sm ${iconBorderBg}`}>
         {icon}
       </span>
       <div className="min-w-0">
         <div className="flex flex-wrap items-baseline gap-x-1.5">
-          <span className="text-lg sm:text-xl font-bold tracking-tight text-white tabular-nums">
+          <span className="font-display text-lg sm:text-xl font-bold leading-tight tracking-tight text-text tabular-nums">
             {value}
           </span>
           {subLabel && (
-            <span className="text-[10px] font-bold text-amber-300/90 truncate">
+            <span className="hidden truncate text-xs font-bold text-al-gold/90 sm:inline">
               {subLabel}
             </span>
           )}
         </div>
-        <div className="truncate text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.08em] text-zinc-400">
-          {label}
+        <div className="truncate text-xs font-semibold uppercase leading-snug tracking-wide text-text-muted">
+          <span className="sm:hidden">{shortLabel ?? label}</span>
+          <span className="hidden sm:inline">{label}</span>
         </div>
       </div>
     </div>
@@ -1111,8 +1051,8 @@ function CountryChannelsView({
   if (selectedCountry && activeCountry) {
     return (
       <div className="flex-1 divide-y divide-white/[0.055] overflow-y-auto">
-        <div className="flex items-center justify-between border-b border-amber-400/10 bg-amber-400/[0.04] px-4 py-2 text-xs">
-          <div className="flex items-center gap-2 text-amber-200">
+        <div className="flex items-center justify-between border-b border-al-gold/10 bg-al-gold/[0.04] px-4 py-2 text-xs">
+          <div className="flex items-center gap-2 text-text">
             <Tv className="h-3.5 w-3.5" />
             <span>
               Chaînes du catalogue : <strong>{activeCountry.name}</strong> ({countryChannels.length})
@@ -1121,19 +1061,19 @@ function CountryChannelsView({
           <button
             type="button"
             onClick={() => onSelectCountry(null)}
-            className="text-[11px] font-semibold text-zinc-400 hover:text-white"
+            className="text-xs font-semibold text-text-muted hover:text-text"
           >
             Tous les pays
           </button>
         </div>
 
         {error ? (
-          <div className="m-4 rounded-xl border border-amber-300/15 bg-amber-300/[0.05] p-4 text-xs text-amber-100">
+          <div className="m-4 rounded-xl border border-al-gold/15 bg-al-gold/[0.05] p-4 text-xs text-text">
             <p>{error}</p>
             <button
               type="button"
               onClick={onRetry}
-              className="mt-2 font-bold text-amber-200 underline underline-offset-4"
+              className="mt-2 font-bold text-text underline underline-offset-4"
             >
               Réessayer
             </button>
@@ -1146,17 +1086,17 @@ function CountryChannelsView({
           </div>
         ) : countryChannels.length === 0 ? (
           <div className="p-8 text-center">
-            <Tv aria-hidden="true" className="mx-auto h-8 w-8 text-zinc-600" />
-            <p className="mt-3 text-sm font-bold text-zinc-300">
+            <Tv aria-hidden="true" className="mx-auto h-8 w-8 text-text-faint" />
+            <p className="mt-3 text-sm font-bold text-text">
               Aucune chaîne directe répertoriée pour {activeCountry.name}
             </p>
-            <p className="mt-1 text-xs text-zinc-500">
+            <p className="mt-1 text-xs text-text-muted">
               Découvrez les flux disponibles dans les autres pays africains.
             </p>
             <button
               type="button"
               onClick={() => onSelectCountry(null)}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-bold text-zinc-200 transition hover:bg-white/[0.08]"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-line bg-white/[0.04] px-3.5 py-1.5 text-xs font-bold text-text transition hover:bg-white/[0.08]"
             >
               <span>Choisir un autre pays</span>
               <ArrowRight className="h-3 w-3" />
@@ -1171,11 +1111,11 @@ function CountryChannelsView({
               <div
                 key={channel.id}
                 className={`flex items-center justify-between gap-3 px-4 py-3 transition sm:px-5 ${
-                  isPlaying ? 'bg-amber-400/[0.08]' : 'hover:bg-white/[0.025]'
+                  isPlaying ? 'bg-al-gold/[0.08]' : 'hover:bg-white/[0.025]'
                 }`}
               >
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/[0.04]">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-line bg-white/[0.04]">
                     {channel.logoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -1188,31 +1128,31 @@ function CountryChannelsView({
                         }}
                       />
                     ) : (
-                      <Tv className="h-5 w-5 text-zinc-500" />
+                      <Tv className="h-5 w-5 text-text-muted" />
                     )}
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="truncate text-xs sm:text-sm font-bold text-white">
+                      <span className="truncate text-xs sm:text-sm font-bold text-text">
                         {channel.name}
                       </span>
                       {isPlaying && (
-                        <span className="flex items-center gap-1 rounded bg-red-500/20 px-1.5 py-0.5 text-[9px] font-black uppercase text-red-300">
-                          <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-ping" />
+                        <span className="flex items-center gap-1 rounded bg-al-green/15 px-1.5 py-0.5 text-xs font-bold uppercase text-al-green">
+                          <span className="h-1.5 w-1.5 rounded-full bg-al-green animate-ping" />
                           En cours
                         </span>
                       )}
                     </div>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[10px] text-zinc-400">
+                    <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-text-muted">
                       {channel.groupTitle && (
-                        <span className="text-zinc-400">{channel.groupTitle}</span>
+                        <span className="text-text-muted">{channel.groupTitle}</span>
                       )}
-                      <span className="text-zinc-600">·</span>
+                      <span className="text-text-faint">·</span>
                       <span
                         className={`rounded px-1.5 py-0.5 font-semibold ${
                           isBrowserDirect
-                            ? 'bg-emerald-400/10 text-emerald-300'
-                            : 'bg-amber-400/10 text-amber-300'
+                            ? 'bg-al-green/10 text-al-green'
+                            : 'bg-al-gold/10 text-al-gold'
                         }`}
                       >
                         {isBrowserDirect ? 'Direct Web' : 'VLC direct'}
@@ -1225,10 +1165,10 @@ function CountryChannelsView({
                   <button
                     type="button"
                     onClick={() => onPlayChannel(channel)}
-                    className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+                    className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold ${
                       isPlaying
-                        ? 'border border-red-500/40 bg-red-500/15 text-red-200'
-                        : 'border border-amber-400/40 bg-gradient-to-r from-emerald-500/15 via-amber-400/20 to-rose-500/15 hover:from-emerald-500/25 hover:via-amber-400/30 hover:to-rose-500/25 text-amber-200 shadow-sm backdrop-blur-sm'
+                        ? 'border border-al-red/40 bg-al-red/15 text-text'
+                        : 'border border-transparent bg-al-yellow hover:brightness-110 text-black shadow-sm'
                     }`}
                   >
                     <Play className="h-3 w-3 fill-current" />
@@ -1239,7 +1179,7 @@ function CountryChannelsView({
                     onClick={() => onOpenPopout(channel)}
                     title="Ouvrir dans une fenêtre popout"
                     aria-label={`Ouvrir ${channel.name} en fenêtre séparée`}
-                    className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-zinc-400 transition hover:border-amber-400/40 hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                    className="flex h-8 w-8 items-center justify-center rounded-xl border border-line bg-white/[0.04] text-text-muted transition hover:border-al-gold/40 hover:bg-white/[0.08] hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
                   </button>
@@ -1263,11 +1203,11 @@ function CountryChannelsView({
 
   return (
     <div className="flex-1 divide-y divide-white/[0.055] overflow-y-auto">
-      <div className="border-b border-white/[0.07] bg-black/20 px-4 py-3 sm:px-5">
-        <div className="text-xs font-bold text-white">
+      <div className="border-b border-line bg-black/20 px-4 py-3 sm:px-5">
+        <div className="text-xs font-bold text-text">
           Télévisions d’Afrique référencées
         </div>
-        <p className="mt-0.5 text-[11px] text-zinc-400">
+        <p className="mt-0.5 text-xs text-text-muted">
           Choisissez un pays pour ouvrir ses chaînes locales dans le lecteur intégré :
         </p>
       </div>
@@ -1283,23 +1223,23 @@ function CountryChannelsView({
               key={c.code}
               type="button"
               onClick={() => onSelectCountry(c.code)}
-              className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.025] p-3 text-left transition hover:border-amber-400/40 hover:bg-white/[0.06] group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+              className="flex items-center justify-between rounded-xl border border-line bg-white/[0.025] p-3 text-left transition hover:border-al-gold/40 hover:bg-white/[0.06] group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold"
             >
               <div className="min-w-0 pr-2">
-                <div className="font-bold text-xs text-white group-hover:text-amber-200 transition">
+                <div className="font-bold text-xs text-text group-hover:text-text transition">
                   {c.name}
                 </div>
-                <div className="mt-0.5 text-[10px] text-zinc-400">
+                <div className="mt-0.5 text-xs text-text-muted">
                   {c.region}
                 </div>
               </div>
               <div className="text-right shrink-0">
-                <div className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] font-black text-amber-300">
+                <div className="inline-flex items-center gap-1 rounded-full border border-al-gold/30 bg-al-gold/10 px-2 py-0.5 text-xs font-black text-al-gold">
                   <Tv className="h-2.5 w-2.5" />
                   <span>{totalCh}</span>
                 </div>
                 {webCh > 0 && (
-                  <div className="mt-0.5 text-[9px] font-semibold text-emerald-400">
+                  <div className="mt-0.5 text-xs font-semibold text-al-green">
                     {webCh} Web
                   </div>
                 )}
@@ -1329,26 +1269,26 @@ function ArticleRow({
 
   const sourceBadgeClass = () => {
     const name = (article.sourceName || article.domain).toLowerCase();
-    if (name.includes('aps')) return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300';
-    if (name.includes('aip')) return 'border-orange-400/30 bg-orange-400/10 text-orange-300';
-    if (name.includes('ecofin')) return 'border-amber-400/30 bg-amber-400/10 text-amber-300';
-    if (name.includes('financial')) return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300';
-    if (name.includes('rfi')) return 'border-rose-400/30 bg-rose-400/10 text-rose-300';
+    if (name.includes('aps')) return 'border-al-green/30 bg-al-green/10 text-al-green';
+    if (name.includes('aip')) return 'border-al-gold/30 bg-al-gold/10 text-al-gold';
+    if (name.includes('ecofin')) return 'border-al-gold/30 bg-al-gold/10 text-al-gold';
+    if (name.includes('financial')) return 'border-al-green/30 bg-al-green/10 text-al-green';
+    if (name.includes('rfi')) return 'border-al-red/30 bg-al-red/10 text-al-red-soft';
     if (name.includes('france 24')) return 'border-sky-400/30 bg-sky-400/10 text-sky-300';
     if (name.includes('jeune')) return 'border-indigo-400/30 bg-indigo-400/10 text-indigo-300';
-    if (name.includes('bbc')) return 'border-red-400/30 bg-red-400/10 text-red-300';
+    if (name.includes('bbc')) return 'border-al-red/30 bg-al-red/10 text-al-red-soft';
     if (name.includes('monde')) return 'border-violet-400/30 bg-violet-400/10 text-violet-300';
     if (name.includes('okapi')) return 'border-cyan-400/30 bg-cyan-400/10 text-cyan-300';
     if (name.includes('malijet')) return 'border-teal-400/30 bg-teal-400/10 text-teal-300';
-    if (name.includes('lefaso')) return 'border-yellow-400/30 bg-yellow-400/10 text-yellow-300';
-    if (name.includes('cameroun')) return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300';
-    if (name.includes('guinée') || name.includes('guinee')) return 'border-amber-400/30 bg-amber-400/10 text-amber-300';
-    if (name.includes('hespress')) return 'border-red-400/30 bg-red-400/10 text-red-300';
+    if (name.includes('lefaso')) return 'border-al-gold/30 bg-al-gold/10 text-al-gold';
+    if (name.includes('cameroun')) return 'border-al-green/30 bg-al-green/10 text-al-green';
+    if (name.includes('guinée') || name.includes('guinee')) return 'border-al-gold/30 bg-al-gold/10 text-al-gold';
+    if (name.includes('hespress')) return 'border-al-red/30 bg-al-red/10 text-al-red-soft';
     if (name.includes('tsa')) return 'border-teal-400/30 bg-teal-400/10 text-teal-300';
-    if (name.includes('gabon')) return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300';
-    if (name.includes('benin') || name.includes('bénin')) return 'border-yellow-400/30 bg-yellow-400/10 text-yellow-300';
+    if (name.includes('gabon')) return 'border-al-green/30 bg-al-green/10 text-al-green';
+    if (name.includes('benin') || name.includes('bénin')) return 'border-al-gold/30 bg-al-gold/10 text-al-gold';
     if (name.includes('africanews')) return 'border-blue-400/30 bg-blue-400/10 text-blue-300';
-    return 'border-zinc-700 bg-white/[0.04] text-zinc-300';
+    return 'border-line bg-white/[0.04] text-text';
   };
 
   const isNational = () => {
@@ -1372,26 +1312,26 @@ function ArticleRow({
 
   return (
     <div className="group px-4 py-3.5 transition hover:bg-white/[0.025] sm:px-5">
-      <div className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+      <div className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold uppercase tracking-wide text-text-muted">
         {isRss ? (
           <span className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 font-bold tracking-normal ${sourceBadgeClass()}`}>
             <Rss className="h-2.5 w-2.5" />
             {article.sourceName ?? article.domain}
           </span>
         ) : (
-          <span className="text-emerald-200/90">{article.domain}</span>
+          <span className="text-text/90">{article.domain}</span>
         )}
         {article.category && (
-          <span className="rounded-md border border-white/[0.06] bg-white/[0.03] px-1.5 py-0.5 text-[9px] font-normal tracking-normal text-zinc-400">
+          <span className="rounded-md border border-line bg-white/[0.03] px-1.5 py-0.5 text-xs font-normal tracking-normal text-text-muted">
             {article.category}
           </span>
         )}
-        <span className="text-zinc-700">·</span>
+        <span className="text-text-faint">·</span>
         {article.countryCode ? (
           <button
             type="button"
             onClick={() => onSelectCountry?.(article.countryCode!)}
-            className="rounded px-1 text-zinc-400 transition hover:bg-amber-400/10 hover:text-amber-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-400"
+            className="rounded px-1 text-text-muted transition hover:bg-al-gold/10 hover:text-al-gold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-al-gold"
             title={`Centrer la carte sur ${country?.name ?? article.countryCode}`}
           >
             {country?.name ?? 'Pays inconnu'}{article.countryBasis === 'inferred_topic' ? ' · sujet inféré' : ' · pays du média'}
@@ -1403,37 +1343,40 @@ function ArticleRow({
           <button
             type="button"
             onClick={() => onSelectCountryForChannels?.(article.countryCode!)}
-            className="inline-flex items-center gap-1 rounded-lg border border-amber-400/30 bg-amber-400/10 px-1.5 py-0.5 text-[9px] font-bold text-amber-300 transition hover:bg-amber-400/20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-400"
+            className="inline-flex items-center gap-1 rounded-lg border border-al-gold/30 bg-al-gold/10 px-1.5 py-0.5 text-xs font-bold text-al-gold transition hover:bg-al-gold/20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-al-gold"
             title={`Voir les ${channelCount} chaîne(s) TV référencées`}
           >
             <Tv className="h-2.5 w-2.5" />
             <span>{channelCount} chaînes</span>
           </button>
         )}
-        <span className="ml-auto font-mono font-normal tracking-normal text-zinc-500">Publication · {formatRadarDate(article.indexedAt)}</span>
+        <span className="ml-auto font-mono font-normal tracking-normal text-text-muted">Publication · {formatRadarDate(article.indexedAt)}</span>
       </div>
-      <a href={article.url} target="_blank" rel="noopener noreferrer" className="block text-[13px] font-semibold leading-5 text-zinc-200 transition group-hover:text-amber-200 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-400">
+      <a href={article.url} target="_blank" rel="noopener noreferrer" className="block text-[13px] font-semibold leading-5 text-text transition group-hover:text-text focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-al-gold">
         {article.title}
-        <ExternalLink aria-hidden="true" className="ml-1.5 inline h-3 w-3 text-zinc-500 group-hover:text-amber-300" />
+        <ExternalLink aria-hidden="true" className="ml-1.5 inline h-3 w-3 text-text-muted group-hover:text-al-gold" />
       </a>
       <div className="mt-2 flex items-center justify-between gap-2">
         {article.editorialScope === 'international' ? (
-          <span className="inline-flex items-center gap-1 text-[9px] font-medium text-sky-400/90">
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-sky-400/90">
             <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
             Rubrique internationale
           </span>
         ) : isNational() ? (
-          <span className="inline-flex items-center gap-1 text-[9px] font-medium text-emerald-400/90">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-al-green/90">
+            <span className="h-1.5 w-1.5 rounded-full bg-al-green" />
             Rédaction nationale officielle
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 text-[9px] font-medium text-amber-400/90">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-al-gold/90">
+            <span className="h-1.5 w-1.5 rounded-full bg-al-yellow" />
             Rédaction panafricaine & économie
           </span>
         )}
-        {country && <span className="inline-flex items-center gap-1 text-[9px] text-zinc-600"><MapPin aria-hidden="true" className="h-2.5 w-2.5" />{country.region}</span>}
+        <div className="flex items-center gap-2">
+          {country && <span className="inline-flex items-center gap-1 text-xs text-text-muted"><MapPin aria-hidden="true" className="h-2.5 w-2.5" />{country.region}</span>}
+          <ShareArticleLink title={article.title} sourceName={article.sourceName ?? undefined} url={article.url} />
+        </div>
       </div>
     </div>
   );

@@ -95,7 +95,7 @@ function harness(scenario: Scenario) {
     '@/lib/live-channels': { getAfricanChannelsSummary: collector, getChannelsForAfricanCountry: collector },
     'next/navigation': { redirect: (destination: string) => { throw new Error(`redirect:${destination}`); } },
     '@/app/app/live/LiveRadarDashboard': { __esModule: true, default: Dashboard },
-    '@/components/AppNavigation': { NavigationProvider: 'navigation-provider' },
+    '@/components/shell/AppShell': { __esModule: true, default: 'app-shell' },
     '@/lib/admin-access': { getAdministratorAccess: async () => ({ allowed: state.scenario.decision.reason === 'administrator_access' }) },
   };
   return { state, load: (file: string) => loadSource(file, mocks), Dashboard };

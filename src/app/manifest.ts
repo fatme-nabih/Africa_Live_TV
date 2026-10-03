@@ -1,10 +1,11 @@
 import type { MetadataRoute } from 'next';
 
+// Manifeste unique de l'application (Next.js le publie sur /manifest.webmanifest).
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Africa Live',
+    name: 'Africa Live — Le live qui vient à vous',
     short_name: 'Africa Live',
-    description: 'Radar panafricain et chaînes TV en direct.',
+    description: 'L’Afrique en direct : chaînes TV, dépêches, carte et météo.',
     lang: 'fr',
     start_url: '/app/live',
     display: 'standalone',
