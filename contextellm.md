@@ -2,6 +2,23 @@
 
 Dernière mise à jour : 3 octobre 2026, fuseau Africa/Dakar.
 
+## Expérience Premium — Lot P4 « Landing, tarifs, compte » fait et vérifié, non committé (3 octobre 2026)
+
+- **Fait et vérifié en local, non committé** (UX-401 → 407 + UX-212 + UX-214, captures connectées faites avec le propriétaire). Dépendance
+  ajoutée sur décision du propriétaire : `@clerk/localizations` 4.9.0 (compatible `@clerk/shared` 4.20.0). HEAD reste
+  `1ff0e53` (P3 `412574d` + documentation, non poussés). Détail : section « Lot P4 » de [production-progress.md](docs/production-progress.md) ;
+  captures `docs/screenshots/premium-p4-*`.
+- Landing : chiffres réels (`src/lib/public-stats*.ts`, cache 1 h : 11 771 chaînes, 371 africaines, 36 pays en local), hero
+  `public/landing/hero-radar-tv.webp` (41 Ko, données fictives, script `.local-logs/p4/hero-shot.ts`), 3 bénéfices, FAQ 5 questions.
+  Tarifs : `PlanCard` / `PaymentMethods` partagés, annuel mis en avant, « Activer pour … FCFA » (NabooPay inchangé). Clerk :
+  `src/lib/clerk-theme.ts` (jetons en variables CSS + traduction française manuelle). Erreurs : `OffAirScreen`, `error.tsx`,
+  `app/error.tsx`, `global-error.tsx`, `loading.tsx`. Compte : jauge `access-gauge` + « Mon activité ». Éco data dans la barre dès 360 px.
+- Vérification : tsc 0, lint 0, npm test 348 (334/14 ignorés/0), invariants 4/4, build réussi, E2E MVP 132 + 1 ignoré (2 échecs corrigés,
+  specs rejoués 67/67), E2E Clerk 8/8.
+- Environnement laissé : `npm run dev` en mode **Clerk** sur 3001 (onglet « dev server (Clerk) »), santé 200, `/app` anonyme → 307 ;
+  ligne technique MVP supprimée (`users` = 2). Scripts de travail : `.local-logs/p4/` (look, shots-p4, hero-shot, look-section).
+- Suite : bilan au propriétaire, **P5 après son feu vert**. Commit/push uniquement sur demande.
+
 ## Expérience Premium — Lot P3 « Radar vivant » fait et committé en local (3 octobre 2026)
 
 - **Fait, vérifié et committé en local (`412574d`, suivi d'un commit documentaire), non poussé, non publié** (UX-301 → 308). Arbre propre. Détail, mesures et limites : section « Lot P3 » de

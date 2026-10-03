@@ -1,6 +1,6 @@
 # Africa Live — Rapport d'expérience et plan « Premium »
 
-Date : 2 octobre 2026 (mis à jour le 3 octobre 2026 : P0–P2 publiés, P3 committé en local) · Africa/Dakar · HEAD `412574d` (P3, non poussé, non publié).
+Date : 2 octobre 2026 (mis à jour le 3 octobre 2026 : P0–P2 publiés, P3 committé en local, P4 fait non committé) · Africa/Dakar · HEAD `1ff0e53` (P3 `412574d` + documentation, non poussés).
 Périmètre : lecture du code (`src/app`, `src/components`, `globals.css`),
 captures réelles de `docs/screenshots` (staging connecté, TV 1366/390, L5),
 audits existants (`audit-produit-professionnel.md`, `audit-agencement-dashboard.md`).
@@ -314,8 +314,8 @@ documenté dans `production-progress.md`. Estimations en jours-dev effectifs.
 | **P1** | Coquille unique et navigation | 3 j | Fluidité inter-pages | ✅ Fait et vérifié (02/10), publié (03/10) |
 | **P2** | TV « streaming » | 5 j | Rétention n°1 | ✅ Fait et vérifié (02/10), publié (03/10) ; UX-209 partiel |
 | **P3** | Radar « vivant » | 5 j | Identité du produit | ✅ Fait, vérifié et committé en local (`412574d`, 03/10) ; non poussé, non publié |
-| **P4** | Landing, tarifs, compte | 3 j | Conversion | ⏭ **Prochain lot**, en attente du feu vert du propriétaire |
-| **P5** | Aimants avancés et finition | 5 j | Habitude, différenciation | À faire |
+| **P4** | Landing, tarifs, compte | 3 j | Conversion | ✅ Fait et vérifié (03/10), **non committé** (UX-214 compris) |
+| **P5** | Aimants avancés et finition | 5 j | Habitude, différenciation | ⏭ **Prochain lot**, en attente du feu vert du propriétaire |
 
 Ordre recommandé : P0 → P1 → P2 → P3 → P4 → P5. P2 avant P3 car le gain
 de rétention est le plus rapide et la base L5 (zapping) existe déjà.
@@ -326,12 +326,18 @@ de rétention est le plus rapide et la base L5 (zapping) existe déjà.
 Railway staging, à la demande du propriétaire ([dossier de publication](publication-premium-2026-10-03.md)).
 
 **Fait, vérifié, committé en local (`412574d`), non poussé, non publié** : P3 « Radar vivant » (UX-301 → 308, 8 tickets), le 3 octobre 2026. Au total 34 tickets
-faits et 1 partiel (UX-209) sur 50. Preuves, mesures de la carte, défauts corrigés et limites : section « Expérience Premium — Lot
+faits et 1 partiel (UX-209) sur 50 à la fin de P3. Preuves, mesures de la carte, défauts corrigés et limites : section « Expérience Premium — Lot
 P3 » de [production-progress.md](production-progress.md) ; captures `docs/screenshots/premium-p3-*`. Dernière vérification complète
 (fin de P3) : `tsc` 0 erreur, `lint` 0, `npm test` 341 tests (327 réussis, 14 ignorés, 0 échec), invariants 4/4, `build` réussi,
 E2E mode MVP 132 réussis + 1 ignoré sur 134 (un échec de test corrigé, voir production-progress.md), E2E mode Clerk 8/8.
 
-**Reste à faire** (15 tickets + 4 reliquats), dans cet ordre, un lot à la fois :
+**Fait et vérifié, non committé** : P4 « Landing, tarifs, compte » (UX-401 → 407 + UX-212), le 3 octobre 2026 : 42 tickets faits et
+1 partiel (UX-209) sur 50, plus le reliquat UX-214 fait. Preuves, mesures (chiffres réels : 11 771 chaînes, 371 africaines, 36 pays)
+et limites : section « Lot P4 » de [production-progress.md](production-progress.md) ; captures `docs/screenshots/premium-p4-*`. Dernière
+vérification complète (fin de P4) : `tsc` 0, `lint` 0, `npm test` 348 (334 réussis, 14 ignorés, 0 échec), invariants 4/4, build réussi,
+E2E MVP 135 tests (132 réussis + 1 ignoré, 2 échecs corrigés puis specs rejoués 67/67), E2E Clerk 8/8.
+
+**Reste à faire** (8 tickets P5 + 2 reliquats : UX-209 suite, UX-213), un lot à la fois. Le tableau P4 ci-dessous est conservé pour l'historique :
 
 | Lot | Tickets | Points d'attention |
 |---|---|---|
@@ -342,7 +348,7 @@ E2E mode MVP 132 réussis + 1 ignoré sur 134 (un échec de test corrigé, voir 
 UX-209 (tiroir unique des filtres, suite), UX-212 (Éco data visible sur mobile), UX-213 (contrôle du lecteur ancré à harmoniser),
 UX-214 (capturer `/account` et `/admin` avec une session Clerk — action du propriétaire).
 
-**Questions ouvertes pour le propriétaire** :
+**Questions ouvertes pour le propriétaire** (5. et 6. nouvelles en P4) :
 1. ~~Committer P0–P2 avant P3~~ — **résolue** : P0–P2 sont committés et publiés (`1ef60b5`, `01279c0`). P3 est committé en local (`412574d`) à la demande du propriétaire, non poussé ni déployé ;
    push et publication restent à sa demande explicite.
 2. Fournir une session Clerk (ou valider lui-même) pour capturer `/account` et `/admin` (UX-214).
@@ -350,12 +356,14 @@ UX-214 (capturer `/account` et `/admin` avec une session Clerk — action du pro
    seuls Edge et Chromium sont testés, les mesures de performance sont simulées (bridage CPU/réseau).
 4. **Nouvelle (P3)** : la tuile « Alerte météo/séisme » n'a pas de séisme (couche USGS retirée en RW-009, appel interdit par les E2E).
    Réintroduire une source sismique est un choix produit à valider ; sinon la tuile reste « Alerte météo ».
+5. **P4** : logos officiels Wave / Orange Money (kit marchand) à fournir ; pictogrammes locaux en attendant.
+6. **P4** : le nom de l'application dans le tableau de bord Clerk est « Afrika_Live » (masqué par la traduction, à corriger côté Clerk).
 
 ### 5.2 Préparation de P4 et P5 (repères de code, relevés le 3 octobre 2026)
 
 Repères pour ne pas tout redécouvrir. Ils n'engagent pas : relire le code avant d'agir et mettre ce tableau à jour si l'un d'eux change.
 
-**P4 — Landing, tarifs, compte**
+**P4 — Landing, tarifs, compte** (✅ fait le 3 octobre 2026 ; repères conservés pour l'historique — voir production-progress.md « Lot P4 »)
 
 | Ticket | Repères dans le code | Pièges et décisions par défaut |
 |---|---|---|
@@ -382,7 +390,9 @@ Vérification propre à P4 : la landing, `/pricing` et `/sign-in` sont testées 
 | UX-505 | `framer-motion` reste dans 5 composants (`CategoryTabs`, `FilterSidebar`, `InlinePlayerModal`, `PlayerOverlays`, `Player`) ; l'image `BrandBackdrop` est signalée comme LCP en développement. | Mesurer le poids JS de la TV et du Radar avant/après (le Radar charge déjà la modale à la demande) ; `loading="eager"` sur le logo ; CSS plutôt que bibliothèque là où il suffit. |
 | UX-506 → 508, UX-209 suite, UX-213 | Voir §6. | Mur TV derrière un drapeau (desktop) ; briefing = lot L6 ; audit a11y + Lighthouse, rapport daté dans `docs/`. |
 
-**Décisions du propriétaire en attente** (aucune ne bloque P4) : (1) pousser et publier P3 sur staging ? ; (2) source sismique pour la tuile d'alerte ? ; (3) dépendance `@clerk/localizations` ou traduction manuelle (défaut) ; (4) session Clerk pour UX-214 ; (5) validation sur Android réel.
+**Décisions du propriétaire en attente** (aucune ne bloque P5) : (1) committer P4, pousser et publier P3–P4 sur staging ? ; (2) source sismique pour la tuile d'alerte ? ; (3) ~~traduction Clerk~~ résolue : `@clerk/localizations` 4.9.0 ; (4) ~~session Clerk pour UX-214~~ résolue ; (5) validation sur Android réel ; (6) logos officiels Wave / Orange Money ; (7) nom « Afrika_Live » dans le tableau de bord Clerk.
+
+Repères ajoutés en P4 utiles à P5 : chiffres publics `getPublicStats()` (`src/lib/public-stats-server.ts`, cache 1 h) ; écran partagé `OffAirScreen` (404, erreurs, hors-ligne PWA d'UX-504) ; `PlanCard` / `PaymentMethods` / `Faq` ; `loading.tsx` racine (penser au piège d'hydratation en E2E) ; bascule Éco visible dès 360 px.
 
 ---
 
@@ -450,13 +460,13 @@ Taille : S ≤ ½ j, M ≈ 1 j, L ≈ 2–3 j.
 
 | ID | Prio | Taille | Ticket | Critères d'acceptation | État |
 |---|---|---|---|---|---|
-| UX-401 | P1 | M | Hero avec vraie capture (ou animation statique) du Radar + TV, chiffres réels issus de la base au build/ISR | Aucun chiffre en dur ; capture à jour | À faire |
-| UX-402 | P1 | S | Remplacer les « métriques » par 3 bénéfices clairs ; supprimer les doublons d'icônes | Relecture copy | À faire |
-| UX-403 | P1 | M | Tarifs : carte annuelle mise en avant (« 2 mois offerts »), CTA orienté bénéfice, logos moyens de paiement, FAQ courte | Parcours NabooPay inchangé ; E2E paiement simulé vert | À faire |
-| UX-404 | P2 | M | Compte : « Mon activité » (pays suivis, favoris, dernières chaînes), état d'accès en jauge (jours restants) | Données déjà disponibles ; pas de migration | À faire |
-| UX-405 | P2 | S | Clerk `appearance` aligné sur jetons (police, rayons, couleurs) | Captures sign-in/sign-up cohérentes | À faire |
-| UX-406 | P2 | S | États vides/erreurs avec le ton « hors antenne » sur toutes les pages | Composants `EmptyState`/`ErrorState` partout | À faire |
-| UX-407 | P3 | S | FAQ resserrée (6 → 5 questions courtes, ton factuel) | Aucune promesse non vérifiable | À faire |
+| UX-401 | P1 | M | Hero avec vraie capture (ou animation statique) du Radar + TV, chiffres réels issus de la base au build/ISR | Aucun chiffre en dur ; capture à jour | ✅ P4 — 03/10/2026 (cache 1 h ; hero WebP 41 Ko, données fictives) |
+| UX-402 | P1 | S | Remplacer les « métriques » par 3 bénéfices clairs ; supprimer les doublons d'icônes | Relecture copy | ✅ P4 — 03/10/2026 |
+| UX-403 | P1 | M | Tarifs : carte annuelle mise en avant (« 2 mois offerts »), CTA orienté bénéfice, logos moyens de paiement, FAQ courte | Parcours NabooPay inchangé ; E2E paiement simulé vert | ✅ P4 — 03/10/2026 (logos : pictogrammes locaux, voir §5.1 q. 5) |
+| UX-404 | P2 | M | Compte : « Mon activité » (pays suivis, favoris, dernières chaînes), état d'accès en jauge (jours restants) | Données déjà disponibles ; pas de migration | ✅ P4 — 03/10/2026 (capture connectée : UX-214) |
+| UX-405 | P2 | S | Clerk `appearance` aligné sur jetons (police, rayons, couleurs) | Captures sign-in/sign-up cohérentes | ✅ P4 — 03/10/2026 (traduction manuelle partielle) |
+| UX-406 | P2 | S | États vides/erreurs avec le ton « hors antenne » sur toutes les pages | Composants `EmptyState`/`ErrorState` partout | ✅ P4 — 03/10/2026 (`OffAirScreen`, `error.tsx`, `loading.tsx`) |
+| UX-407 | P3 | S | FAQ resserrée (6 → 5 questions courtes, ton factuel) | Aucune promesse non vérifiable | ✅ P4 — 03/10/2026 |
 
 ### Lot P5 — Aimants avancés et finition
 
@@ -478,9 +488,9 @@ Rien n'y est bloquant ; chaque reliquat est rattaché au lot où il coûte le mo
 | ID | Lot | Prio | Taille | Ticket | Critères d'acceptation | État |
 |---|---|---|---|---|---|---|
 | UX-209 (suite) | P5 | P3 | M | Filtres en tiroir unique desktop + mobile : retirer la barre latérale desktop au profit du tiroir mobile existant (pastilles, compteur et « Tout effacer » sont faits en P2) | Un seul panneau de filtres ; E2E `tv-workspace`, `catalogue`, `tv-streaming` équivalents et verts ; première chaîne toujours visible à 1366×768 | À faire |
-| UX-212 | P4 | P2 | S | « Éco data » découvrable sur mobile : la bascule est cachée dans la barre sous 640 px et n'existe que dans Compte | Accès en ≤ 2 gestes depuis la TV à 360 px ; état annoncé (`aria-pressed`) ; E2E | À faire |
+| UX-212 | P4 | P2 | S | « Éco data » découvrable sur mobile : la bascule est cachée dans la barre sous 640 px et n'existe que dans Compte | Accès en ≤ 2 gestes depuis la TV à 360 px ; état annoncé (`aria-pressed`) ; E2E | ✅ P4 — 03/10/2026 (1 geste dès 360 px ; Compte sous 360 px) |
 | UX-213 | P5 | P2 | S | Contrôle du lecteur ancré (« Activer le lecteur ancré » + case « VLC et mes autres lecteurs sont arrêtés ») : habiller avec `Button`/`Chip` du design system, libellés humains, sans changer le comportement L5 | Aucune régression `anchored-player.spec` ; captures 360/1366 | À faire |
-| UX-214 | P4 | P2 | S | Capturer `/account` et `/admin` avec une session Clerk (non faisable en anonyme) | Captures `premium-p4-account-*` et `premium-p4-admin-*` ; **nécessite le propriétaire** | À faire |
+| UX-214 | P4 | P2 | S | Capturer `/account` et `/admin` avec une session Clerk (non faisable en anonyme) | Captures `premium-p4-account-*` et `premium-p4-admin-*` ; **nécessite le propriétaire** | ✅ P4 — 03/10/2026 (sessions du propriétaire, données personnelles masquées) |
 
 ---
 
@@ -556,9 +566,8 @@ UI légers, sans données personnelles supplémentaires :
 
 ## 9. Prochaine étape
 
-1. Le propriétaire répond aux décisions en attente du §5.2 (publication de P3, séisme, localisation Clerk, session Clerk, Android réel)
-   et donne son feu vert pour **P4** (landing, tarifs, compte) ; push et publication de P3 uniquement sur sa demande.
+1. Le propriétaire revoit le bilan P4, répond aux décisions en attente du §5.2 et donne son feu vert pour **P5** ; commit, push et
+   publication de P3–P4 uniquement sur sa demande.
 2. Nouvelle session : coller [prompt-reprise-premium-p4.md](prompt-reprise-premium-p4.md) (lecture des documents, annonce du plan de
    lot en 5 lignes, un lot à la fois, bilan fait / vérifié / limites, attente du feu vert).
-3. P4 commence par le socle des chiffres réels (UX-401) puis la landing, les tarifs (E2E paiement équivalents et verts) et le
-   compte ; P5 ensuite.
+3. P5 commence par le mini-lecteur persistant (UX-501, E2E lecture obligatoires) ; voir les repères du §5.2.

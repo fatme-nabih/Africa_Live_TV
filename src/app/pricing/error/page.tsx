@@ -1,10 +1,10 @@
-import { XCircle } from 'lucide-react';
+import { HelpCircle, Wallet } from 'lucide-react';
 import { db } from '@/db';
 import { naboopayTransactions } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { auth } from '@clerk/nextjs/server';
 import { ensureInternalUser } from '@/lib/identity';
-import BrandBackdrop from '@/components/brand/BrandBackdrop';
+import OffAirScreen from '@/components/brand/OffAirScreen';
 import { ButtonLink } from '@/components/ui';
 
 export default async function PricingErrorPage(props: { searchParams: Promise<{ order_id?: string }> }) {
@@ -30,20 +30,20 @@ export default async function PricingErrorPage(props: { searchParams: Promise<{ 
   }
 
   return (
-    <main className="relative min-h-screen bg-black px-5 py-20 text-text flex flex-col items-center justify-center overflow-hidden">
-      <BrandBackdrop variant="app" />
-      <div className="relative z-10 mx-auto max-w-md w-full text-center rounded-2xl border border-line bg-surface-1/80 p-8 shadow-2xl">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-al-red/20 bg-al-red/10 text-al-red-soft">
-          <XCircle className="h-8 w-8" />
-        </div>
-        <h1 className="font-display text-2xl font-bold text-text mb-3">Paiement non abouti</h1>
-        <p className="text-text-muted mb-6 text-xs leading-relaxed">
-          {errorMessage}
-        </p>
-        <ButtonLink href="/pricing" variant="primary">
-          Retour aux offres
-        </ButtonLink>
-      </div>
-    </main>
+    <OffAirScreen
+      illustration="acacia"
+      title="Paiement non abouti"
+      description={errorMessage}
+      actions={(
+        <>
+          <ButtonLink href="/pricing" variant="primary" icon={<Wallet size={16} aria-hidden="true" />}>
+            Retour aux offres
+          </ButtonLink>
+          <ButtonLink href="/contact" variant="ghost" icon={<HelpCircle size={16} aria-hidden="true" />}>
+            Besoin d’aide ?
+          </ButtonLink>
+        </>
+      )}
+    />
   );
 }

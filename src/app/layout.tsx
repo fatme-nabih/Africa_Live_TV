@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Manrope, Unbounded } from "next/font/google";
 import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
+import { clerkAppearance, clerkLocalization } from "@/lib/clerk-theme";
 import { ECO_BOOT_SCRIPT } from "@/lib/eco-mode";
 import { isLocalDevMode } from "@/lib/local-dev";
 import "./globals.css";
@@ -71,16 +72,8 @@ export default function RootLayout({
             signUpUrl="/sign-up"
             signInFallbackRedirectUrl="/app/live"
             signUpFallbackRedirectUrl="/app/live"
-            appearance={{ variables: {
-              colorPrimary: '#fcd116',
-              colorPrimaryForeground: '#000000',
-              colorBackground: '#0b0b0c',
-              colorForeground: '#f5f5f4',
-              colorMutedForeground: '#a8a29e',
-              colorDanger: '#e8112d',
-              colorSuccess: '#12b54a',
-              borderRadius: '0.875rem',
-            } }}
+            appearance={clerkAppearance}
+            localization={clerkLocalization}
           >
             {ecoBoot}
             {children}

@@ -295,6 +295,24 @@ test.describe('Éco data', () => {
     expect(logoRequests.filter(url => url.startsWith(LOGO_HOST))).toHaveLength(0);
   });
 
+  test('mobile 360 px : la bascule est dans la barre, en un geste, et annonce son état', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 800 });
+    await fixtureCatalog(page);
+    await page.goto('/app');
+    await expect(region(page, 'Info')).toBeVisible();
+    const toggle = page.getByRole('banner').getByRole('button', { name: 'Mode Éco data', exact: true });
+    await expect(toggle).toBeVisible();
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    const box = await toggle.boundingBox();
+    expect(box && box.width >= 44 && box.height >= 44).toBe(true);
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('html')).toHaveAttribute('data-eco', 'true');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await page.goto('/app/live');
+    await expect(page.getByRole('banner').getByRole('button', { name: 'Mode Éco data', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  });
+
   test('Save-Data active le mode par défaut ; le choix de l’utilisateur reste prioritaire', async ({ page }) => {
     await page.setViewportSize({ width: 1366, height: 900 });
     await page.addInitScript(() => Object.defineProperty(navigator, 'connection', { value: { saveData: true }, configurable: true }));

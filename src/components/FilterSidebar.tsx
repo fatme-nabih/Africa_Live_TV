@@ -10,8 +10,6 @@ import {
   Languages as LanguageIcon,
   Star as StarIcon,
   X as XIcon,
-  RefreshCw,
-  AlertCircle,
 } from 'lucide-react';
 
 import {
@@ -23,6 +21,7 @@ import { formatCountryName } from '@/lib/format';
 import { categoryCodes, categoryLabel, catalogLanguageCodes, catalogLanguageLabel } from '@/lib/catalog-metadata';
 import { uniqueFilterOptions } from '@/lib/radar-data';
 import { LatestRequestController } from '@/lib/latest-request';
+import { ErrorState } from '@/components/ui';
 import type { ChannelFilters } from '@/types/channel';
 
 interface FilterSidebarProps {
@@ -146,20 +145,7 @@ export default function FilterSidebar({
       </div>
 
       {error && (
-        <div role="alert" className="rounded-xl border border-al-red/30 bg-black/60 p-2.5 text-xs text-text">
-          <div className="flex items-start gap-1.5">
-            <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-al-red-soft" aria-hidden="true" />
-            <p>{error}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => void loadFilters()}
-            className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-al-red/40 bg-al-red/10 px-2 py-1 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold"
-          >
-            <RefreshCw className="h-3 w-3" aria-hidden="true" />
-            Réessayer
-          </button>
-        </div>
+        <ErrorState className="p-3 sm:p-3" title="Filtres momentanément indisponibles" description={error} onRetry={() => void loadFilters()} />
       )}
 
       <motion.button

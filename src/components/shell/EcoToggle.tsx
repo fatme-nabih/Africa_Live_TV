@@ -6,7 +6,7 @@ import { useEcoMode } from '@/components/tv/hooks';
 
 /**
  * Mode Éco data : pas d'images de chaînes, lecture manuelle, fond et animations au repos.
- * `icon` : bouton compact de la barre ; `switch` : ligne explicative de la page Compte.
+ * `icon` : bouton compact de la barre, visible dès 360 px (un geste sur mobile ; en dessous, la place revient au choix du pays) ; `switch` : ligne explicative de la page Compte.
  */
 export default function EcoToggle({ variant = 'icon' }: { variant?: 'icon' | 'switch' }) {
   const eco = useEcoMode();
@@ -20,7 +20,7 @@ export default function EcoToggle({ variant = 'icon' }: { variant?: 'icon' | 'sw
         aria-pressed={eco}
         aria-label="Mode Éco data"
         title={eco ? 'Éco data activé : images et animations réduites' : 'Activer le mode Éco data'}
-        className={`hidden size-11 shrink-0 items-center justify-center rounded-control border transition-colors sm:inline-flex ${
+        className={`hidden size-11 shrink-0 items-center justify-center rounded-control border transition-colors min-[360px]:inline-flex ${
           eco ? 'border-al-green/60 bg-al-green/10 text-al-green' : 'border-line bg-surface-2 text-text-muted hover:border-line-gold hover:text-text'
         }`}
       >

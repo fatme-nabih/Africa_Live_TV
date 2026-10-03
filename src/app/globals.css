@@ -34,6 +34,10 @@
   /* Rouge du logo éclairci pour le texte d'erreur sur fond noir (≥ 4.5:1) */
   --color-al-red-soft: #ff6b7d;
 
+  /* Moyens de paiement : couleurs des marques, réservées à leurs pastilles */
+  --color-pay-wave: #1dc8ff;
+  --color-pay-orange: #ff7900;
+
   --radius-card: 1.25rem;
   --radius-control: 0.875rem;
   --radius-pill: 9999px;

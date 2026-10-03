@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import BrandBackdrop from '@/components/brand/BrandBackdrop';
 import BrandMark from '@/components/brand/BrandMark';
-import { Button } from '@/components/ui';
+import { Button, ErrorState } from '@/components/ui';
 
 export default function ContactPage() {
   const [name, setName] = useState('');
@@ -249,7 +249,7 @@ export default function ContactPage() {
                   <span>Vos coordonnées et votre message sont enregistrés pour traiter cette demande.</span>
                 </div>
 
-                {submitError && <p role="alert" className="rounded-lg border border-al-red/30 bg-al-red/10 p-3 text-xs text-text">{submitError}</p>}
+                {submitError && <ErrorState title="Message non envoyé" description={submitError} />}
 
                 <Button type="submit" variant="primary" block disabled={loading} icon={<Send size={14} aria-hidden="true" />}>
                   <span>{loading ? 'Envoi en cours...' : 'Envoyer mon message'}</span>

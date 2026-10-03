@@ -1,5 +1,23 @@
 # Checklist de non-régression — lots local et Railway
 
+## Expérience Premium P4 — reçue localement le 3 octobre 2026 (non committée)
+
+Plan : [plan-experience-premium.md](plan-experience-premium.md) §5.1. Preuves et limites : [production-progress.md](production-progress.md),
+section « Lot P4 ». Cases reçues en local uniquement (dev, port 3001). À rejouer à la fin de P5.
+
+- [x] `npx tsc --noEmit` 0 ; `npm run lint` 0 ; build réussi.
+- [x] `npm test` : 348 tests, 334 réussis, 14 ignorés, 0 échec ; invariants 4/4.
+- [x] E2E mode MVP (14 specs, --workers=1) : 135 tests, 132 réussis, 1 ignoré, 2 échecs au premier passage (320 px et hydratation), corrigés ; specs rejoués 67/67.
+- [x] E2E mode Clerk : 8/8 (auth-entry, payment — CTA « Activer pour 990 FCFA », assertion équivalente).
+- [x] Parcours NabooPay inchangé (`handleSubscribe` identique), identifiants `lumina_all_access_*` inchangés et jamais affichés (Compte corrigé).
+- [x] Aucun chiffre en dur sur la landing : compteur public depuis la base (cache 1 h), aucun chiffre si la base ne répond pas.
+- [x] Image du hero produite avec des données fictives (aucun contenu d'éditeur), WebP 41 Ko.
+- [x] Aucune migration, aucune dépendance, aucun changement `.env*`, Railway, Clerk (configuration) ou DNS.
+- [x] Contrôle visuel 360 / 768 / 1366 px : 0 débordement, 0 texte < 12 px, 0 erreur (landing, /pricing, /sign-in, /sign-up, 404, /pricing/error, /app/live, /app, /app/ui).
+- [x] `/account` et `/admin` capturés avec les sessions du propriétaire (UX-214), données personnelles masquées ; widget Profil pleine largeur.
+- [x] `@clerk/localizations` 4.9.0 : `@clerk/shared` reste en 4.20.0 (aucune autre dépendance Clerk modifiée) ; build et E2E Clerk 8/8 rejoués.
+- [ ] Logos officiels Wave / Orange Money ; appareils Android réels ; Lighthouse : non reçus.
+
 ## Expérience Premium P3 — reçue localement le 3 octobre 2026
 
 Plan : [plan-experience-premium.md](plan-experience-premium.md) §5.1. Preuves, mesures et limites :

@@ -24,6 +24,11 @@ test.describe('Page de paiement — interface utilisateur', () => {
     await expect(page.getByText('Abonnement Mensuel')).toBeVisible();
     await expect(page.getByText('Abonnement Annuel')).toBeVisible();
     await expect(page.getByPlaceholder('+221771234567')).toBeVisible();
+    // Offre annuelle mise en avant (2 mois offerts : 9 900 = 10 × 990) et CTA orientés bénéfice.
+    await expect(page.getByText('2 mois offerts', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Activer pour 9 900 FCFA' })).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Activer pour 990 FCFA' })).toBeEnabled();
+    await expect(page.getByRole('list', { name: 'Moyens de paiement acceptés' })).toContainText('Orange Money');
   });
 
   test('Le refus de connexion est annoncé sans créer de paiement', async ({ page }) => {
@@ -31,7 +36,7 @@ test.describe('Page de paiement — interface utilisateur', () => {
     await page.getByLabel('Prénom').fill('Test');
     await page.getByLabel('Nom', { exact: true }).fill('User');
     await page.getByPlaceholder('+221771234567').fill('+221771234567');
-    await page.getByRole('button', { name: /Payer avec NabooPay/i }).first().click();
+    await page.getByRole('button', { name: 'Activer pour 990 FCFA' }).click();
     await expect(page.getByRole('main').getByRole('alert')).toContainText('Veuillez vous connecter');
   });
 
@@ -42,7 +47,7 @@ test.describe('Page de paiement — interface utilisateur', () => {
     await page.getByLabel('Prénom').fill('Test');
     await page.getByLabel('Nom', { exact: true }).fill('User');
     await page.getByPlaceholder('+221771234567').fill('0771234567');
-    await page.getByRole('button', { name: /Payer avec NabooPay/i }).first().click();
+    await page.getByRole('button', { name: 'Activer pour 990 FCFA' }).click();
     await expect(page.getByRole('main').getByRole('alert')).toContainText('+');
     expect(creations).toEqual([]);
   });

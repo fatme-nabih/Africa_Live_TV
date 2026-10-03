@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { EmptyState, ErrorState } from '@/components/ui';
 
 type SupportEvent = {
   id: string;
@@ -109,8 +110,8 @@ export default function AdminSupportQueue() {
         <button type="button" onClick={() => void refresh()} className="rounded-lg border border-line px-3 py-2 text-xs font-semibold text-text hover:bg-white/5">Actualiser</button>
       </div>
 
-      {error && <p role="alert" className="mt-4 rounded-lg border border-al-red/30 bg-al-red/10 p-3 text-xs text-text">{error}</p>}
-      {loading ? <p className="mt-5 text-sm text-text-muted">Chargement…</p> : requests.length === 0 ? <p className="mt-5 text-sm text-text-muted">Aucune demande enregistrée.</p> : (
+      {error && <ErrorState className="mt-4" title="File indisponible" description={error} onRetry={() => void refresh()} />}
+      {loading ? <p className="mt-5 text-sm text-text-muted">Chargement…</p> : requests.length === 0 ? <EmptyState illustration="acacia" title="Aucune demande enregistrée" description="Les demandes de support et de retrait apparaîtront ici." /> : (
         <ul className="mt-5 space-y-4">
           {requests.map((item) => (
             <li key={item.id} className="rounded-xl border border-line bg-surface-1/80 p-4 sm:p-5">

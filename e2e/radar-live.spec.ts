@@ -322,6 +322,8 @@ test.describe('Regarder le direct du pays (UX-306)', () => {
     await page.setViewportSize({ width: 1366, height: 900 });
     await liveSetup(page);
     await page.goto('/app/live?country=SN');
+    // Attendre un contenu rendu après hydratation : un clic plus tôt donne le focus à l'onglet sans le sélectionner.
+    await expect(stories(page).getByRole('button', { name: /^Regarder le direct du pays/ })).toBeVisible();
     await page.getByRole('tab', { name: /Chaînes TV/ }).click();
     await page.getByRole('button', { name: 'Regarder Gamma Sénégal', exact: true }).click();
     await expect(page.locator('#inline-player-title').filter({ hasText: 'Gamma Sénégal' })).toBeVisible();

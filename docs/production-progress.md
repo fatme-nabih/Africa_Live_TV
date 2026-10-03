@@ -1280,3 +1280,70 @@ P0, P1 et P2 sont publiés ; P3 est fait, vérifié et committé en local (`4125
 UX-401 → 407, P5 Aimants et finition UX-501 → 508) et 4 reliquats (UX-209 suite, UX-212, UX-213, UX-214). Plan à jour :
 [plan-experience-premium.md](plan-experience-premium.md) §5.1, §6 « Reliquats » et §8.1 « Pièges connus ». Prochain lot : **P4**, après
 le feu vert du propriétaire.
+
+## Expérience Premium — Lot P4 « Landing, tarifs, compte » — 3 octobre 2026
+
+Périmètre : [plan-experience-premium.md](plan-experience-premium.md) UX-401 à UX-407 et reliquats UX-212, UX-214, après P3 (committé en
+local `412574d`, non poussé). Aucun commit, push, déploiement, migration, changement `.env*`, Railway, Clerk (configuration) ou DNS ;
+aucune nouvelle dépendance. Aucun relais, conversion ni stockage de média. Machine de lecture, accès, éligibilité, quotas et API
+inchangés ; parcours NabooPay (appels, redirections, webhooks, identifiants `lumina_all_access_*`) inchangé — la fonction
+`handleSubscribe` de `/pricing` est identique octet pour octet, seul son type d'argument est factorisé.
+
+| Ticket | État | Preuve |
+|---|---|---|
+| UX-401 Hero et chiffres réels | Fait | Compteur public `src/lib/public-stats.ts` (pur, testé) + `public-stats-server.ts` : une requête agrégée par pays et catégorie, mêmes règles que le catalogue (chaîne active, visible publiquement — Canal+ exclu —, au moins une source affichable), `unstable_cache` 1 h (Next 16 sans Cache Components), aucune donnée personnelle ; en cas d'échec la landing n'affiche **aucun** chiffre (pas de repli en dur). Mesure sur `africa_live_dev` : **11 771 chaînes, 371 africaines, 36 pays**, Info 967, Sport 410, Musique 697, Cinéma et séries 916 (272 ms, 1 540 lignes agrégées). Les chiffres en dur « 11 700+ », « 1 400+ », « 650+ », « 1 200+ », « 980+ » sont supprimés (les catégories étaient surévaluées de 45 % à 70 %). Hero : vraie capture du Radar (1280 px) et de la TV mobile (360 px) produite par `.local-logs/p4/hero-shot.ts` avec des **données entièrement fictives** (titres, rédactions, chaînes, sans logo ni image d'éditeur ; artefacts du mode local masqués) → `public/landing/hero-radar-tv.webp`, 1200 × 760, **41,3 Ko**, `next/image` `loading="eager"` + `fetchPriority="high"` (`priority` est déprécié en Next 16), légende « Aperçu réalisé avec des données d'exemple ». `LandingDashboardPreview.tsx` (icône de globe) supprimé. |
+| UX-402 Trois bénéfices | Fait | Les 4 « métriques » et les 4 « fonctionnalités » (deux `Globe2`) deviennent 3 bénéfices, une icône chacun : Radar (actualité pays par pays), Tv (le direct en un geste), Leaf (pensé pour votre forfait : Éco data, Wave/OM, WhatsApp). Section VLC « Flexibilité absolue » retirée (couverte par la FAQ). Promesses invérifiables retirées : « instantané », « authenticité totale », « dans la seconde », « Priorité réseau et support client dédié », « Zéro publicité injectée », « 100 % direct », « haute performance ». |
+| UX-403 Tarifs | Fait | Composants partagés landing + `/pricing` : `src/components/pricing/PlanCard.tsx` (+ `PLAN_COPY`, montants identiques à `NABOOPAY_PLANS`) et `PaymentMethods.tsx` (pastilles dessinées en SVG local, jetons `--color-pay-wave` / `--color-pay-orange`, aucun chargement tiers ; les hex `#1da1f2`, `#ff7900`… codés dans la landing disparaissent). Annuel en premier et mis en avant (« 2 mois offerts » : 9 900 = 10 × 990, économie 1 980 FCFA), seul bouton jaune ; CTA « Activer pour 9 900 FCFA » / « Activer pour 990 FCFA » ; « Paiement sécurisé par NabooPay » sous les offres ; « sans renouvellement automatique » vérifié dans les CGU (pas de reconduction tacite) ; FAQ courte (3 questions) sur `/pricing`. |
+| UX-404 Compte | Fait (non capturé) | `src/lib/access-gauge.ts` (testé) : jauge « n jours restants » tirée de la décision d'accès existante (essai 5 j, mensuel 30 j, annuel 365 j, grâce 3 j ; aucune jauge sans échéance : administrateur, version locale) ; `AccessMeter` (`role="meter"`, vert, or sous 3 jours, jamais rouge tant que l'accès dure). `AccountActivity` : dernières chaînes, pays récents (liens vers le Radar du pays), dernière visite du Radar (`al_radar_visit`), nombre de favoris (comptage serveur de `user_favorites`) ; état vide « hors antenne ». Aucune migration ni nouvelle donnée. **Défaut corrigé** : la page affichait l'identifiant interne brut (`lumina_all_access_monthly`) comme « Plan » ; elle affiche désormais « Africa Live Mensuel / Annuel », « Essai gratuit »… (`planLabel`, testé). |
+| UX-405 Clerk | Fait | **Mise à jour après décision du propriétaire (même jour)** : traduction officielle `@clerk/localizations` **4.9.0** (version figée, nouvelle dépendance autorisée), choisie parce qu'elle accepte le `@clerk/shared` 4.20.0 déjà installé ; la 4.21.x aurait fait monter `@clerk/shared` en 4.38.0 sous tout Clerk (essayé puis annulé, lockfile restauré). `frFR` en base + libellés de marque (« Connexion à Africa Live », « 5 jours d'essai offerts, sans carte bancaire ») ; la traduction manuelle est supprimée. Version initiale : `src/lib/clerk-theme.ts` : `appearance` en **variables CSS des jetons** (aucune couleur littérale ; vérifié au rendu avec Clerk 7.5.7), Manrope, rayon `--radius-control`, carte à bordure or ; `localization` française **écrite à la main** (connexion, inscription, codes, mot de passe oublié, menu du compte, sections du profil, erreurs courantes), sans `@clerk/localizations`. Le titre « Sign in to Afrika_Live » (nom de l'application dans le tableau de bord Clerk) devient « Connexion à Africa Live » dans l'interface. `colorNeutral`/`colorBorder` en variables CSS effaçaient les bordures des champs : retirés. |
+| UX-406 États vides et erreurs | Fait | `OffAirScreen` partagé (404, `error.tsx` racine, `app/error.tsx` dans la coquille, `global-error.tsx`, « Paiement non abouti ») ; `loading.tsx` racine (logo + barre tricolore immobile si mouvement réduit). Erreurs rédigées à la main converties en `ErrorState` / `EmptyState` : filtres de la TV, formulaire de contact, file d'administration (+ état vide). Prop `retry` de Next 16.2+ (guide lu). |
+| UX-407 FAQ | Fait | `src/components/marketing/Faq.tsx` : 5 questions courtes et factuelles (ce que c'est, essai, prix et paiement, installation, hébergement des vidéos), réutilisées par `/pricing`. |
+| UX-212 Éco data mobile | Fait | La bascule de la barre est visible dès **360 px** (1 geste depuis la TV, `aria-pressed`, cible 44 px). Sous 360 px elle reste dans Compte : à 320 px elle réduisait tant le sélecteur de pays que ses boutons couvraient le champ (régression détectée par l'E2E `radar-workspace` 320 × 844, corrigée). Nouvel E2E `tv-streaming` « mobile 360 px ». |
+| UX-214 Captures connectées | Fait | Le propriétaire s'est connecté lui-même dans le navigateur intégré (compte utilisateur puis compte administrateur). Captures `premium-p4-account-{360,768,1366}`, `-account-activite-360`, `-account-profil-1366`, `premium-p4-admin-{360,768,1366}` ; **e-mails et noms masqués dans la page avant capture** (aucune donnée personnelle dans les fichiers versionnés). 0 débordement, 0 texte < 12 px aux trois largeurs. Défauts vus et corrigés : (1) le widget Profil de Clerk était coupé dans la colonne de droite sur desktop → pleine largeur sous la grille ; (2) un accès expiré affichait « Échéance : 28 septembre 2026 » → « Terminé le … ». `/admin` montre le nouvel état vide « Aucune demande enregistrée ». Limites : les captures 1366 sont réduites à 800 px par l'outil du panneau, la hauteur à 768 px est 840 (panneau) ; une ouverture **directe** d'une page protégée depuis le navigateur intégré boucle sur la page de connexion hébergée de Clerk (instance de développement), alors que le passage par `/sign-in` local fonctionne — à surveiller, non reproduit ailleurs. |
+
+### E2E et tests
+
+- `e2e/payment.spec.ts` : `/Payer avec NabooPay/i` (premier bouton = mensuel) → bouton `Activer pour 990 FCFA` (même offre, même parcours) ;
+  ajout : « 2 mois offerts », boutons 9 900 et 990 actifs, liste des moyens de paiement.
+- `e2e/radar-live.spec.ts` « depuis la liste des chaînes du pays » : attente d'un contenu post-hydratation avant le clic sur l'onglet
+  (le clic précoce donnait le focus sans sélectionner : piège §8.1, rendu plus fréquent par le nouveau `loading.tsx`) ; assertions inchangées, 5/5 en répétition.
+- `e2e/tv-streaming.spec.ts` : nouveau test Éco data mobile 360 px. Tests unitaires : `public-stats` (3), `access-gauge` (4).
+
+### Vérification (code final)
+
+| Contrôle | Résultat |
+|---|---|
+| `npx tsc --noEmit` | 0 erreur |
+| `npm run lint` | 0 erreur, 0 avertissement |
+| `npm test` | 348 tests : 334 réussis, 14 ignorés (intégrations PostgreSQL), 0 échec (référence fin P3 : 341, soit +7) |
+| `npm run test:invariants` | 4/4 |
+| `npm run build` | Réussi (Next.js, Turbopack), serveur arrêté |
+| E2E mode MVP (14 specs, `--workers=1`) | 135 tests : 132 réussis, 1 ignoré (« build servi »), 2 échecs au premier passage (régression 320 px d'UX-212 et course d'hydratation, voir ci-dessus), corrigés ; specs concernés rejoués (radar-live, radar-workspace, tv-streaming, app-shell) : **67/67** |
+| E2E mode Clerk (dev, anonyme) | **8/8** (auth-entry, payment) |
+
+Contrôle visuel (Edge, 360 / 768 / 1366 px) : 0 débordement horizontal, 0 texte < 12 px, 0 erreur de page sur landing, `/pricing`,
+`/sign-in`, `/sign-up`, 404, `/pricing/error` (mode Clerk) et `/app/live`, `/app`, `/app/ui` (mode MVP) ; captures
+`docs/screenshots/premium-p4-<page>-<largeur>.png`. Défauts vus à l'œil et corrigés : séparateur de milliers invisible en Unbounded
+(« 11771 » : espace fine remplacée par une espace insécable), section tarifs de la landing décentrée à 1366 px, indicateur de
+développement et badges du mode local dans l'image du hero.
+
+### Limites et réserves
+
+- Le Compte n'a pas d'E2E (page protégée par Clerk) ; il a été vérifié avec les sessions du propriétaire (UX-214).
+- Pastilles Wave / Orange Money : pictogrammes dessinés localement, **pas les logos officiels** ; pour une conformité de marque, fournir
+  les fichiers du kit marchand (NabooPay / Wave / Orange) à déposer dans `public/`.
+- Traduction Clerk complète via `frFR` ; « Secured by Clerk » et « Development mode » (clés de développement) ne sont pas traduisibles.
+  19 écrans secondaires de `frFR` affichent le nom d'application du tableau de bord Clerk, aujourd'hui « Afrika_Live » : à renommer
+  « Africa Live » par le propriétaire (configuration Clerk, non touchée).
+- « Mon activité » est propre à l'appareil (sauf le nombre de favoris) ; aucune synchronisation au compte (ticket de migration UX-503).
+- Chiffres de la landing : cache d'une heure par instance ; en staging ils reflèteront la base Railway.
+- Bascule Éco absente de la barre sous 360 px (reste dans Compte). Le libellé « 8 dépêche(s) » de l'infobulle de la carte (P3) est à
+  reprendre en P5.
+- Aucun appareil Android réel ; l'image du hero n'a pas été mesurée en LCP (prévu en UX-508).
+- Mode MVP : ligne technique `africa-live-local-user` réinsérée puis supprimée avec ses données de test (`users` = 2) ; captures
+  `l5-anchored-*.png` restaurées depuis `HEAD` ; serveur relancé en mode Clerk (santé 200, `/app` anonyme → 307).
+
+### Reste à faire — Expérience Premium (au 3 octobre 2026, après le lot P4)
+
+P0–P2 publiés ; P3 committé en local (`412574d`) ; P4 fait et vérifié, **non committé**. Restent P5 « Aimants et finition »
+(UX-501 → 508) et les reliquats UX-209 (suite), UX-213. Prochain lot : **P5**, après le feu vert du propriétaire.

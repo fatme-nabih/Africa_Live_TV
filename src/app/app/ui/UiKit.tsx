@@ -6,6 +6,9 @@ import BrandBackdrop from '@/components/brand/BrandBackdrop';
 import GoldRing from '@/components/brand/GoldRing';
 import KenteBand from '@/components/brand/KenteBand';
 import BrandLogo from '@/components/BrandLogo';
+import AccessMeter from '@/components/account/AccessMeter';
+import AccountActivity from '@/components/account/AccountActivity';
+import PaymentMethods from '@/components/pricing/PaymentMethods';
 import {
   Badge,
   Button,
@@ -131,6 +134,16 @@ export default function UiKit() {
             <Card><EmptyState illustration="lion" title="Sélection vide" description="Choisissez un pays pour commencer." /></Card>
           </div>
           <ErrorState description="Les dépêches ne répondent pas pour le moment." onRetry={() => undefined} />
+        </section>
+
+        <section aria-labelledby="ui-compte" className="flex flex-col gap-4">
+          <SectionHeader eyebrow="Compte (P4)" title={<span id="ui-compte">Jauge d’accès et activité</span>} description="Composants de /account, visibles ici sans session (données de l’appareil ; jauges d’exemple)." />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Card><AccessMeter gauge={{ daysLeft: 4, totalDays: 5, ratio: 0.8, label: '4 jours restants', endingSoon: false }} /></Card>
+            <Card><AccessMeter gauge={{ daysLeft: 2, totalDays: 30, ratio: 2 / 30, label: '2 jours restants', endingSoon: true }} /></Card>
+          </div>
+          <AccountActivity favoritesCount={3} />
+          <PaymentMethods />
         </section>
 
         <footer className="flex flex-col gap-3">
