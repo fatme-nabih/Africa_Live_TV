@@ -1183,10 +1183,100 @@ Limites et réserves :
   (`users` 2, `user_favorites` 29). Les trois captures historiques `docs/screenshots/l5-anchored-*.png`,
   réécrites par un E2E, ont été restaurées depuis `HEAD`.
 
-### Reste à faire — Expérience Premium (au 3 octobre 2026)
+## Expérience Premium — Lot P3 « Radar vivant » — 3 octobre 2026
 
-P0, P1 et P2 sont faits et vérifiés localement, non committés. Restent 23 tickets (P3 Radar vivant UX-301 →
-308, P4 Landing/tarifs/compte UX-401 → 407, P5 Aimants et finition UX-501 → 508) et 4 reliquats (UX-209 suite,
-UX-212, UX-213, UX-214). Plan à jour : [plan-experience-premium.md](plan-experience-premium.md) §5.1, §6
-« Reliquats » et §8.1 « Pièges connus ». Prochain lot : **P3**, après le feu vert du propriétaire ; prompt de
-reprise : [prompt-reprise-premium-p3.md](prompt-reprise-premium-p3.md).
+Périmètre : [plan-experience-premium.md](plan-experience-premium.md) UX-301 à UX-308, après la publication de P0–P2 (GitHub
+`1ef60b5`, Railway staging) et sur demande du propriétaire de poursuivre. Aucun commit, push, déploiement, migration,
+changement `.env*`, Railway, Clerk ou DNS. Aucun relais, conversion ni stockage de média : le navigateur et VLC lisent la
+source amont ; l'image d'une dépêche est chargée par le navigateur depuis l'adresse publiée par l'éditeur, sans cache serveur.
+Machine de lecture (`src/lib/playback-*`), accès, éligibilité et quotas inchangés. Seul changement d'API : le flux de dépêches
+(`/api/live/rss`) porte un champ optionnel `imageUrl` (UX-302, testé).
+
+| Ticket | État | Preuve |
+|---|---|---|
+| UX-301 Découpage | Fait | `LiveRadarDashboard.tsx` passe de 1 383 à 250 lignes. `src/components/radar/` : `RadarHeader`, `RadarTiles`, `FeaturedStories`, `RadarFeedPanel`, `NewsFeed`, `ArticleRow`, `CountryChannels`, `WeatherCard`, `MarketsCard`, `RadarMapCard`, `RadarSourcesPanel`, `NewArrivalsPill` ; hooks `useRadarData` (+ `useRadarArticles`), `useRadarCountry`, `useRadarPlayer`, `useFreshArticles`, `useRadarVisit`, `useStoredToggle`, `useNow`. Logique pure testée dans `src/lib/` : `radar-articles`, `radar-sources`, `radar-featured`, `radar-visit`, `radar-fresh`, `radar-activity`, `radar-editorial`, `country-live`, `weather-alert`, `relative-time`, `rss-image`. **Critère tenu** : l'extraction mécanique (blocs JSX découpés à l'identique) a passé les 44 E2E radar **sans modifier un seul spec** (1 ignoré : test « build servi »), avant tout ajout fonctionnel. |
+| UX-302 À la une | Fait | `rss-image.ts` lit l'illustration dans le flux (`media:content`, `media:thumbnail`, `enclosure`, lien Atom, première image du texte) ; seules les adresses `https` sans identifiants sont gardées (`http` relevé en `https`, relatives résolues sur l'article, pixels/émojis/avatars écartés). Le serveur ne télécharge ni ne stocke rien. Côté navigateur : `<img loading="lazy" referrerpolicy="no-referrer">`, retiré si elle ne charge pas (repli typographique), absente en mode Éco data. Mesure sur les **22 flux réels** : 440 dépêches sur 598 (74 %) ont une image ; **APS (Sénégal) : 0** (aucune image dans son flux), Africanews publie en `http`. Sélection : les plus récentes de la vue, rédactions variées, une dépêche illustrée récente prend la tête si la première n'a pas d'image ; le fil ne répète pas ce qui est à la une. |
+| UX-303 Tuiles | Fait (météo seule) | 3 tuiles cliquables : « Nouvelles depuis votre visite » (dernière visite en `localStorage` `al_radar_visit`, figée pendant la page, enregistrée à la sortie seulement si des dépêches ont été affichées ; première visite : « Dépêches des dernières 24 h »), « Chaînes en direct du pays » (chiffres du résumé du catalogue), « Alerte météo » (orage, fortes pluies ≥ 8 mm, vent ≥ 60 km/h, chaleur ≥ 45 °C ; rouge seulement quand il y a une alerte ; « pas une alerte officielle » dans le nom accessible). **Pas de séisme** : la couche USGS a été retirée en RW-009 et l'E2E interdit tout appel à `/api/live/events` depuis le Radar. |
+| UX-304 Langage humain | Fait | « sujet inféré / pays du média », « MapLibre GL », « RSS », « Couverture partielle · 16/19 », « cache périmé », « non configuré », « Disponibilité et fraîcheur par source », « bandeau daté », « Marchés / bandeau » disparaissent de l'interface. Panneau **« Sources et fraîcheur »** (état en une phrase : « Toutes les sources répondent », « 3 sources momentanément muettes »…, détail par source, « Comment lire le radar ») ; l'en-tête n'affiche que ce qui manque vraiment. Couleurs éditoriales (`sky/indigo/violet/cyan/teal/blue` du Radar) remplacées par les jetons : vert = presse nationale, or = panafricain, neutre = international ; rouge = alerte. |
+| UX-305 Carte | Fait, **écart au plan documenté** | Voir « Mesure de la carte » ci-dessous : le fond vectoriel OpenFreeMap prévu par le plan pèse ≈ 1,27 Mo (10× le satellite). Fond sombre par défaut = **contours des pays d'Afrique auto-hébergés** (`public/maps/africa-countries.json`, 74 Ko, 24 Ko compressés, Natural Earth domaine public, généré par `scripts/build-africa-countries.mjs`), couleurs lues sur les jetons, pays choisi surligné, clic sur un pays pour le choisir ; satellite en option. Vue initiale cadrée sur le continent entier (Dakar était coupé). Pulsation selon l'activité 24 h (0 / 1-2 / 3-7 / 8 et plus), coupée en mode Éco et mouvement réduit ; plus d'anneau qui tourne en permanence. « Libellés FR » : sans objet avec ce fond (aucun texte) ; les noms français sont dans les repères et leurs infobulles. |
+| UX-306 Direct du pays | Fait | « Regarder le direct du pays » (à la une, bouton « Direct » des lignes) choisit le pays dans l'URL, attend ses chaînes puis lance la première chaîne prête qui se lit dans le navigateur dans `InlinePlayerModal` (zapping, raccourcis, PiP de P2) **sans quitter le Radar** ; la liste des chaînes utilise la même modale (le mini-lecteur incrusté disparaît : un seul lecteur). La chaîne rejoint « Reprendre » de la TV ; la fenêtre séparée reçoit la liste de zapping. Pays sans chaîne : message clair et accès à l'onglet des chaînes. Modale chargée à la demande (hls.js n'est plus dans le premier chargement du Radar). |
+| UX-307 Météo et marchés | Fait | Météo et marchés repliables, état mémorisé (`al_radar_weather_open`, `al_radar_markets_open`) ; météo repliée = une ligne (« 24 °C, ciel dégagé »). |
+| UX-308 Arrivées en douceur | Fait | Après le premier affichage, une dépêche qui arrive seule attend derrière la pastille flottante « n nouvelle(s) » (aucune place prise, aucun saut de défilement : `scrollY` identique vérifié). Changer de pays ou de rubrique, « Actualiser » ou la pastille affichent tout. |
+
+### Mesure de la carte (UX-305, mobile 360 px, CPU ×4, 4G lente 1,6 Mbit/s, 5 passages, serveur de développement)
+
+| Fond | Requêtes | Données | Calme réseau | CPU (tâches) | Tâches longues |
+|---|---|---|---|---|---|
+| **Avant** : satellite par défaut (ancien cadrage) | 8 | ≈ 120 Ko | n/c * | n/c * | n/c * |
+| Satellite (option, nouveau cadrage continent entier) | 18 | 227 Ko | 2,0 s | 3,43 s | 5 (339 ms) |
+| Fond vectoriel OpenFreeMap (prévu au plan, **écarté**) | 11 | ≈ 1 270 Ko (2 tuiles = 917 Ko, sprites 117 Ko, polices 233 Ko) | n/c * | n/c * | n/c * |
+| **Après** : contours auto-hébergés (défaut) | **1** | **25 Ko** | **0,04 s** | **1,63 s** | **1 (67 ms)** |
+
+\* Octets et requêtes de ces deux lignes sont fiables (mêmes conditions, détail des requêtes relevé) ; leurs temps ont été pris
+pendant que la page chargeait encore ses dépêches et ne sont pas comparables au « après » (mesuré page stabilisée).
+
+Le fond sombre vectoriel « léger » du plan est donc plus lourd que l'ancien satellite à l'échelle du continent ; le nouveau
+fond réduit les données de ≈ 80 % par rapport à l'ancien satellite (25 Ko contre ≈ 120 Ko) et supprime les appels aux serveurs
+de tuiles tiers (aucun Esri / OpenFreeMap tant que « Satellite » n'est pas choisi : vérifié par E2E). Limites : serveur de
+développement (JavaScript non minifié), bridage simulé, Edge de bureau, aucun appareil réel.
+
+### Défauts trouvés en cours de lot et corrigés
+
+- **CPU au repos saturé** (hérité de l'ancien fichier monolithique) : l'horloge météo faisait le rendu de *toute* la page chaque
+  seconde, avec les ≈ 170 dépêches de la fenêtre 24 h. Mesure (CPU ×4, 5 s au repos) : 4,6 à 4,8 s de tâches, soit le thread
+  principal saturé ; **après** : horloge à 15 s, lignes mémoïsées, fil paginé par 12 (« Voir plus »), formateur de dates `Intl`
+  construit une seule fois : un rendu toutes les 15 s (≈ 0,1 s en dev, ≈ 0,3 s à CPU ×4), ≈ 4 ms entre deux rendus.
+- Dakar était **hors de la vue initiale** de la carte (centre et zoom fixes) ; cadrage calculé sur l'étendue du continent.
+- Tuile météo : « Indisponible » débordait à 320 px ; libellés de tuiles tronqués à 360 px ; bouton « Recadrer » en
+  chevauchement avec la légende sur mobile ; point de statut séparé de son texte ; pastille « rédactions » sur deux lignes.
+- Course d'hydratation (préexistante, rendue visible) : RW-008 interagissait avant l'hydratation de la page (≈ 100 ms après
+  `load` en dev) ; le test attend maintenant l'affichage des dépêches (assertions inchangées).
+
+### E2E et tests
+
+Mises à jour avec des assertions **équivalentes** : `Disponibilité des sources` → `Sources et fraîcheur` (région), `Disponibilité
+et fraîcheur par source` → `Détail par source`, `Marchés et événements · bandeau daté` → `Marchés et événements`, états de
+couverture (`Sources disponibles` → `Toutes les sources répondent`, `Couverture partielle` → `aux données anciennes ou partielles` /
+`momentanément muette`, `Sources indisponibles` → `Aucune source ne répond pour le moment`), `cache périmé` → `données anciennes`,
+`non configuré` → `pas activée`, bouton « Chaînes TV » → onglet, message d'erreur des dépêches, fond de carte bloqué (le fichier
+des contours remplace les tuiles Esri), « Fil des dépêches » en haut d'écran → tête du fil (« À la une ») et première dépêche
+visibles sans défiler. Nouveau : `e2e/radar-live.spec.ts` (25 scénarios : À la une avec/sans image, Éco, image cassée, absence de
+doublon et pagination, tuiles, visite, alerte météo, blocs repliables, pastille, direct du pays ×4, fond de carte et pulsation,
+débordement et plancher 12 px à 320 / 360 / 768 / 1366 px). Tests unitaires : `radar-articles`, `rss-image`, `radar-live`
+(+ `radar-workspace` étendu) : +20 tests.
+
+### Vérification (code final)
+
+| Contrôle | Résultat |
+|---|---|
+| `npx tsc --noEmit` | 0 erreur |
+| `npm run lint` | 0 erreur, 0 avertissement |
+| `npm test` | 341 tests : 327 réussis, 14 ignorés (intégrations PostgreSQL), 0 échec (référence fin P2 : 321, soit +20) |
+| `npm run test:invariants` | 4/4 |
+| `npm run build` | build réussi (Next.js, Turbopack) |
+| E2E mode MVP local (dev, 3001) | E2E mode MVP (14 specs, --workers=1) : 134 tests, 132 réussis, 1 ignoré (test « build servi »), 1 échec de test (course dans le nouveau spec radar-live), corrigé puis rejoué 10/10 |
+| E2E mode Clerk (dev, anonyme) | E2E mode Clerk (dev, anonyme) : 8/8 (auth-entry, payment) |
+
+Contrôle visuel (Edge, 360 / 768 / 1366 px) : Edge, 0 débordement horizontal, 0 texte < 12 px, 0 erreur de page sur /app/live, /app, /app/ui (mode MVP) et landing, /pricing, /sign-in, 404 (mode Clerk) ; captures docs/screenshots/premium-p3-<page>-<largeur>.png, plus états simulés (sn-simule, alerte-orage, blocs-replies, direct-modale, pastille, eco) à 360 et 1366 px avec données et lecteur simulés. /account et /admin non capturés (session Clerk requise).
+
+### Limites et réserves
+
+- **Séisme** absent de la tuile d'alerte (pas de source depuis RW-009) ; l'alerte météo est un repère tiré d'un relevé automatisé.
+- **À la une** = les plus récentes, de rédactions variées ; aucune détection « multi-sources ». Les dépêches d'APS n'ont pas
+  d'image dans leur flux : le fil du Sénégal est souvent typographique (récupérer `og:image` demanderait au serveur de lire les
+  pages des éditeurs, non fait).
+- **Carte** : frontières Natural Earth 1:50m simplifiées (≈ 3 km) — anguleuses au-delà du zoom 6 ; aucun libellé sur le fond
+  sombre ; le satellite garde les libellés anglais d'Esri. Le clic sur un pays du fond (polygone) n'est pas couvert par un E2E
+  automatisé (vérifié à la main).
+- « Depuis votre visite » est propre à l'appareil et plafonné à la fenêtre de 24 h du Radar.
+- Mesures de performance : serveur de développement, bridage simulé, Edge de bureau ; aucun appareil Android réel. Lighthouse et
+  poids JS avant/après restent prévus en UX-505 / UX-508.
+- L'image `BrandBackdrop` est signalée comme LCP par Next en développement (`loading="eager"` conseillé) : à traiter en P5.
+- Profils Clerk connectés (`/account`, `/admin`), VLC réel et flux amont à l'instant T : hors réception, comme en P0–P2.
+
+### Reste à faire — Expérience Premium (au 3 octobre 2026, après le lot P3)
+
+P0, P1 et P2 sont publiés ; P3 est fait et vérifié localement, non committé. Restent 15 tickets (P4 Landing/tarifs/compte
+UX-401 → 407, P5 Aimants et finition UX-501 → 508) et 4 reliquats (UX-209 suite, UX-212, UX-213, UX-214). Plan à jour :
+[plan-experience-premium.md](plan-experience-premium.md) §5.1, §6 « Reliquats » et §8.1 « Pièges connus ». Prochain lot : **P4**, après
+le feu vert du propriétaire.

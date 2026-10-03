@@ -29,7 +29,8 @@ for (const width of [1366, 390, 683]) test(`L4 réception datée, clavier et ref
 test('L4 fond cartographique bloqué : choix pays et fil préservés', async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
   await fixtureRadar(page, { weatherOk: true });
-  await page.route('**/ArcGIS/rest/services/**/MapServer/tile/**', route => route.abort());
+  // Fond sombre par défaut : les contours des pays sont servis par l'application elle-même.
+  await page.route('**/maps/africa-countries.json', route => route.abort());
   await page.goto('/app/live');
   await expect(page.getByText('Carte indisponible. Le fil et le choix du pays restent accessibles.', { exact: true })).toBeVisible({ timeout: 15000 });
   await selectCountry(page, 'SN');
@@ -43,7 +44,7 @@ for (const width of [1366, 390]) test(`RW réception locale en panne simulée à
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto('/app/live?country=SN');
   await expect(page.getByRole('heading', { name: /Radar Afrique/ })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Disponibilité des sources' }).getByRole('status')).toContainText(/Sources|Couverture/);
+  await expect(page.getByRole('region', { name: 'Sources et fraîcheur' }).getByRole('status')).toContainText(/source/i);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
   await page.screenshot({ path: `.local-logs/rw/screenshots/l4-dashboard-real-${width}.png` });

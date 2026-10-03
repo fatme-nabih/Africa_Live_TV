@@ -30,8 +30,8 @@ test('RW-004/RW-005 : wttr.in partiel garde sa provenance et ses inconnues dans 
   await expect(widget(page).getByText('Observation · wttr.in · serveur')).toBeVisible();
   await expect(widget(page).getByText('Condition inconnue', { exact: true })).toBeVisible();
   await expect(widget(page).getByText(/Date d’observation inconnue/)).toBeVisible();
-  const panel = page.getByRole('region', { name: 'Disponibilité des sources' });
-  await panel.getByText('Disponibilité et fraîcheur par source', { exact: true }).click();
+  const panel = page.getByRole('region', { name: 'Sources et fraîcheur' });
+  await panel.getByText('Détail par source', { exact: true }).click();
   await expect(panel.getByRole('row').filter({ hasText: 'wttr.in' }).getByText('données partielles', { exact: true })).toBeVisible();
   await expect(panel.getByRole('row').filter({ hasText: 'Open-Meteo' })).toHaveCount(0);
 });
@@ -93,8 +93,8 @@ test('RW-001/RW-005 : seul 503 autorisé → Open-Meteo navigateur et disponibil
   await page.goto('/app/live?country=SN');
   await expect(widget(page).getByText('29°C', { exact: true })).toBeVisible();
   await expect(widget(page).getByText('Observation · Open-Meteo · navigateur')).toBeVisible();
-  const panel = page.getByRole('region', { name: 'Disponibilité des sources' });
-  await panel.getByText('Disponibilité et fraîcheur par source', { exact: true }).click();
+  const panel = page.getByRole('region', { name: 'Sources et fraîcheur' });
+  await panel.getByText('Détail par source', { exact: true }).click();
   await expect(panel.getByRole('row').filter({ hasText: 'Open-Meteo' }).getByText('disponible', { exact: true })).toBeVisible();
   expect(direct).toBe(1);
 });

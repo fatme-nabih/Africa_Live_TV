@@ -5,6 +5,8 @@ import { loadClientWeather } from '@/lib/weather-client';
 import { admissibleWeather, makeWeatherSnapshot, WEATHER_TTL_MS } from '@/lib/weather-contract';
 import { WeatherRequestError } from '@/lib/weather-request';
 
+const CLOCK_TICK_MS = 15_000;
+
 export function useLiveWeather(code: string, refreshToken: number) {
   const [snapshot, setSnapshot] = useState<LiveWeatherSnapshot | null>(null);
   const [weatherError, setError] = useState<string | null>(null);
@@ -45,7 +47,8 @@ export function useLiveWeather(code: string, refreshToken: number) {
     // No immediate retry when Retry-After elapses: the regular cadence/manual action applies.
     if (Date.now() < retryDeadline.current) { setLoading(false); setError('Trop de demandes météo. Réessayez après le délai indiqué.'); }
     const interval = window.setInterval(() => void load(), WEATHER_TTL_MS);
-    const clock = window.setInterval(tick, 1_000);
+    // L'horloge ne sert qu'à constater l'expiration d'un relevé (quinze minutes de validité) : inutile de refaire le rendu de tout le Radar chaque seconde.
+    const clock = window.setInterval(tick, CLOCK_TICK_MS);
     return () => { active = false; controller.abort(); window.clearInterval(interval); window.clearInterval(clock); };
   }, [code, refreshToken]);
   const weather = now > 0 && snapshot?.current.countryCode === code && admissibleWeather(snapshot, now)

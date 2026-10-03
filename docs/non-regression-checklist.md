@@ -1,6 +1,31 @@
 # Checklist de non-régression — lots local et Railway
 
-## Expérience Premium P0–P2 — reçue localement le 2 octobre 2026
+## Expérience Premium P3 — reçue localement le 3 octobre 2026
+
+Plan : [plan-experience-premium.md](plan-experience-premium.md) §5.1. Preuves, mesures et limites :
+[production-progress.md](production-progress.md), section « Lot P3 ». **Cases reçues en local uniquement (dev, port 3001), sans commit
+ni déploiement ; Railway staging inchangé (P0–P2 y sont publiés).** À rejouer à la fin de chaque lot suivant (P4, P5).
+
+- [x] `npx tsc --noEmit` 0 erreur ; `npm run lint` 0 ; build réussi (Next.js, Turbopack).
+- [x] `npm test` : 341 tests, 327 réussis, 14 ignorés (intégrations PostgreSQL), 0 échec ; invariants 4/4.
+- [x] E2E mode MVP (14 specs, --workers=1) : 134 tests, 132 réussis, 1 ignoré (test « build servi »), 1 échec de test (course dans le nouveau spec radar-live), corrigé puis rejoué 10/10.
+- [x] E2E mode Clerk (dev, anonyme) : 8/8 (auth-entry, payment).
+- [x] Découpage UX-301 : 44 E2E radar verts **avant** tout ajout, specs non modifiés à ce stade.
+- [x] Aucun relais, conversion ni stockage de média ; image de dépêche chargée par le navigateur depuis l'éditeur (https, sans
+  référent), jamais téléchargée par le serveur, absente en mode Éco data ; aucun appel API d'image (E2E).
+- [x] Machine de lecture, accès, éligibilité, quotas inchangés ; seul changement d'API : champ optionnel `imageUrl` du flux de dépêches.
+- [x] Aucune migration, aucun changement `.env*`, Railway, Clerk ou DNS.
+- [x] Fond de carte par défaut sans serveur de tuiles tiers (E2E) : 1 requête / 25 Ko contre ≈ 120 Ko (satellite) ; satellite en option.
+- [x] Radar au repos : un rendu toutes les 15 s (≈ 4 ms de CPU entre deux rendus à CPU ×4) ; fil paginé par 12.
+- [x] Aucun jargon visible ni couleur hors charte dans le Radar (recherche automatisée) ; 0 débordement et 0 texte < 12 px à 320 / 360 / 768 / 1366 px (E2E).
+- [x] Pastille « n nouvelles » : `scrollY` inchangé à l'arrivée d'une dépêche (E2E).
+- [x] Contrôle visuel 360 / 768 / 1366 px : Edge, 0 débordement horizontal, 0 texte < 12 px, 0 erreur de page sur /app/live, /app, /app/ui (mode MVP) et landing, /pricing, /sign-in, 404 (mode Clerk) ; captures docs/screenshots/premium-p3-<page>-<largeur>.png, plus états simulés (sn-simule, alerte-orage, blocs-replies, direct-modale, pastille, eco) à 360 et 1366 px avec données et lecteur simulés. /account et /admin non capturés (session Clerk requise).
+- [ ] Séisme dans la tuile d'alerte : non fait (source retirée en RW-009).
+- [ ] Profils Clerk connectés ; `/account` et `/admin` capturés (UX-214) : non reçus.
+- [ ] Appareils Android/iOS réels, Safari, lecteur d'écran, VLC réel, flux amont actuels : non reçus.
+- [ ] Lighthouse et poids JS avant/après : prévus en UX-505 et UX-508 (P5).
+
+## Expérience Premium P0–P2 — reçue localement le 2 octobre 2026 (publiée le 3 octobre : GitHub `1ef60b5`, Railway staging)
 
 Plan : [plan-experience-premium.md](plan-experience-premium.md) §5.1. Preuves et limites :
 [production-progress.md](production-progress.md), sections « Lot P0 », « Lot P1 » et « Lot P2 ».

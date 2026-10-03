@@ -1,6 +1,6 @@
 # Africa Live — Rapport d'expérience et plan « Premium »
 
-Date : 2 octobre 2026 (mis à jour le 3 octobre 2026 : P0, P1, P2 faits) · Africa/Dakar · HEAD `1aa85b5` + lots P0–P2 non committés.
+Date : 2 octobre 2026 (mis à jour le 3 octobre 2026 : P0–P2 publiés, P3 fait en local) · Africa/Dakar · HEAD `01279c0` + lot P3 non committé.
 Périmètre : lecture du code (`src/app`, `src/components`, `globals.css`),
 captures réelles de `docs/screenshots` (staging connecté, TV 1366/390, L5),
 audits existants (`audit-produit-professionnel.md`, `audit-agencement-dashboard.md`).
@@ -310,11 +310,11 @@ documenté dans `production-progress.md`. Estimations en jours-dev effectifs.
 
 | Lot | Thème | Durée | Valeur | État (3 octobre 2026) |
 |---|---|---|---|---|
-| **P0** | Hygiène et socle design | 3 j | Cohérence immédiate | ✅ Fait et vérifié (02/10) |
-| **P1** | Coquille unique et navigation | 3 j | Fluidité inter-pages | ✅ Fait et vérifié (02/10) |
-| **P2** | TV « streaming » | 5 j | Rétention n°1 | ✅ Fait et vérifié (02/10) ; UX-209 partiel |
-| **P3** | Radar « vivant » | 5 j | Identité du produit | ⏭ **Prochain lot**, en attente du feu vert du propriétaire |
-| **P4** | Landing, tarifs, compte | 3 j | Conversion | À faire |
+| **P0** | Hygiène et socle design | 3 j | Cohérence immédiate | ✅ Fait et vérifié (02/10), publié (03/10) |
+| **P1** | Coquille unique et navigation | 3 j | Fluidité inter-pages | ✅ Fait et vérifié (02/10), publié (03/10) |
+| **P2** | TV « streaming » | 5 j | Rétention n°1 | ✅ Fait et vérifié (02/10), publié (03/10) ; UX-209 partiel |
+| **P3** | Radar « vivant » | 5 j | Identité du produit | ✅ Fait et vérifié en local (03/10), non committé |
+| **P4** | Landing, tarifs, compte | 3 j | Conversion | ⏭ **Prochain lot**, en attente du feu vert du propriétaire |
 | **P5** | Aimants avancés et finition | 5 j | Habitude, différenciation | À faire |
 
 Ordre recommandé : P0 → P1 → P2 → P3 → P4 → P5. P2 avant P3 car le gain
@@ -322,36 +322,34 @@ de rétention est le plus rapide et la base L5 (zapping) existe déjà.
 
 ### 5.1 État d'avancement et reste à faire (mis à jour le 3 octobre 2026)
 
-**Fait, vérifié localement, non committé** (arbre de travail volontairement sale,
-voir §8) : P0, P1 et P2, soit 26 tickets faits et 1 partiel (UX-209) sur 50. Preuves,
-limites et captures : sections « Expérience Premium — Lot P0 / P1 / P2 » de
-[production-progress.md](production-progress.md) ; captures
-`docs/screenshots/premium-p0-*`, `premium-p1-*`, `premium-p2-*`.
-Dernière vérification complète (fin de P2) : `tsc` 0 erreur, `lint` 0, `npm test`
-321 tests (307 réussis, 14 ignorés, 0 échec), invariants 4/4, `build` réussi,
-E2E mode MVP 108 réussis + 1 ignoré, E2E mode Clerk 8/8.
+**Publié** : P0, P1 et P2 sont committés et publiés sur GitHub `main` (applicatif `1ef60b5`, documentation `01279c0`) et sur
+Railway staging, à la demande du propriétaire ([dossier de publication](publication-premium-2026-10-03.md)).
 
-**Reste à faire** (23 tickets + 4 reliquats), dans cet ordre, un lot à la fois :
+**Fait, vérifié localement, non committé** : P3 « Radar vivant » (UX-301 → 308, 8 tickets), le 3 octobre 2026. Au total 34 tickets
+faits et 1 partiel (UX-209) sur 50. Preuves, mesures de la carte, défauts corrigés et limites : section « Expérience Premium — Lot
+P3 » de [production-progress.md](production-progress.md) ; captures `docs/screenshots/premium-p3-*`. Dernière vérification complète
+(fin de P3) : `tsc` 0 erreur, `lint` 0, `npm test` 341 tests (327 réussis, 14 ignorés, 0 échec), invariants 4/4, `build` réussi,
+E2E mode MVP 132 réussis + 1 ignoré sur 134 (un échec de test corrigé, voir production-progress.md), E2E mode Clerk 8/8.
+
+**Reste à faire** (15 tickets + 4 reliquats), dans cet ordre, un lot à la fois :
 
 | Lot | Tickets | Points d'attention |
 |---|---|---|
-| **P3 Radar vivant** (8) | UX-301 (découpage de `LiveRadarDashboard.tsx` **d'abord**), 302 → 308 | Les E2E radar (`radar-workspace`, `radar-weather`, `radar-reliability`, `dashboard-reception`) vérifient des libellés : les mettre à jour dans le même ticket avec une assertion équivalente. UX-302 : image `og:image` de l'éditeur chargée par le navigateur, aucun cache serveur. UX-305 : le fond sombre léger est déjà le défaut en mode Éco (`TacticalVectorMap.tsx`) ; mesurer le rendu mobile avant/après. UX-306 réutilise la modale de lecture et le zapping de P2 (`InlinePlayerModal`, `Player` avec `zapping`). Les dépêches ont déjà un bouton WhatsApp (`ShareArticleLink`). |
-| **P4 Landing, tarifs, compte** (7) | UX-401 → 407 + reliquats UX-212, UX-214 | Chiffres de la landing issus de la base, jamais en dur. Parcours NabooPay inchangé (E2E paiement simulé verts). UX-404 « Mon activité » peut réutiliser `recent-channels`, favoris, pays récents. UX-405 : widgets Clerk encore en anglais. |
-| **P5 Aimants et finition** (8) | UX-501 → 508 + reliquats UX-209 (suite), UX-213 | UX-501 mini-lecteur persistant : touche au lecteur, donc E2E lecture obligatoires, une seule source active. UX-502 : la barre de recherche (Ctrl K) existe déjà pour le catalogue TV. UX-503 : la synchronisation au compte est un **ticket de migration séparé**, sauvegarde Railway préalable. UX-505 : mesurer le poids JS de la TV avant/après. UX-508 : audit a11y + Lighthouse, rapport daté dans `docs/`. |
+| **P4 Landing, tarifs, compte** (7) | UX-401 → 407 + reliquats UX-212, UX-214 | Chiffres de la landing issus de la base, jamais en dur. Parcours NabooPay inchangé (E2E paiement simulé verts). UX-404 « Mon activité » peut réutiliser `recent-channels`, favoris, pays récents, et le repère `al_radar_visit` du Radar. UX-405 : widgets Clerk encore en anglais. |
+| **P5 Aimants et finition** (8) | UX-501 → 508 + reliquats UX-209 (suite), UX-213 | UX-501 mini-lecteur persistant : touche au lecteur, donc E2E lecture obligatoires, une seule source active (le Radar utilise déjà `InlinePlayerModal` ; le mini-lecteur persistant le remplacera ou le prolongera). UX-502 : la barre de recherche (Ctrl K) existe déjà pour le catalogue TV. UX-503 : la synchronisation au compte est un **ticket de migration séparé**, sauvegarde Railway préalable. UX-505 : mesurer le poids JS de la TV et du Radar avant/après ; l'image `BrandBackdrop` est signalée comme LCP en développement (`loading="eager"`). UX-508 : audit a11y + Lighthouse, rapport daté dans `docs/`. |
 
 **Reliquats identifiés pendant P0–P2** (à traiter dans le lot indiqué ; détail en §6) :
-UX-209 (tiroir unique des filtres, suite), UX-212 (Éco data visible sur mobile),
-UX-213 (contrôle du lecteur ancré à harmoniser), UX-214 (capturer `/account` et
-`/admin` avec une session Clerk — action du propriétaire).
+UX-209 (tiroir unique des filtres, suite), UX-212 (Éco data visible sur mobile), UX-213 (contrôle du lecteur ancré à harmoniser),
+UX-214 (capturer `/account` et `/admin` avec une session Clerk — action du propriétaire).
 
 **Questions ouvertes pour le propriétaire** :
-1. Committer P0–P2 avant P3 ? ~190 fichiers sont modifiés ou ajoutés, non committés ;
-   le risque de perte ou de mélange augmente à chaque lot. Aucun commit n'est fait
-   sans demande explicite.
-2. Fournir une session Clerk (ou valider lui-même) pour capturer `/account` et
-   `/admin` (UX-214).
-3. Faire valider sur appareil Android réel le lecteur (raccourcis, PiP, plein écran)
-   et le mode Éco data : seuls Edge et Chromium sont testés.
+1. ~~Committer P0–P2 avant P3~~ — **résolue** : P0–P2 sont committés et publiés (`1ef60b5`, `01279c0`). P3 est le seul lot non committé ;
+   aucun commit n'est fait sans demande explicite.
+2. Fournir une session Clerk (ou valider lui-même) pour capturer `/account` et `/admin` (UX-214).
+3. Faire valider sur appareil Android réel le lecteur (raccourcis, PiP, plein écran), le mode Éco data et la fluidité du Radar :
+   seuls Edge et Chromium sont testés, les mesures de performance sont simulées (bridage CPU/réseau).
+4. **Nouvelle (P3)** : la tuile « Alerte météo/séisme » n'a pas de séisme (couche USGS retirée en RW-009, appel interdit par les E2E).
+   Réintroduire une source sismique est un choix produit à valider ; sinon la tuile reste « Alerte météo ».
 
 ---
 
@@ -406,14 +404,14 @@ Taille : S ≤ ½ j, M ≈ 1 j, L ≈ 2–3 j.
 
 | ID | Prio | Taille | Ticket | Critères d'acceptation | État |
 |---|---|---|---|---|---|
-| UX-301 | P1 | L | Découper `LiveRadarDashboard.tsx` : `useRadarData`, `NewsFeed`, `CountryChannels`, `WeatherCard`, `MarketsCard`, `RadarHeader` | Fichier racine < 300 lignes ; E2E radar inchangés et verts | À faire |
-| UX-302 | P1 | M | Bloc **À la une** : 3 dépêches les plus récentes/multi-sources du pays, avec image `og:image` si fournie par le flux RSS | Pas de stockage d'image ; repli typographique | À faire |
-| UX-303 | P1 | M | Remplacer les 4 métriques de volume par : « Nouvelles depuis votre visite », « Chaînes en direct du pays », « Alerte météo/séisme » | Chaque tuile cliquable vers son contenu | À faire |
-| UX-304 | P1 | M | Langage humain : supprimer jargon visible, panneau « Sources et fraîcheur » regroupant RSS/GDELT/couverture | Revue des libellés ; aucun nom de librairie dans l'UI | À faire |
-| UX-305 | P2 | M | Carte : fond sombre vectoriel par défaut (léger), satellite en option ; libellés FR si le style le permet ; pulsation des pays selon activité 24 h | Temps de rendu carte mobile réduit (mesure avant/après) | À faire |
-| UX-306 | P2 | M | Dépêche → « Regarder le direct du pays » ouvre le mini-lecteur sans quitter le Radar | Parcours E2E clic dépêche → lecture | À faire |
-| UX-307 | P2 | S | Météo et marchés compacts et repliables, état mémorisé | Préférence locale | À faire |
-| UX-308 | P3 | M | Rafraîchissement doux : nouvelles dépêches annoncées par une pastille « 3 nouvelles ↑ » au lieu de repousser la liste | Pas de saut de défilement | À faire |
+| UX-301 | P1 | L | Découper `LiveRadarDashboard.tsx` : `useRadarData`, `NewsFeed`, `CountryChannels`, `WeatherCard`, `MarketsCard`, `RadarHeader` | Fichier racine < 300 lignes ; E2E radar inchangés et verts | ✅ P3 — 03/10/2026 (racine 250 lignes ; 44 E2E radar verts, specs inchangés à l'extraction) |
+| UX-302 | P1 | M | Bloc **À la une** : 3 dépêches les plus récentes/multi-sources du pays, avec image `og:image` si fournie par le flux RSS | Pas de stockage d'image ; repli typographique | ✅ P3 — 03/10/2026 (74 % des dépêches réelles illustrées ; APS : aucune image dans son flux) |
+| UX-303 | P1 | M | Remplacer les 4 métriques de volume par : « Nouvelles depuis votre visite », « Chaînes en direct du pays », « Alerte météo/séisme » | Chaque tuile cliquable vers son contenu | ✅ P3 — 03/10/2026 (météo seule : pas de séisme, voir §5.1 question 4) |
+| UX-304 | P1 | M | Langage humain : supprimer jargon visible, panneau « Sources et fraîcheur » regroupant RSS/GDELT/couverture | Revue des libellés ; aucun nom de librairie dans l'UI | ✅ P3 — 03/10/2026 |
+| UX-305 | P2 | M | Carte : fond sombre vectoriel par défaut (léger), satellite en option ; libellés FR si le style le permet ; pulsation des pays selon activité 24 h | Temps de rendu carte mobile réduit (mesure avant/après) | ✅ P3 — 03/10/2026 (écart : contours auto-hébergés au lieu du vectoriel OpenFreeMap, 10× plus lourd ; 25 Ko, 1 requête) |
+| UX-306 | P2 | M | Dépêche → « Regarder le direct du pays » ouvre le mini-lecteur sans quitter le Radar | Parcours E2E clic dépêche → lecture | ✅ P3 — 03/10/2026 |
+| UX-307 | P2 | S | Météo et marchés compacts et repliables, état mémorisé | Préférence locale | ✅ P3 — 03/10/2026 |
+| UX-308 | P3 | M | Rafraîchissement doux : nouvelles dépêches annoncées par une pastille « 3 nouvelles ↑ » au lieu de repousser la liste | Pas de saut de défilement | ✅ P3 — 03/10/2026 |
 
 ### Lot P4 — Landing, tarifs, compte
 
@@ -479,10 +477,9 @@ UI légers, sans données personnelles supplémentaires :
   le navigateur ; aucune mise en cache serveur (cohérent avec la politique média).
 - **Promesses commerciales** : chiffres uniquement issus de la base ; pas de
   « garanti », « instantané » sans preuve.
-- **Arbre de travail** : le diff RW est committé (`51c0bc8`, `1aa85b5`) mais P0, P1 et P2
-  ne le sont pas : l'arbre est sale par construction (≈ 190 fichiers). Ne jamais utiliser de
-  commande Git destructive pour « nettoyer » ; inspecter `git status --short` avant d'éditer.
-  Un commit local n'est fait que sur demande explicite ; push et déploiement Railway idem.
+- **Arbre de travail** : P0, P1 et P2 sont committés et publiés (`1ef60b5`, `01279c0`) ; seul le lot en cours est non committé. Inspecter
+  `git status --short` avant d'éditer et ne jamais utiliser de commande Git destructive pour « nettoyer ». Un commit local n'est fait
+  que sur demande explicite ; push et déploiement Railway idem.
 - **Libellés et E2E** : `e2e/dashboard-reception`, `radar-*`, `tv-workspace`,
   `local-mvp` vérifient des textes visibles ; tout changement de libellé met à
   jour le test dans le même ticket, sans affaiblir l'assertion.
@@ -511,12 +508,22 @@ UI légers, sans données personnelles supplémentaires :
   sur 3001 ; les E2E Clerk (`auth-entry`, `payment`) le serveur Clerk. Redémarrer le serveur
   Clerk à la fin de chaque lot.
 
+- **Hydratation (P3)** : en développement, React hydrate ≈ 100 ms **après** l'événement `load`. Un test qui agit juste après
+  `page.goto` peut agir sur du HTML non hydraté (changement de liste ignoré). Attendre d'abord un contenu qui n'existe qu'après
+  hydratation (dépêches affichées). Même piège pour les scripts de mesure ou de capture.
+- **Modale du lecteur** : elle contient deux titres (celui de la fenêtre, `#inline-player-title`, et celui du lecteur) ; cibler
+  `#inline-player-title` pour éviter l'erreur de sélecteur strict.
+- **Rendu du Radar** : près de 170 dépêches sur 24 h. Ne jamais les rendre toutes d'un coup (fil paginé par 12) ni lier un état qui
+  change souvent (horloge, tic) à la racine sans mémoïser les lignes. Mesurer le CPU au repos après toute modification
+  (`PerformanceObserver` + `Performance.getMetrics`, CPU ×4).
+- **Fond de carte** : ne pas réintroduire un fond en tuiles par défaut sans mesurer (OpenFreeMap : ≈ 1,27 Mo à l'échelle du
+  continent). Les contours viennent de `public/maps/africa-countries.json` (régénérable par `scripts/build-africa-countries.mjs`).
+- **Shell** : les remplacements multilignes avec `\\` ou `\s` dans un heredoc perdent leurs échappements ; utiliser l'outil d'écriture
+  ou d'édition. `python` lancé sans fichier bloque (processus à tuer).
+
 ## 9. Prochaine étape
 
-1. Le propriétaire répond aux trois questions ouvertes du §5.1 (commit de P0–P2, session
-   Clerk, test Android réel) et donne son feu vert pour **P3**.
-2. Nouvelle session : coller [prompt-reprise-premium-p3.md](prompt-reprise-premium-p3.md)
-   (annonce du plan de lot en 5 lignes, un lot à la fois, bilan fait / vérifié / limites,
-   attente du feu vert).
-3. P3 commence par UX-301 (découpage de `LiveRadarDashboard.tsx`, 1 383 lignes au 3 octobre) avec les E2E
-   radar inchangés et verts avant d'ajouter le moindre bloc nouveau.
+1. Le propriétaire relit le bilan de P3, répond aux questions ouvertes du §5.1 (session Clerk, test Android réel, séisme) et donne
+   son feu vert pour **P4** (landing, tarifs, compte), éventuellement après avoir demandé le commit de P3.
+2. Nouvelle session si besoin : lire AGENTS.md, contextellm.md, ce plan (§5.1, §6, §8.1) et la section « Lot P3 » de
+   production-progress.md ; annoncer le plan du lot en 5 lignes, un lot à la fois, bilan fait / vérifié / limites, attente du feu vert.

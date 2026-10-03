@@ -2,6 +2,31 @@
 
 Dernière mise à jour : 3 octobre 2026, fuseau Africa/Dakar.
 
+## Expérience Premium — Lot P3 « Radar vivant » fait en local (3 octobre 2026)
+
+- **Fait et vérifié localement, non committé, non publié** (UX-301 → 308). Détail, mesures et limites : section « Lot P3 » de
+  [production-progress.md](docs/production-progress.md) ; plan à jour : [plan-experience-premium.md](docs/plan-experience-premium.md) §5.1.
+  Captures : `docs/screenshots/premium-p3-*`.
+- `LiveRadarDashboard.tsx` : 1 383 → 250 lignes ; composants et hooks dans `src/components/radar/`, logique pure testée dans
+  `src/lib/` (`radar-articles`, `radar-featured`, `radar-visit`, `radar-fresh`, `radar-activity`, `weather-alert`, `rss-image`…).
+  Nouveautés : « À la une » (image de l'éditeur lue dans le flux, jamais téléchargée par le serveur), trois tuiles cliquables,
+  panneau « Sources et fraîcheur », direct du pays dans `InlinePlayerModal` sans quitter le Radar, météo et marchés repliables
+  (mémorisés), pastille « n nouvelles » sans saut de défilement.
+- **Carte** : le fond vectoriel OpenFreeMap prévu au plan pèse ≈ 1,27 Mo (10× le satellite) et a été écarté. Fond sombre par défaut
+  = contours des pays d'Afrique auto-hébergés (`public/maps/africa-countries.json`, 74 Ko / 24 Ko compressés, Natural Earth domaine
+  public, `scripts/build-africa-countries.mjs`) : 1 requête, 25 Ko ; satellite en option ; vue initiale cadrée sur tout le continent.
+- **Performance** : l'ancien Radar saturait le CPU au repos (rendu complet de ≈ 170 dépêches chaque seconde via l'horloge météo).
+  Horloge à 15 s, lignes mémoïsées, fil paginé par 12 : un rendu toutes les 15 s, ≈ 4 ms entre deux rendus (CPU ×4).
+- Vérification de fin de P3 : `tsc` 0, `lint` 0, `npm test` 341 (327 réussis, 14 ignorés, 0 échec), invariants 4/4, build réussi (Next.js, Turbopack),
+  E2E mode MVP (14 specs, --workers=1) : 134 tests, 132 réussis, 1 ignoré (test « build servi »), 1 échec de test (course dans le nouveau spec radar-live), corrigé puis rejoué 10/10, E2E mode Clerk (dev, anonyme) : 8/8 (auth-entry, payment).
+- Limites : pas de séisme dans la tuile d'alerte (USGS retiré en RW-009) ; APS n'a pas d'image dans son flux ; mesures simulées sur
+  Edge de bureau (aucun appareil réel) ; Clerk connecté, VLC réel et flux amont hors réception.
+- Suite : **attendre le feu vert du propriétaire pour P4** (Landing, tarifs, compte : UX-401 → 407 + UX-212, UX-214), puis P5.
+  Le propriétaire peut demander le commit de P3 (seul lot non committé).
+- Environnement laissé : serveur `npm run dev` sur 3001 en mode **Clerk** (santé 200, `/app` anonyme → 307), ligne technique
+  `africa-live-local-user` et événements de test supprimés (compteurs de tables identiques). Scripts de travail non versionnés dans
+  `.local-logs/p3/` (mesures de carte, CPU au repos, rendus React, captures) en plus de `.local-logs/premium/`.
+
 ## Publication Premium P0–P2 — 3 octobre 2026
 
 - Sur demande explicite du propriétaire, l'ensemble des changements Premium
@@ -18,14 +43,14 @@ Dernière mise à jour : 3 octobre 2026, fuseau Africa/Dakar.
 - [Dossier de publication](docs/publication-premium-2026-10-03.md).
   Un commit documentaire de clôture suit l'applicatif. Les mentions
   « non committé/non publié » des bilans P0–P2 ci-dessous sont historiques.
-- Suite : P3 après feu vert du propriétaire ; P3–P5 et reliquats inchangés.
+- Suite (historique) : P3 est fait en local depuis (voir ci-dessus) ; P4–P5 et reliquats inchangés.
   Profils connectés, amonts actuels, appareils et VLC réel restent hors réception.
 
 Ce document permet à une nouvelle session de reprendre le travail sans
 réinterpréter l'historique. Il ne contient volontairement aucun secret, cookie,
 mot de passe, identifiant de paiement, clé Clerk ou URL de flux média.
 
-## Expérience Premium — P0 à P2 faits, P3 en attente (3 octobre 2026)
+## Expérience Premium — P0 à P2 faits et publiés (historique, 2-3 octobre 2026)
 
 - Diff RW committé et publié par le propriétaire (`51c0bc8`, `1aa85b5`),
   Railway staging mis à jour. Vision UX/design validée.
@@ -57,11 +82,11 @@ mot de passe, identifiant de paiement, clé Clerk ou URL de flux média.
   (`enableInterstitialPlayback:false`). UX-209 partiel (barre latérale desktop conservée). Détail et preuves :
   section « Lot P2 » de [production-progress.md](docs/production-progress.md) ; captures
   `docs/screenshots/premium-p2-*`.
-- Suite : **attendre le feu vert du propriétaire pour P3** (Radar « vivant », UX-301 → 308 ; commencer par le
+- Suite : ~~attendre le feu vert pour P3~~ (P3 est fait : voir plus haut) (Radar « vivant », UX-301 → 308 ; commencer par le
   découpage UX-301 avec les E2E radar inchangés). Puis P4 (UX-401 → 407), P5 (UX-501 → 508). Réserves :
   `/account` et `/admin` à capturer avec une session Clerk (UX-214) ; widgets Clerk encore en anglais (UX-405) ;
-  couleurs éditoriales du Radar conservées jusqu'à P3 ; contrôle du lecteur ancré encore brut (UX-213).
-- **Arbre de travail** : P0, P1 et P2 sont modifiés/ajoutés mais **non committés** (≈ 190 fichiers). Le propriétaire
+  couleurs éditoriales du Radar harmonisées en P3 ; contrôle du lecteur ancré encore brut (UX-213).
+- **Arbre de travail** : (historique) P0–P2 étaient non committés (≈ 190 fichiers) ; ils sont committés et publiés depuis (`1ef60b5`). Le propriétaire
   n'a pas encore décidé de les committer ; ne rien committer sans demande explicite, ne jamais nettoyer par une
   commande Git destructive. `docs/screenshots/l5-anchored-*.png` sont réécrits par l'E2E `anchored-player` :
   les restaurer depuis `HEAD` après un passage.

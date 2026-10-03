@@ -18,7 +18,7 @@ export async function fixtureRadar(page: Page, options: { rssFails?: boolean; we
       { ...article, id: 'future', title: 'Future dépêche exclue', url: 'https://example.org/future', publishedAt: new Date(Date.parse(now) + 3600_000).toISOString() }],
       undatedArticles: [{ ...article, id: 'unknown', title: 'Dépêche sans date', url: 'https://example.org/unknown', publishedAt: null }], sources: [], updatedAt: now, availability: [source] }
       : api === 'channels' ? url.searchParams.has('country') ? { channels: [], total: 0, canPlay: true } : { countries: { SN: { countryCode: 'SN', channelCount: 3, directWebCount: 1, directVlcCount: 2 } }, totalChannels: 3, totalDirectWeb: 1, totalDirectVlc: 2, updatedAt: now }
-      : api === 'markets' ? { commodities: [], forex: [], alerts: [alert, alert, { ...alert, id: 'world', title: 'Événement mondial', url: 'https://example.org/world', scope: 'World' }], updatedAt: now, disclaimer: '', availability: [{ ...source, provider: 'Marchés / bandeau' }] }
+      : api === 'markets' ? { commodities: [], forex: [], alerts: [alert, alert, { ...alert, id: 'world', title: 'Événement mondial', url: 'https://example.org/world', scope: 'World' }], updatedAt: now, disclaimer: '', availability: [{ ...source, provider: 'Marchés et événements' }] }
       : api === 'events' || api === 'firms' ? { type: 'FeatureCollection', features: [], metadata: { updatedAt: now, stale: false } }
       : api === 'weather' && options.weatherOk ? weatherFixture(url.searchParams.get('code') ?? 'SN', Date.parse(now))
       : { error: 'Source indisponible' };

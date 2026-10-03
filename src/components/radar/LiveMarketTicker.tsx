@@ -34,8 +34,8 @@ export default function LiveMarketTicker({ onSelectCountry, onSourcesChange, ref
   }, [refresh, refreshToken]);
 
   useEffect(() => {
-    onSourcesChange?.(error ? [sourcePlaceholder('Marchés / bandeau', 'Cotations et événements', 'unavailable')]
-      : data?.availability?.map(source => ({ ...source, scope: `Bandeau · ${source.scope}` })) ?? [sourcePlaceholder('Marchés / bandeau', 'Cotations et événements', loading ? 'loading' : 'empty')]);
+    onSourcesChange?.(error ? [sourcePlaceholder('Marchés et événements', 'Cotations et événements', 'unavailable')]
+      : data?.availability?.map(source => ({ ...source, scope: `Bandeau · ${source.scope}` })) ?? [sourcePlaceholder('Marchés et événements', 'Cotations et événements', loading ? 'loading' : 'empty')]);
   }, [data, error, loading, onSourcesChange]);
 
   const items = useMemo(() => {
@@ -76,7 +76,7 @@ export default function LiveMarketTicker({ onSelectCountry, onSourcesChange, ref
     <div className="flex flex-wrap items-center gap-2 px-3 py-2 text-xs text-text">
       <label>Périmètre du bandeau <select aria-label="Périmètre du bandeau" value={scope} onChange={event => setScope(event.target.value as 'Africa' | 'World')} className="rounded bg-surface-2 px-2 py-1"><option value="Africa">Afrique</option><option value="World">Monde</option></select></label>
       <span className="text-text-muted">Cotations mondiales identifiées séparément</span>
-      <span role="status" className={degraded ? 'text-text' : 'text-text-muted'}>{loading ? 'Chargement du bandeau…' : degraded ? 'Bandeau partiel · sources indisponibles ou cache ancien' : items.length ? 'Dates et sources affichées' : 'Aucun résultat fourni par les sources consultées'}</span>
+      <span role="status" className={degraded ? 'text-text' : 'text-text-muted'}>{loading ? 'Chargement du bandeau…' : degraded ? 'Bandeau partiel · sources indisponibles ou données anciennes' : items.length ? 'Dates et sources affichées' : 'Aucun résultat fourni par les sources consultées'}</span>
       <button type="button" aria-label={paused ? 'Reprendre le défilement' : 'Mettre en pause'} onClick={() => setPaused(value => !value)} className="ml-auto rounded p-2 hover:bg-white/10">{paused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}</button>
       <button type="button" aria-label="Actualiser les cotations" disabled={loading} onClick={() => setRefresh(value => value + 1)} className="rounded p-2 hover:bg-white/10"><RefreshCw className="h-3 w-3" /></button>
     </div>

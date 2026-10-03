@@ -11,6 +11,8 @@ export type RadarRssArticle = {
   countryBasis?: 'media' | 'inferred_topic';
   editorialScope: 'africa' | 'international';
   category: string;
+  /** Illustration publiée par l'éditeur dans son flux (https). Jamais téléchargée ni stockée par Africa Live. */
+  imageUrl?: string;
 };
 
 export type RssSourceMetric = {

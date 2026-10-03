@@ -84,11 +84,14 @@ export function uniqueFilterOptions(values: string[]) {
   return [...new Set(values.map(value => value.trim()).filter(Boolean))];
 }
 
+// Un formateur Intl coûte cher à construire : un seul pour toutes les lignes du Radar.
+const RADAR_DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Africa/Dakar', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+
 export function formatRadarDate(date: string | null | undefined) {
   const normalized = normalizeRadarDate(date);
-  return normalized ? new Intl.DateTimeFormat('fr-FR', { timeZone: 'Africa/Dakar', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(normalized)) + ' GMT' : 'Date inconnue';
+  return normalized ? RADAR_DATE_FORMAT.format(new Date(normalized)) + ' GMT' : 'Date inconnue';
 }
 
 export function radarStatusLabel(status: RadarSourceStatus) {
-  return { available: 'disponible', empty: 'réponse vide', partial: 'données partielles', stale: 'cache périmé', unavailable: 'indisponible', not_configured: 'non configuré' }[status];
+  return { available: 'disponible', empty: 'réponse vide', partial: 'données partielles', stale: 'données anciennes', unavailable: 'indisponible', not_configured: 'pas activée' }[status];
 }

@@ -34,6 +34,8 @@ test('RW-008 : météo, villes rapides, URL/historique, RSS et lien TV partagent
   await page.setViewportSize({ width: 390, height: 844 });
   await fixtureRadar(page, { weatherOk: true });
   await page.goto('/app/live?country=SN&context=weather#feed');
+  // La page est hydratée quand les dépêches du pays s'affichent : avant, un changement de liste serait ignoré.
+  await expect(page.getByText('Dépêche Sénégal récente', { exact: true })).toBeVisible();
   const weather = page.getByRole('combobox', { name: 'Choisir le pays ou la ville pour la météo', exact: true });
   await weather.focus(); await expect(weather).toBeFocused(); await weather.selectOption('CI');
   await expectCountry(page, 'CI'); await expect(page).toHaveURL(/country=CI/);
@@ -121,7 +123,7 @@ test('Pays rapides SN→CI : réponses météo et TV obsolètes ignorées', asyn
   });
   await page.goto('/app/live');
   await selectCountry(page, 'SN'); await selectCountry(page, 'CI');
-  await page.getByRole('button', { name: /Chaînes TV/ }).click();
+  await page.getByRole('tab', { name: /Chaînes TV/ }).click();
   await expect(page.getByText('Chaîne CI', { exact: true })).toBeVisible();
   await page.waitForTimeout(900);
   await expect(page.getByText('Chaîne SN', { exact: true })).toHaveCount(0);
@@ -138,7 +140,9 @@ test('Carte et contrôle partagent le pays ; médias restent accessibles en 2D e
   const marker = page.locator('.tactical-radar-marker').filter({ hasText: 'Sénégal' });
   await expect(marker).toBeVisible();
   expect((await marker.boundingBox())!.y).toBeLessThan(768);
-  expect((await page.getByText('Fil des dépêches', { exact: true }).boundingBox())!.y).toBeLessThan(768);
+  // Le fil commence par « À la une » : sa tête est visible sans défiler, à côté de la carte.
+  expect((await page.getByRole('heading', { name: 'À la une' }).boundingBox())!.y).toBeLessThan(768);
+  expect((await page.getByText('Dépêche Sénégal récente', { exact: true }).boundingBox())!.y).toBeLessThan(768);
   await marker.focus(); await marker.press('Enter');
   await expect(page).toHaveURL(/country=SN/);
   await expectCountry(page, 'SN');
@@ -172,12 +176,12 @@ test('Fraîcheur expirée : table et couverture deviennent périmées selon leur
   await page.setViewportSize({ width: 390, height: 844 });
   await fixtureRadar(page, { weatherOk: true, asOf: '2026-09-30T12:00:00Z' });
   await page.goto('/app/live');
-  const panel = page.getByRole('region', { name: 'Disponibilité des sources' });
-  await expect(panel.getByRole('status')).toHaveText(/Sources disponibles/);
-  await panel.getByText('Disponibilité et fraîcheur par source', { exact: true }).click();
+  const panel = page.getByRole('region', { name: 'Sources et fraîcheur' });
+  await expect(panel.getByRole('status')).toHaveText(/Toutes les sources répondent/);
+  await panel.getByText('Détail par source', { exact: true }).click();
   await page.clock.fastForward(6 * 60_000);
-  await expect(panel.getByRole('status')).toHaveText(/Couverture partielle/);
-  await expect(panel.getByText('cache périmé', { exact: true }).first()).toBeVisible();
+  await expect(panel.getByRole('status')).toHaveText(/aux données anciennes ou partielles/);
+  await expect(panel.getByText('données anciennes', { exact: true }).first()).toBeVisible();
   await expect(panel.getByRole('row').filter({ hasText: 'Catalogue TV' }).getByText('disponible', { exact: true })).toBeVisible();
 });
 
@@ -185,19 +189,19 @@ test('Sources : panne totale, état non configuré/périmé, reprise et annonces
   await page.setViewportSize({ width: 390, height: 844 });
   await fixtureRadar(page, { allFail: true });
   await page.goto('/app/live');
-  const panel = page.getByRole('region', { name: 'Disponibilité des sources' });
-  await expect(panel.getByRole('status')).toHaveText('Sources indisponibles');
-  await panel.getByText('Disponibilité et fraîcheur par source', { exact: true }).click();
+  const panel = page.getByRole('region', { name: 'Sources et fraîcheur' });
+  await expect(panel.getByRole('status')).toHaveText('Aucune source ne répond pour le moment');
+  await panel.getByText('Détail par source', { exact: true }).click();
   await expect(panel.getByRole('table')).toBeVisible();
   await expect(panel.getByText('à la demande', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Feux NASA|Séismes & GDACS/ })).toHaveCount(0);
   await fixtureRadar(page, { weatherOk: true });
   await page.getByRole('button', { name: 'Actualiser', exact: true }).click();
-  await expect(panel.getByRole('status')).toHaveText(/Sources disponibles/);
+  await expect(panel.getByRole('status')).toHaveText(/Toutes les sources répondent/);
   await page.route('**/api/live/rss', route => route.fulfill({ json: { articles: [], sources: [], updatedAt: new Date().toISOString(), availability: [{ provider: 'RSS', scope: 'Afrique', status: 'not_configured', fetchedAt: '', lastSuccessAt: null, dataAt: null, cacheExpiresAt: null, count: 0 }] } }));
   await page.getByRole('button', { name: 'Actualiser', exact: true }).click();
-  await expect(panel.getByText('non configuré', { exact: true })).toBeVisible();
-  await expect(panel.getByRole('status')).toHaveText(/Couverture partielle/);
+  await expect(panel.getByText('pas activée', { exact: true })).toBeVisible();
+  await expect(panel.getByRole('status')).toHaveText(/momentanément muette/);
   const text = await panel.getByRole('status').textContent();
   await page.waitForTimeout(1100); expect(await panel.getByRole('status').textContent()).toBe(text);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -220,7 +224,7 @@ test('RW-009 : carte médias 2D/globe sans contrôles ni requêtes FIRMS/USGS, b
   await globe.click(); await expect(globe).toHaveAttribute('aria-pressed', 'true');
   await globe.click(); await expect(globe).toHaveAttribute('aria-pressed', 'false');
   await expect(page.getByText('Dépêche Sénégal récente', { exact: true })).toBeVisible();
-  await page.getByText('Marchés et événements · bandeau daté', { exact: true }).click();
+  await page.getByText('Marchés et événements', { exact: true }).click();
   await expect(page.getByRole('link', { name: 'Source : Économie africaine du bandeau' })).toHaveCount(1);
   expect(layers).toEqual([]); expect(errors).toEqual([]);
 });

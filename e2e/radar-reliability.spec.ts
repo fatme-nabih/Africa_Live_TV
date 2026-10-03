@@ -24,7 +24,7 @@ for (const width of [1366, 390, 320]) test(`Radar : dates, identités, filtre et
   await expect(page.locator('.maplibregl-canvas')).toBeVisible();
   await expect(page.locator('.tactical-radar-marker').first()).toBeVisible();
   await expect.poll(() => workers.some(url => url.endsWith('/maplibre-gl-worker.mjs'))).toBe(true);
-  await page.getByText('Marchés et événements · bandeau daté', { exact: true }).click();
+  await page.getByText('Marchés et événements', { exact: true }).click();
   await expect(page.getByRole('combobox', { name: 'Périmètre du bandeau' })).toHaveValue('Africa');
   await expect(page.getByText('Événement mondial', { exact: true })).toHaveCount(0);
   await page.getByRole('combobox', { name: 'Périmètre du bandeau' }).selectOption('World');
@@ -49,7 +49,7 @@ test('Worker bloqué et RSS en panne : pays et fil restent utilisables après na
     await fixtureRadar(page, { rssFails: true });
     await page.goto('/app/live');
     await expect(page.getByText('Carte indisponible. Le fil et le choix du pays restent accessibles.', { exact: true })).toBeVisible();
-    await expect(page.getByText('Flux RSS des rédactions indisponible', { exact: true })).toBeVisible();
+    await expect(page.getByText('Les dépêches sont momentanément indisponibles.', { exact: true })).toBeVisible();
     await expect(page.getByText('Dépêche Sénégal récente', { exact: true })).toHaveCount(0);
     await fixtureRadar(page, { weatherOk: true });
     await page.getByRole('button', { name: 'Actualiser', exact: true }).click();

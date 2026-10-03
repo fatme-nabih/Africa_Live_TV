@@ -10,6 +10,9 @@ export const STORAGE_KEYS = {
   ecoMode: 'al_eco',
   zapList: 'al_zap_list',
   tvRows: 'al_tv_rows',
+  radarVisit: 'al_radar_visit',
+  radarWeatherOpen: 'al_radar_weather_open',
+  radarMarketsOpen: 'al_radar_markets_open',
 } as const;
 
 export const VLC_NOTICE_CHANGE_EVENT = 'al_vlc_notice_change';

@@ -1,6 +1,7 @@
 import { ServiceUnavailableError } from '@/lib/api-errors';
 import { createHash } from 'node:crypto';
 import { canonicalArticleUrl, normalizeRadarDate, radarSource, temporalWindow, type RadarSourceState } from './radar-data';
+import { extractImageUrl } from './rss-image';
 import type {
   FeedConfig,
   RadarRssArticle,
@@ -394,6 +395,7 @@ export function parseFeedXml(xml: string, feed: FeedConfig): RadarRssArticle[] {
     // 6. ID
     const id = `${feed.id}-${createHash('sha256').update(finalUrl).digest('hex')}`;
     const updatedMatch = itemXml.match(/<updated[^>]*>([\s\S]*?)<\/updated>/i);
+    const imageUrl = extractImageUrl(itemXml, finalUrl);
 
     articles.push({
       id,
@@ -408,6 +410,7 @@ export function parseFeedXml(xml: string, feed: FeedConfig): RadarRssArticle[] {
       countryCode,
       countryBasis: inferredCountry ? 'inferred_topic' : 'media',
       category,
+      ...(imageUrl ? { imageUrl } : {}),
     });
   }
 
@@ -501,13 +504,13 @@ async function fetchAllFeeds(): Promise<RadarRssSnapshot> {
       allArticles.push(...outcome.value);
       sourceCounts.set(feed.id, outcome.value.length);
       feedCache.set(feed.id, { articles: outcome.value, savedAt: now });
-      availability.push(radarSource(feed.name, 'Afrique · pays du sujet inféré', now, RSS_TTL_MS, outcome.value.length, { limit: 150, dataAt: outcome.value.find(a => a.publishedAt)?.publishedAt }));
+      availability.push(radarSource(feed.name, 'Afrique · dépêches', now, RSS_TTL_MS, outcome.value.length, { limit: 150, dataAt: outcome.value.find(a => a.publishedAt)?.publishedAt }));
     } else {
       const cached = feedCache.get(feed.id);
       const reusable = cached && now - cached.savedAt <= RSS_MAX_STALE_MS;
       if (reusable) allArticles.push(...cached.articles);
       sourceCounts.set(feed.id, reusable ? cached.articles.length : 0);
-      availability.push(radarSource(feed.name, 'Afrique · pays du sujet inféré', now, RSS_TTL_MS, reusable ? cached.articles.length : 0, { status: reusable ? 'stale' : 'unavailable', lastSuccessAt: cached ? new Date(cached.savedAt).toISOString() : null, limit: 150 }));
+      availability.push(radarSource(feed.name, 'Afrique · dépêches', now, RSS_TTL_MS, reusable ? cached.articles.length : 0, { status: reusable ? 'stale' : 'unavailable', lastSuccessAt: cached ? new Date(cached.savedAt).toISOString() : null, limit: 150 }));
     }
   }
 
@@ -516,14 +519,20 @@ async function fetchAllFeeds(): Promise<RadarRssSnapshot> {
   }
 
   // Deduplicate by URL
-  const seenUrls = new Set<string>();
+  const byUrl = new Map<string, RadarRssArticle>();
   const deduplicatedArticles: RadarRssArticle[] = [];
 
   for (const article of allArticles) {
     const key = canonicalArticleUrl(article.url);
-    if (seenUrls.has(key)) continue;
-    seenUrls.add(key);
-    deduplicatedArticles.push(article);
+    const kept = byUrl.get(key);
+    if (kept) {
+      // Même article repris par deux flux : on garde le premier, mais on récupère l'illustration manquante.
+      if (!kept.imageUrl && article.imageUrl) kept.imageUrl = article.imageUrl;
+      continue;
+    }
+    const entry = { ...article };
+    byUrl.set(key, entry);
+    deduplicatedArticles.push(entry);
   }
 
   // Sort descending by date
