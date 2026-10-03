@@ -2,6 +2,25 @@
 
 Dernière mise à jour : 3 octobre 2026, fuseau Africa/Dakar.
 
+## Publication Premium P0–P2 — 3 octobre 2026
+
+- Sur demande explicite du propriétaire, l'ensemble des changements Premium
+  P0/P1/P2, leurs tests, captures et documentation sont committés et poussés
+  sur GitHub `main` : applicatif `1ef60b5` (226 fichiers).
+- Railway staging CLI : `117f35ed-2c1a-474f-ad72-dd0cea974a4f` **SUCCESS**,
+  instance RUNNING ; 343 fichiers applicatifs identiques par SSH.
+- Réception : 307 unitaires réussis, 14 intégrations ignorées, invariants
+  4/4, TypeScript/lint/migrations/build réussis ; 8/8 E2E Clerk locaux et
+  **9/9 E2E distants**. Santé 200 sur les deux domaines, météo anonyme 401,
+  dashboard 307 ; migrations 19/19 sans différence avant/après.
+- Serveur local absent au début de la réception navigateur, relancé sur 3001
+  avec Clerk ; santé 200. Variables, DNS, plans, schéma et source IPTV inchangés.
+- [Dossier de publication](docs/publication-premium-2026-10-03.md).
+  Un commit documentaire de clôture suit l'applicatif. Les mentions
+  « non committé/non publié » des bilans P0–P2 ci-dessous sont historiques.
+- Suite : P3 après feu vert du propriétaire ; P3–P5 et reliquats inchangés.
+  Profils connectés, amonts actuels, appareils et VLC réel restent hors réception.
+
 Ce document permet à une nouvelle session de reprendre le travail sans
 réinterpréter l'historique. Il ne contient volontairement aucun secret, cookie,
 mot de passe, identifiant de paiement, clé Clerk ou URL de flux média.

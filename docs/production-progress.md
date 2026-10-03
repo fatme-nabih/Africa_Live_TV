@@ -1,5 +1,18 @@
 # Progression — préparation production
 
+## Publication Premium P0–P2 — 3 octobre 2026
+
+Publication demandée par le propriétaire : commit applicatif `1ef60b5`
+poussé sur GitHub `main`, Railway staging CLI
+`117f35ed-2c1a-474f-ad72-dd0cea974a4f` SUCCESS et instance RUNNING.
+343 fichiers applicatifs identiques par SSH ; santé 200 sur les deux
+domaines, météo anonyme 401 et dashboard 307. 307 unitaires réussis,
+14 intégrations ignorées, invariants 4/4, TypeScript/lint/migrations/build
+réussis, 8/8 E2E Clerk locaux et 9/9 E2E distants. Migrations 19/19
+sans différence avant/après. [Preuves et limites](publication-premium-2026-10-03.md).
+P0–P2 sont désormais committés et publiés ; les mentions contraires des
+bilans antérieurs restent historiques. P3–P5 et reliquats non commencés.
+
 ## Correction locale lecteur — 2 octobre 2026
 
 Capture utilisateur : React signale une clé vide dupliquée dans `Player.tsx`.
