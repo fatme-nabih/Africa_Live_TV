@@ -1,12 +1,13 @@
 'use client';
 
-import { Heart, History, MapPin, Radar } from 'lucide-react';
+import { Heart, History, MapPin, Radar, Star, X } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useSyncExternalStore } from 'react';
 import { useNow } from '@/components/radar/useNow';
-import { useRecentChannels } from '@/components/tv/hooks';
+import { useFollowedCountries, useRecentChannels, writeFollowedCountries } from '@/components/tv/hooks';
 import { ButtonLink, EmptyState } from '@/components/ui';
 import { flagEmoji, parseRecentCountries, RECENT_COUNTRIES_EVENT } from '@/lib/country-picker';
+import { makePrimaryCountry, toggleFollowedCountry } from '@/lib/followed-countries';
 import { formatCountryName } from '@/lib/format';
 import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
 import { parseVisit } from '@/lib/radar-visit';
@@ -38,6 +39,7 @@ function read(key: string) {
  */
 export default function AccountActivity({ favoritesCount }: { favoritesCount: number }) {
   const recents = useRecentChannels();
+  const followed = useFollowedCountries();
   const countriesRaw = useSyncExternalStore(subscribe, () => read(STORAGE_KEYS.recentCountries), () => null);
   const visitRaw = useSyncExternalStore(subscribe, () => read(STORAGE_KEYS.radarVisit), () => null);
   // 0 avant le montage : le serveur ne connaît pas l'appareil, le premier rendu client est identique.
@@ -46,7 +48,7 @@ export default function AccountActivity({ favoritesCount }: { favoritesCount: nu
   const countries = useMemo(() => parseRecentCountries(countriesRaw, AFRICAN_CODES), [countriesRaw]);
   const visit = hydrated ? parseVisit(visitRaw, now) : null;
 
-  const empty = recents.length === 0 && countries.length === 0 && visit === null && favoritesCount === 0;
+  const empty = recents.length === 0 && followed.length === 0 && countries.length === 0 && visit === null && favoritesCount === 0;
 
   return (
     <section aria-labelledby="activity-title" className="rounded-card border border-line bg-surface-1/90 p-5 sm:p-6">
@@ -76,6 +78,33 @@ export default function AccountActivity({ favoritesCount }: { favoritesCount: nu
               </ul>
             ) : <Muted>Aucune chaîne regardée pour l’instant.</Muted>}
             <ActivityLink href="/app">Reprendre à la TV</ActivityLink>
+          </Block>
+
+          <Block icon={Star} title="Pays suivis">
+            {followed.length ? (
+              <ul className="space-y-1.5">
+                {followed.map((code, index) => (
+                  <li key={code} className="flex min-w-0 items-center gap-2 text-sm text-text">
+                    <span aria-hidden="true">{flagEmoji(code)}</span>
+                    <Link href={`/app/live?country=${code}`} className="min-w-0 truncate hover:text-al-gold">{formatCountryName(code)}</Link>
+                    {index === 0 ? (
+                      <span className="shrink-0 rounded-pill border border-line-gold px-2 text-xs text-al-gold">Principal</span>
+                    ) : (
+                      <button type="button" onClick={() => writeFollowedCountries(makePrimaryCountry(followed, code))}
+                        aria-label={`Faire de ${formatCountryName(code)} le pays principal`}
+                        className="shrink-0 rounded-pill border border-line px-2 text-xs text-text-muted hover:border-line-gold hover:text-text">
+                        En principal
+                      </button>
+                    )}
+                    <button type="button" onClick={() => writeFollowedCountries(toggleFollowedCountry(followed, code))}
+                      aria-label={`Ne plus suivre ${formatCountryName(code)}`}
+                      className="ml-auto inline-flex size-8 shrink-0 items-center justify-center rounded-control text-text-muted hover:bg-surface-3 hover:text-text">
+                      <X size={14} aria-hidden="true" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : <Muted>Suivez jusqu’à 5 pays depuis le Radar : le premier devient votre pays principal.</Muted>}
           </Block>
 
           <Block icon={MapPin} title="Pays récents">

@@ -1,19 +1,21 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import PageTransition from '@/components/shell/PageTransition';
 import { useCatalogFilters } from '@/components/useCatalogFilters';
 import BrandBackdrop from '@/components/brand/BrandBackdrop';
 import { Button, ButtonLink, ErrorState } from '@/components/ui';
 import FilterSidebar from '@/components/FilterSidebar';
+import CatalogSearchField from '@/components/tv/CatalogSearchField';
 import ChannelGrid from '@/components/ChannelGrid';
 import CategoryTabs from '@/components/CategoryTabs';
 import ActiveFilterChips from '@/components/tv/ActiveFilterChips';
 import HelpLine from '@/components/tv/HelpLine';
 import TvRows from '@/components/tv/TvRows';
 import { recordRecentChannel } from '@/components/tv/hooks';
-import InlinePlayerModal from '@/components/InlinePlayerModal';
-import AnchoredPlayer from '@/components/AnchoredPlayer';
+import { usePlayerDock } from '@/components/player/PlayerDock';
+import { TV_WALL_ENABLED } from '@/lib/tv-wall';
 import {
   catalogRequestSchema,
   catalogResponseSchema,
@@ -30,6 +32,9 @@ import { saveZapList } from '@/lib/zap-list';
 import { migrateLegacyStorageOnce, STORAGE_KEYS, VLC_NOTICE_CHANGE_EVENT } from '@/lib/storage-keys';
 import type { Channel } from '@/types/channel';
 import { AlertCircle, ExternalLink, Filter, LayoutGrid, LayoutList, List, MonitorPlay, Play, RefreshCw } from 'lucide-react';
+
+// Prototype L5 (développement seulement) : chargé à la demande, pour que le lecteur et hls.js restent hors du premier chargement de la TV.
+const AnchoredPlayer = dynamic(() => import('@/components/AnchoredPlayer'), { ssr: false });
 
 
 const VLC_NOTICE_STORAGE_KEY = STORAGE_KEYS.vlcNoticeDismissed;
@@ -126,7 +131,8 @@ function CatalogWorkspace() {
   const [playlist, setPlaylist] = useState<Channel[] | null>(null);
   const [canPlay, setCanPlay] = useState(true);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
-  const [isInlinePlayerOpen, setIsInlinePlayerOpen] = useState(false);
+  // Lecteur unique de l'espace /app (UX-501) : il continue si l'on passe au Radar.
+  const dock = usePlayerDock();
   const [anchoredEnabled, setAnchoredEnabled] = useState(false);
   const [anchoredChannel, setAnchoredChannel] = useState<Channel | null>(null);
   const [externalStopped, setExternalStopped] = useState(false);
@@ -162,8 +168,7 @@ function CatalogWorkspace() {
   // Recherche : raccourci Ctrl/Cmd+K, bouton « Rechercher » de la barre (événement) ou lien ?focus=search
   useEffect(() => {
     const focusSearch = () => {
-      if (!window.matchMedia('(min-width: 1024px)').matches) setIsMobileFiltersOpen(true);
-      // Le champ peut n'exister qu'après l'ouverture du tiroir mobile : on réessaie quelques images.
+      // Le champ est dans la barre d'outils ; il peut n'exister qu'après hydratation : on réessaie quelques images.
       let attempts = 0;
       const tryFocus = () => {
         const input = document.getElementById('catalog-search') as HTMLInputElement | null;
@@ -181,13 +186,6 @@ function CatalogWorkspace() {
       };
       window.requestAnimationFrame(tryFocus);
     };
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        focusSearch();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
     window.addEventListener(FOCUS_SEARCH_EVENT, focusSearch);
     const url = new URL(window.location.href);
     if (url.searchParams.get('focus') === 'search') {
@@ -196,7 +194,6 @@ function CatalogWorkspace() {
       queueMicrotask(focusSearch);
     }
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener(FOCUS_SEARCH_EVENT, focusSearch);
     };
   }, []);
@@ -404,7 +401,7 @@ function CatalogWorkspace() {
   const openPlayerForChannel = useCallback((channel: Channel) => {
     setAnchoredChannel(null);
     setSelectedChannel(channel);
-    setIsInlinePlayerOpen(false);
+    dock.close();
     saveZapList(playlist ?? channels, window.localStorage);
     recordRecentChannel(channel);
     const result = launchPlayer({
@@ -423,7 +420,7 @@ function CatalogWorkspace() {
       playerWindowRef.current = null;
       setPlayerWindowStatus('blocked');
     }
-  }, [channels, playlist]);
+  }, [channels, playlist, dock]);
 
   const closePlayerWindow = useCallback(() => {
     const handle = playerWindowRef.current as Window | null;
@@ -438,19 +435,24 @@ function CatalogWorkspace() {
   }, []);
 
   const openInlinePlayer = useCallback(() => {
+    if (!selectedChannel) return;
     stopPlayerWindow();
     setAnchoredChannel(null);
-    setIsInlinePlayerOpen(true);
-  }, [stopPlayerWindow]);
+    dock.open({ channel: selectedChannel, playlist: playlist ?? channels, onZap: setSelectedChannel, onPopout: openPlayerForChannel });
+  }, [stopPlayerWindow, selectedChannel, playlist, channels, dock, openPlayerForChannel]);
 
   const handleSelectChannel = useCallback((channel: Channel, list?: Channel[]) => {
     setPlaylist(list ?? null);
     setSelectedChannel(channel);
     if (anchoredEnabled) closePlayerWindow();
     else stopPlayerWindow();
-    setIsInlinePlayerOpen(canPlay && !anchoredEnabled);
+    if (canPlay && !anchoredEnabled) {
+      dock.open({ channel, playlist: list ?? channels, onZap: setSelectedChannel, onPopout: openPlayerForChannel });
+    } else {
+      dock.close();
+    }
     setAnchoredChannel(canPlay && anchoredEnabled ? channel : null);
-  }, [canPlay, anchoredEnabled, closePlayerWindow, stopPlayerWindow]);
+  }, [canPlay, anchoredEnabled, closePlayerWindow, stopPlayerWindow, dock, channels, openPlayerForChannel]);
 
   useEffect(() => {
     if (playerWindowStatus !== 'open') return;
@@ -495,10 +497,10 @@ function CatalogWorkspace() {
             type="button"
             onClick={() => setIsMobileFiltersOpen(true)}
             aria-label="Ouvrir les filtres"
-            className="flex min-h-11 items-center gap-1.5 rounded-control border border-line bg-surface-2 px-3.5 text-xs font-semibold text-text transition hover:border-line-gold lg:hidden"
+            className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-control border border-line bg-surface-2 px-3.5 text-xs font-semibold text-text transition hover:border-line-gold"
           >
             <Filter className="h-3.5 w-3.5 text-al-gold" aria-hidden="true" />
-            <span>Filtres</span>
+            <span className="hidden min-[360px]:inline">Filtres</span>
             {activeFiltersCount > 0 && (
               <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-al-yellow px-1 text-xs font-black text-black">
                 {activeFiltersCount}
@@ -506,12 +508,19 @@ function CatalogWorkspace() {
             )}
           </button>
 
-          <div className="ml-auto flex items-center gap-2 sm:gap-3">
-            <div aria-live="polite" className="hidden items-center gap-2 whitespace-nowrap rounded-full border border-line bg-surface-2 px-3 py-1.5 text-xs font-semibold text-text-muted sm:flex">
+          <CatalogSearchField value={baseFilters.search} onChange={search => handleFilterChange({ ...baseFilters, search })} />
+
+          <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+            <div aria-live="polite" className="hidden items-center gap-2 whitespace-nowrap rounded-full border border-line bg-surface-2 px-3 py-1.5 text-xs font-semibold text-text-muted xl:flex">
               <span aria-hidden="true" className="live-dot"></span>
               {channels.length} chaînes visibles
             </div>
 
+            {TV_WALL_ENABLED && (
+              <ButtonLink href="/app/mur" variant="ghost" size="sm" className="hidden xl:inline-flex" icon={<LayoutGrid aria-hidden="true" className="size-4 text-al-gold" />}>
+                Mur TV
+              </ButtonLink>
+            )}
             <div role="group" aria-label="Mode d’affichage" className="flex items-center gap-0.5 rounded-control border border-line bg-surface-2 p-0.5">
               <button
                 type="button"
@@ -539,10 +548,10 @@ function CatalogWorkspace() {
       {showVlcNotice && <HelpLine onDismiss={dismissVlcNotice} />}
 
       {/* Contenu principal */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 md:p-6 flex flex-col gap-4 sm:gap-6">
 
-        {/* Colonne Filtres (1/4 de largeur sur grand écran, drawer sur mobile) */}
-        <div className="lg:col-span-1">
+        {/* Filtres : un seul tiroir à toutes les largeurs (UX-209), ouvert par le bouton « Filtres » */}
+        <div>
           <FilterSidebar
             filters={baseFilters}
             onReset={resetFilters}
@@ -555,7 +564,7 @@ function CatalogWorkspace() {
         </div>
 
         {/* Section Lecteur + Grille (3/4 de largeur) */}
-        <div className={`min-w-0 lg:col-span-3 ${anchoredEnabled && canPlay ? 'grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] items-start' : 'flex flex-col'} gap-4 sm:gap-6`}>
+        <div className={`min-w-0 ${anchoredEnabled && canPlay ? 'grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] items-start' : 'flex flex-col'} gap-4 sm:gap-6`}>
 
           {/* Quick Category Filter Tabs */}
           <div className="xl:col-span-2"><CategoryTabs
@@ -578,17 +587,19 @@ function CatalogWorkspace() {
           {(selectedChannel || ANCHORED_PLAYER_AVAILABLE) && (
             <section aria-label="Lecteur" className={`relative xl:col-span-2 overflow-hidden ${selectedChannel ? 'rounded-card border border-line bg-surface-1 p-3 sm:p-4' : ''}`}>
               {ANCHORED_PLAYER_AVAILABLE && (
-                <div className={`flex flex-wrap items-center gap-3 text-xs ${selectedChannel ? 'mb-3' : ''}`}>
-                  <button type="button" aria-pressed={anchoredEnabled} disabled={!canPlay || (!anchoredEnabled && !externalStopped)}
-                    className="rounded-lg border border-al-gold/40 px-3 py-2 focus-visible:ring-2 focus-visible:ring-al-gold disabled:opacity-40"
+                <div className={`flex flex-wrap items-center gap-2 rounded-control border border-dashed border-line px-3 py-2 ${selectedChannel ? 'mb-3' : ''}`}>
+                  {/* Prototype local L5 (développement seulement) : habillé avec le design system, comportement inchangé (UX-213). */}
+                  <span className="mr-1 text-xs font-semibold uppercase tracking-[0.14em] text-text-muted">Prototype</span>
+                  <Button variant="secondary" size="sm" aria-pressed={anchoredEnabled} disabled={!canPlay || (!anchoredEnabled && !externalStopped)}
+                    icon={<MonitorPlay aria-hidden="true" className="size-3.5 text-al-gold" />}
                     onClick={() => {
                       closePlayerWindow();
-                      setIsInlinePlayerOpen(false);
+                      dock.close();
                       setAnchoredChannel(null);
                       setAnchoredEnabled(!anchoredEnabled);
-                    }}>{anchoredEnabled ? 'Désactiver le lecteur ancré' : 'Activer le lecteur ancré'}</button>
-                  {!anchoredEnabled && <label className="flex items-center gap-2">
-                    <input type="checkbox" checked={externalStopped} onChange={event => setExternalStopped(event.target.checked)} />
+                    }}>{anchoredEnabled ? 'Désactiver le lecteur ancré' : 'Activer le lecteur ancré'}</Button>
+                  {!anchoredEnabled && <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-pill border border-line bg-surface-2 px-3 text-xs font-semibold text-text has-[:checked]:border-al-green/60 has-[:checked]:text-al-green">
+                    <input type="checkbox" className="size-4 accent-al-green" checked={externalStopped} onChange={event => setExternalStopped(event.target.checked)} />
                     VLC et mes autres lecteurs sont arrêtés
                   </label>}
                 </div>
@@ -715,7 +726,7 @@ function CatalogWorkspace() {
       </div>
 
       {/* Floating Action Button for Quick Player Re-Open */}
-      {selectedChannel && canPlay && !anchoredEnabled && (
+      {selectedChannel && canPlay && !anchoredEnabled && !dock.channel && (
         <button
           type="button"
           onClick={openInlinePlayer}
@@ -735,18 +746,6 @@ function CatalogWorkspace() {
         </button>
       )}
 
-      {/* Inline Video Player Modal Overlay */}
-      {canPlay && isInlinePlayerOpen && <InlinePlayerModal
-        channel={selectedChannel}
-        isOpen={canPlay && isInlinePlayerOpen}
-        onClose={() => setIsInlinePlayerOpen(false)}
-        onOpenPopoutWindow={() => {
-          if (selectedChannel) openPlayerForChannel(selectedChannel);
-        }}
-        playlist={playlist ?? channels}
-        onZap={setSelectedChannel}
-        onPlaybackStarted={recordRecentChannel}
-      />}
     </main>
     </PageTransition>
   );

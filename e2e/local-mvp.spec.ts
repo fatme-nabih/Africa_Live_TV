@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { loadEnvConfig } from '@next/env';
 import { Pool } from 'pg';
 import { assertLocalE2ETarget } from '../src/lib/integration-test-safety';
+import { withFilters } from './helpers/filters';
 
 loadEnvConfig(process.cwd());
 test.use({ trace: 'off', screenshot: 'off' });
@@ -57,7 +58,7 @@ test('channels marked unavailable stay hidden from the catalogue', async ({ page
 test('country filters and favorites work without Clerk', async ({ page }) => {
   await page.goto('/app');
   const response = page.waitForResponse(response => response.url().endsWith('/api/channels') && response.request().postDataJSON().country === 'SN');
-  await page.getByLabel('Pays', { exact: true }).selectOption('SN');
+  await withFilters(page, drawer => drawer.getByLabel('Pays', { exact: true }).selectOption('SN'));
   const body = await (await response).json();
   expect(body.channels.length).toBeGreaterThan(0);
   expect(body.channels.every((channel: { countryCode: string }) => channel.countryCode === 'SN')).toBe(true);
@@ -74,7 +75,7 @@ test('country filters and favorites work without Clerk', async ({ page }) => {
   try {
     await expect(remove).toBeVisible();
     await page.reload();
-    await page.getByLabel('Pays', { exact: true }).selectOption('SN');
+    await withFilters(page, drawer => drawer.getByLabel('Pays', { exact: true }).selectOption('SN'));
     await expect(remove).toBeVisible();
   } finally {
     const cleaned = await page.request.patch('/api/favorites', {

@@ -1,5 +1,17 @@
 # Checklist de non-régression — lots local et Railway
 
+## Expérience Premium P5 — reçue localement le 3 octobre 2026 (non committée)
+
+Preuves : [production-progress.md](production-progress.md) « Lot P5 » et [audit](audit-a11y-performance-2026-10-03.md).
+
+- [x] tsc 0 ; lint 0 ; build réussi ; `npm test` 355 (341/14/0) ; invariants 4/4.
+- [x] E2E MVP 19 specs : 145 réussis + 1 ignoré (1 échec corrigé, spec rejoué) ; specs de lecture rejoués 73/73 et 36/36 ; E2E Clerk 8/8.
+- [x] Une seule source active : le même `<video>` survit au passage TV → Radar (E2E), une nouvelle chaîne remplace la précédente.
+- [x] Service worker : cache limité à `offline.html` + 2 images locales (aucun média, aucune API) ; écran « Hors antenne » hors connexion.
+- [x] Machine de lecture, accès, quotas, API, schéma, `.env*`, Railway, Clerk et DNS inchangés ; `framer-motion` retiré, aucune dépendance ajoutée.
+- [x] axe-core WCAG 2.1 A/AA : 0 violation (8 pages, 2 états) ; 0 débordement, 0 texte < 12 px sur les captures P5.
+- [ ] UX-507 (L6) ; Lighthouse ; pays suivis synchronisés au compte ; appareils Android et lecteurs d'écran réels : non reçus.
+
 ## Expérience Premium P4 — reçue localement le 3 octobre 2026 (publiée le 3 octobre avec P3 : GitHub `06b662f`, Railway staging `990745ba`, 9/9 E2E distants)
 
 Plan : [plan-experience-premium.md](plan-experience-premium.md) §5.1. Preuves et limites : [production-progress.md](production-progress.md),

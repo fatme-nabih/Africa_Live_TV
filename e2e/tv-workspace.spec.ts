@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { categoryCodes, catalogLanguageCodes } from '../src/lib/catalog-metadata';
 import { fixtureRadar } from './helpers/radar-fixture';
+import { openFilters, withFilters } from './helpers/filters';
 
 async function fixtureTv(page: Page, options: { slowSN?: boolean; expired?: boolean } = {}) {
   const favorites = new Set<string>();
@@ -40,30 +41,39 @@ test('Filtres combinés : raccourci/sidebar synchronisés, composites, paginatio
   await page.getByRole('button', { name: 'Charger plus de chaînes' }).click();
   await expect(page.locator('#catalogue').getByRole('button', { name: /^Regarder / })).toHaveCount(42);
   await page.getByRole('button', { name: 'Actualités', exact: true }).click();
-  await expect(page.getByLabel('Catégorie', { exact: true })).toHaveValue('News');
   await expect(page.getByText('Alpha 00', { exact: true })).toBeVisible();
   await expect(page.getByText('Économie · Actualités', { exact: true }).first()).toBeVisible();
-  await page.getByLabel('Pays', { exact: true }).selectOption('SN');
-  await page.getByLabel('Langue', { exact: true }).selectOption('fr');
+  await withFilters(page, async drawer => {
+    // Raccourci « Actualités » et tiroir synchronisés.
+    await expect(drawer.getByLabel('Catégorie', { exact: true })).toHaveValue('News');
+    await drawer.getByLabel('Pays', { exact: true }).selectOption('SN');
+    await drawer.getByLabel('Langue', { exact: true }).selectOption('fr');
+  });
   await page.getByLabel('Recherche', { exact: true }).fill('Alpha');
   await expect.poll(() => requests.at(-1)).toMatchObject({ search: 'Alpha', country: 'SN', language: 'fr', group: 'News', cursor: null });
   await expect(page.getByRole('button', { name: 'Actualités', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await page.getByRole('button', { name: 'Réinitialiser', exact: true }).click();
-  await expect(page.getByLabel('Catégorie', { exact: true })).toHaveValue('');
-  await expect(page.getByLabel('Pays', { exact: true })).toHaveValue('');
-  await expect(page.getByLabel('Langue', { exact: true })).toHaveValue('');
+  await withFilters(page, async drawer => {
+    await drawer.getByRole('button', { name: 'Réinitialiser', exact: true }).click();
+    await expect(drawer.getByLabel('Catégorie', { exact: true })).toHaveValue('');
+    await expect(drawer.getByLabel('Pays', { exact: true })).toHaveValue('');
+    await expect(drawer.getByLabel('Langue', { exact: true })).toHaveValue('');
+  });
   await expect(page.getByLabel('Recherche', { exact: true })).toHaveValue('');
   await expect(page.getByRole('button', { name: 'Tout le catalogue', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await page.goBack(); await expect(page.getByLabel('Pays', { exact: true })).toHaveValue('SN');
-  await page.goForward(); await expect(page.getByLabel('Pays', { exact: true })).toHaveValue('');
+  await page.goBack();
+  const drawer = await openFilters(page);
+  await expect(drawer.getByLabel('Pays', { exact: true })).toHaveValue('SN');
+  await page.goForward(); await expect(drawer.getByLabel('Pays', { exact: true })).toHaveValue('');
 });
 
 test('Pays rapides : réponse SN tardive ignorée, curseur annulé et compte cohérent', async ({ page }) => {
   const { requests } = await fixtureTv(page, { slowSN: true });
   await page.goto('/app');
-  await page.getByLabel('Pays', { exact: true }).selectOption('SN');
-  await expect.poll(() => requests.some(request => request.country === 'SN')).toBe(true);
-  await page.getByLabel('Pays', { exact: true }).selectOption('CI');
+  await withFilters(page, async drawer => {
+    await drawer.getByLabel('Pays', { exact: true }).selectOption('SN');
+    await expect.poll(() => requests.some(request => request.country === 'SN')).toBe(true);
+    await drawer.getByLabel('Pays', { exact: true }).selectOption('CI');
+  });
   await expect(page.locator('#catalogue').getByRole('button', { name: /^Regarder / })).toHaveCount(4);
   await page.waitForTimeout(800);
   await expect(page.getByText('Alpha 00', { exact: true })).toHaveCount(0);
@@ -101,23 +111,25 @@ for (const width of [1366, 390, 320]) test(`Navigation et filtres clavier à ${w
   await expect(page).toHaveURL(/\/app\?country=SN$/);
   await expect(nav.getByRole('link', { name: 'TV', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByRole('link', { name: 'Dashboard Africa Live', exact: true })).toHaveAttribute('href', '/app/live');
-  if (width < 1024) await page.getByRole('button', { name: 'Ouvrir les filtres' }).click();
-  await expect(page.getByLabel('Pays', { exact: true })).toHaveValue('SN');
+  // Tiroir unique à toutes les largeurs (UX-209) : pays transmis, focus piégé, Échap rend le focus au bouton.
+  const dialog = await openFilters(page);
+  await expect(dialog.getByLabel('Pays', { exact: true })).toHaveValue('SN');
+  await dialog.getByRole('button', { name: 'Voir les résultats' }).focus();
+  await page.keyboard.press('Tab');
+  await expect(dialog.getByRole('button').first()).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Ouvrir les filtres' })).toBeFocused();
+  // Recherche du catalogue toujours visible dans la barre d'outils.
   await page.getByLabel('Recherche', { exact: true }).focus();
   await page.getByLabel('Recherche', { exact: true }).fill('Alpha');
   await expect(page.getByLabel('Recherche', { exact: true })).toBeFocused();
-  if (width < 1024) {
-    await page.getByLabel('Recherche', { exact: true }).press('Escape');
-    await expect(page.getByRole('button', { name: 'Ouvrir les filtres' })).toBeFocused();
-    await page.keyboard.press('Control+k');
-    const dialog = page.getByRole('dialog', { name: 'Filtres', exact: true });
-    await expect(dialog).toBeVisible();
-    await expect(page.getByLabel('Recherche', { exact: true })).toBeFocused();
-    await dialog.getByRole('button', { name: 'Voir les résultats' }).focus();
-    await page.keyboard.press('Tab');
-    await expect(dialog.getByRole('button').first()).toBeFocused();
-    await page.keyboard.press('Escape');
-  }
+  // Ctrl K ouvre la recherche universelle (UX-502), champ focalisé ; Échap la ferme.
+  await page.keyboard.press('Control+k');
+  await expect(page.getByRole('dialog', { name: 'Recherche universelle' })).toBeVisible();
+  await expect(page.getByRole('combobox', { name: /Rechercher un pays/ })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog', { name: 'Recherche universelle' })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await expect(page.locator('#catalogue').getByRole('button', { name: /^Regarder / }).first()).toBeVisible();
   await page.screenshot({ path: `.local-logs/rw/screenshots/l3-tv-${width}.png`, fullPage: false });

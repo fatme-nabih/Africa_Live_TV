@@ -53,6 +53,14 @@ const nextConfig: NextConfig = {
           }
         ],
       },
+      {
+        // Service worker hors-ligne (UX-504) : jamais mis en cache, pour que chaque version soit prise aussitôt.
+        source: '/sw.js',
+        headers: [
+          { key: 'Content-Type', value: 'application/javascript; charset=utf-8' },
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+        ],
+      },
     ];
   },
   turbopack: {

@@ -15,6 +15,8 @@ import {
 import { useEffect, useId, useRef, useState, type RefObject } from 'react';
 
 export type PlayerControlsProps = {
+  /** Mini-lecteur : lecture, son et image dans l'image seulement. */
+  compact?: boolean;
   visible: boolean;
   paused: boolean;
   muted: boolean;
@@ -78,7 +80,7 @@ export default function PlayerControls(props: PlayerControlsProps) {
           props.visible ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
       >
-        {props.onPrevious && (
+        {props.onPrevious && !props.compact && (
           <button type="button" onClick={props.onPrevious} disabled={!props.hasPrevious} aria-label="Chaîne précédente" className={BUTTON}>
             <SkipBack className="size-5" aria-hidden="true" />
           </button>
@@ -86,7 +88,7 @@ export default function PlayerControls(props: PlayerControlsProps) {
         <button type="button" onClick={props.onTogglePlay} aria-label={paused ? 'Lecture' : 'Pause'} className={BUTTON}>
           {paused ? <Play className="size-5 fill-current" aria-hidden="true" /> : <Pause className="size-5 fill-current" aria-hidden="true" />}
         </button>
-        {props.onNext && (
+        {props.onNext && !props.compact && (
           <button type="button" onClick={props.onNext} disabled={!props.hasNext} aria-label="Chaîne suivante" className={BUTTON}>
             <SkipForward className="size-5" aria-hidden="true" />
           </button>
@@ -108,32 +110,32 @@ export default function PlayerControls(props: PlayerControlsProps) {
           value={muted ? 0 : volume}
           onChange={event => props.onVolumeChange(Number(event.target.value))}
           aria-label="Volume"
-          className="mx-1 hidden h-11 w-24 accent-al-yellow sm:block"
+          className={`mx-1 hidden h-11 w-24 accent-al-yellow ${props.compact ? '' : 'sm:block'}`}
         />
         <span className="flex-1" />
-        <button
+        {!props.compact && <button
           type="button"
           onClick={props.onToggleHelp}
           aria-label="Raccourcis clavier"
           aria-expanded={helpOpen}
           aria-controls={helpOpen ? helpId : undefined}
-          className={`${BUTTON} hidden sm:inline-flex`}
+          className={`${BUTTON} max-sm:hidden`}
         >
           <Keyboard className="size-5" aria-hidden="true" />
-        </button>
+        </button>}
         {props.pipAvailable && (
           <button type="button" onClick={props.onTogglePip} aria-label="Image dans l’image" className={BUTTON}>
             <PictureInPicture2 className="size-5" aria-hidden="true" />
           </button>
         )}
-        <button
+        {!props.compact && <button
           type="button"
           onClick={props.onToggleFullscreen}
           aria-label={fullscreen ? 'Quitter le plein écran' : 'Plein écran'}
           className={BUTTON}
         >
           {fullscreen ? <Minimize className="size-5" aria-hidden="true" /> : <Maximize className="size-5" aria-hidden="true" />}
-        </button>
+        </button>}
       </div>
     </>
   );

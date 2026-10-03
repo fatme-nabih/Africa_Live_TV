@@ -1,7 +1,6 @@
 'use client';
 
-import { Suspense, useCallback, useMemo, useState } from 'react';
-import dynamic from 'next/dynamic';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import BrandBackdrop from '@/components/brand/BrandBackdrop';
 import PageTransition from '@/components/shell/PageTransition';
 import { Button } from '@/components/ui';
@@ -21,10 +20,10 @@ import { useLiveWeather } from '@/components/radar/useLiveWeather';
 import { useNow } from '@/components/radar/useNow';
 import { useRadarCountry } from '@/components/radar/useRadarCountry';
 import { useRadarArticles, useRadarData } from '@/components/radar/useRadarData';
+import { usePlayerDock } from '@/components/player/PlayerDock';
 import { useRadarPlayer } from '@/components/radar/useRadarPlayer';
 import { useRadarVisit } from '@/components/radar/useRadarVisit';
 import { useStoredToggle } from '@/components/radar/useStoredToggle';
-import { recordRecentChannel } from '@/components/tv/hooks';
 import { featuredKeys, pickFeatured } from '@/lib/radar-featured';
 import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
 import { canonicalArticleUrl } from '@/lib/radar-data';
@@ -35,7 +34,6 @@ import { STORAGE_KEYS } from '@/lib/storage-keys';
 import { weatherAlert } from '@/lib/weather-alert';
 
 // Le lecteur (hls.js, animations) ne se charge qu'au premier « Regarder » : le Radar démarre plus léger.
-const InlinePlayerModal = dynamic(() => import('@/components/InlinePlayerModal'), { ssr: false });
 
 export default function LiveRadarDashboard() {
   return <Suspense fallback={<p className="p-4">Chargement du Radar…</p>}><RadarWorkspace /></Suspense>;
@@ -82,6 +80,18 @@ function RadarWorkspace() {
     playlistLoading: data.countryChannelsLoading,
     playlistError: data.countryChannelsError,
   });
+  // La chaîne choisie par le Radar part dans le lecteur unique de l'espace /app (UX-501) : elle continue si l'on va sur la TV.
+  const dock = usePlayerDock();
+  const { channel: requested, close: clearRequest, popout } = player;
+  useEffect(() => {
+    if (!requested) return;
+    dock.open({ channel: requested, playlist: data.countryChannels, onPopout: popout });
+    clearRequest();
+  }, [requested, data.countryChannels, dock, popout, clearRequest]);
+  const popoutFromList = useCallback((channel: Parameters<typeof popout>[0]) => {
+    dock.close();
+    popout(channel);
+  }, [dock, popout]);
   const openPanel = (tab: RadarPanelTab) => {
     setPanelTab(tab);
     scrollToSection('radar-fil');
@@ -110,7 +120,7 @@ function RadarWorkspace() {
       <BrandBackdrop variant="app" />
 
       <div className="mx-auto max-w-7xl w-full flex-1 px-3 pb-8 pt-3 sm:px-6 sm:pt-4 md:px-6">
-        <RadarHeader refreshing={data.refreshing} onRefresh={data.refresh} unknownCountry={unknownCountry} coverage={coverage(sourceRows, now)} />
+        <RadarHeader refreshing={data.refreshing} onRefresh={data.refresh} unknownCountry={unknownCountry} coverage={coverage(sourceRows, now)} country={selectedCountry} />
 
         <RadarTiles
           countryName={activeCountry?.name ?? null}
@@ -170,10 +180,10 @@ function RadarWorkspace() {
             countryChannels={data.countryChannels}
             channelsLoading={data.countryChannelsLoading}
             channelsError={data.countryChannelsError}
-            playingChannelId={player.channel?.id ?? null}
+            playingChannelId={dock.channel?.id ?? null}
             onSelectCountry={selectCountry}
             onPlayChannel={player.open}
-            onOpenPopout={player.popout}
+            onOpenPopout={popoutFromList}
             onRetry={data.refresh}
             news={
               <NewsFeed
@@ -237,17 +247,6 @@ function RadarWorkspace() {
       </div>
 
       <NewArrivalsPill count={fresh.pendingCount} onShow={showArrivals} />
-      {player.channel && (
-        <InlinePlayerModal
-          channel={player.channel}
-          isOpen
-          onClose={player.close}
-          onOpenPopoutWindow={() => player.popout(player.channel!)}
-          playlist={data.countryChannels}
-          onZap={player.zap}
-          onPlaybackStarted={recordRecentChannel}
-        />
-      )}
     </main>
     </PageTransition>
   );

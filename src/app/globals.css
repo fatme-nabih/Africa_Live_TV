@@ -402,3 +402,34 @@ html[data-eco='true'] .skeleton::after {
 html[data-eco='true'] .live-dot::after {
   display: none;
 }
+
+/* Lecteur unique (UX-501) : apparition douce de la fenêtre et du mini-lecteur, coupée en Éco data et mouvement réduit. */
+@keyframes dock-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes dock-rise {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+.dock-fade { animation: dock-fade 200ms ease-out; }
+.dock-rise { animation: dock-rise 260ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .dock-fade, .dock-rise { animation: none; }
+}
+html[data-eco='true'] .dock-fade,
+html[data-eco='true'] .dock-rise {
+  animation: none;
+}
+
+/* Favori ajouté (UX-505) : l'étoile rebondit une fois. */
+@keyframes fav-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.45); }
+  100% { transform: scale(1); }
+}
+[data-pop='true'] > svg { animation: fav-pop 320ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+@media (prefers-reduced-motion: reduce) {
+  [data-pop='true'] > svg { animation: none; }
+}
+html[data-eco='true'] [data-pop='true'] > svg { animation: none; }

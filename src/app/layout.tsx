@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Manrope, Unbounded } from "next/font/google";
 import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
+import ServiceWorkerRegister from "@/components/shell/ServiceWorkerRegister";
 import { clerkAppearance, clerkLocalization } from "@/lib/clerk-theme";
 import { ECO_BOOT_SCRIPT } from "@/lib/eco-mode";
 import { isLocalDevMode } from "@/lib/local-dev";
@@ -66,7 +67,7 @@ export default function RootLayout({
       className={`${manrope.variable} ${unbounded.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {isLocalDevMode() ? <>{ecoBoot}{children}</> : (
+        {isLocalDevMode() ? <>{ecoBoot}<ServiceWorkerRegister />{children}</> : (
           <ClerkProvider
             signInUrl="/sign-in"
             signUpUrl="/sign-up"
@@ -76,6 +77,7 @@ export default function RootLayout({
             localization={clerkLocalization}
           >
             {ecoBoot}
+            <ServiceWorkerRegister />
             {children}
           </ClerkProvider>
         )}

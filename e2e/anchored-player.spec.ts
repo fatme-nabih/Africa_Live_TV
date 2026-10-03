@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { withFilters } from './helpers/filters';
 
 test.use({ trace: 'off', screenshot: 'off' });
 
@@ -140,7 +141,7 @@ test('Filtres, résultats vides et pagination de zapping ne remplacent pas le fl
   await anchor(page).getByRole('button', { name: 'Lire maintenant', exact: true }).click();
   await expect(anchor(page).getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
   const video = await page.locator('video').elementHandle();
-  await page.getByLabel('Pays', { exact: true }).selectOption('CI');
+  await withFilters(page, drawer => drawer.getByLabel('Pays', { exact: true }).selectOption('CI'));
   await expect(anchor(page).getByText(/hors des résultats actuels/)).toBeVisible();
   await expect(anchor(page).getByRole('button', { name: 'Chaîne suivante', exact: true })).toBeDisabled();
   expect(await video!.evaluate(v => v.isConnected && !(v as HTMLVideoElement).paused)).toBe(true);

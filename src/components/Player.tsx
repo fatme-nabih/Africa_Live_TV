@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import Hls from 'hls.js';
-import { AnimatePresence, motion } from 'framer-motion';
 import {
   ExternalLink,
   LoaderCircle,
@@ -69,6 +68,10 @@ interface PlayerProps {
   manualExternal?: boolean;
   /** Appelé une fois par tentative, dès que l'image démarre (ou que VLC est ouvert). Alimente « Reprendre ». */
   onPlaybackStarted?: () => void;
+  /** Mini-lecteur : commandes réduites et aucun raccourci clavier global (la page garde ses touches). */
+  compact?: boolean;
+  /** Mur TV : le son est piloté par la page (une seule chaîne audible). Absent = son géré par le lecteur. */
+  forceMuted?: boolean;
 }
 
 type ActiveAttempt = {
@@ -87,7 +90,7 @@ function telemetryEngine(engine: PlayerEngine | null | undefined): TelemetryPlay
     : null;
 }
 
-export default function Player({ channelId, channelName = '', anchored = false, onExternalHandoff, initialVolume = 1, onVolumePreference, zapping, manualExternal = false, onPlaybackStarted }: PlayerProps) {
+export default function Player({ channelId, channelName = '', anchored = false, onExternalHandoff, initialVolume = 1, onVolumePreference, zapping, manualExternal = false, onPlaybackStarted, compact = false, forceMuted }: PlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [paused, setPaused] = useState(true);
   const [volume, setVolume] = useState(initialVolume);
@@ -513,6 +516,12 @@ export default function Player({ channelId, channelName = '', anchored = false, 
     });
   }, [anchored, channelId, failCurrentAttempt, source, state.attemptId, stopStartupTimeout, updateAttemptEngine]);
 
+  // Son imposé par la page (mur TV) : réappliqué à chaque changement d'état, la lecture elle-même n'est pas touchée.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video && forceMuted !== undefined) video.muted = forceMuted;
+  }, [forceMuted, state.phase]);
+
   const startPlayback = useCallback((userInitiated: boolean) => {
     const video = videoRef.current;
     const attempt = activeAttemptRef.current;
@@ -849,7 +858,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
     && state.phase !== 'exhausted' && state.phase !== 'external-required' && state.phase !== 'external-ready' && state.phase !== 'external-opened';
   const uiVisible = useIdleVisibility(containerRef, paused || helpOpen);
   usePlayerShortcuts({
-    enabled: controlsActive,
+    enabled: controlsActive && !compact,
     helpOpen,
     onTogglePlay: togglePlay,
     onToggleMute: toggleMute,
@@ -857,8 +866,8 @@ export default function Player({ channelId, channelName = '', anchored = false, 
     onTogglePip: pipAvailable ? togglePip : () => undefined,
     onToggleHelp: () => setHelpOpen(open => !open),
     onCloseHelp: () => setHelpOpen(false),
-    onPrevious: zapping?.previous ?? undefined,
-    onNext: zapping?.next ?? undefined,
+    onPrevious: compact ? undefined : zapping?.previous ?? undefined,
+    onNext: compact ? undefined : zapping?.next ?? undefined,
   });
 
   if (!channelId) {
@@ -878,15 +887,30 @@ export default function Player({ channelId, channelName = '', anchored = false, 
   const visibleFailure = state.phase === 'exhausted' && !externalSuggested ? state.failure : null;
   const showError = Boolean(visibleFailure);
 
+  // « Relancer VLC » : en attente de choix (external-required), l'écran central propose déjà « Lancer VLC » (pas de doublon).
+  const vlcAction = (externalSuggested || externalReady || externalOpened || state.engine === 'vlc') && state.phase !== 'external-required';
+  const vlcButton = vlcAction ? (
+      <button
+        type="button"
+        onClick={() => openExternalPlayer(true)}
+        disabled={state.phase === 'external-opening'}
+        className="inline-flex items-center gap-1.5 rounded-xl border border-al-gold/40 bg-al-gold/15 hover:bg-al-gold/25 px-4 py-2 text-xs sm:text-sm font-bold text-al-gold shadow-sm transition disabled:opacity-50"
+      >
+        {state.phase === 'external-opening' ? (
+          <LoaderCircle className="h-4 w-4 animate-spin" />
+        ) : (
+          <ExternalLink className="h-4 w-4" />
+        )}
+        {state.phase === 'external-opening' ? 'Lancement…' : 'Relancer VLC'}
+      </button>
+  ) : null;
+
   return (
-    <motion.div
+    <div
       ref={containerRef}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="flex flex-col overflow-hidden rounded-2xl border border-line bg-black/60 shadow-2xl"
+      className="dock-fade flex flex-col overflow-hidden rounded-2xl border border-line bg-black/60 shadow-2xl"
     >
       <div className="group/player relative flex aspect-video w-full items-center justify-center bg-black">
-        <AnimatePresence>
           <LoadingOverlay key="loading" loading={loading} waitingForUser={waitingForUser} />
           <AwaitingUserOverlay 
             key="awaiting-user"
@@ -918,7 +942,6 @@ export default function Player({ channelId, channelName = '', anchored = false, 
             tryAnotherSource={tryAnotherSource} 
             openExternalPlayer={openExternalPlayer} 
           />
-        </AnimatePresence>
 
         <video
           ref={videoRef}
@@ -943,6 +966,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
         />
         {controlsActive && (
           <PlayerControls
+            compact={compact}
             visible={uiVisible}
             paused={paused}
             muted={muted}
@@ -997,6 +1021,8 @@ export default function Player({ channelId, channelName = '', anchored = false, 
         </div>
       )}
 
+      {/* Mini-lecteur : le nom est déjà dans son en-tête ; seul « Relancer VLC » reste, s'il a lieu d'être. */}
+      {compact ? (vlcButton && <div className="border-t border-line p-2">{vlcButton}</div>) : (
       <div className="flex flex-col gap-3.5 border-t border-line bg-white/[0.02] p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
           <div className="mb-1 flex items-center gap-2">
@@ -1012,24 +1038,10 @@ export default function Player({ channelId, channelName = '', anchored = false, 
         </div>
 
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-          {/* En attente de choix (external-required), l'écran central propose déjà « Lancer VLC » : pas de doublon « Relancer ». */}
-          {(externalSuggested || externalReady || externalOpened || state.engine === 'vlc') && state.phase !== 'external-required' && (
-            <button
-              type="button"
-              onClick={() => openExternalPlayer(true)}
-              disabled={state.phase === 'external-opening'}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-al-gold/40 bg-al-gold/15 hover:bg-al-gold/25 px-4 py-2 text-xs sm:text-sm font-bold text-al-gold shadow-sm transition disabled:opacity-50"
-            >
-              {state.phase === 'external-opening' ? (
-                <LoaderCircle className="h-4 w-4 animate-spin" />
-              ) : (
-                <ExternalLink className="h-4 w-4" />
-              )}
-              {state.phase === 'external-opening' ? 'Lancement…' : 'Relancer VLC'}
-            </button>
-          )}
+          {vlcButton}
         </div>
       </div>
-    </motion.div>
+      )}
+    </div>
   );
 }

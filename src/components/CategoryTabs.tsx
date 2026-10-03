@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import {
   Sparkles,
   Star,
@@ -135,10 +134,9 @@ export default function CategoryTabs({
                 </span>
               )}
               {isActive && (
-                <motion.div
-                  layoutId="activeCategoryGlow"
-                  className="absolute inset-0 rounded-xl pointer-events-none ring-1 ring-al-gold/30"
-                  transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
+                <span
+                  aria-hidden="true"
+                  className="dock-fade absolute inset-0 rounded-xl pointer-events-none ring-1 ring-al-gold/30"
                 />
               )}
             </button>

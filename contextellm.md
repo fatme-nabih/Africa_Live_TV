@@ -2,6 +2,19 @@
 
 Dernière mise à jour : 3 octobre 2026, fuseau Africa/Dakar.
 
+## Expérience Premium — Lot P5 « Aimants et finition » fait et vérifié, non committé (3 octobre 2026)
+
+- Fait (UX-501 → 506, UX-508, UX-209 suite, UX-213) ; **UX-507 bloqué** (L6 différé, décision D1). Détail : « Lot P5 » de
+  [production-progress.md](docs/production-progress.md), [audit daté](docs/audit-a11y-performance-2026-10-03.md), captures `premium-p5-*`.
+- Nouveautés : lecteur unique `PlayerDock` (layout `/app`, mini-lecteur qui survit au Radar ↔ TV), recherche Ctrl K
+  (`UniversalSearch`), pays suivis (`al_followed_countries`), PWA (`public/sw.js`, `offline.html`, raccourcis), `framer-motion` retiré,
+  mur TV `/app/mur` derrière `NEXT_PUBLIC_TV_WALL` (actif en dev seulement), tiroir de filtres unique, recherche du catalogue dans la barre.
+- Vérification : tsc 0, lint 0, 355 tests (341/14/0), invariants 4/4, build, E2E MVP 145 + 1 ignoré (échec corrigé), E2E Clerk 8/8,
+  TV 522 → 322 Ko gzip. Pièges nouveaux : Ctrl K = palette (plus le champ du catalogue) ; filtres à ouvrir dans le tiroir en E2E
+  (`e2e/helpers/filters.ts`) ; un build servi en local exige `DEPLOYMENT_ENV=local` sur le port 3001.
+- Environnement laissé : `npm run dev` en mode Clerk sur 3001 (santé 200, `/app` anonyme → 307) ; ligne technique MVP supprimée.
+- Suite : bilan au propriétaire ; commit / publication de P5 uniquement sur demande.
+
 ## Publication Premium P3–P4 sur staging — 3 octobre 2026
 
 - À la demande du propriétaire : P4 committé (`06b662f`), poussé avec P3 sur GitHub `main`, publié sur Railway staging

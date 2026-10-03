@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <title>Africa Live — Hors antenne</title>
+  <style>
+    /* Page autonome (servie sans réseau) : couleurs des jetons Africa Live recopiées ici, police système. */
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px;
+      background: #000; color: #f5f5f4; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; text-align: center; }
+    main { max-width: 28rem; }
+    .ring { width: 88px; height: 88px; margin: 0 auto; border-radius: 9999px; padding: 4px; border: 2px solid #d4a72c; }
+    .ring img { width: 100%; height: 100%; border-radius: 9999px; display: block; }
+    .bar { height: 3px; width: 128px; margin: 24px auto 0; border-radius: 9999px;
+      background: linear-gradient(90deg, #12b54a 0%, #fcd116 50%, #e8112d 100%); }
+    h1 { margin: 24px 0 0; font-size: 1.75rem; line-height: 1.2; }
+    p { margin: 16px 0 0; color: #a8a29e; font-size: 1rem; line-height: 1.6; }
+    button { margin-top: 28px; min-height: 48px; padding: 0 24px; border: 0; border-radius: 14px; background: #fcd116; color: #000;
+      font: inherit; font-weight: 700; cursor: pointer; }
+    button:focus-visible { outline: 2px solid #d4a72c; outline-offset: 3px; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="ring"><img src="/africa-live-logo.webp" alt="" width="80" height="80"></div>
+    <div class="bar" aria-hidden="true"></div>
+    <h1>Hors antenne</h1>
+    <p>Pas de connexion pour le moment. Vérifiez vos données mobiles ou le Wi-Fi : le live revient à vous dès que le réseau revient.</p>
+    <button type="button" onclick="location.reload()">Réessayer</button>
+  </main>
+</body>
+</html>

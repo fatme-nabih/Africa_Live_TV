@@ -1,5 +1,6 @@
 import { RefreshCw } from 'lucide-react';
 import { Button, cn } from '@/components/ui';
+import FollowCountryButton from '@/components/shell/FollowCountryButton';
 import type { CoverageLevel } from '@/lib/radar-workspace';
 
 const DOT: Record<CoverageLevel, string> = {
@@ -14,10 +15,13 @@ export default function RadarHeader({
   onRefresh,
   unknownCountry,
   coverage,
+  country,
 }: {
   refreshing: boolean;
   onRefresh: () => void;
   unknownCountry: boolean;
+  /** Pays affiché : il peut être suivi (UX-503). */
+  country: string | null;
   coverage: { level: CoverageLevel; short: string };
 }) {
   return (
@@ -35,6 +39,8 @@ export default function RadarHeader({
             <a href="#radar-sources" className="font-semibold text-al-gold underline underline-offset-2 hover:text-text">Sources et fraîcheur</a>
           </p>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+        {country && <FollowCountryButton code={country} />}
         <Button
           variant="secondary"
           size="sm"
@@ -44,6 +50,7 @@ export default function RadarHeader({
         >
           {refreshing ? 'Actualisation…' : 'Actualiser'}
         </Button>
+        </div>
       </section>
 
       {unknownCountry && (

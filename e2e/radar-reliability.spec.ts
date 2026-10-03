@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { fixtureRadar } from './helpers/radar-fixture';
 import { selectCountry } from './helpers/country';
+import { openFilters } from './helpers/filters';
 
 const servedBuild = process.env.RADAR_BUILD_TEST === 'true';
 
@@ -89,8 +90,10 @@ test('Options de catalogue dupliquées : une option par valeur, aucun avertissem
   page.on('console', message => { if (/same key|unique.*key/i.test(message.text())) errors.push(message.text()); });
   await page.route('**/api/filters', route => route.fulfill({ json: { countries: ['SN', 'SN', ' CI ', 'CI'], groups: ['Informations', 'Informations'], languages: ['fr', 'fr'], statuses: ['BROWSER_OK'] } }));
   await page.goto('/app');
-  await expect(page.getByLabel('Pays', { exact: true }).locator('option[value="SN"]')).toHaveCount(1);
-  await expect(page.getByLabel('Pays', { exact: true }).locator('option[value="CI"]')).toHaveCount(1);
+  // Les listes de filtres sont dans le tiroir unique (UX-209).
+  const drawer = await openFilters(page);
+  await expect(drawer.getByLabel('Pays', { exact: true }).locator('option[value="SN"]')).toHaveCount(1);
+  await expect(drawer.getByLabel('Pays', { exact: true }).locator('option[value="CI"]')).toHaveCount(1);
   await expect(page.locator('option[value="News"]')).toHaveCount(1);
   await expect(page.locator('option[value="fr"]')).toHaveCount(1);
   expect(errors).toEqual([]);

@@ -1354,3 +1354,71 @@ développement et badges du mode local dans l'image du hero.
 
 P0–P2 publiés ; P3 committé en local (`412574d`) ; P4 fait et vérifié, **non committé**. Restent P5 « Aimants et finition »
 (UX-501 → 508) et les reliquats UX-209 (suite), UX-213. Prochain lot : **P5**, après le feu vert du propriétaire.
+
+## Expérience Premium — Lot P5 « Aimants et finition » — 3 octobre 2026
+
+Périmètre : [plan-experience-premium.md](plan-experience-premium.md) UX-501 à UX-508 et reliquats UX-209 (suite), UX-213, après la
+publication de P3–P4 sur staging et le feu vert du propriétaire. **Non committé, non publié.** Aucune migration, aucun changement
+`.env*`, Railway, Clerk (configuration) ou DNS ; aucune nouvelle dépendance (`framer-motion` est **retiré**). Aucun relais, conversion
+ni stockage de média : le service worker ne met en cache que l'écran hors-ligne. Machine de lecture (`src/lib/playback-*`), accès,
+éligibilité, quotas et API inchangés ; `Player` reçoit seulement deux props d'affichage (`compact`, `forceMuted`).
+
+| Ticket | État | Preuve |
+|---|---|---|
+| UX-501 Lecteur unique | Fait | `src/components/player/PlayerDock.tsx` dans le layout `/app` : une seule instance de `<Player>`, à position stable dans l'arbre, passe de la fenêtre au **mini-lecteur** (« Réduire », « Agrandir ») sans être remontée ; changement de page → mini-lecteur, rappels de la page quittée oubliés. Remplace `InlinePlayerModal` (supprimé) pour la TV et le Radar. Mode `compact` : lecture, son, image dans l'image ; aucun raccourci global (les flèches restent à la page). Lecteur chargé à la demande. E2E `player-dock` : même élément `<video>` après TV → Radar (marqueur conservé), une seule résolution, aucune relance ; une autre chaîne remplace la précédente (une seule source) ; 360 px au-dessus de la barre basse. |
+| UX-502 Recherche Ctrl K | Fait | `src/components/search/UniversalSearch.tsx` + `src/lib/universal-search.ts` (testé) : pays et villes météo en local (instantané), chaînes via `/api/channels` existant après 250 ms de pause de frappe (≤ 1 requête par saisie, quotas), dépêches du flux déjà publié (lu une fois, 5 min), « Chercher … dans la TV ». Dialogue + `combobox`/`listbox`, ↑ ↓ Entrée Échap. Ctrl K ouvrait jusqu'ici la recherche du catalogue : il ouvre la palette partout dans `/app` (E2E mis à jour en conséquence). Doublons de dépêches écartés (URL canonique, titre). |
+| UX-503 Pays suivis | Fait (local) | `src/lib/followed-countries.ts` (testé), clé `al_followed_countries` : 1 à 5 pays, le premier est principal. Bouton « Suivre » (`aria-pressed`, désactivé au-delà de 5 avec explication) dans l'en-tête du Radar ; Radar ouvert sur le pays principal sans pays dans l'URL ; rangée « … en direct » de la TV sur le pays principal ; gestion (principal, retrait) dans « Mon activité » du Compte. Synchronisation au compte : ticket de migration séparé, non fait. |
+| UX-504 PWA | Fait | Manifeste : `id`, `scope`, raccourcis Radar et TV. `public/sw.js` minimal écrit à la main (navigations réseau d'abord ; cache = `offline.html` + 2 images locales uniquement), enregistré en production seulement, servi sans cache (`next.config.ts`). `public/offline.html` « Hors antenne » autonome. Vérifié sur le build servi : installable (aucune erreur dans un profil normal), service worker actif, écran hors-ligne affiché sans réseau. |
+| UX-505 Micro-interactions | Fait | `framer-motion` retiré (4 composants → animations CSS `dock-fade`/`dock-rise`, coupées en Éco data et mouvement réduit) et désinstallé ; « pop » de l'étoile quand une chaîne entre dans les favoris. Poids JS TV **522 → 322 Ko gzip (−38 %)** (lecteur et prototype L5 chargés à la demande). |
+| UX-506 Mur TV 2×2 | Fait (drapeau) | `/app/mur` : `TV_WALL_ENABLED` (actif en développement ; en production seulement avec `NEXT_PUBLIC_TV_WALL=true`, variable **non posée**). Jusqu'à 4 chaînes de « Reprendre » lisibles dans le navigateur, **une seule audible** (`forceMuted`), désactivé en Éco data et sous 1 280 px ; ferme le lecteur unique. Quotas : plafonds serveur inchangés (4 résolutions < 10/min même en essai). E2E `tv-wall`. |
+| UX-507 Briefing | **Bloqué** | Lot L6 différé par décision D1 (`plan-dashboard-backlog.md`) : nom, durée et mode de génération à arbitrer par le propriétaire avant toute activation. Rien n'a été activé. |
+| UX-508 Audit | Fait (sans Lighthouse) | [Rapport daté](audit-a11y-performance-2026-10-03.md) : axe-core WCAG 2.1 A/AA **0 violation** sur 8 pages et 2 états interactifs ; clavier vérifié par E2E (`a11y`) ; poids JS, métriques du build servi (CLS 0 ; LCP 3,6–5,1 s à 360 px CPU ×4 4G lente). **Lighthouse non installé** : notes ≥ 90 non démontrées. |
+| UX-209 Tiroir unique | Fait | `FilterSidebar` = un seul tiroir à toutes les largeurs (barre latérale desktop supprimée) ; recherche du catalogue toujours visible dans la barre d'outils (`CatalogSearchField`) ; catalogue en pleine largeur. Helper E2E `e2e/helpers/filters.ts`. |
+| UX-213 Lecteur ancré | Fait | Contrôle du prototype L5 habillé avec `Button` et une case stylée, libellés inchangés (13/13 `anchored-player`). |
+
+### Défauts trouvés et corrigés
+
+- hls.js (≈ 162 Ko gzip) restait dans le premier chargement de la TV via le prototype L5 (import statique) → chargé à la demande.
+- À 320 px, la barre d'outils de la TV débordait de 3 px → libellé « Filtres » masqué sous 360 px (nom accessible inchangé).
+- Mini-lecteur : le pied du lecteur (titre en grand) doublait l'en-tête → masqué en mode compact ; le bouton d'aide clavier
+  s'affichait sur mobile malgré `hidden` (conflit avec `inline-flex`) → réellement masqué sous 640 px, absent en mini-lecteur.
+- Palette : la même dépêche apparaissait deux fois (paramètres de suivi) → dédoublonnage par URL canonique et titre (test ajouté).
+- `aria-labelledby` du mini-lecteur masquait son nom « Mini-lecteur » → appliqué seulement en vue agrandie.
+
+### E2E et tests
+
+- Nouveaux : `player-dock` (3), `universal-search` (3), `followed-countries` (2), `tv-wall` (2), `a11y` (2) ; unitaires
+  `universal-search` (4), `followed-countries` (3).
+- Mis à jour avec des assertions équivalentes : filtres lus et modifiés **dans le tiroir** (`tv-workspace`, `app-shell`, `catalogue`,
+  `local-mvp`, `anchored-player`, `radar-reliability`) ; Ctrl K → recherche universelle (`tv-workspace`) ; l'erreur simulée du catalogue
+  vise la requête de recherche (les rangées chargent aussi `/api/channels`) ; `radar-access.test.ts` : frontières `PlayerDock` et
+  `UniversalSearch` simulées, le catalogue est vérifié sous le lecteur unique.
+
+### Vérification (code final)
+
+| Contrôle | Résultat |
+|---|---|
+| `npx tsc --noEmit` | 0 erreur |
+| `npm run lint` | 0 erreur, 0 avertissement |
+| `npm test` | 355 tests : 341 réussis, 14 ignorés (intégrations PostgreSQL), 0 échec (référence fin P4 : 348, soit +7) |
+| `npm run test:invariants` | 4/4 |
+| `npm run build` | Réussi (Next.js 16.3.5, Turbopack), serveur arrêté |
+| E2E mode MVP (19 specs, `--workers=1`) | 147 tests : 145 réussis, 1 ignoré (« build servi »), 1 échec (`radar-reliability`, sélecteur passé dans le tiroir) corrigé puis spec rejoué 6/6 ; après les dernières retouches du lecteur : specs de lecture rejoués 73/73 puis 36/36 |
+| E2E mode Clerk (dev, anonyme) | 8/8 (auth-entry, payment) |
+| Build servi (`next start`, `DEPLOYMENT_ENV=local`) | PWA installable, service worker actif, cache limité à l'écran hors-ligne, « Hors antenne » sans réseau |
+
+Contrôle visuel (Edge) : 0 débordement, 0 texte < 12 px, 0 erreur de page — `premium-p5-<page>-<largeur>.png` pour app-live, app-tv,
+ui-kit (360/768/1366, mode MVP), landing, pricing, sign-in, 404 (360/768/1366, mode Clerk), et états simulés `lecteur-agrandi`,
+`mini-lecteur-radar`, `recherche`, `pays-suivi`, `tiroir-filtres` (360 et 1366), `mur-tv` (1366), `hors-ligne` (1366, build servi).
+
+### Limites et réserves
+
+- **UX-507 bloqué** (L6, décision D1 du propriétaire). **Lighthouse non lancé** (outil non installé).
+- LCP de la landing au-dessus de 2,5 s en 4G lente simulée (élément : fond de marque décoratif) ; Radar et TV non mesurables en
+  production sans session.
+- Pays suivis propres à l'appareil (synchronisation = ticket de migration). Mur TV désactivé en production tant que
+  `NEXT_PUBLIC_TV_WALL` n'est pas posé (décision du propriétaire, avec un avertissement de consommation de données).
+- Les vidéos de test sont des clips synthétiques de 4 s ; VLC réel, flux amont actuels, appareils Android et lecteurs d'écran réels :
+  hors réception.
+- Mode MVP : ligne technique réinsérée puis supprimée (`users` = 2) ; captures L5 restaurées depuis `HEAD` ; serveur relancé en
+  mode Clerk (santé 200, `/app` anonyme → 307).

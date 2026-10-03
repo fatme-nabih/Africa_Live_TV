@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
 import {
-  Search as SearchIcon,
   Globe as GlobeIcon,
   Filter as FilterIcon,
   Film as FilmIcon,
@@ -41,7 +39,6 @@ export default function FilterSidebar({
   onCloseMobile,
 }: FilterSidebarProps) {
   const { search, country, group, language } = filters;
-  const setSearch = (search: string) => onFilterChange({ ...filters, search });
   const setCountry = (country: string) => onFilterChange({ ...filters, country });
   const setGroup = (group: string) => onFilterChange({ ...filters, group });
   const setLanguage = (language: string) => onFilterChange({ ...filters, language });
@@ -103,11 +100,8 @@ export default function FilterSidebar({
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
       }
     };
-    const desktop = window.matchMedia('(min-width: 1024px)');
-    const closeOnDesktop = () => { if (desktop.matches) onCloseMobile?.(); };
-    desktop.addEventListener('change', closeOnDesktop);
     window.addEventListener('keydown', handleKeyDown);
-    return () => { window.removeEventListener('keydown', handleKeyDown); desktop.removeEventListener('change', closeOnDesktop); document.body.style.overflow = previousOverflow; previous?.focus(); };
+    return () => { window.removeEventListener('keydown', handleKeyDown); document.body.style.overflow = previousOverflow; previous?.focus(); };
   }, [isOpenMobile, onCloseMobile]);
 
   const filterForm = (
@@ -136,7 +130,7 @@ export default function FilterSidebar({
               type="button"
               onClick={onCloseMobile}
               aria-label="Fermer les filtres"
-              className="flex lg:hidden h-7 w-7 items-center justify-center rounded-lg border border-line bg-white/[0.03] text-text-muted hover:text-text hover:border-white/20"
+              className="flex size-9 items-center justify-center rounded-control border border-line bg-surface-2 text-text-muted hover:text-text hover:border-line-gold"
             >
               <XIcon className="h-3.5 w-3.5" />
             </button>
@@ -148,13 +142,11 @@ export default function FilterSidebar({
         <ErrorState className="p-3 sm:p-3" title="Filtres momentanément indisponibles" description={error} onRetry={() => void loadFilters()} />
       )}
 
-      <motion.button
+      <button
         type="button"
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.98 }}
         onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
         aria-pressed={showFavoritesOnly}
-        className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold ${
+        className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 transition-all hover:scale-[1.01] active:scale-[0.98] motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold ${
           showFavoritesOnly
             ? 'border-al-gold/40 bg-al-gold/15 text-text shadow-md font-bold'
             : 'border-line bg-white/[0.02] text-text hover:border-white/20 hover:bg-white/[0.04]'
@@ -167,37 +159,7 @@ export default function FilterSidebar({
         {showFavoritesOnly && (
           <span className="flex h-1.5 w-1.5 rounded-full bg-al-yellow shadow-[0_0_8px_rgba(252,209,22,0.8)]" aria-hidden="true" />
         )}
-      </motion.button>
-
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="catalog-search" className="text-xs font-bold uppercase tracking-wider text-text-muted">Recherche</label>
-        <div className="relative">
-          <input
-            id="catalog-search"
-            type="search"
-            placeholder="Rechercher une chaîne…"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            autoComplete="off"
-            className="w-full rounded-xl border border-line bg-white/[0.03] py-1.5 pl-8 pr-12 text-xs text-text placeholder:text-text-muted transition hover:border-white/20 focus-visible:border-al-gold/60 focus-visible:bg-surface-1/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-al-gold/30"
-          />
-          <SearchIcon className="pointer-events-none absolute left-2.5 top-2 h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
-          {!search ? (
-            <kbd className="pointer-events-none absolute right-2 top-1.5 rounded bg-white/[0.06] px-1.5 py-0.5 text-xs font-mono font-bold text-text-muted border border-line">
-              Ctrl+K
-            </kbd>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setSearch('')}
-              aria-label="Effacer la recherche"
-              className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-md text-text-muted transition hover:bg-white/10 hover:text-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-al-gold"
-            >
-              <XIcon className="h-3 w-3" aria-hidden="true" />
-            </button>
-          )}
-        </div>
-      </div>
+      </button>
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="catalog-group" className="text-xs font-bold uppercase tracking-wider text-text-muted">Catégorie</label>
@@ -257,33 +219,24 @@ export default function FilterSidebar({
       </div>
 
       {filters.region === 'africa' && <p className="text-xs text-text">Périmètre : Afrique</p>}
-      {search.trim().length === 1 && <p className="text-xs text-text-muted">Saisissez au moins deux caractères.</p>}
       <p className="sr-only" aria-live="polite">
         {loading ? 'Chargement des options de filtre.' : 'Options de filtre chargées.'}
       </p>
     </>
   );
 
+  // Un seul panneau de filtres (UX-209) : le même tiroir sur mobile et sur ordinateur ; fermé, il ne prend aucune place.
   return (
     <>
-      {/* Desktop Sidebar (visible on lg and up) */}
-      {!isOpenMobile && <aside
-        aria-labelledby="catalog-filters-title"
-        className="hidden lg:sticky lg:top-24 lg:flex lg:max-h-[calc(100vh-7rem)] flex-col gap-4 overflow-y-auto rounded-2xl border border-line bg-black/40 p-4 shadow-2xl backdrop-blur-2xl"
-      >
-        {filterForm}
-      </aside>}
-
-      {/* Mobile Slide-over Drawer */}
       {isOpenMobile && (
-        <div ref={drawerRef} className="fixed inset-0 z-50 flex justify-end lg:hidden" role="dialog" aria-modal="true" aria-labelledby="catalog-filters-title">
+        <div ref={drawerRef} className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-labelledby="catalog-filters-title">
           <div
             className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
             onClick={onCloseMobile}
             aria-hidden="true"
           />
           <aside
-            className="relative z-10 flex h-full w-full max-w-[280px] flex-col justify-between overflow-y-auto border-l border-line bg-black/90 p-4 shadow-2xl"
+            className="dock-rise relative z-10 flex h-full w-full max-w-[320px] flex-col justify-between overflow-y-auto border-l border-line bg-surface-1 p-4 shadow-2xl"
           >
             {/* Tricolor top border accent */}
             <div className="absolute top-0 left-0 w-full h-[2px] bg-tricolor-bar opacity-80" />

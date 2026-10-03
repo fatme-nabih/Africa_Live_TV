@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { withFilters } from './helpers/filters';
 
 const hasAuthenticatedState = Boolean(process.env.E2E_STORAGE_STATE);
 const isLocalMvp = process.env.LOCAL_DEV_MODE === 'true';
@@ -31,9 +32,11 @@ test.describe('catalogue, filtres, favoris et lecteur', () => {
     const favoritesFilterRequest = page.waitForRequest(
       (candidate) => candidate.url().endsWith('/api/channels') && candidate.method() === 'POST' && candidate.postDataJSON().favoritesOnly === true && candidate.postDataJSON().limit === 30,
     );
-    await page.getByRole('button', { name: 'Mes favoris' }).click();
-    expect((await favoritesFilterRequest).postDataJSON()).toMatchObject({ favoritesOnly: true });
-    await page.getByRole('button', { name: 'Mes favoris' }).click();
+    await withFilters(page, async drawer => {
+      await drawer.getByRole('button', { name: 'Mes favoris' }).click();
+      expect((await favoritesFilterRequest).postDataJSON()).toMatchObject({ favoritesOnly: true });
+      await drawer.getByRole('button', { name: 'Mes favoris' }).click();
+    });
 
     const firstCard = page.locator('#catalogue button[aria-label^="Regarder "]').first();
     await expect(firstCard).toBeVisible();
@@ -139,7 +142,8 @@ test.describe('catalogue, filtres, favoris et lecteur', () => {
     await openAuthenticatedCatalogue(page);
     let failNext = true;
     await page.route('**/api/channels', async (route) => {
-      if (failNext) {
+      // Seule la recherche « déclencheur » échoue (les rangées de l'accueil chargent aussi /api/channels).
+      if (failNext && route.request().postDataJSON()?.search === 'déclencheur') {
         failNext = false;
         await route.fulfill({
           status: 503,

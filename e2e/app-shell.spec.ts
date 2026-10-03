@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { countryPicker, expectCountry, selectCountry } from './helpers/country';
 import { fixtureRadar } from './helpers/radar-fixture';
+import { withFilters } from './helpers/filters';
 
 // Attend que la TV soit hydratée et chargée (au moins une chaîne visible) avant d'interagir.
 async function waitForCatalog(page: Page) {
@@ -34,7 +35,7 @@ test.describe('Coquille unique', () => {
     await nav.getByRole('link', { name: 'TV', exact: true }).click();
     await expect(page).toHaveURL(/\/app\?country=SN/);
     await expectCountry(page, 'SN');
-    await expect(page.getByLabel('Pays', { exact: true })).toHaveValue('SN');
+    await withFilters(page, drawer => expect(drawer.getByLabel('Pays', { exact: true })).toHaveValue('SN'));
     await nav.getByRole('link', { name: 'Radar', exact: true }).click();
     await expect(page).toHaveURL(/\/app\/live\?country=SN/);
     await expectCountry(page, 'SN');
@@ -49,10 +50,10 @@ test.describe('Coquille unique', () => {
     await page.goto('/app');
     await selectCountry(page, 'CI');
     await expect(page).toHaveURL(/country=CI/);
-    await expect(page.getByLabel('Pays', { exact: true })).toHaveValue('CI');
+    await withFilters(page, drawer => expect(drawer.getByLabel('Pays', { exact: true })).toHaveValue('CI'));
     await page.getByRole('button', { name: 'Réinitialiser le pays', exact: true }).click();
     expect(new URL(page.url()).searchParams.has('country')).toBe(false);
-    await expect(page.getByLabel('Pays', { exact: true })).toHaveValue('');
+    await withFilters(page, drawer => expect(drawer.getByLabel('Pays', { exact: true })).toHaveValue(''));
   });
 });
 

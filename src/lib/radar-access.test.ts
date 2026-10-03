@@ -96,6 +96,9 @@ function harness(scenario: Scenario) {
     'next/navigation': { redirect: (destination: string) => { throw new Error(`redirect:${destination}`); } },
     '@/app/app/live/LiveRadarDashboard': { __esModule: true, default: Dashboard },
     '@/components/shell/AppShell': { __esModule: true, default: 'app-shell' },
+    // Lecteur unique et recherche universelle du layout /app (P5) : frontières client simulées.
+    '@/components/player/PlayerDock': { PlayerDockProvider: 'player-dock' },
+    '@/components/search/UniversalSearch': { __esModule: true, default: 'universal-search' },
     '@/lib/admin-access': { getAdministratorAccess: async () => ({ allowed: state.scenario.decision.reason === 'administrator_access' }) },
   };
   return { state, load: (file: string) => loadSource(file, mocks), Dashboard };
@@ -144,7 +147,7 @@ for (const route of routes) {
 test('dashboard guard denies expired accounts while the parent layout permits catalog browsing', async () => {
   for (const scenario of cases) {
     const { load, Dashboard } = harness(scenario);
-    const layout = load('app/app/layout.tsx').default as (props: { children: string }) => Promise<{ props: { children: string; admin: boolean } }>;
+    const layout = load('app/app/layout.tsx').default as (props: { children: string }) => Promise<{ props: { children: { props: { children: unknown[] } }; admin: boolean } }>;
     const page = load('app/app/live/page.tsx').default as () => Promise<{ type: unknown }>;
     if (!scenario.user) {
       await assert.rejects(layout({ children: 'catalog' }), /redirect:\/sign-in\?redirect_url=\/app\/live/);
@@ -154,7 +157,8 @@ test('dashboard guard denies expired accounts while the parent layout permits ca
       await assert.rejects(page(), /redirect:\/account\?access=required/);
     } else {
       const rendered = await layout({ children: 'catalog' });
-      assert.equal(rendered.props.children, 'catalog');
+      // Le catalogue est rendu (à l'intérieur du lecteur unique de l'espace /app).
+      assert.ok(rendered.props.children.props.children.includes('catalog'));
       assert.equal(rendered.props.admin, scenario.decision.reason === 'administrator_access');
       if (scenario.status === 200) assert.equal((await page()).type, Dashboard);
       else await assert.rejects(page(), /redirect:\/account\?access=required/);

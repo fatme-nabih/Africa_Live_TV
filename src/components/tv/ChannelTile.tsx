@@ -135,7 +135,13 @@ export default function ChannelTile({
           <button
             type="button"
             tabIndex={tabIndex}
-            onClick={event => { event.stopPropagation(); onToggleFavorite(channel.id); }}
+            onClick={event => {
+              event.stopPropagation();
+              // Petit « pop » de l'étoile quand la chaîne entre dans les favoris (CSS, coupé en Éco data et mouvement réduit).
+              if (!favorite) event.currentTarget.dataset.pop = 'true';
+              onToggleFavorite(channel.id);
+            }}
+            onAnimationEnd={event => { delete event.currentTarget.dataset.pop; }}
             aria-label={`${favorite ? 'Retirer' : 'Ajouter'} ${accessibleName} ${favorite ? 'des' : 'aux'} favoris`}
             aria-pressed={favorite}
             className={`${ICON_BUTTON} ${favorite ? 'border-al-gold/50 text-al-gold' : ''}`}

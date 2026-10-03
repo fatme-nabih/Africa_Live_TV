@@ -315,7 +315,7 @@ documenté dans `production-progress.md`. Estimations en jours-dev effectifs.
 | **P2** | TV « streaming » | 5 j | Rétention n°1 | ✅ Fait et vérifié (02/10), publié (03/10) ; UX-209 partiel |
 | **P3** | Radar « vivant » | 5 j | Identité du produit | ✅ Fait et vérifié (03/10), publié (03/10, `412574d`) |
 | **P4** | Landing, tarifs, compte | 3 j | Conversion | ✅ Fait et vérifié (03/10), publié (03/10, `06b662f`) |
-| **P5** | Aimants avancés et finition | 5 j | Habitude, différenciation | ⏭ **En cours** (feu vert du 03/10) |
+| **P5** | Aimants avancés et finition | 5 j | Habitude, différenciation | ✅ Fait et vérifié (03/10), **non committé** ; UX-507 bloqué (L6) |
 
 Ordre recommandé : P0 → P1 → P2 → P3 → P4 → P5. P2 avant P3 car le gain
 de rétention est le plus rapide et la base L5 (zapping) existe déjà.
@@ -339,7 +339,13 @@ et limites : section « Lot P4 » de [production-progress.md](production-progres
 vérification complète (fin de P4) : `tsc` 0, `lint` 0, `npm test` 348 (334 réussis, 14 ignorés, 0 échec), invariants 4/4, build réussi,
 E2E MVP 135 tests (132 réussis + 1 ignoré, 2 échecs corrigés puis specs rejoués 67/67), E2E Clerk 8/8.
 
-**Reste à faire** (8 tickets P5 + 2 reliquats : UX-209 suite, UX-213), un lot à la fois. Le tableau P4 ci-dessous est conservé pour l'historique :
+**Fait et vérifié, non committé** : P5 « Aimants et finition » le 3 octobre 2026 (UX-501 → 506, UX-508, UX-209 suite, UX-213) ; **UX-507 bloqué**
+(briefing = L6 différé, arbitrage D1 du propriétaire). Preuves : section « Lot P5 » de [production-progress.md](production-progress.md) et
+[audit daté](audit-a11y-performance-2026-10-03.md). Vérification : tsc 0, lint 0, 355 tests (341/14/0), invariants 4/4, build, E2E MVP
+145 + 1 ignoré (1 échec corrigé, specs rejoués), E2E Clerk 8/8 ; poids JS TV −38 %.
+
+**Reste à faire** : UX-507 (après décision L6) ; synchronisation des pays suivis au compte (ticket de migration) ; Lighthouse (outil à autoriser).
+Historique — tickets P5 + 2 reliquats : UX-209 suite, UX-213, un lot à la fois. Le tableau P4 ci-dessous est conservé pour l'historique :
 
 | Lot | Tickets | Points d'attention |
 |---|---|---|
@@ -392,7 +398,7 @@ Vérification propre à P4 : la landing, `/pricing` et `/sign-in` sont testées 
 | UX-505 | `framer-motion` reste dans 5 composants (`CategoryTabs`, `FilterSidebar`, `InlinePlayerModal`, `PlayerOverlays`, `Player`) ; l'image `BrandBackdrop` est signalée comme LCP en développement. | Mesurer le poids JS de la TV et du Radar avant/après (le Radar charge déjà la modale à la demande) ; `loading="eager"` sur le logo ; CSS plutôt que bibliothèque là où il suffit. |
 | UX-506 → 508, UX-209 suite, UX-213 | Voir §6. | Mur TV derrière un drapeau (desktop) ; briefing = lot L6 ; audit a11y + Lighthouse, rapport daté dans `docs/`. |
 
-**Décisions du propriétaire en attente** (aucune ne bloque P5) : (1) ~~publier P3–P4~~ résolue (publiés le 3 octobre) ; (2) source sismique pour la tuile d'alerte ? ; (3) ~~traduction Clerk~~ résolue : `@clerk/localizations` 4.9.0 ; (4) ~~session Clerk pour UX-214~~ résolue ; (5) validation sur Android réel ; (6) logos officiels Wave / Orange Money ; (7) nom « Afrika_Live » dans le tableau de bord Clerk.
+**Décisions du propriétaire en attente** (après P5) : (8) **briefing L6** (UX-507) ; (9) autoriser Lighthouse ; (10) activer le mur TV en production (`NEXT_PUBLIC_TV_WALL`) ; (11) committer et publier P5 ; (1) ~~publier P3–P4~~ résolue (publiés le 3 octobre) ; (2) source sismique pour la tuile d'alerte ? ; (3) ~~traduction Clerk~~ résolue : `@clerk/localizations` 4.9.0 ; (4) ~~session Clerk pour UX-214~~ résolue ; (5) validation sur Android réel ; (6) logos officiels Wave / Orange Money ; (7) nom « Afrika_Live » dans le tableau de bord Clerk.
 
 Repères ajoutés en P4 utiles à P5 : chiffres publics `getPublicStats()` (`src/lib/public-stats-server.ts`, cache 1 h) ; écran partagé `OffAirScreen` (404, erreurs, hors-ligne PWA d'UX-504) ; `PlanCard` / `PaymentMethods` / `Faq` ; `loading.tsx` racine (penser au piège d'hydratation en E2E) ; bascule Éco visible dès 360 px.
 
@@ -474,14 +480,14 @@ Taille : S ≤ ½ j, M ≈ 1 j, L ≈ 2–3 j.
 
 | ID | Prio | Taille | Ticket | Critères d'acceptation | État |
 |---|---|---|---|---|---|
-| UX-501 | P1 | L | **Mini-lecteur persistant** dans `AppShell` (layout `/app`), survit Radar ↔ TV | Une seule source active ; arrêt propre ; quotas respectés | À faire |
-| UX-502 | P1 | L | **Recherche universelle ⌘K** : pays, chaînes, dépêches, villes | Réutilise API existantes ; < 300 ms perçu ; clavier complet | À faire |
-| UX-503 | P2 | M | **Pays suivis** (1–5) en local, puis synchronisés au compte (ticket migration séparé) | Radar et TV s'ouvrent sur le pays principal | À faire |
-| UX-504 | P2 | M | PWA : manifeste unique, raccourcis Radar/TV, écran hors-ligne « hors antenne » | Lighthouse PWA installable | À faire |
-| UX-505 | P2 | M | Micro-interactions sobres : favori (pop), live dot, squelettes animés ; retrait de `framer-motion` là où CSS suffit | Bundle JS TV réduit (mesure) | À faire |
-| UX-506 | P3 | L | **Mur TV 2×2** (desktop, flag) | Un seul flux sonore ; respect des quotas de lecture | À faire |
-| UX-507 | P3 | — | Briefing du matin = lot L6 existant, branché sur Pays suivis | Selon `plan-dashboard-backlog.md` | À faire |
-| UX-508 | P2 | M | Audit a11y final (axe + clavier + lecteur d'écran) et Lighthouse ≥ 90 perf/a11y sur Radar et TV | Rapport daté dans `docs/` | À faire |
+| UX-501 | P1 | L | **Mini-lecteur persistant** dans `AppShell` (layout `/app`), survit Radar ↔ TV | Une seule source active ; arrêt propre ; quotas respectés | ✅ P5 — 03/10/2026 (`PlayerDock`) |
+| UX-502 | P1 | L | **Recherche universelle ⌘K** : pays, chaînes, dépêches, villes | Réutilise API existantes ; < 300 ms perçu ; clavier complet | ✅ P5 — 03/10/2026 (pays/villes instantanés, chaînes après 250 ms) |
+| UX-503 | P2 | M | **Pays suivis** (1–5) en local, puis synchronisés au compte (ticket migration séparé) | Radar et TV s'ouvrent sur le pays principal | ✅ P5 — 03/10/2026 (local ; synchronisation = migration à part) |
+| UX-504 | P2 | M | PWA : manifeste unique, raccourcis Radar/TV, écran hors-ligne « hors antenne » | Lighthouse PWA installable | ✅ P5 — 03/10/2026 (installable vérifié par le protocole du navigateur ; Lighthouse non installé) |
+| UX-505 | P2 | M | Micro-interactions sobres : favori (pop), live dot, squelettes animés ; retrait de `framer-motion` là où CSS suffit | Bundle JS TV réduit (mesure) | ✅ P5 — 03/10/2026 (522 → 322 Ko gzip, `framer-motion` retiré) |
+| UX-506 | P3 | L | **Mur TV 2×2** (desktop, flag) | Un seul flux sonore ; respect des quotas de lecture | ✅ P5 — 03/10/2026 (drapeau `NEXT_PUBLIC_TV_WALL`, non posé en production) |
+| UX-507 | P3 | — | Briefing du matin = lot L6 existant, branché sur Pays suivis | Selon `plan-dashboard-backlog.md` | ⛔ Bloqué — L6 différé (décision D1 du propriétaire) |
+| UX-508 | P2 | M | Audit a11y final (axe + clavier + lecteur d'écran) et Lighthouse ≥ 90 perf/a11y sur Radar et TV | Rapport daté dans `docs/` | ✅ P5 — 03/10/2026 ([rapport](audit-a11y-performance-2026-10-03.md) ; axe 0 violation ; Lighthouse non lancé) |
 
 ### Reliquats identifiés pendant P0–P2
 
@@ -489,9 +495,9 @@ Rien n'y est bloquant ; chaque reliquat est rattaché au lot où il coûte le mo
 
 | ID | Lot | Prio | Taille | Ticket | Critères d'acceptation | État |
 |---|---|---|---|---|---|---|
-| UX-209 (suite) | P5 | P3 | M | Filtres en tiroir unique desktop + mobile : retirer la barre latérale desktop au profit du tiroir mobile existant (pastilles, compteur et « Tout effacer » sont faits en P2) | Un seul panneau de filtres ; E2E `tv-workspace`, `catalogue`, `tv-streaming` équivalents et verts ; première chaîne toujours visible à 1366×768 | À faire |
+| UX-209 (suite) | P5 | P3 | M | Filtres en tiroir unique desktop + mobile : retirer la barre latérale desktop au profit du tiroir mobile existant (pastilles, compteur et « Tout effacer » sont faits en P2) | Un seul panneau de filtres ; E2E `tv-workspace`, `catalogue`, `tv-streaming` équivalents et verts ; première chaîne toujours visible à 1366×768 | ✅ P5 — 03/10/2026 |
 | UX-212 | P4 | P2 | S | « Éco data » découvrable sur mobile : la bascule est cachée dans la barre sous 640 px et n'existe que dans Compte | Accès en ≤ 2 gestes depuis la TV à 360 px ; état annoncé (`aria-pressed`) ; E2E | ✅ P4 — 03/10/2026 (1 geste dès 360 px ; Compte sous 360 px) |
-| UX-213 | P5 | P2 | S | Contrôle du lecteur ancré (« Activer le lecteur ancré » + case « VLC et mes autres lecteurs sont arrêtés ») : habiller avec `Button`/`Chip` du design system, libellés humains, sans changer le comportement L5 | Aucune régression `anchored-player.spec` ; captures 360/1366 | À faire |
+| UX-213 | P5 | P2 | S | Contrôle du lecteur ancré (« Activer le lecteur ancré » + case « VLC et mes autres lecteurs sont arrêtés ») : habiller avec `Button`/`Chip` du design system, libellés humains, sans changer le comportement L5 | Aucune régression `anchored-player.spec` ; captures 360/1366 | ✅ P5 — 03/10/2026 |
 | UX-214 | P4 | P2 | S | Capturer `/account` et `/admin` avec une session Clerk (non faisable en anonyme) | Captures `premium-p4-account-*` et `premium-p4-admin-*` ; **nécessite le propriétaire** | ✅ P4 — 03/10/2026 (sessions du propriétaire, données personnelles masquées) |
 
 ---
