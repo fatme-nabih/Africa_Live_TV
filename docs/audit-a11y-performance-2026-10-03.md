@@ -2,8 +2,8 @@
 
 Périmètre : Radar (`/app/live`), TV (`/app`), mur TV (`/app/mur`), page de revue (`/app/ui`), landing, `/pricing`, `/sign-in`, 404,
 et les états ajoutés en P5 (lecteur agrandi, mini-lecteur, recherche universelle, tiroir de filtres). Code final du lot P5,
-non committé au moment de l'audit. Aucun outil n'a été installé : axe-core est déjà présent dans `node_modules` (dépendance
-transitive) ; **Lighthouse n'est pas installé** et n'a pas été lancé (il faudrait l'ajouter : décision du propriétaire).
+non committé au moment de l'audit. axe-core est déjà présent dans `node_modules` (dépendance transitive) ; Lighthouse a ensuite
+été installé hors du projet à la demande du propriétaire (section « Lighthouse »).
 
 ## Accessibilité (axe-core, règles WCAG 2.0 / 2.1 niveaux A et AA)
 
@@ -59,8 +59,67 @@ Manifeste unique avec raccourcis Radar et TV ; installable (aucune erreur d'inst
 du navigateur) ; service worker actif ; **cache limité à `offline.html` et deux images locales** (aucune vidéo, réponse d'API ou image
 distante) ; hors connexion, une navigation affiche l'écran « Hors antenne » (capture `premium-p5-hors-ligne-1366.png`).
 
+## Lighthouse (12.8.2, installé à la demande du propriétaire le 3 octobre 2026)
+
+Installé **hors du projet** (`.local-logs/tools/lighthouse`, ignoré par Git) : ni `package.json` ni le build Railway n'en dépendent.
+Navigateur : Edge (Chromium) sans interface. Profils Lighthouse par défaut : « mobile » (appareil milieu de gamme simulé, 4G lente,
+CPU ×4) et « desktop ». Une seule mesure par page et par profil (variations observées : ± 5 à 10 points en performance mobile).
+
+### 1. Staging (`staging.africatv.sn`, build de production, P5 publié)
+
+| Page | Perf. mobile / desktop | Accessibilité | Bonnes pratiques | SEO | LCP mobile | CLS mobile |
+|---|---|---|---|---|---|---|
+| Landing | 71 / 88 | 99 / 100 | 79 / 78 | 100 | 5,5 s | 0 |
+| `/pricing` | 65 / 88 | 100 / 99 | 79 / 78 | 100 | 6,4 s | 0 |
+| `/sign-in` | 55 / 89 | 100 | 79 / 78 | 100 | 5,4 s | **0,269** |
+
+### 2. Corrections faites après cette mesure (locales, **non committées, non publiées**)
+
+- **Accessibilité** : logo de marque au texte alternatif redondant à côté du mot « Africa Live » (`image-redundant-alt`) → logo
+  décoratif (`BrandLogo decorative`) ; lien d'accueil dont le nom ne reprenait pas le texte visible → nom = texte visible ; bouton
+  « Rechercher » de la barre (nom « Rechercher une chaîne », texte « Rechercher Ctrl K ») → nom = texte visible, et dans `/app` il
+  ouvre désormais la recherche universelle, comme le raccourci Ctrl K qu'il affiche (E2E `app-shell` mis à jour, équivalent).
+- **CLS de la connexion** (0,269 sur mobile) : place réservée au widget Clerk avant son arrivée.
+- **CLS du Radar** (jusqu'à 0,47 sur mobile, CPU ×4, existant depuis P3) : textes des tuiles et ligne d'état à hauteur réservée
+  (unité `lh`), ligne d'état exclue de l'ancrage de défilement (la pastille « n nouvelles » ne fait pas bouger la page, E2E vert) ;
+  sur grand écran, place de la carte réservée dès le rendu serveur (le bouton « Afficher la carte » disparaissait après hydratation).
+- **CLS de la TV** : la rangée « Mes favoris » n'affiche plus un squelette qui s'efface quand il n'y a aucun favori (et n'est plus
+  demandée : une requête `/api/channels` de moins ; E2E `tv-streaming` mis à jour en conséquence).
+- Essais **retirés faute de gain mesuré** : `loading="eager"`, puis `preload` du fond de marque (LCP mobile inchangé dans le bruit).
+
+### 3. Après corrections — build servi en local (`next start`, `DEPLOYMENT_ENV=local`)
+
+| Page | Perf. mobile / desktop | Accessibilité | Bonnes pratiques | SEO | LCP mobile | CLS mobile |
+|---|---|---|---|---|---|---|
+| Landing | 63 / **98** | **100** | 79 / 78 | 100 | 6,9 s | 0 |
+| `/pricing` | 64 / **96** | **100** | 79 / 78 | 100 | 6,2 s | 0 |
+| `/sign-in` | 71 / **98** | **100** | 79 / 78 | 100 | 4,6 s | **0,017** |
+
+### 4. Radar et TV (session requise : mesurés sur le serveur de **développement**, mode MVP)
+
+La performance n'est **pas représentative** (code non minifié, compilation à la volée) ; accessibilité, bonnes pratiques et SEO le sont.
+
+| Page | Perf. (dev) mobile / desktop | Accessibilité | Bonnes pratiques | SEO | CLS mobile / desktop |
+|---|---|---|---|---|---|
+| Radar `/app/live` | 47 / 78 | **100** | 100 | 100 | 0,024 / 0,001 (avant : 0,035–0,47 / 0,167) |
+| TV `/app` | 47 / 89 | **100** | 100 / 78 | 100 | 0,011 / 0,024 (avant : 0,121 / 0,079) |
+
+Avertissement restant sans effet sur la note : les tuiles du Radar ont un nom accessible plus riche que leur texte visible
+(« … pas une alerte officielle », etc.), choisi en P3 et vérifié par 6 E2E : conservé volontairement.
+
+### Lecture
+
+- **Accessibilité : 100 partout** après corrections. **SEO : 100.**
+- **Bonnes pratiques 78–79** : uniquement les **cookies tiers de l'instance Clerk de développement** (`*.clerk.accounts.dev`)
+  utilisée par staging ; une instance Clerk de production sur le domaine `africatv.sn` (configuration Clerk, décision du propriétaire)
+  supprime ce point. Aucun défaut de code relevé.
+- **Performance desktop : 96–98** (build servi). **Performance mobile : 55–72**, LCP 4,6–6,9 s : l'élément LCP est le grand logo
+  décoratif `BrandBackdrop` ; la part dominante est le **délai serveur** (landing rendue à chaque requête par `auth()` : 2,1 s de
+  premier octet sur staging) et le JavaScript (Clerk compris). Pistes, à décider : landing **statique** (état de connexion lu côté
+  client) et revalidée ; fond de marque plus léger ou dessiné en CSS ; Clerk chargé seulement où il sert sur la landing.
+
 ## Recommandations
 
-1. Autoriser Lighthouse (outil de mesure, sans effet sur l'application) pour obtenir les notes officielles Radar / TV / landing.
+1. ~~Autoriser Lighthouse~~ fait (voir « Lighthouse ») ; publier les corrections d'accessibilité et de CLS (accord du propriétaire).
 2. Alléger le fond de marque (LCP) et charger Clerk seulement où il sert sur la landing.
 3. Tester sur un Android d'entrée de gamme réel avec TalkBack.

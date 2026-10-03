@@ -1,6 +1,6 @@
 # Checklist de non-régression — lots local et Railway
 
-## Expérience Premium P5 — reçue localement le 3 octobre 2026 (non committée)
+## Expérience Premium P5 — reçue localement le 3 octobre 2026 (publiée : GitHub `090ce01`, Railway staging `75bf069d`, 9/9 E2E distants ; corrections Lighthouse locales non publiées)
 
 Preuves : [production-progress.md](production-progress.md) « Lot P5 » et [audit](audit-a11y-performance-2026-10-03.md).
 
@@ -10,7 +10,8 @@ Preuves : [production-progress.md](production-progress.md) « Lot P5 » et [audi
 - [x] Service worker : cache limité à `offline.html` + 2 images locales (aucun média, aucune API) ; écran « Hors antenne » hors connexion.
 - [x] Machine de lecture, accès, quotas, API, schéma, `.env*`, Railway, Clerk et DNS inchangés ; `framer-motion` retiré, aucune dépendance ajoutée.
 - [x] axe-core WCAG 2.1 A/AA : 0 violation (8 pages, 2 états) ; 0 débordement, 0 texte < 12 px sur les captures P5.
-- [ ] UX-507 (L6) ; Lighthouse ; pays suivis synchronisés au compte ; appareils Android et lecteurs d'écran réels : non reçus.
+- [x] Lighthouse : accessibilité 100 et SEO 100 partout (après corrections locales), performance desktop 96–98 ; mobile 55–72 (LCP) non conforme à l'objectif 90.
+- [ ] UX-507 (L6) ; pays suivis synchronisés au compte ; appareils Android et lecteurs d'écran réels : non reçus.
 
 ## Expérience Premium P4 — reçue localement le 3 octobre 2026 (publiée le 3 octobre avec P3 : GitHub `06b662f`, Railway staging `990745ba`, 9/9 E2E distants)
 

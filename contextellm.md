@@ -2,7 +2,16 @@
 
 Dernière mise à jour : 3 octobre 2026, fuseau Africa/Dakar.
 
-## Expérience Premium — Lot P5 « Aimants et finition » fait et vérifié, non committé (3 octobre 2026)
+## Publication P5 et audit Lighthouse — 3 octobre 2026
+
+- P5 committé (`090ce01`), poussé, publié sur Railway staging (`75bf069d` **SUCCESS**, 402/402 fichiers identiques, 9/9 E2E distants).
+  [Dossier](docs/publication-premium-p5-2026-10-03.md).
+- Lighthouse 12.8.2 installé **hors du projet** (`.local-logs/tools/lighthouse`, scripts `.local-logs/p5/lh-run.sh` et `lh-summary.cjs`).
+  Notes : [audit](docs/audit-a11y-performance-2026-10-03.md). Corrections issues de l'audit **locales, non committées** (accessibilité 100,
+  CLS Radar/TV/connexion, bouton « Rechercher » = recherche universelle dans `/app`) : attendent l'accord du propriétaire pour commit et publication.
+- Pistes performance mobile proposées (non faites) : landing statique, fond de marque allégé, Clerk différé ; instance Clerk de production.
+
+## Expérience Premium — Lot P5 « Aimants et finition » fait et vérifié (3 octobre 2026)
 
 - Fait (UX-501 → 506, UX-508, UX-209 suite, UX-213) ; **UX-507 bloqué** (L6 différé, décision D1). Détail : « Lot P5 » de
   [production-progress.md](docs/production-progress.md), [audit daté](docs/audit-a11y-performance-2026-10-03.md), captures `premium-p5-*`.
