@@ -2,7 +2,15 @@
 
 Dernière mise à jour : 3 octobre 2026, fuseau Africa/Dakar.
 
-## Expérience Premium — Lot P4 « Landing, tarifs, compte » fait et vérifié, non committé (3 octobre 2026)
+## Publication Premium P3–P4 sur staging — 3 octobre 2026
+
+- À la demande du propriétaire : P4 committé (`06b662f`), poussé avec P3 sur GitHub `main`, publié sur Railway staging
+  (`990745ba-1fe3-4ebc-82cf-23acc5736f17` **SUCCESS**). 391/391 fichiers applicatifs identiques par SSH, santé 200 sur les deux
+  domaines, météo anonyme 401, dashboard 307, **9/9 E2E distants**. Aucune migration, variable, DNS ou plan modifié. [dossier de publication P3–P4](docs/publication-premium-p3p4-2026-10-03.md).
+- Les mentions « non committé / non poussé / non publié » de P3 et P4 ci-dessous sont historiques.
+- Suite : **lot P5** (feu vert donné le 3 octobre), un lot à la fois.
+
+## Expérience Premium — Lot P4 « Landing, tarifs, compte » fait et vérifié (3 octobre 2026)
 
 - **Fait et vérifié en local, non committé** (UX-401 → 407 + UX-212 + UX-214, captures connectées faites avec le propriétaire). Dépendance
   ajoutée sur décision du propriétaire : `@clerk/localizations` 4.9.0 (compatible `@clerk/shared` 4.20.0). HEAD reste

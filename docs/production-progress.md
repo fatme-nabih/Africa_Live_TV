@@ -1,5 +1,12 @@
 # Progression — préparation production
 
+## Publication Premium P3–P4 — 3 octobre 2026
+
+Publication demandée par le propriétaire : P4 committé (`06b662f`), P3 et P4 poussés sur GitHub `main`, Railway staging
+`990745ba-1fe3-4ebc-82cf-23acc5736f17` **SUCCESS**. 391/391 fichiers applicatifs identiques par SSH, santé 200 sur les deux domaines,
+météo anonyme 401, dashboard 307, **9/9 E2E distants**, chiffres de la landing lus dans la base Railway. Aucune migration, variable,
+DNS ou plan modifié. [Dossier de publication](publication-premium-p3p4-2026-10-03.md).
+
 ## Publication Premium P0–P2 — 3 octobre 2026
 
 Publication demandée par le propriétaire : commit applicatif `1ef60b5`

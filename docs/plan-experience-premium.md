@@ -313,14 +313,16 @@ documenté dans `production-progress.md`. Estimations en jours-dev effectifs.
 | **P0** | Hygiène et socle design | 3 j | Cohérence immédiate | ✅ Fait et vérifié (02/10), publié (03/10) |
 | **P1** | Coquille unique et navigation | 3 j | Fluidité inter-pages | ✅ Fait et vérifié (02/10), publié (03/10) |
 | **P2** | TV « streaming » | 5 j | Rétention n°1 | ✅ Fait et vérifié (02/10), publié (03/10) ; UX-209 partiel |
-| **P3** | Radar « vivant » | 5 j | Identité du produit | ✅ Fait, vérifié et committé en local (`412574d`, 03/10) ; non poussé, non publié |
-| **P4** | Landing, tarifs, compte | 3 j | Conversion | ✅ Fait et vérifié (03/10), **non committé** (UX-214 compris) |
-| **P5** | Aimants avancés et finition | 5 j | Habitude, différenciation | ⏭ **Prochain lot**, en attente du feu vert du propriétaire |
+| **P3** | Radar « vivant » | 5 j | Identité du produit | ✅ Fait et vérifié (03/10), publié (03/10, `412574d`) |
+| **P4** | Landing, tarifs, compte | 3 j | Conversion | ✅ Fait et vérifié (03/10), publié (03/10, `06b662f`) |
+| **P5** | Aimants avancés et finition | 5 j | Habitude, différenciation | ⏭ **En cours** (feu vert du 03/10) |
 
 Ordre recommandé : P0 → P1 → P2 → P3 → P4 → P5. P2 avant P3 car le gain
 de rétention est le plus rapide et la base L5 (zapping) existe déjà.
 
 ### 5.1 État d'avancement et reste à faire (mis à jour le 3 octobre 2026)
+
+**Publié (P3–P4, 3 octobre)** : P3 (`412574d`) et P4 (`06b662f`) sont poussés et publiés sur Railway staging (`990745ba`, 9/9 E2E distants) — [dossier](publication-premium-p3p4-2026-10-03.md).
 
 **Publié** : P0, P1 et P2 sont committés et publiés sur GitHub `main` (applicatif `1ef60b5`, documentation `01279c0`) et sur
 Railway staging, à la demande du propriétaire ([dossier de publication](publication-premium-2026-10-03.md)).
@@ -390,7 +392,7 @@ Vérification propre à P4 : la landing, `/pricing` et `/sign-in` sont testées 
 | UX-505 | `framer-motion` reste dans 5 composants (`CategoryTabs`, `FilterSidebar`, `InlinePlayerModal`, `PlayerOverlays`, `Player`) ; l'image `BrandBackdrop` est signalée comme LCP en développement. | Mesurer le poids JS de la TV et du Radar avant/après (le Radar charge déjà la modale à la demande) ; `loading="eager"` sur le logo ; CSS plutôt que bibliothèque là où il suffit. |
 | UX-506 → 508, UX-209 suite, UX-213 | Voir §6. | Mur TV derrière un drapeau (desktop) ; briefing = lot L6 ; audit a11y + Lighthouse, rapport daté dans `docs/`. |
 
-**Décisions du propriétaire en attente** (aucune ne bloque P5) : (1) committer P4, pousser et publier P3–P4 sur staging ? ; (2) source sismique pour la tuile d'alerte ? ; (3) ~~traduction Clerk~~ résolue : `@clerk/localizations` 4.9.0 ; (4) ~~session Clerk pour UX-214~~ résolue ; (5) validation sur Android réel ; (6) logos officiels Wave / Orange Money ; (7) nom « Afrika_Live » dans le tableau de bord Clerk.
+**Décisions du propriétaire en attente** (aucune ne bloque P5) : (1) ~~publier P3–P4~~ résolue (publiés le 3 octobre) ; (2) source sismique pour la tuile d'alerte ? ; (3) ~~traduction Clerk~~ résolue : `@clerk/localizations` 4.9.0 ; (4) ~~session Clerk pour UX-214~~ résolue ; (5) validation sur Android réel ; (6) logos officiels Wave / Orange Money ; (7) nom « Afrika_Live » dans le tableau de bord Clerk.
 
 Repères ajoutés en P4 utiles à P5 : chiffres publics `getPublicStats()` (`src/lib/public-stats-server.ts`, cache 1 h) ; écran partagé `OffAirScreen` (404, erreurs, hors-ligne PWA d'UX-504) ; `PlanCard` / `PaymentMethods` / `Faq` ; `loading.tsx` racine (penser au piège d'hydratation en E2E) ; bascule Éco visible dès 360 px.
 

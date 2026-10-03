@@ -1,6 +1,6 @@
 # Checklist de non-régression — lots local et Railway
 
-## Expérience Premium P4 — reçue localement le 3 octobre 2026 (non committée)
+## Expérience Premium P4 — reçue localement le 3 octobre 2026 (publiée le 3 octobre avec P3 : GitHub `06b662f`, Railway staging `990745ba`, 9/9 E2E distants)
 
 Plan : [plan-experience-premium.md](plan-experience-premium.md) §5.1. Preuves et limites : [production-progress.md](production-progress.md),
 section « Lot P4 ». Cases reçues en local uniquement (dev, port 3001). À rejouer à la fin de P5.
