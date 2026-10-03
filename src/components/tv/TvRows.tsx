@@ -126,7 +126,8 @@ export default function TvRows(props: RowProps) {
           {...props}
         />
       )}
-      <CatalogRail id="favorites" followedCountry={followedCountry} favoritesKey={props.favorites.join(',')} {...props} />
+      {/* Sans favori connu, pas de squelette qui s'efface ensuite : il décalait toutes les rangées suivantes (CLS). */}
+      {props.favorites.length > 0 && <CatalogRail id="favorites" followedCountry={followedCountry} favoritesKey={props.favorites.join(',')} {...props} />}
       <CatalogRail id="country" followedCountry={followedCountry} {...props} />
       <CatalogRail id="news" followedCountry={followedCountry} {...props} />
       <CatalogRail id="sports" followedCountry={followedCountry} {...props} />

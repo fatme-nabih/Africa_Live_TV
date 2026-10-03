@@ -67,12 +67,14 @@ export default function RadarMapCard({
             aria-expanded={mapRequested}
             aria-controls="radar-map"
             onClick={() => setMapRequested(value => !value)}
-            className="mb-2"
+            className="mb-2 xl:hidden"
           >
             {mapRequested ? 'Masquer la carte' : 'Afficher la carte'}
           </Button>
         )}
-        <div id="radar-map">
+        {/* Sur grand écran, la place de la carte (barre d'outils, carte, légende : 614 px mesurés) est réservée dès le rendu serveur :
+            plus de saut quand la carte remplace le bouton « Afficher la carte » après hydratation (CLS mesuré par Lighthouse). */}
+        <div id="radar-map" className="xl:min-h-[614px]">
           {showMap ? (
             <TacticalVectorMap
               countries={AFRICAN_COUNTRIES}
@@ -83,7 +85,7 @@ export default function RadarMapCard({
               onSelectCountryForChannels={onSelectCountryForChannels}
             />
           ) : (
-            <p className="p-3 text-xs text-text-muted">Carte à la demande, pour économiser vos données. Le choix du pays et les dépêches fonctionnent sans elle.</p>
+            <p className="p-3 text-xs text-text-muted xl:hidden">Carte à la demande, pour économiser vos données. Le choix du pays et les dépêches fonctionnent sans elle.</p>
           )}
         </div>
       </div>

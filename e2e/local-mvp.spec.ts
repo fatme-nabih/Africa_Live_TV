@@ -57,13 +57,19 @@ test('channels marked unavailable stay hidden from the catalogue', async ({ page
 
 test('country filters and favorites work without Clerk', async ({ page }) => {
   await page.goto('/app');
-  const response = page.waitForResponse(response => response.url().endsWith('/api/channels') && response.request().postDataJSON().country === 'SN');
+  // Une requête « SN » peut être remplacée par une plus récente (corps alors illisible) : on garde la dernière réponse complète.
+  const bodies: Array<{ channels: Array<{ id: string; name: string; countryCode: string }> }> = [];
+  page.on('response', async response => {
+    if (!response.url().endsWith('/api/channels') || response.request().postDataJSON()?.country !== 'SN' || !response.ok()) return;
+    try { bodies.push(await response.json()); } catch { /* requête annulée par une plus récente */ }
+  });
   await withFilters(page, drawer => drawer.getByLabel('Pays', { exact: true }).selectOption('SN'));
-  const body = await (await response).json();
+  await expect.poll(() => bodies.length).toBeGreaterThan(0);
+  const body = bodies.at(-1)!;
   expect(body.channels.length).toBeGreaterThan(0);
   expect(body.channels.every((channel: { countryCode: string }) => channel.countryCode === 'SN')).toBe(true);
   const existingFavorites = await page.request.get('/api/favorites').then(response => response.json());
-  const candidate = body.channels.find((channel: { id: string }) => !existingFavorites.favorites.includes(channel.id));
+  const candidate = body.channels.find((channel: { id: string }) => !existingFavorites.favorites.includes(channel.id))!;
   expect(candidate).toBeDefined();
   const name = candidate.name;
   const add = page.getByRole('button', { name: `Ajouter ${name} aux favoris`, exact: true });

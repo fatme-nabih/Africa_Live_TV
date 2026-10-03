@@ -16,7 +16,7 @@ export default function SignUpPage() {
           </GoldRing>
         </Link>
         <h1 className="font-display text-center text-2xl font-bold text-text">Votre regard sur l’Afrique commence ici</h1>
-        {!isAnonymousE2EMode() && <SignUp routing="path" path="/sign-up" />}
+        <div className="flex min-h-[34rem] w-full justify-center">{!isAnonymousE2EMode() && <SignUp routing="path" path="/sign-up" />}</div>
         <Link href="/" className="text-xs font-medium text-text-muted hover:text-text transition">
           Retour à l’accueil
         </Link>

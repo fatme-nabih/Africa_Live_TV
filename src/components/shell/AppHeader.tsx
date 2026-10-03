@@ -20,6 +20,7 @@ import EcoToggle from './EcoToggle';
 import CountryPicker from './CountryPicker';
 import NavLinks from './NavLinks';
 import { useOpenSearch } from './useOpenSearch';
+import { OPEN_UNIVERSAL_SEARCH_EVENT } from '@/lib/universal-search';
 
 export type ShellMode = 'member' | 'public' | 'auto';
 
@@ -120,7 +121,7 @@ function BrandLink({ href, label }: { href: string; label: string }) {
   return (
     <Link href={href} aria-label={label} className="flex shrink-0 items-center gap-2.5 rounded-control">
       <GoldRing className="size-10">
-        <BrandLogo className="size-9" />
+        <BrandLogo className="size-9" decorative />
       </GoldRing>
       <span className="hidden sm:block md:hidden lg:block">
         <Wordmark className="text-sm" />
@@ -129,19 +130,25 @@ function BrandLink({ href, label }: { href: string; label: string }) {
   );
 }
 
-/** Bouton de recherche : sur la TV il active la recherche, ailleurs il y conduit. Masqué sur mobile (barre basse). */
+/**
+ * Bouton de recherche (masqué sur mobile : barre basse). Dans l'espace /app il ouvre la recherche universelle, comme Ctrl K ;
+ * ailleurs (Compte, Tarifs), où la palette n'existe pas, il conduit à la recherche de la TV.
+ */
 function SearchButton({ pathname, country }: { pathname: string; country: string | null }) {
-  const onClick = useOpenSearch(pathname, country);
+  const openCatalogSearch = useOpenSearch(pathname, country);
+  const inApp = pathname === '/app' || pathname.startsWith('/app/');
+  const onClick = inApp ? () => window.dispatchEvent(new Event(OPEN_UNIVERSAL_SEARCH_EVENT)) : openCatalogSearch;
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label="Rechercher une chaîne"
+      aria-keyshortcuts={inApp ? 'Control+K' : undefined}
       className="hidden h-11 shrink-0 items-center gap-2 rounded-control border border-line bg-surface-2 px-3 text-sm font-semibold text-text-muted transition-colors hover:border-line-gold hover:text-text md:inline-flex"
     >
       <Search size={16} aria-hidden="true" className="text-al-gold" />
-      <span className="hidden xl:inline">Rechercher</span>
-      <kbd className="hidden rounded-md border border-line px-1.5 py-0.5 font-mono text-xs text-text-muted xl:inline">Ctrl K</kbd>
+      {/* Nom accessible = texte visible (« Rechercher ») ; masqué à l'écran entre 768 et 1279 px, lu par les lecteurs d'écran. */}
+      <span className="sr-only xl:not-sr-only">Rechercher</span>
+      {inApp && <kbd aria-hidden="true" className="hidden rounded-md border border-line px-1.5 py-0.5 font-mono text-xs text-text-muted xl:inline">Ctrl K</kbd>}
     </button>
   );
 }

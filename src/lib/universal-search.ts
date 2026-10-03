@@ -9,6 +9,8 @@ import type { RadarRssArticle } from './rss-collector-types';
  * et les dépêches déjà publiées ; les chaînes passent par /api/channels (recherche serveur existante).
  */
 export const MIN_REMOTE_QUERY = 2;
+/** Événement d'ouverture de la palette (bouton « Rechercher » de la barre). */
+export const OPEN_UNIVERSAL_SEARCH_EVENT = 'al_open_universal_search';
 
 const COUNTRIES: PickerCountry[] = AFRICAN_COUNTRIES.map(({ code, name }) => ({ code, name }));
 

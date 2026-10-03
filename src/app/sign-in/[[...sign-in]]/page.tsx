@@ -16,7 +16,7 @@ export default function SignInPage() {
           </GoldRing>
         </Link>
         <h1 className="font-display text-center text-2xl font-bold text-text">Ravi de vous retrouver</h1>
-        {!isAnonymousE2EMode() && <SignIn routing="path" path="/sign-in" />}
+        <div className="flex min-h-[34rem] w-full justify-center">{!isAnonymousE2EMode() && <SignIn routing="path" path="/sign-in" />}</div>
         <Link href="/" className="text-xs font-medium text-text-muted hover:text-text transition">
           Retour à l’accueil
         </Link>

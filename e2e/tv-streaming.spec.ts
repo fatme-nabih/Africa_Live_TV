@@ -38,9 +38,11 @@ test.describe('Accueil en rangées', () => {
 
     // Chargement paresseux : les rangées éloignées ne sont demandées qu'en approchant de l'écran.
     await page.waitForTimeout(600);
-    expect(distinctRows(requests).size).toBeLessThan(5);
+    expect(distinctRows(requests).size).toBeLessThan(4);
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await expect.poll(() => distinctRows(requests).size).toBe(5);
+    // Sans favori connu, la rangée « Mes favoris » n'est même pas demandée (pas de squelette qui s'efface : CLS).
+    await expect.poll(() => distinctRows(requests).size).toBe(4);
+    expect(rowRequests(requests).some(request => request.favoritesOnly)).toBe(false);
     await expect(region(page, 'Sport')).toBeVisible();
     await expect(region(page, 'Musique')).toBeVisible();
     // Une rangée vide (aucun favori) n'est pas affichée.

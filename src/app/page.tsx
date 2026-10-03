@@ -69,9 +69,9 @@ export default async function HomePage() {
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <header className="sticky top-0 z-50 flex min-h-16 items-center justify-between gap-4 border-b border-line bg-black/70 backdrop-blur-xl sm:min-h-20">
           <div className="bg-tricolor-bar absolute top-0 right-0 left-0 h-0.5" aria-hidden="true" />
-          <Link href="/" aria-label="Africa Live, accueil" className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3">
             <GoldRing className="size-11 sm:size-12">
-              <BrandLogo className="size-10 sm:size-11" />
+              <BrandLogo className="size-10 sm:size-11" decorative />
             </GoldRing>
             <div className="flex flex-col gap-1.5">
               <Wordmark className="text-base sm:text-xl" />
@@ -261,7 +261,7 @@ export default async function HomePage() {
         <footer className="border-t border-line py-10 text-sm text-text-muted">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <BrandLogo className="size-8" />
+              <BrandLogo className="size-8" decorative />
               <Wordmark className="text-sm" />
             </div>
             <nav aria-label="Liens du pied de page" className="flex flex-wrap gap-x-6 gap-y-3">

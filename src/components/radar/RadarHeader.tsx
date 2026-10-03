@@ -29,7 +29,9 @@ export default function RadarHeader({
       <section id="radar-haut" className="mb-3 flex scroll-mt-20 flex-wrap items-end justify-between gap-3 sm:mb-4">
         <div>
           <h1 className="font-display text-xl font-bold tracking-tight text-text sm:text-2xl">Radar Afrique</h1>
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-text-muted">
+          {/* Hauteur réservée sur mobile (le texte d'état s'allonge à l'arrivée des données : CLS) ; jamais ancre de défilement,
+              pour que la pastille « n nouvelles » ne fasse pas bouger la page (UX-308). */}
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-text-muted [overflow-anchor:none] max-sm:min-h-[3lh]">
             <span>Dépêches, météo et télévisions par pays.</span>
             <span className="ml-1 inline-flex items-center gap-1.5">
               <span aria-hidden="true" className={cn('size-1.5 shrink-0 rounded-full', DOT[coverage.level])} />

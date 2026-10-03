@@ -147,12 +147,19 @@ test('Recherche (mobile) conduit à la TV, ouvre la recherche et retire le param
   expect(new URL(page.url()).searchParams.has('focus')).toBe(false);
 });
 
-test('Rechercher (bureau) active la recherche de la TV sans recharger la page', async ({ page }) => {
+test('Rechercher (bureau) ouvre la recherche universelle sans recharger la page, et mène à la recherche de la TV', async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
   await page.goto('/app');
   await waitForCatalog(page);
-  await page.getByRole('button', { name: 'Rechercher une chaîne', exact: true }).click();
-  await expect(page.getByRole('searchbox', { name: 'Recherche' })).toBeFocused();
+  // Même porte d'entrée que Ctrl K (UX-502) : la palette, champ focalisé.
+  await page.getByRole('banner').getByRole('button', { name: 'Rechercher', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Recherche universelle' })).toBeVisible();
+  const input = page.getByRole('combobox', { name: /Rechercher un pays/ });
+  await expect(input).toBeFocused();
+  await input.fill('Alpha');
+  await page.getByRole('option', { name: /Chercher « Alpha » dans la TV/ }).click();
+  await expect(page).toHaveURL(/\/app\?search=Alpha/);
+  await expect(page.getByRole('searchbox', { name: 'Recherche' })).toHaveValue('Alpha');
 });
 
 test.describe('Heure locale', () => {

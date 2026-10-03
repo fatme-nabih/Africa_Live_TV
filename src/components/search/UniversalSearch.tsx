@@ -11,11 +11,9 @@ import { formatCountryName } from '@/lib/format';
 import { formatAgo } from '@/lib/relative-time';
 import type { RadarRssArticle } from '@/lib/rss-collector-types';
 import {
-  catalogSearchHref, MIN_REMOTE_QUERY, searchArticles, searchCities, searchCountries,
+  catalogSearchHref, MIN_REMOTE_QUERY, OPEN_UNIVERSAL_SEARCH_EVENT, searchArticles, searchCities, searchCountries,
 } from '@/lib/universal-search';
 import type { Channel } from '@/types/channel';
-
-export const OPEN_UNIVERSAL_SEARCH_EVENT = 'al_open_universal_search';
 
 type Item = {
   id: string;

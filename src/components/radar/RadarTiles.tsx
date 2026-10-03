@@ -37,8 +37,9 @@ function Tile({
         <span className="sm:hidden">{shortLabel}</span>
         <span className="hidden sm:inline">{label}</span>
       </span>
-      <span className="min-h-7 max-w-full text-text">{value}</span>
-      {sub && <span className="line-clamp-2 max-w-full text-xs leading-snug text-text-muted">{sub}</span>}
+      <span className="min-h-7 max-w-full text-text max-sm:min-h-[2lh]">{value}</span>
+      {/* Toujours présent et haut de 2 lignes sur mobile : l'arrivée des données ne décale plus la page (CLS). */}
+      <span className="line-clamp-2 min-h-[2lh] max-w-full text-xs leading-snug text-text-muted sm:min-h-[1lh]">{sub}</span>
     </button>
   );
 }
