@@ -73,7 +73,7 @@ CPU ×4) et « desktop ». Une seule mesure par page et par profil (variations o
 | `/pricing` | 65 / 88 | 100 / 99 | 79 / 78 | 100 | 6,4 s | 0 |
 | `/sign-in` | 55 / 89 | 100 | 79 / 78 | 100 | 5,4 s | **0,269** |
 
-### 2. Corrections faites après cette mesure (locales, **non committées, non publiées**)
+### 2. Corrections faites après cette mesure (publiées le 3 octobre : commit `865c85d`, Railway `3bc79b16` ; staging : accessibilité 100, CLS connexion 0,017)
 
 - **Accessibilité** : logo de marque au texte alternatif redondant à côté du mot « Africa Live » (`image-redundant-alt`) → logo
   décoratif (`BrandLogo decorative`) ; lien d'accueil dont le nom ne reprenait pas le texte visible → nom = texte visible ; bouton

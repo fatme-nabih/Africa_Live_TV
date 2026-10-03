@@ -9,7 +9,8 @@ Publication demandée par le propriétaire : P5 committé (`090ce01`), poussé s
 Lighthouse 12.8.2 installé hors du projet ; notes et corrections dans l'[audit daté](audit-a11y-performance-2026-10-03.md) : accessibilité
 **100** partout après corrections, SEO 100, performance desktop 96–98, mobile 55–72 (LCP : délai serveur de la landing et fond de marque),
 bonnes pratiques 78–79 (cookies tiers de l'instance Clerk de **développement**). Corrections issues de l'audit (accessibilité, CLS Radar /
-TV / connexion, bouton « Rechercher » → recherche universelle) **locales, non committées, non publiées** ; vérifiées : tsc 0, lint 0,
+TV / connexion, bouton « Rechercher » → recherche universelle) **publiées** sur demande (commit `865c85d`, Railway `3bc79b16` SUCCESS,
+402/402 fichiers, 9/9 E2E distants ; staging : accessibilité 100, CLS connexion 0,269 → 0,017) ; vérifiées avant publication : tsc 0, lint 0,
 355 tests (341/14/0), invariants 4/4, build, E2E MVP 146 + 1 ignoré, E2E Clerk 8/8.
 
 ## Publication Premium P3–P4 — 3 octobre 2026

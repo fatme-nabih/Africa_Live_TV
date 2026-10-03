@@ -8,7 +8,8 @@ Dernière mise à jour : 3 octobre 2026, fuseau Africa/Dakar.
   [Dossier](docs/publication-premium-p5-2026-10-03.md).
 - Lighthouse 12.8.2 installé **hors du projet** (`.local-logs/tools/lighthouse`, scripts `.local-logs/p5/lh-run.sh` et `lh-summary.cjs`).
   Notes : [audit](docs/audit-a11y-performance-2026-10-03.md). Corrections issues de l'audit **locales, non committées** (accessibilité 100,
-  CLS Radar/TV/connexion, bouton « Rechercher » = recherche universelle dans `/app`) : attendent l'accord du propriétaire pour commit et publication.
+  CLS Radar/TV/connexion, bouton « Rechercher » = recherche universelle dans `/app`) **publiées** : commit `865c85d`, Railway `3bc79b16`
+  SUCCESS (une première tentative `2aaeeb5b` coupée par le réseau, close sans build), 402/402 fichiers, 9/9 E2E distants.
 - Pistes performance mobile proposées (non faites) : landing statique, fond de marque allégé, Clerk différé ; instance Clerk de production.
 
 ## Expérience Premium — Lot P5 « Aimants et finition » fait et vérifié (3 octobre 2026)

@@ -36,9 +36,27 @@ promotion en production. Mur TV inactif en production (variable `NEXT_PUBLIC_TV_
 ## Lighthouse (après publication)
 
 Notes et corrections : [audit daté](audit-a11y-performance-2026-10-03.md), section « Lighthouse ». Les corrections issues de l'audit
-(accessibilité 100, CLS) sont **locales, non committées et non publiées** : elles attendent l'accord du propriétaire.
+(accessibilité 100, CLS) ont ensuite été publiées sur demande du propriétaire (section finale).
 
 ## Limites
 
 Profils Clerk connectés sur staging, paiement réel, amonts, appareils Android et VLC réel : hors réception. Variables, DNS, plans et schéma
 inchangés. Preuves locales : `.local-logs/publication-p5/` (ignoré par Git).
+
+## Correctifs de l'audit Lighthouse — publiés le 3 octobre 2026
+
+À la demande du propriétaire : commit [`865c85d`](https://github.com/fatme-nabih/Africa_Live_TV/commit/865c85dc46e75d2f9c14ac57be3a3de1a69814c5)
+(24 fichiers ; aucun changement de schéma ni de dépendance), poussé sur `main`.
+
+- Premier envoi CLI interrompu par une erreur réseau : la tentative `2aaeeb5b` a été close par Railway **sans build** (aucun code
+  exécuté) ; staging est resté sur `75bf069d` (santé 200). Second envoi : **`3bc79b16-cd7c-423f-af8d-8ec43ba53003` SUCCESS**.
+- Paquet : 505 fichiers, 402 applicatifs ; manifeste `2ac808e8a4ae8e5d1e5cfead41ab082d1ff01fce348afb381bd3b2e11bc4923b`.
+- Preuve SHA-256 par SSH : **402/402 identiques** ; rôle `staging`. Santé 200 sur les deux domaines, météo anonyme 401, dashboard 307.
+  **9/9 E2E distants.**
+- Lighthouse sur staging après publication :
+
+| Page | Perf. mobile / desktop | Accessibilité | Bonnes pratiques | SEO | CLS mobile |
+|---|---|---|---|---|---|
+| Landing | 69 / 88 | **100** | 79 / 78 | 100 | 0 |
+| `/pricing` | 57 / 85 | **100** | 79 / 78 | 100 | 0 |
+| `/sign-in` | 69 / 85 | **100** | 79 / 78 | 100 | **0,017** (avant : 0,269) |

@@ -1,6 +1,6 @@
 # Checklist de non-régression — lots local et Railway
 
-## Expérience Premium P5 — reçue localement le 3 octobre 2026 (publiée : GitHub `090ce01`, Railway staging `75bf069d`, 9/9 E2E distants ; corrections Lighthouse locales non publiées)
+## Expérience Premium P5 — reçue localement le 3 octobre 2026 (publiée : GitHub `090ce01`, Railway staging `75bf069d`, 9/9 E2E distants ; correctifs Lighthouse publiés : `865c85d`, Railway `3bc79b16`, 9/9 E2E distants)
 
 Preuves : [production-progress.md](production-progress.md) « Lot P5 » et [audit](audit-a11y-performance-2026-10-03.md).
 
