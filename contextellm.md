@@ -6,7 +6,8 @@ Dernière mise à jour : 4 octobre 2026 (fin du lot P6), fuseau Africa/Dakar.
 
 - Staging utilise désormais l'**instance Clerk de production** (`pk_live`, `clerk.africatv.sn`, DNS OVH, Google OAuth propre, webhook) ;
   `.env.local` garde l'instance de dev (la production refuse localhost). CSP corrigée (`32d1a66`, Railway `047d66d7` SUCCESS, 9/9 E2E distants).
-  Détail : [dossier P6, dernière section](docs/publication-premium-p6-2026-10-04.md). Reste : compte admin de production, renommer « Afrika_Live ».
+  Détail : [dossier P6, dernière section](docs/publication-premium-p6-2026-10-04.md). Compte admin de production créé, application renommée « Africa Live ». Carte « Mon accès » d'un admin corrigée (affichage seulement,
+  `2caf8ad`, Railway `7e1bb51d` actif, 9/9 E2E distants).
 
 ## Lot P6 « Performance mobile » — 4 octobre 2026 (lire ensuite)
 

@@ -72,3 +72,15 @@ lecture seule) : instance de production sur `africatv.sn` (domaine conservé, ma
   `img.clerk.com` sur l'icône Google du widget, hors de notre code) ; `/pricing` 75, bonnes pratiques **79 → 96**. Accessibilité 100.
 - À faire par le propriétaire : créer son compte sur l'instance de production et lui remettre le rôle admin (métadonnées Clerk) ; les
   comptes de l'instance de développement ne sont pas repris.
+
+## Suite D-2 — compte administrateur et carte « Mon accès » — 4 octobre 2026
+
+- Le propriétaire a créé son compte sur l'instance de production (connexion Google), retrouvé le rôle administrateur (onglet Admin
+  visible) et renommé l'application « Afrika Live » → **« Africa Live »** dans Clerk.
+- Défaut vu sur la page Compte d'un administrateur en essai : « Essai actif · 5 jours restants » à côté de « Échéance : Accès
+  permanent ». Cause : `getCurrentAccessDecision()` renvoie l'essai actif avant de vérifier le rôle administrateur. Correctif
+  **d'affichage seulement** (logique d'accès inchangée) : `accountAccessView` (`src/lib/access-gauge.ts`, testé) ; un administrateur
+  voit « Actif (Administrateur) », « Accès administrateur », « Accès permanent », sans jauge ni bouton « Prolonger ». Commit
+  [`2caf8ad`](https://github.com/fatme-nabih/Africa_Live_TV/commit/2caf8ad), Railway **`7e1bb51d` SUCCESS**, 411/411 fichiers
+  identiques, santé 200, 9/9 E2E distants ; rendu confirmé par le propriétaire. Vérification : tsc 0, lint 0, 363 tests (349/14/0),
+  invariants 4/4.
