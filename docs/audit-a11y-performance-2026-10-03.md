@@ -168,6 +168,8 @@ Le fichier `/pricing` est revenu identique au commit `865c85d`.
   **développement** (≈ 1 s). Une instance Clerk de production (D-2) supprime cette poignée de main de premier passage et les cookies tiers
   (bonnes pratiques 79 → ~100) ; le poids de Clerk resterait. Pistes non faites : sortir zod de la coquille commune (≈ 63 Ko sur `/pricing`
   et l'espace `/app`), différer Clerk sur `/pricing` jusqu'à l'interaction (touche au parcours de paiement : ticket dédié).
-- Chiffres **non mesurés sur staging** après P6 (pas de déploiement demandé) ; le local n'a ni la latence réelle de Railway ni le CDN.
+- **Mesuré sur staging après publication** (`e077db96`, 4 octobre) : landing **93** (93/94/92, LCP 2,98 s, bonnes pratiques 100),
+  `/cgu` 97, `/pricing` 75, `/sign-in` 73 en mobile ; desktop 99 / 99 / 95 / 93 ; accessibilité 100.
+  [Dossier de publication P6](publication-premium-p6-2026-10-04.md).
 - Landing pour un membre connecté : l'indice de session (`__client_uat`) n'a pas pu être vérifié avec une vraie session (aucune connexion
   par l'agent) ; vérifié hors session (`__client_uat=0`, lisible, non HttpOnly) et par tests unitaires.

@@ -4,7 +4,8 @@ Dernière mise à jour : 4 octobre 2026 (fin du lot P6), fuseau Africa/Dakar.
 
 ## Lot P6 « Performance mobile » — 4 octobre 2026 (lire en premier)
 
-- **Fait et vérifié en local, commit applicatif `7e27319`** (feu vert du propriétaire le 4 octobre). Staging inchangé (`3bc79b16`).
+- **Fait, committé (`7e27319` + docs `c710769`) et publié sur staging : Railway `e077db96` SUCCESS** (409/409 fichiers, 9/9 E2E distants).
+  Lighthouse staging mobile : landing **93**, CGU 97, tarifs 75, connexion 73 ; desktop 99/99/95/93 ; [dossier](docs/publication-premium-p6-2026-10-04.md).
   Détail : section « Lot P6 » de [production-progress.md](docs/production-progress.md) ; mesures : [audit, section P6](docs/audit-a11y-performance-2026-10-03.md).
 - Découverte : le « premier octet de 2,1 s » était la **poignée de main Clerk** (instance de développement, 3 redirections), pas le rendu.
   Pages publiques `/`, `/pricing`, `/cgu`, `/privacy`, `/contact` hors middleware Clerk (`src/lib/public-static-pages.ts`) ; landing
@@ -19,7 +20,7 @@ Dernière mise à jour : 4 octobre 2026 (fin du lot P6), fuseau Africa/Dakar.
   nom accessible ; une page qui appelle `auth()` ne doit pas entrer dans `CLERK_FREE_PUBLIC_PAGES` ; une page Clerk va dans `(clerk)`.
 - Environnement laissé : `npm run dev` en mode **Clerk** sur 3001 (onglet « dev server (Clerk) »), santé 200, `/app` anonyme 307 ;
   ligne technique MVP supprimée (users = 2) ; captures L5 restaurées. Outils : `.local-logs/p6/` (`cycle.sh`, `lh-median.cjs`…).
-- Suite : bilan au propriétaire ; commit / push / publication de P6 puis Lighthouse staging **uniquement sur demande**.
+- Suite : décisions D-2 → D-10 (D-2 = principale marge de `/sign-in`, `/pricing` et des bonnes pratiques) ; UX-507 bloqué (L6).
 
 ## Point de reprise — 4 octobre 2026 (avant P6)
 

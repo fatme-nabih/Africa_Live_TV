@@ -1,6 +1,6 @@
 # Checklist de non-régression — lots local et Railway
 
-## Expérience Premium P6 « Performance mobile » — reçue localement le 4 octobre 2026 (commit `7e27319`, non publiée)
+## Expérience Premium P6 « Performance mobile » — reçue le 4 octobre 2026 (commit `7e27319`, publiée : Railway staging `e077db96`, 409/409 fichiers, 9/9 E2E distants)
 
 Preuves : [production-progress.md](production-progress.md) « Lot P6 » et [audit, section P6](audit-a11y-performance-2026-10-03.md).
 
@@ -10,7 +10,8 @@ Preuves : [production-progress.md](production-progress.md) « Lot P6 » et [audi
 - [x] Parcours NabooPay, machine de lecture, accès, quotas, API, schéma, `.env*`, Railway, Clerk (configuration), DNS inchangés ; aucune dépendance ajoutée.
 - [x] Lighthouse mobile (build servi local, ×3) : landing 90, `/cgu` 93, `/pricing` 78, `/sign-in` 79 ; accessibilité 100 partout ; Radar `label-content-name-mismatch` réussi.
 - [x] axe-core 0 violation (landing, pricing, sign-in, cgu à 360 px) ; captures `premium-p6-*` 360/768/1366 : 0 débordement, 0 texte < 12 px, 0 erreur.
-- [ ] Mesure sur staging (publication non demandée) ; landing avec une vraie session membre ; capture /admin 360 px (session admin) ; objectif 90 sur `/pricing` et `/sign-in`.
+- [x] Lighthouse staging après publication : mobile landing 93, `/cgu` 97, `/pricing` 75, `/sign-in` 73 ; desktop 99/99/95/93 ; accessibilité 100.
+- [ ] Landing avec une vraie session membre ; capture /admin 360 px (session admin) ; objectif 90 sur `/pricing` et `/sign-in`.
 
 ## Expérience Premium P5 — reçue localement le 3 octobre 2026 (publiée : GitHub `090ce01`, Railway staging `75bf069d`, 9/9 E2E distants ; correctifs Lighthouse publiés : `865c85d`, Railway `3bc79b16`, 9/9 E2E distants)
 

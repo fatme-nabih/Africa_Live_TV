@@ -2,11 +2,22 @@
 
 ## Reste à faire — Expérience Premium (au 4 octobre 2026, après le lot P6)
 
-P0 → P5 et les correctifs Lighthouse sont publiés sur staging (`865c85d`, Railway `3bc79b16`). **Lot P6 « Performance mobile » fait et
-vérifié en local, committé (`7e27319`)** (section suivante) : landing 90 en Lighthouse mobile (build servi local), `/pricing` 78,
-`/sign-in` 79. Restent : commit et publication de P6 puis mesure sur staging (sur demande), **UX-507** (briefing L6), et les décisions
+P0 → P5 et les correctifs Lighthouse sont publiés sur staging (`865c85d`, Railway `3bc79b16`). **Lot P6 « Performance mobile » fait,
+committé (`7e27319`) et publié sur staging (`e077db96`)** (section suivante) : landing 90 en Lighthouse mobile (build servi local), `/pricing` 78,
+`/sign-in` 79. Lighthouse mobile **sur staging** : landing **93**, `/cgu` 97, `/pricing` 75, `/sign-in` 73 ([dossier](publication-premium-p6-2026-10-04.md)).
+Restent : **UX-507** (briefing L6), et les décisions
 D-2 → D-10 du [plan §5.2](plan-experience-premium.md) — D-2 (instance Clerk de production) est désormais la principale marge de
 `/sign-in` et des bonnes pratiques.
+
+## Publication Premium P6 — 4 octobre 2026
+
+Publication demandée par le propriétaire : commits `7e27319` (applicatif) et `c710769` (documentation) poussés sur `main`, Railway staging
+**`e077db96-4d69-41da-b431-1b3d3f8cdd8d` SUCCESS** ; 409/409 fichiers applicatifs identiques par SSH, santé 200 sur les deux domaines,
+météo anonyme 401, dashboard 307, **9/9 E2E distants**, pages publiques servies depuis le cache sans redirection Clerk. Aucune migration,
+variable, DNS, plan ou configuration Clerk modifiés. Lighthouse sur staging (mobile, médiane de 3 ; desktop, 1 passage) : landing
+**69 → 93** (desktop 99, bonnes pratiques 100), `/cgu` 97, `/pricing` 64 → 75 (desktop 95), `/sign-in` 64 → 73 (desktop 93) ;
+accessibilité 100. Chiffres de la landing absents jusqu'à la première régénération (≈ 10 min après le build), comme prévu.
+[Dossier](publication-premium-p6-2026-10-04.md).
 
 ## Expérience Premium — Lot P6 « Performance mobile » — 4 octobre 2026
 

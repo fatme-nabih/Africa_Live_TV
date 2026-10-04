@@ -330,8 +330,8 @@ de rétention est le plus rapide et la base L5 (zapping) existe déjà.
 | P0–P2 | `1ef60b5` | `117f35ed` | [publication-premium-2026-10-03.md](publication-premium-2026-10-03.md) |
 | P3–P4 | `412574d`, `06b662f` | `990745ba` | [publication-premium-p3p4-2026-10-03.md](publication-premium-p3p4-2026-10-03.md) |
 | P5 | `090ce01` | `75bf069d` | [publication-premium-p5-2026-10-03.md](publication-premium-p5-2026-10-03.md) |
-| Correctifs Lighthouse | `865c85d` | **`3bc79b16`** (actif) | même dossier, section finale |
-| P6 « Performance mobile » | [`7e27319`](https://github.com/fatme-nabih/Africa_Live_TV/commit/7e27319) | non publié | [production-progress.md](production-progress.md), section « Lot P6 » |
+| Correctifs Lighthouse | `865c85d` | `3bc79b16` | même dossier, section finale |
+| P6 « Performance mobile » | [`7e27319`](https://github.com/fatme-nabih/Africa_Live_TV/commit/7e27319) | **`e077db96`** (actif) | [dossier de publication P6](publication-premium-p6-2026-10-04.md) |
 
 HEAD documentaire `f260400` (et suivants). **49 tickets faits sur 50** (UX-001 → UX-508 et reliquats UX-209, UX-212, UX-213, UX-214) ;
 **UX-507 bloqué** (briefing = lot L6, différé par la décision D1 du propriétaire). Preuves par lot : sections « Lot P0 » à « Lot P5 » de
@@ -351,7 +351,7 @@ Radar et TV (serveur de dev, session requise) : accessibilité 100, CLS ≤ 0,02
 
 | # | Décision | Effet | Par défaut si rien n'est décidé |
 |---|---|---|---|
-| D-1 | ~~Lot P6 « Performance mobile »~~ **fait en local le 4 octobre 2026** (§6) ; reste : commit et publication sur demande | Landing 90 ; tarifs 78 et connexion 79 (Clerk) | Non publié |
+| D-1 | ~~Lot P6 « Performance mobile »~~ **fait et publié le 4 octobre 2026** (§6, `e077db96`) | Staging mobile : landing 93, CGU 97, tarifs 75, connexion 73 | — |
 | D-2 | **Instance Clerk de production** sur `africatv.sn` + renommer l'application « Afrika_Live » → « Africa Live » dans le tableau de bord Clerk | Supprime les cookies tiers (bonnes pratiques 78 → ~100) et le nom erroné sur 19 écrans `frFR` ; prépare la production | Configuration Clerk inchangée (action du propriétaire, jamais faite par l'agent) |
 | D-3 | **Briefing L6** (UX-507) : nom, durée, fenêtre, mode de génération (cf. `plan-dashboard-backlog.md`, D1) | Débloque UX-507 branché sur les pays suivis | Briefing masqué |
 | D-4 | **Synchronisation des pays suivis au compte** (UX-503b) | Ticket de **migration** : sauvegarde Railway restaurable préalable, `npm run db:migrate:deploy` | Pays suivis sur l'appareil seulement |
@@ -478,7 +478,7 @@ Taille : S ≤ ½ j, M ≈ 1 j, L ≈ 2–3 j.
 | UX-507 | P3 | — | Briefing du matin = lot L6 existant, branché sur Pays suivis | Selon `plan-dashboard-backlog.md` | ⛔ Bloqué — L6 différé (décision D1 du propriétaire) |
 | UX-508 | P2 | M | Audit a11y final (axe + clavier + lecteur d'écran) et Lighthouse ≥ 90 perf/a11y sur Radar et TV | Rapport daté dans `docs/` | ✅ P5 — 03/10/2026 ([rapport](audit-a11y-performance-2026-10-03.md) ; axe 0 violation ; Lighthouse non lancé) |
 
-### Lot P6 — Performance mobile (feu vert le 4 octobre 2026 ; fait et vérifié en local, commit `7e27319`, non publié)
+### Lot P6 — Performance mobile (feu vert le 4 octobre 2026 ; commit `7e27319`, publié sur staging `e077db96` le 4 octobre 2026)
 
 Objectif : Lighthouse mobile ≥ 90 sur la landing, `/pricing` et `/sign-in` (staging), sans perte d'accessibilité (100) ni de fonctionnalité.
 Chaque ticket : mesure avant / après (Lighthouse staging ×3, médiane, et `measure-js.cjs`), sinon abandon documenté.
@@ -603,5 +603,5 @@ UI légers, sans données personnelles supplémentaires :
 1. Le propriétaire tranche les décisions du §5.2 A (en particulier **D-1 : feu vert pour le lot P6 « Performance mobile »**).
 2. Nouvelle session : coller [prompt-reprise-premium-p6.md](prompt-reprise-premium-p6.md) (lecture des documents, rappel des décisions en
    une ligne, annonce du plan de lot en 5 lignes, un lot à la fois, bilan fait / vérifié / limites, attente du feu vert).
-3. ~~P6 commence par UX-601~~ P6 fait en local le 4 octobre 2026, commit `7e27319` ; push, publication puis mesure Lighthouse sur
-   staging uniquement sur demande du propriétaire.
+3. ~~P6 commence par UX-601~~ P6 fait, committé (`7e27319`) et publié sur staging (`e077db96`) le 4 octobre 2026 ; Lighthouse staging mesuré
+   ([dossier de publication P6](publication-premium-p6-2026-10-04.md)). Suite : décisions D-2 → D-10.
