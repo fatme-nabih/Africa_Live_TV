@@ -16,6 +16,7 @@ import { AFRICAN_COUNTRIES } from '@/lib/live-osint';
 import type { LiveChannelsSummarySnapshot } from '@/lib/live-channels-types';
 import type { RadarSourceRow } from '@/lib/radar-workspace';
 import { Compass, Globe2, RotateCcw } from 'lucide-react';
+import { countLabel } from '@/lib/format';
 
 function isWebGLSupported(): boolean {
   if (typeof window === 'undefined') return false;
@@ -402,8 +403,8 @@ export default function TacticalVectorMap({
                   : ''
               }
             </div>
-            <div class="text-xs font-normal text-text-muted mt-0.5">${count} dépêche(s)${
-              channelCount > 0 ? ` · ${channelCount} chaînes référencées` : ''
+            <div class="text-xs font-normal text-text-muted mt-0.5">${countLabel(count, 'dépêche', 'dépêches')}${
+              channelCount > 0 ? ` · ${countLabel(channelCount, 'chaîne référencée', 'chaînes référencées')}` : ''
             }</div>
           </div>
         </div>

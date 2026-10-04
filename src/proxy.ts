@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest, type NextFetchEvent } from 'next/server';
 import { isAnonymousE2EMode, isLocalDevMode, isLocalDevRequest } from './lib/local-dev';
 import { isLoopbackAddress } from './lib/local-request';
+import { isClerkFreePublicPage } from './lib/public-static-pages';
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
 const isProtectedRoute = createRouteMatcher([
@@ -55,6 +56,7 @@ export default async function proxy(req: NextRequest, event: NextFetchEvent) {
     if (req.nextUrl.pathname.startsWith('/api/webhooks/')) return new NextResponse(null, { status: 404 });
     return NextResponse.next();
   }
+  if (isClerkFreePublicPage(req.nextUrl.pathname)) return NextResponse.next();
   const response = await authenticatedProxy(req, event);
   const rewrite = response?.headers?.get('x-middleware-rewrite');
   if (response && rewrite) {

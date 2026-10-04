@@ -23,3 +23,8 @@ export function formatLanguageName(
     return code;
   }
 }
+
+/** « 1 dépêche », « 8 dépêches » : en français, 0 et 1 restent au singulier. */
+export function countLabel(count: number, singular: string, plural: string) {
+  return `${count} ${count > 1 ? plural : singular}`;
+}

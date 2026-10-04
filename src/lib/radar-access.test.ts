@@ -94,7 +94,7 @@ function harness(scenario: Scenario) {
     '@/lib/live-briefing': { getLiveBriefing: collector },
     '@/lib/live-channels': { getAfricanChannelsSummary: collector, getChannelsForAfricanCountry: collector },
     'next/navigation': { redirect: (destination: string) => { throw new Error(`redirect:${destination}`); } },
-    '@/app/app/live/LiveRadarDashboard': { __esModule: true, default: Dashboard },
+    '@/app/(clerk)/app/live/LiveRadarDashboard': { __esModule: true, default: Dashboard },
     '@/components/shell/AppShell': { __esModule: true, default: 'app-shell' },
     // Lecteur unique et recherche universelle du layout /app (P5) : frontières client simulées.
     '@/components/player/PlayerDock': { PlayerDockProvider: 'player-dock' },
@@ -147,8 +147,8 @@ for (const route of routes) {
 test('dashboard guard denies expired accounts while the parent layout permits catalog browsing', async () => {
   for (const scenario of cases) {
     const { load, Dashboard } = harness(scenario);
-    const layout = load('app/app/layout.tsx').default as (props: { children: string }) => Promise<{ props: { children: { props: { children: unknown[] } }; admin: boolean } }>;
-    const page = load('app/app/live/page.tsx').default as () => Promise<{ type: unknown }>;
+    const layout = load('app/(clerk)/app/layout.tsx').default as (props: { children: string }) => Promise<{ props: { children: { props: { children: unknown[] } }; admin: boolean } }>;
+    const page = load('app/(clerk)/app/live/page.tsx').default as () => Promise<{ type: unknown }>;
     if (!scenario.user) {
       await assert.rejects(layout({ children: 'catalog' }), /redirect:\/sign-in\?redirect_url=\/app\/live/);
       await assert.rejects(page(), /redirect:\/sign-in\?redirect_url=\/app\/live/);

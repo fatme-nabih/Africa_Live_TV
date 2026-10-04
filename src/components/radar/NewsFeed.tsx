@@ -8,6 +8,7 @@ import type { LiveChannelsSummarySnapshot } from '@/lib/live-channels-types';
 import type { RadarArticle, RadarCountry } from '@/lib/live-osint-types';
 import type { ScopeCounts, ScopeTab } from '@/lib/radar-articles';
 import type { RadarRssSnapshot } from '@/lib/rss-collector-types';
+import { countLabel } from '@/lib/format';
 
 // Près de 170 dépêches sur 24 h : on en montre 12 à la fois, le reste à la demande (page courte, DOM léger sur mobile modeste).
 const PAGE_SIZE = 12;
@@ -120,7 +121,7 @@ export default function NewsFeed({
             title={activeCountry ? `Aucune dépêche pour : ${activeCountry.name}` : 'Aucune dépêche dans ce filtre'}
             description={activeCountry
               ? scopeTab !== 'all' && tabCounts.all > 0
-                ? `Ce pays a ${tabCounts.all} dépêche(s) dans d’autres rubriques.`
+                ? `Ce pays a ${countLabel(tabCounts.all, 'dépêche', 'dépêches')} dans d’autres rubriques.`
                 : 'Ce pays n’a pas de dépêche récente dans ce flux.'
               : 'Essayez une autre rubrique ou effacez la sélection.'}
             action={

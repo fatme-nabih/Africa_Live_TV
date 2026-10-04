@@ -23,20 +23,20 @@ function loadComponent(entry: string, boundaries: Record<string, unknown>) {
 }
 
 test('Clerk fallback after sign-in/sign-up is dashboard; explicit deep-link redirections remain SDK-owned', () => {
-  const Layout = loadComponent('src/app/layout.tsx', {
+  // UX-603 : ClerkProvider vit dans le layout du groupe (clerk) (app, compte, admin, tarifs, connexion), plus dans le layout racine.
+  const Layout = loadComponent('src/app/(clerk)/layout.tsx', {
     '@/lib/local-dev': { isLocalDevMode: () => false }, '@clerk/nextjs': { ClerkProvider: 'clerk-provider' },
-    // next/font/google n'existe que sous le compilateur Next : on simule uniquement la variable CSS exposée.
-    'next/script': { __esModule: true, default: 'script' },
-    'next/font/google': { Manrope: () => ({ variable: 'font-manrope' }), Unbounded: () => ({ variable: 'font-unbounded' }) },
-  }) as (props: { children: string }) => React.ReactElement<{ children: React.ReactElement<{ children: React.ReactElement<Record<string, unknown>> }> }>;
-  const provider = Layout({ children: 'app' }).props.children.props.children;
+  }) as (props: { children: string }) => React.ReactElement<Record<string, unknown>>;
+  const provider = Layout({ children: 'app' });
+  assert.equal(provider.type, 'clerk-provider');
+  assert.equal(provider.props.children, 'app');
   assert.equal(provider.props.signInFallbackRedirectUrl, '/app/live');
   assert.equal(provider.props.signUpFallbackRedirectUrl, '/app/live');
   assert.equal(provider.props.signInForceRedirectUrl, undefined);
   assert.equal(provider.props.signUpForceRedirectUrl, undefined);
 });
 test('completed checkout renders dashboard destination without submitting a payment', () => {
-  const Success = loadComponent('src/app/pricing/success/SuccessClient.tsx', {
+  const Success = loadComponent('src/app/(clerk)/pricing/success/SuccessClient.tsx', {
     react: { ...React, useReducer: () => [{ tag: 'done', status: 'completed' }, () => {}], useEffect: () => {} },
     'next/link': { __esModule: true, default: 'a' },
     'next/navigation': { useSearchParams: () => new URLSearchParams('order_id=synthetic') },

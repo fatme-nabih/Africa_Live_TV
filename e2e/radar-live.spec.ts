@@ -147,16 +147,17 @@ test.describe('Tuiles du moment (UX-303)', () => {
     await page.goto('/app/live');
     await expect(stories(page).getByText('Titre a1')).toBeVisible();
 
-    await page.getByRole('button', { name: /^Chaînes en direct d’Afrique : 3\./ }).click();
+    // À 390 px le libellé court est affiché : le nom accessible commence par lui (UX-605), le périmètre suit.
+    await page.getByRole('button', { name: /^Chaînes en direct : 3\..*Voir les chaînes \(toute l’Afrique\)$/ }).click();
     await expect(page.getByRole('tab', { name: /Chaînes TV/ })).toHaveAttribute('aria-selected', 'true');
     await expect(page.getByRole('article', { name: 'Fil et chaînes du pays' })).toBeFocused();
 
-    await page.getByRole('button', { name: /^Dépêches des dernières 24 h/ }).click();
+    await page.getByRole('button', { name: /^Dépêches 24 h : 2\..*Voir le fil des dépêches/ }).click();
     await expect(page.getByRole('tab', { name: /^Dépêches/ })).toHaveAttribute('aria-selected', 'true');
 
     await page.getByRole('button', { name: 'Replier la météo' }).click();
     await expect(page.locator('#weather-country-select')).toBeHidden();
-    await page.getByRole('button', { name: /^Alerte météo : rien à signaler/ }).click();
+    await page.getByRole('button', { name: /^Alerte météo : Rien à signaler\./ }).click();
     await expect(page.locator('#weather-country-select')).toBeVisible();
     await expect(page.locator('#radar-meteo')).toBeFocused();
   });
@@ -173,7 +174,7 @@ test.describe('Tuiles du moment (UX-303)', () => {
     }, target, 'server', at), at);
     await page.route('**/api/live/weather?*', route => route.fulfill({ json: storm }));
     await page.goto('/app/live');
-    const tile = page.getByRole('button', { name: /^Alerte météo : Orage, Dakar/ });
+    const tile = page.getByRole('button', { name: /^Alerte météo : Orage\. Dakar/ });
     await expect(tile).toBeVisible();
     await expect(tile).toHaveAccessibleName(/pas une alerte officielle/);
     await expect(tile.getByText('Orage', { exact: true })).toBeVisible();
@@ -183,7 +184,7 @@ test.describe('Tuiles du moment (UX-303)', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await radar(page, [article('a1')], { weatherOk: false });
     await page.goto('/app/live');
-    await expect(page.getByRole('button', { name: /^Alerte météo : météo indisponible/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Alerte météo : Pas de relevé\..*Météo indisponible\. Voir la météo$/ })).toBeVisible();
   });
 });
 

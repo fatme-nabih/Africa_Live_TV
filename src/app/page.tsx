@@ -1,7 +1,5 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { auth } from '@clerk/nextjs/server';
-import { UserButton } from '@clerk/nextjs';
 import {
   ArrowRight,
   Film,
@@ -21,10 +19,11 @@ import GoldRing from '@/components/brand/GoldRing';
 import KenteBand from '@/components/brand/KenteBand';
 import Wordmark from '@/components/brand/Wordmark';
 import Faq from '@/components/marketing/Faq';
+import SessionSwitch from '@/components/marketing/SessionSwitch';
 import PaymentMethods from '@/components/pricing/PaymentMethods';
 import PlanCard, { PLAN_COPY } from '@/components/pricing/PlanCard';
 import { ButtonLink } from '@/components/ui';
-import { isAnonymousE2EMode, isLocalDevMode } from '@/lib/local-dev';
+import { isLocalDevMode } from '@/lib/local-dev';
 import { formatCount, type PublicCategoryId } from '@/lib/public-stats';
 import { getPublicStats } from '@/lib/public-stats-server';
 
@@ -54,13 +53,15 @@ const CATEGORIES: ReadonlyArray<{ id: PublicCategoryId; name: string; icon: type
   { id: 'movies', name: 'Cinéma et séries', icon: Film, desc: 'Fictions, Nollywood et documentaires.' },
 ];
 
+// Page statique, régénérée au plus toutes les 10 minutes (chiffres publics, eux-mêmes en cache 1 h) : aucun rendu par requête.
+// La session n'est jamais lue côté serveur et Clerk n'est pas chargé ici (UX-603) : les zones qui en dépendent passent par
+// <SessionSwitch> (version visiteur d'abord). Le menu de compte et l'accès Administration vivent dans l'application.
+// 10 minutes plutôt qu'une heure : si la base est injoignable pendant le build, la page sans chiffres est vite remplacée.
+export const revalidate = 600;
+
 export default async function HomePage() {
   if (isLocalDevMode()) redirect('/app/live');
-  const [{ userId, sessionClaims }, stats] = await Promise.all([
-    isAnonymousE2EMode() ? { userId: null, sessionClaims: null } : auth(),
-    getPublicStats(),
-  ]);
-  const startHref = userId ? '/app/live' : '/sign-up';
+  const stats = await getPublicStats();
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-black text-text selection:bg-al-yellow selection:text-black">
@@ -84,27 +85,24 @@ export default async function HomePage() {
             <Link href="#tarifs" className="hidden text-al-gold transition hover:text-text sm:block">Tarifs</Link>
             <Link href="#faq" className="hidden text-text-muted transition hover:text-text md:block">FAQ</Link>
             <div className="hidden h-4 w-px bg-line md:block" />
-            {userId ? (
-              <div className="flex items-center gap-3">
-                {sessionClaims?.metadata?.role === 'admin' && (
-                  <ButtonLink href="/admin" variant="ghost" size="sm" className="hidden sm:inline-flex">Administration</ButtonLink>
-                )}
-                <ButtonLink href="/app/live" variant="secondary" size="sm">
-                  <span className="sm:hidden">Dashboard</span>
-                  <span className="hidden sm:inline">Ouvrir le dashboard</span>
-                </ButtonLink>
-                <UserButton />
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 sm:gap-3">
-                <Link href="/sign-in" className="inline-flex min-h-11 items-center px-2 text-sm font-medium whitespace-nowrap text-text transition hover:text-al-gold sm:px-3">
-                  Se connecter
-                </Link>
-                <span className="hidden sm:block">
-                  <ButtonLink href="/sign-up" variant="secondary" size="sm">Commencer</ButtonLink>
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <SessionSwitch
+                signedOut={<>
+                  <Link href="/sign-in" className="inline-flex min-h-11 items-center px-2 text-sm font-medium whitespace-nowrap text-text transition hover:text-al-gold sm:px-3">
+                    Se connecter
+                  </Link>
+                  <span className="hidden sm:block">
+                    <ButtonLink href="/sign-up" variant="secondary" size="sm">Commencer</ButtonLink>
+                  </span>
+                </>}
+                signedIn={
+                  <ButtonLink href="/app/live" variant="secondary" size="sm">
+                    <span className="sm:hidden">Dashboard</span>
+                    <span className="hidden sm:inline">Ouvrir le dashboard</span>
+                  </ButtonLink>
+                }
+              />
+            </div>
           </nav>
         </header>
 
@@ -132,15 +130,23 @@ export default async function HomePage() {
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <ButtonLink href={startHref} variant="primary" size="lg">
-                {userId ? 'Accéder au dashboard' : 'Profiter de 5 jours d’essai gratuit'}
-                <ArrowRight size={18} aria-hidden="true" />
-              </ButtonLink>
-              {!userId && (
-                <ButtonLink href="/sign-in" variant="secondary" size="lg" icon={<Sparkles size={16} aria-hidden="true" className="text-al-gold" />}>
-                  J’ai déjà un compte
-                </ButtonLink>
-              )}
+              <SessionSwitch
+                signedOut={<>
+                  <ButtonLink href="/sign-up" variant="primary" size="lg">
+                    Profiter de 5 jours d’essai gratuit
+                    <ArrowRight size={18} aria-hidden="true" />
+                  </ButtonLink>
+                  <ButtonLink href="/sign-in" variant="secondary" size="lg" icon={<Sparkles size={16} aria-hidden="true" className="text-al-gold" />}>
+                    J’ai déjà un compte
+                  </ButtonLink>
+                </>}
+                signedIn={
+                  <ButtonLink href="/app/live" variant="primary" size="lg">
+                    Accéder au dashboard
+                    <ArrowRight size={18} aria-hidden="true" />
+                  </ButtonLink>
+                }
+              />
             </div>
 
             <p className="mt-5 flex items-center gap-2 text-sm text-text-muted">
@@ -250,10 +256,10 @@ export default async function HomePage() {
               Le Radar et la TV de toute l’Afrique, dans un seul espace.
             </p>
             <div className="mt-7 flex justify-center">
-              <ButtonLink href={startHref} variant="secondary" size="lg">
-                {userId ? 'Ouvrir mon dashboard' : 'Créer mon compte'}
-                <ArrowRight size={18} aria-hidden="true" />
-              </ButtonLink>
+              <SessionSwitch
+                signedOut={<ButtonLink href="/sign-up" variant="secondary" size="lg">Créer mon compte<ArrowRight size={18} aria-hidden="true" /></ButtonLink>}
+                signedIn={<ButtonLink href="/app/live" variant="secondary" size="lg">Ouvrir mon dashboard<ArrowRight size={18} aria-hidden="true" /></ButtonLink>}
+              />
             </div>
           </div>
         </section>
@@ -269,9 +275,10 @@ export default async function HomePage() {
               <Link href="/contact" className="transition hover:text-text">Contact</Link>
               <Link href="/cgu" className="transition hover:text-text">CGU et vente</Link>
               <Link href="/privacy" className="transition hover:text-text">Confidentialité</Link>
-              <Link href={userId ? '/account' : '/sign-in'} className="transition hover:text-al-gold">
-                {userId ? 'Mon compte' : 'Se connecter'}
-              </Link>
+              <SessionSwitch
+                signedOut={<Link href="/sign-in" className="transition hover:text-al-gold">Se connecter</Link>}
+                signedIn={<Link href="/account" className="transition hover:text-al-gold">Mon compte</Link>}
+              />
             </nav>
           </div>
           <p className="mt-8 border-t border-line pt-6 text-xs">

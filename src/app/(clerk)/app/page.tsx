@@ -516,10 +516,13 @@ function CatalogWorkspace() {
               {channels.length} chaînes visibles
             </div>
 
+            {/* Enveloppe : `hidden` posé sur le bouton perdait contre son `inline-flex` (lien visible à 360 px). Mur réservé au desktop. */}
             {TV_WALL_ENABLED && (
-              <ButtonLink href="/app/mur" variant="ghost" size="sm" className="hidden xl:inline-flex" icon={<LayoutGrid aria-hidden="true" className="size-4 text-al-gold" />}>
-                Mur TV
-              </ButtonLink>
+              <span className="hidden xl:block">
+                <ButtonLink href="/app/mur" variant="ghost" size="sm" icon={<LayoutGrid aria-hidden="true" className="size-4 text-al-gold" />}>
+                  Mur TV
+                </ButtonLink>
+              </span>
             )}
             <div role="group" aria-label="Mode d’affichage" className="flex items-center gap-0.5 rounded-control border border-line bg-surface-2 p-0.5">
               <button

@@ -250,6 +250,14 @@ html[data-eco='true'] .brand-backdrop-halo {
   }
 }
 
+/* Texte réservé aux lecteurs d'écran, collé au texte visible (UX-605) : ponctuation ou valeur « en cours de chargement » passées par
+   --sr-after. Le contenu généré entre dans le nom accessible sans espace parasite (« 3. Bienvenue », là où un .sr-only donnerait
+   « 3 . Bienvenue ») et n'est jamais affiché. */
+.sr-after::after {
+  content: var(--sr-after, '');
+  font-size: 0;
+}
+
 /* Repères de la carte du Radar : la pulsation suit l'activité des dernières 24 h (UX-305). */
 @keyframes radar-pulse {
   0% {

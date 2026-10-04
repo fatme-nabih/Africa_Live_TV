@@ -1,21 +1,20 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Unbounded } from "next/font/google";
 import Script from "next/script";
-import { ClerkProvider } from "@clerk/nextjs";
 import ServiceWorkerRegister from "@/components/shell/ServiceWorkerRegister";
-import { clerkAppearance, clerkLocalization } from "@/lib/clerk-theme";
 import { ECO_BOOT_SCRIPT } from "@/lib/eco-mode";
-import { isLocalDevMode } from "@/lib/local-dev";
 import "./globals.css";
 
+// `subsets` ne règle que le préchargement : les autres sous-ensembles (latin-ext pour ŋ, etc.) restent déclarés et se chargent
+// seulement si la page en contient. Précharger latin-ext coûtait 130 Ko (dont 115 Ko pour Unbounded) sur chaque page.
 const manrope = Manrope({
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin"],
   display: "swap",
   variable: "--font-manrope",
 });
 
 const unbounded = Unbounded({
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin"],
   display: "swap",
   variable: "--font-unbounded",
 });
@@ -67,20 +66,10 @@ export default function RootLayout({
       className={`${manrope.variable} ${unbounded.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {isLocalDevMode() ? <>{ecoBoot}<ServiceWorkerRegister />{children}</> : (
-          <ClerkProvider
-            signInUrl="/sign-in"
-            signUpUrl="/sign-up"
-            signInFallbackRedirectUrl="/app/live"
-            signUpFallbackRedirectUrl="/app/live"
-            appearance={clerkAppearance}
-            localization={clerkLocalization}
-          >
-            {ecoBoot}
-            <ServiceWorkerRegister />
-            {children}
-          </ClerkProvider>
-        )}
+        {/* Clerk n'est monté que dans le groupe (clerk) (app, compte, admin, tarifs, connexion) : voir src/app/(clerk)/layout.tsx. */}
+        {ecoBoot}
+        <ServiceWorkerRegister />
+        {children}
       </body>
     </html>
   );
