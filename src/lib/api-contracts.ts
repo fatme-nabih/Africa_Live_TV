@@ -253,3 +253,13 @@ export function messageForApiError(error: unknown, fallback: string) {
   if (error instanceof ApiRequestError || error instanceof Error) return error.message;
   return fallback;
 }
+
+// Pays suivis synchronisés au compte (UX-503b) : 0 à 5 codes ISO, le premier est le pays principal, sans doublon.
+export const followedCountriesSchema = z
+  .object({
+    countries: z.array(z.string().regex(/^[A-Z]{2}$/)).max(5),
+  })
+  .strict()
+  .refine(({ countries }) => new Set(countries).size === countries.length, { message: 'Pays en double.' });
+
+export type FollowedCountriesPayload = z.infer<typeof followedCountriesSchema>;

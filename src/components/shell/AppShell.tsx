@@ -5,6 +5,7 @@ import { Suspense, useMemo, type ReactNode } from 'react';
 import { buildNavItems, countryFromSearch } from '@/lib/shell-nav';
 import { Show } from '@clerk/nextjs';
 import AppHeader, { type ShellMode } from './AppHeader';
+import FollowedCountriesSync from './FollowedCountriesSync';
 import NavLinks from './NavLinks';
 import { useOpenSearch } from './useOpenSearch';
 
@@ -45,6 +46,8 @@ export default function AppShell({
           <MobileTabBar admin={admin} />
         </Suspense>
       )}
+      {/* Pages connectées seulement : pays suivis synchronisés au compte (UX-503b). */}
+      {mode === 'member' && <FollowedCountriesSync />}
       {mode === 'auto' && (
         <Show when="signed-in">
           <Suspense fallback={null}>

@@ -34,3 +34,20 @@ export function toggleFollowedCountry(list: readonly string[], code: string): st
 export function makePrimaryCountry(list: readonly string[], code: string): string[] {
   return list.includes(code) ? [code, ...list.filter(item => item !== code)] : [...list];
 }
+
+/**
+ * Synchronisation au compte (UX-503b) : le compte fait foi, enrichi des pays suivis sur cet appareil (dans la limite de 5).
+ * Un appareil neuf récupère donc les pays du compte ; un premier appareil envoie les siens.
+ */
+export function mergeFollowedCountries(account: readonly string[], device: readonly string[]): string[] {
+  const merged: string[] = [];
+  for (const code of [...account, ...device]) {
+    if (!merged.includes(code)) merged.push(code);
+    if (merged.length === MAX_FOLLOWED_COUNTRIES) break;
+  }
+  return merged;
+}
+
+export function sameFollowedCountries(a: readonly string[], b: readonly string[]) {
+  return a.length === b.length && a.every((code, index) => code === b[index]);
+}

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { makePrimaryCountry, MAX_FOLLOWED_COUNTRIES, parseFollowedCountries, toggleFollowedCountry } from './followed-countries';
+import { makePrimaryCountry, MAX_FOLLOWED_COUNTRIES, mergeFollowedCountries, parseFollowedCountries, sameFollowedCountries, toggleFollowedCountry } from './followed-countries';
 
 const VALID = new Set(['SN', 'CI', 'ML', 'GN', 'NG', 'KE', 'MA']);
 
@@ -23,4 +23,13 @@ test('toggle follows at the end, unfollows, and refuses a sixth country', () => 
 test('a followed country can become the primary one', () => {
   assert.deepEqual(makePrimaryCountry(['SN', 'CI', 'ML'], 'ML'), ['ML', 'SN', 'CI']);
   assert.deepEqual(makePrimaryCountry(['SN'], 'KE'), ['SN']);
+});
+
+test('account sync: the account wins, enriched with device countries, capped at 5', () => {
+  assert.deepEqual(mergeFollowedCountries([], ['SN', 'CI']), ['SN', 'CI']);
+  assert.deepEqual(mergeFollowedCountries(['ML'], []), ['ML']);
+  assert.deepEqual(mergeFollowedCountries(['ML', 'SN'], ['SN', 'CI']), ['ML', 'SN', 'CI']);
+  assert.deepEqual(mergeFollowedCountries(['A1', 'A2', 'A3', 'A4'], ['B1', 'B2']), ['A1', 'A2', 'A3', 'A4', 'B1']);
+  assert.equal(sameFollowedCountries(['SN', 'CI'], ['SN', 'CI']), true);
+  assert.equal(sameFollowedCountries(['SN', 'CI'], ['CI', 'SN']), false);
 });

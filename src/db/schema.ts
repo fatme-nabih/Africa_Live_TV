@@ -463,6 +463,31 @@ export const userFavorites = pgTable(
   ],
 );
 
+// Pays suivis synchronisés au compte (UX-503b) : 1 à 5 pays, `position` 0 = pays principal.
+export const userFollowedCountries = pgTable(
+  'user_followed_countries',
+  {
+    userId: text('user_id').notNull(),
+    countryCode: text('country_code').notNull(),
+    position: integer('position').notNull(),
+    updatedAt: timestampWithTimezone('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({
+      name: 'user_followed_countries_pkey',
+      columns: [table.userId, table.countryCode],
+    }),
+    foreignKey({
+      name: 'user_followed_countries_user_id_fkey',
+      columns: [table.userId],
+      foreignColumns: [users.id],
+    }).onDelete('cascade'),
+    unique('user_followed_countries_user_position_key').on(table.userId, table.position),
+    check('user_followed_countries_code_check', sql`${table.countryCode} ~ '^[A-Z]{2}$'`),
+    check('user_followed_countries_position_check', sql`${table.position} between 0 and 4`),
+  ],
+);
+
 export const playbackSessions = pgTable(
   'playback_sessions',
   {

@@ -13,6 +13,7 @@ const isProtectedRoute = createRouteMatcher([
   '/api/channels(.*)',
   '/api/filters(.*)',
   '/api/favorites(.*)',
+  '/api/followed-countries(.*)',
   '/api/open-vlc(.*)',
   '/api/playback/resolutions(.*)',
   '/api/playback-events(.*)',

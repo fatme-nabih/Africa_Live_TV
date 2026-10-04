@@ -36,7 +36,7 @@ test('anonymous visitors cannot access app, account, admin or protected APIs', a
     await page.goto(path);
     await expect(page).toHaveURL(/\/sign-in(?:[/?]|$)/);
   }
-  for (const path of ['/api/favorites', '/api/channels',
+  for (const path of ['/api/favorites', '/api/followed-countries', '/api/channels',
     '/api/live/news', '/api/live/rss', '/api/live/weather', '/api/live/events',
     '/api/live/firms', '/api/live/markets', '/api/live/briefing', '/api/live/channels']) {
     const response = await page.request.get(path, { maxRedirects: 0 });
