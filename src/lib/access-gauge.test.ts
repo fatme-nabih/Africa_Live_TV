@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { accessGauge, planLabel } from './access-gauge';
+import { accessGauge, accountAccessView, planLabel } from './access-gauge';
 
 const NOW = Date.parse('2026-10-03T12:00:00Z');
 const inDays = (days: number) => new Date(NOW + days * 86_400_000).toISOString();
@@ -32,4 +32,14 @@ test('plan labels never expose internal identifiers', () => {
   assert.equal(planLabel(undefined, { status: 'trial', reason: 'trial_active' }), 'Essai gratuit');
   assert.equal(planLabel('inconnu', { status: 'expired', reason: 'subscription_expired' }), 'Aucune formule active');
   assert.equal(planLabel(null, { status: 'active', reason: 'administrator_access' }), 'Accès administrateur');
+});
+
+test('administrators see one consistent administrator access on the account card', () => {
+  const trial = { status: 'trial' as const, hasAccess: true, expiresAt: new Date(Date.now() + 5 * 86_400_000).toISOString(), reason: 'trial' };
+  const view = accountAccessView(trial, true);
+  assert.equal(planLabel(null, view), 'Accès administrateur');
+  assert.equal(accessGauge(view, null), null);
+  assert.equal(view.hasAccess, true);
+  assert.deepEqual(accountAccessView(trial, false), trial);
+  assert.equal(planLabel(null, accountAccessView(trial, false)), 'Essai gratuit');
 });

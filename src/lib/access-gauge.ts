@@ -44,3 +44,12 @@ export function accessGauge(
   const label = daysLeft === 0 ? 'Se termine aujourd’hui' : daysLeft === 1 ? '1 jour restant' : `${daysLeft} jours restants`;
   return { daysLeft, totalDays, ratio: totalDays ? daysLeft / totalDays : 0, label, endingSoon: daysLeft < 3 };
 }
+
+/**
+ * Décision affichée sur la carte « Mon accès ». La décision d'accès renvoie l'essai ou l'abonnement en cours avant de vérifier le
+ * rôle administrateur ; pour un administrateur la carte présente donc l'accès administrateur partout (statut, formule, sans jauge),
+ * au lieu de mêler « Essai actif · 5 jours restants » et « Accès permanent ». Affichage seulement : l'accès réel ne change pas.
+ */
+export function accountAccessView<T extends AccessDecision>(decision: T, isAdmin: boolean): AccessDecision {
+  return isAdmin ? { status: 'active', hasAccess: true, expiresAt: null, reason: 'administrator_access' } : decision;
+}

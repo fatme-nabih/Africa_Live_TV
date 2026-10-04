@@ -7,7 +7,7 @@ import { AlertCircle, ArrowRight, CreditCard, ShieldCheck, Sparkles } from 'luci
 import { db } from '@/db';
 import { userFavorites } from '@/db/schema';
 import { getCurrentAccessDecision } from '@/lib/access-control';
-import { accessGauge, planLabel } from '@/lib/access-gauge';
+import { accessGauge, accountAccessView, planLabel } from '@/lib/access-gauge';
 import AccessMeter from '@/components/account/AccessMeter';
 import AccountActivity from '@/components/account/AccountActivity';
 import AppShell from '@/components/shell/AppShell';
@@ -42,10 +42,12 @@ export default async function AccountPage(props: {
   const searchParams = props.searchParams ? await props.searchParams : {};
   const isAccessRequired = searchParams.access === 'required';
 
-  const { user, decision, subscriptions } = await getCurrentAccessDecision();
+  const { user, decision: accessDecision, subscriptions } = await getCurrentAccessDecision();
   const currentSubscription = subscriptions[0];
   const admin = await getAdministratorAccess();
   const isAdmin = admin.allowed;
+  // Carte « Mon accès » : un administrateur voit son accès administrateur partout (affichage seulement).
+  const decision = accountAccessView(accessDecision, isAdmin);
   const [favorites] = user
     ? await db.select({ value: count() }).from(userFavorites).where(eq(userFavorites.userId, user.id))
     : [{ value: 0 }];
