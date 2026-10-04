@@ -64,9 +64,11 @@ test('real API resolves expired checks and historical failures without fetching 
   expect(historical.rows[0]).toEqual({status:'OFFLINE',direct_eligibility:'OFFLINE',verification_state:'CONFIRMED_FAILURE',last_success_at:null});
 });
 
-test('VLC API rejects arbitrary client URLs and foreign origins', async ({ request, baseURL }) => {
+test('VLC API refuses client URLs in its configured mode and rejects foreign origins', async ({ request, baseURL }) => {
   const arbitrary = await request.post('/api/open-vlc', { headers: { Origin: baseURL! }, data: { channelId, url: 'file:///private.txt' } });
-  expect(arbitrary.status()).toBe(400);
+  const desktopEnabled=process.env.ENABLE_LOCAL_VLC==='true';
+  expect(arbitrary.status()).toBe(desktopEnabled?400:501);
+  expect((await arbitrary.json()).code).toBe(desktopEnabled?'INVALID_CHANNEL_ID':'LOCAL_VLC_DISABLED');
   const foreign = await request.post('/api/open-vlc', { headers: { Origin: 'https://foreign.example' }, data: { channelId } });
   expect(foreign.status()).toBe(403);
 });
