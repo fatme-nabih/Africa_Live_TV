@@ -1,10 +1,13 @@
 import type { NextConfig } from "next";
+import { CLERK_CAPTCHA_ORIGIN, clerkFrontendApiOrigin } from "./src/lib/clerk-csp";
 
 const isDev = process.env.NODE_ENV !== 'production';
+// Domaine Clerk de l'instance utilisée (dev : *.clerk.accounts.dev ; production : clerk.africatv.sn), lu dans la clé publique.
+const clerkOrigin = clerkFrontendApiOrigin(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) ?? '';
 
 const cspHeader = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ""} https://clerk.com https://*.clerk.accounts.dev https://api.clerk.com;
+  script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ""} https://clerk.com https://*.clerk.accounts.dev https://api.clerk.com ${clerkOrigin} ${CLERK_CAPTCHA_ORIGIN};
   style-src 'self' 'unsafe-inline';
   img-src 'self' blob: data: https: http:;
   font-src 'self' data:;
@@ -15,6 +18,7 @@ const cspHeader = `
   connect-src 'self' https://*.clerk.accounts.dev https://api.clerk.com wss://*.clerk.accounts.dev https: http:;
   media-src 'self' blob: https: http:;
   worker-src 'self' blob:;
+  frame-src 'self' ${CLERK_CAPTCHA_ORIGIN};
 `.replace(/\s{2,}/g, ' ').trim();
 
 const nextConfig: NextConfig = {
