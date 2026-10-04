@@ -8,11 +8,12 @@ import {
   lt,
   lte,
   or,
-  sql,
   type SQL,
 } from 'drizzle-orm';
 
 import { db, pool } from '../db';
+import { withWorkerLock } from '../lib/worker-lock';
+import { SupervisedBatchWriter } from '../lib/supervised-batch-writer';
 import { channels, streams } from '../db/schema';
 import { checkHlsStream, type HlsCheckResult } from '../lib/stream-verification';
 import {
@@ -428,20 +429,23 @@ export async function expireStalePlaybackClassifications(now = new Date()) {
   return expired.length;
 }
 
-async function writeSingleBatchWithRetry(batch: PendingUpdate[], maxRetries = 3) {
+async function writeSingleBatchWithRetry(batch: PendingUpdate[], maxRetries = 3, signal?: AbortSignal) {
   let attempt = 0;
   while (attempt < maxRetries) {
+    signal?.throwIfAborted();
     attempt += 1;
     try {
       await db.transaction(async (tx) => {
         for (const update of batch) {
+          signal?.throwIfAborted();
           await tx.update(streams).set(update.values).where(eq(streams.id, update.stream.id));
         }
+        signal?.throwIfAborted();
       });
       return;
     } catch (error) {
       if (attempt >= maxRetries) throw error;
-      console.warn(`Échec d'écriture du lot (${attempt}/${maxRetries}), nouvelle tentative dans 2s...`, error);
+      console.warn(`Échec d'écriture du lot (${attempt}/${maxRetries}), nouvelle tentative dans 2s...`);
       await new Promise((resolve) => setTimeout(resolve, 2000));
     }
   }
@@ -453,16 +457,12 @@ async function run() {
   const now = new Date();
 
   if (options.worker) {
-    const lockResult = await db.execute<{ locked: boolean }>(
-      sql`select pg_try_advisory_lock(hashtext('worker_verify_streams')) as locked`
-    );
-    if (!lockResult.rows[0]?.locked) {
-      console.log('Un autre worker est déjà en cours d\'exécution. Arrêt.');
-      return;
-    }
-    console.log('Verrou worker_verify_streams acquis.');
+    return withWorkerLock(pool, 'worker_verify_streams', signal => runVerification(options, startedAt, now,signal));
   }
+  return runVerification(options, startedAt, now);
+}
 
+async function runVerification(options: VerifyOptions, startedAt: number, now: Date,signal?:AbortSignal) {
   async function selectTargets() {
     const conditions: SQL[] = [eq(streams.active, true), eq(channels.active, true)];
     if (options.revalidateDirect) {
@@ -545,6 +545,7 @@ async function run() {
   }
 
   if (options.revalidateDirect && !options.dryRun) {
+    signal?.throwIfAborted();
     const expired = await expireStalePlaybackClassifications(now);
     if (expired > 0) console.log(`Classifications expirées avant revalidation: ${expired}`);
   }
@@ -556,34 +557,12 @@ async function run() {
 
   const queue = [...targets];
   const pendingUpdates: PendingUpdate[] = [];
-  const writeQueue: PendingUpdate[] = [];
-  let isWriting = false;
   let completed = 0;
-  let written = 0;
-
-  async function flushWriteQueue(force = false) {
-    if (options.dryRun) return;
-    while (writeQueue.length >= UPDATE_BATCH_SIZE || (force && writeQueue.length > 0)) {
-      if (isWriting) {
-        await new Promise((resolve) => setTimeout(resolve, 50));
-        continue;
-      }
-      isWriting = true;
-      try {
-        const batch = writeQueue.splice(0, UPDATE_BATCH_SIZE);
-        if (batch.length > 0) {
-          await writeSingleBatchWithRetry(batch);
-          written += batch.length;
-          console.log(`[Base de données] ${written}/${targets.length} flux synchronisés en base.`);
-        }
-      } finally {
-        isWriting = false;
-      }
-    }
-  }
-
+  const writer = new SupervisedBatchWriter<PendingUpdate>(UPDATE_BATCH_SIZE, batch=>writeSingleBatchWithRetry(batch,3,signal));
   async function worker() {
     while (queue.length > 0) {
+      writer.check();
+      signal?.throwIfAborted();
       const stream = queue.shift();
       if (!stream) return;
       const staticDecision = classifyStaticDirectEligibility(stream.url);
@@ -622,6 +601,7 @@ async function run() {
             retries: options.retries,
             origin: BROWSER_TEST_ORIGIN,
           });
+      signal?.throwIfAborted();
       const updateItem: PendingUpdate = {
         stream,
         result,
@@ -630,28 +610,29 @@ async function run() {
           : buildVerificationUpdate(stream, result, new Date(), reviewedQuery),
       };
       pendingUpdates.push(updateItem);
-      writeQueue.push(updateItem);
+      if (!options.dryRun) writer.add(updateItem);
       completed += 1;
-      if (writeQueue.length >= UPDATE_BATCH_SIZE) {
-        void flushWriteQueue();
-      }
       if (completed % 10 === 0 || completed === targets.length) {
-        console.log(`Progression: ${completed}/${targets.length} vérifiés (dont ${written} écrits en base)`);
+        console.log(`Progression: ${completed}/${targets.length} vérifiés (dont ${writer.written} écrits en base)`);
       }
     }
   }
 
-  await Promise.all(
-    Array.from({ length: Math.min(options.concurrency, targets.length) }, () => worker()),
-  );
+  try {
+    const results = await Promise.allSettled(
+      Array.from({ length: Math.min(options.concurrency, targets.length) }, () => worker()),
+    );
+    const failed = results.find(result => result.status === 'rejected');
+    if (failed?.status === 'rejected') throw failed.reason;
+    if (!options.dryRun) await writer.flush();
+  } catch (error) {
+    // Await a write already in progress before releasing the worker's lock.
+    await writer.flush().catch(()=>{});
+    structuredLog('error', 'stream.verification.write_failed', { checked: completed, written: writer.written, remaining: targets.length - writer.written });
+    throw error;
+  }
   if (!options.dryRun) {
-    while (isWriting) {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
-    await flushWriteQueue(true);
-    while (isWriting) {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
+    signal?.throwIfAborted();
     const expiredAfterVerification = await expireStalePlaybackClassifications(
       new Date(),
     );

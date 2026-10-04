@@ -7,6 +7,10 @@ export { formatMarketPrice, formatVariation } from './market-format';
 
 export const PEGGED_EUR_XOF_RATE = 655.957;
 export const PEGGED_EUR_XAF_RATE = 655.957;
+export function usdXofRate(rates:{EUR:number;XOF?:number}) {
+  if(!Number.isFinite(rates.EUR)||rates.EUR<=0) throw new Error('FOREX_INVALID_RATE');
+  return rates.XOF!==undefined&&Number.isFinite(rates.XOF)&&rates.XOF>0 ? rates.XOF : PEGGED_EUR_XOF_RATE*rates.EUR;
+}
 const TTL = 15 * 60_000;
 const MAX_STALE = 6 * 60 * 60_000;
 let cache: { snapshot: LiveMarketsSnapshot; at: number } | null = null;
@@ -72,7 +76,7 @@ async function forex(now: number) {
     if (Date.parse(date) > now) throw new Error('FOREX_FUTURE_RATE');
     const value: MarketForex[] = [
       { pair: 'USD / EUR', base: 'USD', quote: 'EUR', rate: payload.rates.EUR, label: 'Taux indicatif mondial', isPegged: false, updatedAt: date, source: 'ExchangeRate-API' },
-      { pair: 'USD / XOF', base: 'USD', quote: 'XOF', rate: Number.isFinite(payload.rates.XOF) && payload.rates.XOF > 0 ? payload.rates.XOF : PEGGED_EUR_XOF_RATE / payload.rates.EUR, label: 'Taux indicatif dérivé', isPegged: false, updatedAt: date, source: 'ExchangeRate-API / parité BCEAO' },
+      { pair: 'USD / XOF', base: 'USD', quote: 'XOF', rate: usdXofRate(payload.rates), label: 'Taux indicatif dérivé', isPegged: false, updatedAt: date, source: 'ExchangeRate-API / parité BCEAO' },
     ];
     forexCache = { value, at: now };
     return { value: [...fixed, ...value], source: radarSource('ExchangeRate-API', 'Monde · devises', now, TTL, value.length, { dataAt: date }) };

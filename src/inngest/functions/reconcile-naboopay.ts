@@ -1,7 +1,4 @@
-import { and, eq, isNull, lt, or } from 'drizzle-orm';
-
-import { db } from '@/db';
-import { naboopayTransactions } from '@/db/schema';
+import { claimPaymentReconciliation } from '@/lib/payment-reconciliation';
 import { getNabooPayTransaction } from '@/lib/naboopay';
 import { applyVerifiedNabooPayPayment } from '@/lib/naboopay-payment';
 import { structuredLog } from '@/lib/structured-log';
@@ -17,26 +14,12 @@ export const reconcileNaboopay = inngest.createFunction(
       return { disabled: true, reconciled: 0, errors: 0, ambiguousCreations: 0 };
     }
 
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1_000).toISOString();
-    const candidates = await db.query.naboopayTransactions.findMany({
-      where: or(
-        eq(naboopayTransactions.status, 'reconciliation_required'),
-        and(eq(naboopayTransactions.status, 'pending'), lt(naboopayTransactions.updatedAt, oneHourAgo)),
-        and(eq(naboopayTransactions.status, 'completed'), isNull(naboopayTransactions.fulfilledAt)),
-      ),
-      limit: RECONCILIATION_BATCH_SIZE,
-    });
+    const { orders: candidates, ambiguousCreations } = await claimPaymentReconciliation(new Date(), RECONCILIATION_BATCH_SIZE);
 
-    const results = { disabled: false, reconciled: 0, errors: 0, ambiguousCreations: 0 };
+    const results = { disabled: false, reconciled: 0, errors: 0, ambiguousCreations };
     for (const transaction of candidates) {
-      if (!transaction.providerOrderId) {
-        // The documented v2 lookup requires provider order_id. A timed-out
-        // creation without it is ambiguous and must never be retried blindly.
-        results.ambiguousCreations += 1;
-        continue;
-      }
       try {
-        const providerTransaction = await getNabooPayTransaction(transaction.providerOrderId);
+        const providerTransaction = await getNabooPayTransaction(transaction.provider_order_id);
         const result = await applyVerifiedNabooPayPayment(providerTransaction);
         if (result.outcome !== 'unknown_order') results.reconciled += 1;
       } catch (error) {

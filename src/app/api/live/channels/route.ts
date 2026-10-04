@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withApiErrorHandler } from '@/lib/api-errors';
 import { authorizeAppRequest } from '@/lib/require-app-access';
+import { usesLocalPlaybackPolicy } from '@/lib/local-playback-request';
 import {
   getAfricanChannelsSummary,
   getChannelsForAfricanCountry,
@@ -30,6 +31,9 @@ export const GET = withApiErrorHandler(async (request: Request) => {
   const result = await getChannelsForAfricanCountry(
     country,
     authorization.decision.hasAccess,
+    40,
+    undefined,
+    usesLocalPlaybackPolicy(request),
   );
 
   return NextResponse.json(result, {

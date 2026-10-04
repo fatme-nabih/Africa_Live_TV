@@ -101,4 +101,29 @@ test.describe('Pays suivis (UX-503)', () => {
     }
     expect(await call('GET')).toEqual({ status: 200, body: { countries: [] } });
   });
+
+  test('COR-303 : lecture initiale en panne, reprise et modification pendant un PUT lent',async({page})=>{
+    let gets=0,active=0,maxActive=0;const puts:string[][]=[];let account:string[]=[];
+    let release!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve;});
+    await page.route('**/api/followed-countries',async route=>{
+      if(route.request().method()==='GET') {
+        if(++gets===1){await route.fulfill({status:500,json:{error:'fixture'}});return;}
+      }else{
+        active++;maxActive=Math.max(maxActive,active);
+        const countries=route.request().postDataJSON().countries as string[];puts.push(countries);
+        if(puts.length===1)await gate;
+        account=countries;active--;
+      }
+      await route.fulfill({json:{countries:account}});
+    });
+    await page.goto('/app?country=SN');
+    await expect.poll(()=>gets).toBe(1);
+    const change=(codes:string[])=>page.evaluate(list=>{localStorage.setItem('al_followed_countries',JSON.stringify(list));window.dispatchEvent(new Event('al_followed_countries_change'));},codes);
+    await change(['SN']);await page.evaluate(()=>window.dispatchEvent(new Event('online')));
+    await expect.poll(()=>puts.length).toBe(1);
+    await change(['CI','SN']);release();
+    await expect.poll(()=>account).toEqual(['CI','SN']);
+    expect(maxActive).toBe(1);
+    expect(await page.evaluate(()=>localStorage.getItem('al_followed_countries'))).toBe('["CI","SN"]');
+  });
 });

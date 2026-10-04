@@ -1,5 +1,15 @@
 # Africa Live — Plan de préparation à la production
 
+## Plan des correctifs de l'audit — 4 octobre 2026
+
+Plan préparé à la demande du propriétaire : [plan détaillé en cinq lots](plan-correctifs-audit-2026-10-04.md),
+[backlog COR-000 à COR-901, 29 tickets](backlog-correctifs-audit-2026-10-04.md),
+[audit et preuves](audit-code-2026-10-04.md). Priorité : F1 (droits payants) et F2 (éligibilité stricte),
+puis réseau/reprises/workers, préférences/mur, cache/catalogue et consolidation des tests/CI.
+**Implémentation locale réalisée sur demande : 26 tickets reçus, COR-506 partiel, COR-900 avec réserves, COR-901 conditionnel.**
+[État courant](etat-courant.md), [preuves, règles et limites](correctifs-audit-validation-2026-10-04.md). Aucun commit/push/publication, aucune réparation de droits réels ou modification distante ; aucune migration supplémentaire.
+Les sections suivantes conservent leurs états et preuves historiques.
+
 ## Remédiation Radar/météo publiée sur staging — 2 octobre 2026
 
 Publication expressément demandée par le propriétaire : GitHub `main`,

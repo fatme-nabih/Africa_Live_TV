@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Leaf, Monitor, Tv, Volume2, VolumeX } from 'lucide-react';
 import { usePlayerDock } from '@/components/player/PlayerDock';
 import { useEcoMode, useRecentChannels } from '@/components/tv/hooks';
@@ -28,7 +28,13 @@ export default function TvWall() {
   const wide = useSyncExternalStore(subscribeWide, () => window.matchMedia(QUERY).matches, () => true);
   const recents = useRecentChannels();
   const channels = useMemo(() => pickWallChannels(recents), [recents]);
-  const [audible, setAudible] = useState(0);
+  const [audible, setAudible] = useState<string | null | undefined>(undefined);
+  const wallRef=useRef<HTMLUListElement>(null);
+  const chooseAudible=(id:string|null)=>{
+    // Revoke the current sound before React grants it to a different tile.
+    wallRef.current?.querySelectorAll('video').forEach(video=>{video.muted=true;});
+    setAudible(id);
+  };
   const { close: closeDock } = dock;
 
   useEffect(() => { closeDock(); }, [closeDock]);
@@ -52,11 +58,11 @@ export default function TvWall() {
       description="Regardez au moins deux chaînes à la TV : vos dernières chaînes remplissent le mur."
       action={<ButtonLink href="/app" variant="secondary" icon={<Tv size={16} aria-hidden="true" />}>Choisir des chaînes</ButtonLink>} />;
   } else {
-    const current = Math.min(audible, channels.length - 1);
+    const current = audible === undefined ? channels[0]?.id : audible;
     body = (
-      <ul aria-label="Chaînes du mur" className="grid grid-cols-2 gap-3">
-        {channels.map((channel, index) => {
-          const on = index === current;
+      <ul ref={wallRef} aria-label="Chaînes du mur" className="grid grid-cols-2 gap-3">
+        {channels.map((channel) => {
+          const on = channel.id === current;
           return (
             <li key={channel.id} className={`overflow-hidden rounded-card border bg-surface-1 ${on ? 'border-al-gold' : 'border-line'}`}>
               <div className="flex items-center justify-between gap-2 border-b border-line px-3 py-2">
@@ -64,7 +70,7 @@ export default function TvWall() {
                   {channel.name}
                   <span className="ml-2 text-xs font-normal text-text-muted">{formatCountryName(channel.countryCode)}</span>
                 </p>
-                <button type="button" onClick={() => setAudible(index)} aria-pressed={on}
+                <button type="button" onClick={() => chooseAudible(channel.id)} aria-pressed={on}
                   aria-label={on ? `${channel.name} : son actif` : `Écouter ${channel.name}`}
                   className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-pill border px-3 text-xs font-semibold transition-colors ${
                     on ? 'border-al-gold bg-al-gold/15 text-al-gold' : 'border-line bg-surface-2 text-text-muted hover:border-line-gold hover:text-text'}`}>
@@ -72,7 +78,8 @@ export default function TvWall() {
                   {on ? 'Son' : 'Écouter'}
                 </button>
               </div>
-              <Player channelId={channel.id} channelName={channel.name} compact forceMuted={!on} />
+              <Player channelId={channel.id} channelName={channel.name} compact manualExternal forceMuted={!on}
+                onMutedChange={muted => chooseAudible(muted ? null : channel.id)} />
             </li>
           );
         })}

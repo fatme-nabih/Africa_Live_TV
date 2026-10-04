@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import Hls from 'hls.js';
+import {useMediaLifecycle} from './player/useMediaLifecycle';
+import {usePlaybackResolution} from './player/usePlaybackResolution';
+import type Hls from 'hls.js';
 import {
   ExternalLink,
   LoaderCircle,
@@ -32,10 +34,7 @@ import {
   readApiResponse,
 } from '@/lib/api-contracts';
 import {
-  classifyHlsFailure,
   classifyPlayRejection,
-  nextMediaRecoveryAction,
-  nextNetworkRecoveryAction,
 } from '@/lib/playback-errors';
 import {
   sendPlaybackEvent,
@@ -72,6 +71,7 @@ interface PlayerProps {
   compact?: boolean;
   /** Mur TV : le son est piloté par la page (une seule chaîne audible). Absent = son géré par le lecteur. */
   forceMuted?: boolean;
+  onMutedChange?: (muted: boolean) => void;
 }
 
 type ActiveAttempt = {
@@ -90,7 +90,7 @@ function telemetryEngine(engine: PlayerEngine | null | undefined): TelemetryPlay
     : null;
 }
 
-export default function Player({ channelId, channelName = '', anchored = false, onExternalHandoff, initialVolume = 1, onVolumePreference, zapping, manualExternal = false, onPlaybackStarted, compact = false, forceMuted }: PlayerProps) {
+export default function Player({ channelId, channelName = '', anchored = false, onExternalHandoff, initialVolume = 1, onVolumePreference, zapping, manualExternal = false, onPlaybackStarted, compact = false, forceMuted, onMutedChange }: PlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [paused, setPaused] = useState(true);
   const [volume, setVolume] = useState(initialVolume);
@@ -107,8 +107,6 @@ export default function Player({ channelId, channelName = '', anchored = false, 
   const externalLaunchRequestedRef = useRef(false);
   const externalLaunchPendingRef = useRef(false);
   const launchIdRef = useRef<string | null>(null);
-  const resolutionSequenceRef = useRef(0);
-  const resolutionControllerRef = useRef<AbortController | null>(null);
   const externalControllerRef = useRef<AbortController | null>(null);
   const bufferingTimeoutRef = useRef<number | null>(null);
   const [state, dispatch] = useReducer(playbackReducer, initialPlaybackState);
@@ -175,60 +173,9 @@ export default function Player({ channelId, channelName = '', anchored = false, 
     if (activeAttemptRef.current) activeAttemptRef.current.engine = engine;
   }, []);
 
-  const resolveWebSource = useCallback(async ({
-    signal,
-    previous,
-  }: {
-    signal?: AbortSignal;
-    previous: { id: string; attemptId: string } | null;
-  }) => {
-    const body = playbackResolutionRequestSchema.parse({
-      channelId,
-      destination: 'web',
-      playbackSessionId: previous?.id ?? null,
-      previousAttemptId: previous?.attemptId ?? null,
-    });
-    const sequence = ++resolutionSequenceRef.current;
-    resolutionControllerRef.current?.abort();
-    const controller = new AbortController();
-    resolutionControllerRef.current = controller;
-    const abort = () => controller.abort();
-    if (signal?.aborted) controller.abort();
-    signal?.addEventListener('abort', abort, { once: true });
-    const deadline = window.setTimeout(abort, 12_000);
-    try {
-    const response = await fetch('/api/playback/resolutions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      cache: 'no-store',
-      signal: controller.signal,
-    });
-    const payload = await readApiResponse(response, playbackResolutionResponseSchema);
-    if (selectedChannelIdRef.current !== channelId || sequence !== resolutionSequenceRef.current || controller.signal.aborted) return;
-    webAttemptCountRef.current += 1;
-    playbackSessionRef.current = {
-      id: payload.playbackSessionId,
-      channelId,
-      attemptId: payload.attemptId,
-    };
-    setResolvedChannel({ channelId, name: payload.channel.name });
-    dispatch({
-      type: 'RESOLVED',
-      source: { url: payload.sourceUrl },
-      attemptId: payload.attemptId,
-    });
-    } catch (error) {
-      if (sequence !== resolutionSequenceRef.current || signal?.aborted) return;
-      if (controller.signal.aborted) {
-        throw new ApiRequestError('La préparation de la lecture a dépassé le délai attendu.', 408, 'RESOLUTION_TIMEOUT');
-      }
-      throw error;
-    } finally {
-      window.clearTimeout(deadline);
-      signal?.removeEventListener('abort', abort);
-    }
-  }, [channelId]);
+  const {resolveWebSource,cancelResolution}=usePlaybackResolution({
+    channelId,selectedChannelIdRef,webAttemptCountRef,playbackSessionRef,setResolvedChannel,dispatch,
+  });
 
   const handleResolutionFailure = useCallback((error: unknown) => {
     if (
@@ -275,12 +222,11 @@ export default function Player({ channelId, channelName = '', anchored = false, 
     return () => {
       controller.abort();
       selectedChannelIdRef.current = '';
-      resolutionSequenceRef.current += 1;
-      resolutionControllerRef.current?.abort();
+      cancelResolution();
       externalControllerRef.current?.abort();
       stopStartupTimeout();
     };
-  }, [channelId, handleResolutionFailure, resolveWebSource, stopStartupTimeout]);
+  }, [channelId, handleResolutionFailure, resolveWebSource, stopStartupTimeout, cancelResolution]);
 
   useEffect(() => {
     const previous = activeAttemptRef.current;
@@ -359,162 +305,8 @@ export default function Player({ channelId, channelName = '', anchored = false, 
     dispatch({ type: 'STREAM_FAILED', failure });
   }, [emitForActiveAttempt, stopStartupTimeout]);
 
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !source || !state.attemptId) return;
-
-    hlsRef.current?.destroy();
-    hlsRef.current = null;
-    stopStartupTimeout();
-    video.pause();
-    video.removeAttribute('src');
-    video.load();
-
-    const playbackUrl = source.url;
-    const currentAttemptId = state.attemptId;
-    const isCurrent = () => activeAttemptRef.current?.attemptId === currentAttemptId && selectedChannelIdRef.current === channelId;
-    const directFile = /\.(mp4|m4v|webm|og[gv])$/i.test(new URL(playbackUrl).pathname);
-    if (LOCAL_AUTOMATIC_PLAYBACK) {
-      startupTimeoutRef.current = window.setTimeout(() => {
-        if (isCurrent()) failCurrentAttempt({ category: 'network', code: 'MANIFEST_START_TIMEOUT', message: 'Le flux ne répond pas dans le délai attendu.' });
-      }, 12_000);
-    }
-
-    if (!directFile && Hls.isSupported()) {
-      updateAttemptEngine('hls.js');
-      dispatch({ type: 'ENGINE_SELECTED', engine: 'hls.js' });
-      const hls = new Hls({
-        autoStartLoad: false,
-        // Le contrôleur d'interstitiels de hls.js relance startLoad() après le manifeste et contourne autoStartLoad:false ;
-        // les flux IPTV n'en utilisent pas, et sans lui aucun segment n'est téléchargé avant « Lire maintenant ».
-        enableInterstitialPlayback: false,
-        maxBufferLength: 30,
-        liveSyncDurationCount: 3,
-        backBufferLength: 30,
-        enableWorker: true,
-        lowLatencyMode: false,
-      });
-      hlsRef.current = hls;
-
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        if (!isCurrent()) return;
-        if (anchored) stopStartupTimeout();
-        dispatch({ type: 'STREAM_READY', engine: 'hls.js' });
-      });
-      hls.on(Hls.Events.ERROR, (_event, data) => {
-        if (!data.fatal || !isCurrent()) return;
-        const httpStatus = data.response?.code ?? null;
-        const failure = classifyHlsFailure({
-          type: data.type,
-          details: data.details,
-          httpStatus,
-          corsAllowed: true,
-        });
-
-        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-          if (nextNetworkRecoveryAction(networkRecoveryCountRef.current) === 'retry') {
-            networkRecoveryCountRef.current += 1;
-            hls.startLoad();
-            return;
-          }
-        }
-
-        if (data.type === Hls.ErrorTypes.MEDIA_ERROR && failure.category === 'media') {
-          const action = nextMediaRecoveryAction(mediaRecoveryCountRef.current);
-          if (action !== 'fail') {
-            mediaRecoveryCountRef.current += 1;
-            dispatch({ type: 'MEDIA_RECOVERING' });
-            if (action === 'swap-and-recover') hls.swapAudioCodec();
-            hls.recoverMediaError();
-            if (LOCAL_AUTOMATIC_PLAYBACK) {
-              stopStartupTimeout();
-              startupTimeoutRef.current = window.setTimeout(() => {
-                if (isCurrent()) failCurrentAttempt({ category: 'media', code: 'MEDIA_RECOVERY_TIMEOUT', message: 'Le lecteur ne parvient pas à reprendre le flux.' });
-              }, 12_000);
-            }
-            return;
-          }
-        }
-        failCurrentAttempt(failure, 'hls.js');
-      });
-
-      const handleVideoError = () => {
-        if (!isCurrent()) return;
-        failCurrentAttempt(
-          {
-            category: 'media',
-            code: 'VIDEO_ELEMENT_ERROR',
-            message: 'L’élément vidéo a interrompu la lecture.',
-          },
-          'hls.js',
-        );
-      };
-      video.addEventListener('error', handleVideoError);
-      hls.loadSource(playbackUrl);
-      hls.attachMedia(video);
-
-      return () => {
-        stopStartupTimeout();
-        video.removeEventListener('error', handleVideoError);
-        hls.destroy();
-        if (hlsRef.current === hls) hlsRef.current = null;
-        video.pause();
-        video.removeAttribute('src');
-        video.load();
-      };
-    }
-
-    if (directFile || video.canPlayType('application/vnd.apple.mpegurl')) {
-      updateAttemptEngine('native-hls');
-      dispatch({ type: 'ENGINE_SELECTED', engine: 'native-hls' });
-      let readyDispatched = false;
-      const ready = () => {
-        if (!readyDispatched && isCurrent()) {
-          readyDispatched = true;
-          if (anchored) stopStartupTimeout();
-          dispatch({ type: 'STREAM_READY', engine: 'native-hls' });
-        }
-      };
-      const failed = () => {
-        if (!isCurrent()) return;
-        const code = video.error?.code;
-        failCurrentAttempt(
-          code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
-            ? {
-                category: 'codec',
-                code: 'NATIVE_CODEC_UNSUPPORTED',
-                message: 'Le navigateur ne prend pas en charge le codec de ce flux.',
-              }
-            : {
-                category: code === MediaError.MEDIA_ERR_NETWORK ? 'network' : 'media',
-                code: 'NATIVE_HLS_ERROR',
-                message: 'La lecture HLS native a échoué.',
-              },
-          'native-hls',
-        );
-      };
-      video.addEventListener('loadedmetadata', ready);
-      video.addEventListener('canplay', ready);
-      video.addEventListener('error', failed);
-      video.src = playbackUrl;
-      video.load();
-      return () => {
-        stopStartupTimeout();
-        video.removeEventListener('loadedmetadata', ready);
-        video.removeEventListener('canplay', ready);
-        video.removeEventListener('error', failed);
-        video.pause();
-        video.removeAttribute('src');
-        video.load();
-      };
-    }
-
-    failCurrentAttempt({
-      category: 'unsupported',
-      code: 'HLS_UNSUPPORTED',
-      message: 'Ce navigateur ne prend pas en charge la lecture HLS.',
-    });
-  }, [anchored, channelId, failCurrentAttempt, source, state.attemptId, stopStartupTimeout, updateAttemptEngine]);
+  useMediaLifecycle({anchored,channelId,source,attemptId:state.attemptId,videoRef,hlsRef,activeAttemptRef,selectedChannelIdRef,
+    startupTimeoutRef,networkRecoveryCountRef,mediaRecoveryCountRef,stopStartupTimeout,failCurrentAttempt,updateAttemptEngine,dispatch});
 
   // Son imposé par la page (mur TV) : réappliqué à chaque changement d'état, la lecture elle-même n'est pas touchée.
   useEffect(() => {
@@ -528,7 +320,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
     if (!video || !attempt) return;
 
     dispatch({ type: 'PLAY_REQUESTED' });
-    video.muted = !userInitiated;
+    video.muted = forceMuted ?? !userInitiated;
     hlsRef.current?.startLoad(-1);
     stopStartupTimeout();
     startupTimeoutRef.current = window.setTimeout(() => {
@@ -560,7 +352,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
         failCurrentAttempt(failure);
       }
     });
-  }, [emitForActiveAttempt, failCurrentAttempt, stopStartupTimeout]);
+  }, [emitForActiveAttempt, failCurrentAttempt, stopStartupTimeout, forceMuted]);
 
   useEffect(() => {
     // Éco data : le flux est prêt mais ne charge aucun segment tant que l'utilisateur n'a pas touché « Lire maintenant ».
@@ -654,8 +446,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
     if (LOCAL_AUTOMATIC_PLAYBACK && externalLaunchRequestedRef.current && !retry) return;
     if (retry || !launchIdRef.current) launchIdRef.current = crypto.randomUUID();
     externalLaunchRequestedRef.current = true;
-    resolutionSequenceRef.current += 1;
-    resolutionControllerRef.current?.abort();
+    cancelResolution();
     stopStartupTimeout();
     hlsRef.current?.destroy();
     hlsRef.current = null;
@@ -789,7 +580,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
         });
         dispatch({ type: 'EXTERNAL_FAILED', failure });
       });
-  }, [anchored, onExternalHandoff, channelId, emitForActiveAttempt, stopStartupTimeout]);
+  }, [anchored, onExternalHandoff, channelId, emitForActiveAttempt, stopStartupTimeout, cancelResolution]);
 
   useEffect(() => {
     if (anchored) return;
@@ -815,15 +606,18 @@ export default function Player({ channelId, channelName = '', anchored = false, 
 
   const toggleMute = useCallback(() => {
     const video = videoRef.current;
-    if (video) video.muted = !video.muted;
-  }, []);
+    if (!video) return;
+    if (forceMuted !== undefined) onMutedChange?.(!forceMuted);
+    else video.muted = !video.muted;
+  }, [forceMuted, onMutedChange]);
 
   const changeVolume = useCallback((value: number) => {
     const video = videoRef.current;
     if (!video) return;
     video.volume = value;
-    video.muted = value === 0;
-  }, []);
+    if (forceMuted !== undefined) onMutedChange?.(value === 0);
+    else video.muted = value === 0;
+  }, [forceMuted, onMutedChange]);
 
   const toggleFullscreen = useCallback(() => {
     setFullscreenError('');
@@ -945,6 +739,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
 
         <video
           ref={videoRef}
+          muted={forceMuted}
           controls={anchored}
           playsInline
           onDoubleClick={anchored ? undefined : toggleFullscreen}
@@ -956,6 +751,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
           onVolumeChange={() => {
             const video = videoRef.current;
             if (video) {
+              if (forceMuted !== undefined && video.muted !== forceMuted) video.muted = forceMuted;
               const value = video.muted ? 0 : video.volume;
               setVolume(value);
               setMuted(video.muted);
@@ -969,7 +765,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
             compact={compact}
             visible={uiVisible}
             paused={paused}
-            muted={muted}
+            muted={forceMuted ?? muted}
             volume={volume}
             fullscreen={fullscreen}
             pipAvailable={pipAvailable}
@@ -1002,13 +798,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
           <label className="flex items-center gap-2">Volume
             <input aria-label="Volume" type="range" min="0" max="1" step="0.05" value={volume}
               className="w-24 accent-al-yellow focus-visible:ring-2 focus-visible:ring-al-gold"
-              onChange={event => {
-                const video = videoRef.current;
-                if (!video) return;
-                video.muted = false;
-                video.volume = Number(event.target.value);
-                setVolume(video.volume);
-              }} />
+              onChange={event => changeVolume(Number(event.target.value))} />
           </label>
           <button type="button" className="rounded-lg border border-white/20 px-3 py-2 focus-visible:ring-2 focus-visible:ring-al-gold"
             onClick={() => {

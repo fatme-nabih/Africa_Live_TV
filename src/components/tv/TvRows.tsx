@@ -30,7 +30,7 @@ async function fetchRow(request: CatalogRequest, signal: AbortSignal): Promise<C
     signal,
   });
   const data = await readApiResponse(response, catalogResponseSchema);
-  return data.channels.filter(channel => channel.availabilityStatus !== 'OFFLINE');
+  return data.channels;
 }
 
 /**

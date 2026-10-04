@@ -17,14 +17,10 @@ import { recordRecentChannel } from '@/components/tv/hooks';
 import { usePlayerDock } from '@/components/player/PlayerDock';
 import { TV_WALL_ENABLED } from '@/lib/tv-wall';
 import {
-  catalogRequestSchema,
-  catalogResponseSchema,
-  favoritesResponseSchema,
-  messageForApiError,
-  readApiResponse,
   type CatalogRequest,
 } from '@/lib/api-contracts';
-import { LatestRequestController, SingleFlightGate } from '@/lib/latest-request';
+import {useCatalog} from '@/components/tv/useCatalog';
+import { useFavorites } from '@/components/tv/useFavorites';
 import { launchPlayer, type PlayerWindowHandle } from '@/lib/player-window';
 import { FOCUS_SEARCH_EVENT } from '@/lib/shell-nav';
 import { isCatalogHome } from '@/lib/tv-rows';
@@ -38,52 +34,8 @@ const AnchoredPlayer = dynamic(() => import('@/components/AnchoredPlayer'), { ss
 
 
 const VLC_NOTICE_STORAGE_KEY = STORAGE_KEYS.vlcNoticeDismissed;
-const FAVORITES_STORAGE_KEY = STORAGE_KEYS.favorites;
-const FAVORITES_PENDING_KEY = STORAGE_KEYS.favoritesPending;
-const FAVORITES_MIGRATED_KEY = STORAGE_KEYS.favoritesMigrated;
 // Excluded from every production build, including Railway staging.
 const ANCHORED_PLAYER_AVAILABLE = process.env.NODE_ENV === 'development';
-
-function readStoredFavorites() {
-  if (typeof window === 'undefined') return [];
-  migrateLegacyStorageOnce();
-
-  const saved = window.localStorage.getItem(FAVORITES_STORAGE_KEY);
-  if (!saved) return [];
-
-  try {
-    const parsed: unknown = JSON.parse(saved);
-    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === 'string') : [];
-  } catch (e) {
-    console.error('Impossible de lire les favoris locaux.', e);
-    return [];
-  }
-}
-
-function readPendingFavorites() {
-  if (typeof window === 'undefined') return {} as Record<string, boolean>;
-  migrateLegacyStorageOnce();
-  try {
-    const parsed: unknown = JSON.parse(window.localStorage.getItem(FAVORITES_PENDING_KEY) ?? '{}');
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
-    return Object.fromEntries(
-      Object.entries(parsed).filter(
-        (entry): entry is [string, boolean] => typeof entry[1] === 'boolean',
-      ),
-    );
-  } catch {
-    return {};
-  }
-}
-
-function applyPendingFavorites(serverFavorites: string[], pending: Record<string, boolean>) {
-  const merged = new Set(serverFavorites);
-  for (const [id, desired] of Object.entries(pending)) {
-    if (desired) merged.add(id);
-    else merged.delete(id);
-  }
-  return [...merged];
-}
 
 function readVlcNoticeDismissed() {
   if (typeof window === 'undefined') return false;
@@ -117,19 +69,10 @@ export default function Home() { return <Suspense fallback={<p>Chargement du cat
 
 function CatalogWorkspace() {
   const { filters: baseFilters, favoritesOnly: showFavoritesOnly, activePresetId, update: handleFilterChange, setFavoritesOnly: handleShowFavoritesOnlyChange, selectPreset: handleSelectCategoryPreset, reset: resetFilters } = useCatalogFilters();
+  const { favorites, favoriteError, favoritesRevision, toggleFavorite, synchronizeFavorites } = useFavorites();
   const playerWindowRef = useRef<PlayerWindowHandle | null>(null);
-  const catalogRequestsRef = useRef<LatestRequestController | null>(null);
-  const favoriteSyncRequestsRef = useRef<LatestRequestController | null>(null);
-  const favoriteQueuesRef = useRef(new Map<string, Promise<void>>());
-  const favoritesRef = useRef<string[]>([]);
-  const showFavoritesOnlyRef = useRef(false);
-  const loadingMoreGateRef = useRef(new SingleFlightGate());
-  if (catalogRequestsRef.current === null) catalogRequestsRef.current = new LatestRequestController();
-  if (favoriteSyncRequestsRef.current === null) favoriteSyncRequestsRef.current = new LatestRequestController();
-  const [channels, setChannels] = useState<Channel[]>([]);
   // Liste d'où vient la sélection (grille ou rangée) : le zapping avance dans cette liste.
   const [playlist, setPlaylist] = useState<Channel[] | null>(null);
-  const [canPlay, setCanPlay] = useState(true);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   // Lecteur unique de l'espace /app (UX-501) : il continue si l'on passe au Radar.
   const dock = usePlayerDock();
@@ -138,21 +81,14 @@ function CatalogWorkspace() {
   const [externalStopped, setExternalStopped] = useState(false);
   const [playerWindowStatus, setPlayerWindowStatus] = useState<'idle' | 'open' | 'blocked' | 'closed'>('idle');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const [favoritesHydrated, setFavoritesHydrated] = useState(false);
-  const [favoritesRevision, setFavoritesRevision] = useState(0);
-  const [favoriteError, setFavoriteError] = useState<string | null>(null);
   const showVlcNotice = useSyncExternalStore(
     subscribeToVlcNotice,
     getVlcNoticeSnapshot,
     getServerVlcNoticeSnapshot,
   );
 
-  const [loading, setLoading] = useState(false);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const closeMobileFilters = useCallback(() => setIsMobileFiltersOpen(false), []);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [catalogError, setCatalogError] = useState<string | null>(null);
   const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (baseFilters.search) count++;
@@ -211,192 +147,7 @@ function CatalogWorkspace() {
     [baseFilters, showFavoritesOnly],
   );
 
-  useEffect(() => {
-    let active = true;
-    queueMicrotask(() => {
-      if (!active) return;
-      const storedFavorites = readStoredFavorites();
-      favoritesRef.current = storedFavorites;
-      setFavorites(storedFavorites);
-      setFavoritesHydrated(true);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!favoritesHydrated) return;
-    favoritesRef.current = favorites;
-    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
-  }, [favorites, favoritesHydrated]);
-
-  useEffect(() => {
-    showFavoritesOnlyRef.current = showFavoritesOnly;
-  }, [showFavoritesOnly]);
-
-  const replaceFavorites = useCallback((nextFavorites: string[]) => {
-    favoritesRef.current = nextFavorites;
-    setFavorites(nextFavorites);
-  }, []);
-
-  const synchronizeFavorites = useCallback(async () => {
-    const request = favoriteSyncRequestsRef.current!.begin();
-    setFavoriteError(null);
-    try {
-      const response = await fetch('/api/favorites', { signal: request.signal, cache: 'no-store' });
-      const server = await readApiResponse(response, favoritesResponseSchema);
-      if (!favoriteSyncRequestsRef.current!.isCurrent(request.id)) return;
-
-      const pending = readPendingFavorites();
-      if (window.localStorage.getItem(FAVORITES_MIGRATED_KEY) !== 'true') {
-        for (const id of readStoredFavorites()) pending[id] ??= true;
-      }
-      const add = Object.entries(pending).filter(([, desired]) => desired).map(([id]) => id);
-      const remove = Object.entries(pending).filter(([, desired]) => !desired).map(([id]) => id);
-      let canonical = server.favorites;
-      if (add.length > 0 || remove.length > 0) {
-        const mutationResponse = await fetch('/api/favorites', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ add, remove }),
-          signal: request.signal,
-        });
-        canonical = (await readApiResponse(mutationResponse, favoritesResponseSchema)).favorites;
-      }
-      if (!favoriteSyncRequestsRef.current!.isCurrent(request.id)) return;
-
-      const latestPending = readPendingFavorites();
-      for (const [id, desired] of Object.entries(pending)) {
-        if (latestPending[id] === desired) delete latestPending[id];
-      }
-      window.localStorage.setItem(FAVORITES_PENDING_KEY, JSON.stringify(latestPending));
-      window.localStorage.setItem(FAVORITES_MIGRATED_KEY, 'true');
-      replaceFavorites(applyPendingFavorites(canonical, latestPending));
-      if (showFavoritesOnlyRef.current) setFavoritesRevision((revision) => revision + 1);
-    } catch (error) {
-      if (request.signal.aborted || !favoriteSyncRequestsRef.current!.isCurrent(request.id)) return;
-      setFavoriteError(messageForApiError(error, 'La synchronisation des favoris a échoué.'));
-    } finally {
-      if (favoriteSyncRequestsRef.current!.isCurrent(request.id)) {
-        favoriteSyncRequestsRef.current!.finish(request.id);
-      }
-    }
-  }, [replaceFavorites]);
-
-  useEffect(() => {
-    let active = true;
-    queueMicrotask(() => {
-      if (active) void synchronizeFavorites();
-    });
-    return () => {
-      active = false;
-      favoriteSyncRequestsRef.current?.abort();
-    };
-  }, [synchronizeFavorites]);
-
-  const toggleFavorite = useCallback((id: string) => {
-    const desired = !favoritesRef.current.includes(id);
-    const optimistic = desired
-      ? [...new Set([...favoritesRef.current, id])]
-      : favoritesRef.current.filter((favoriteId) => favoriteId !== id);
-    const pending = { ...readPendingFavorites(), [id]: desired };
-    window.localStorage.setItem(FAVORITES_PENDING_KEY, JSON.stringify(pending));
-    replaceFavorites(optimistic);
-    setFavoriteError(null);
-    if (showFavoritesOnlyRef.current && !desired) {
-      setChannels((current) => current.filter((channel) => channel.id !== id));
-    }
-
-    const previous = favoriteQueuesRef.current.get(id) ?? Promise.resolve();
-    const queued = previous
-      .catch(() => undefined)
-      .then(async () => {
-        const response = await fetch('/api/favorites', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(desired ? { add: [id] } : { remove: [id] }),
-        });
-        const data = await readApiResponse(response, favoritesResponseSchema);
-        const latestPending = readPendingFavorites();
-        if (latestPending[id] === desired) delete latestPending[id];
-        window.localStorage.setItem(FAVORITES_PENDING_KEY, JSON.stringify(latestPending));
-        replaceFavorites(applyPendingFavorites(data.favorites, latestPending));
-        if (showFavoritesOnlyRef.current) setFavoritesRevision((revision) => revision + 1);
-      })
-      .catch((error) => {
-        setFavoriteError(
-          `${messageForApiError(error, 'La mise à jour du favori a échoué.')} Le choix reste conservé localement.`,
-        );
-      })
-      .finally(() => {
-        if (favoriteQueuesRef.current.get(id) === queued) favoriteQueuesRef.current.delete(id);
-      });
-    favoriteQueuesRef.current.set(id, queued);
-  }, [replaceFavorites]);
-
-  const fetchChannels = useCallback(async (requestInput: CatalogRequest, append = false) => {
-    if (append && !loadingMoreGateRef.current.enter()) return;
-    const request = catalogRequestsRef.current!.begin();
-    setLoading(true);
-    setCatalogError(null);
-    try {
-      const body = catalogRequestSchema.parse(requestInput);
-      const response = await fetch('/api/channels', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        signal: request.signal,
-      });
-      const data = await readApiResponse(response, catalogResponseSchema);
-      if (!catalogRequestsRef.current!.isCurrent(request.id)) return;
-      setCanPlay(data.canPlay);
-      const visibleChannels = data.channels.filter(
-        (channel) => channel.availabilityStatus !== 'OFFLINE',
-      );
-      setChannels((current) => {
-        if (!append) return visibleChannels;
-        const merged = new Map(current.map((channel) => [channel.id, channel]));
-        for (const channel of visibleChannels) merged.set(channel.id, channel);
-        return [...merged.values()];
-      });
-      setNextCursor(data.nextCursor);
-    } catch (error) {
-      if (request.signal.aborted || !catalogRequestsRef.current!.isCurrent(request.id)) return;
-      setCatalogError(messageForApiError(error, 'Impossible de charger le catalogue.'));
-    } finally {
-      if (append) loadingMoreGateRef.current.leave();
-      if (catalogRequestsRef.current!.isCurrent(request.id)) {
-        setLoading(false);
-        catalogRequestsRef.current!.finish(request.id);
-      }
-    }
-  }, []);
-
-  const handleLoadMore = useCallback(() => {
-    if (!nextCursor || loading || loadingMoreGateRef.current.isActive()) return;
-    void fetchChannels({ ...catalogRequest, cursor: nextCursor }, true);
-  }, [catalogRequest, fetchChannels, loading, nextCursor]);
-
-  useEffect(() => {
-    let active = true;
-    queueMicrotask(() => { if (active) { setChannels([]); setNextCursor(null); setLoading(true); } });
-    const timer = window.setTimeout(() => {
-      if (!active) return;
-      loadingMoreGateRef.current.leave();
-      void fetchChannels(catalogRequest, false);
-    }, baseFilters.search ? 300 : 0);
-    return () => {
-      active = false;
-      window.clearTimeout(timer);
-      catalogRequestsRef.current?.abort();
-    };
-  }, [catalogRequest, baseFilters.search, favoritesRevision, fetchChannels]);
-
-  const retryCatalog = useCallback(() => {
-    void fetchChannels(catalogRequest, false);
-  }, [catalogRequest, fetchChannels]);
-
+  const {channels,canPlay,loading,nextCursor,catalogError,handleLoadMore,retryCatalog}=useCatalog(catalogRequest,favoritesRevision);
 
   const openPlayerForChannel = useCallback((channel: Channel) => {
     setAnchoredChannel(null);

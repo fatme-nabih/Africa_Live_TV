@@ -1,5 +1,14 @@
 # Progression — préparation production
 
+## Correctifs de l’audit — implémentation locale du 4 octobre 2026
+
+Sur demande du propriétaire : droits datés et remboursements selon décision explicite, éligibilité stricte, transport/reprise NabooPay,
+workers, préférences, mur, caches et Radar corrigés ; Next 16.3.8, tests/CI renforcés et responsabilités lecteur/TV extraites.
+26 tickets reçus localement ; COR-506 profilage partiel, COR-900 réception avec réserves, COR-901 non exécuté.
+364 unités sans réseau et 23 intégrations PostgreSQL, typage/lint/migrations/build et audit production réussis ;
+[preuves E2E, mesures, règle des droits et limites](correctifs-audit-validation-2026-10-04.md), [état courant](etat-courant.md).
+Diff non committé/non publié, aucune migration supplémentaire, `.env*` et états distants conservés. Les publications suivantes sont historiques.
+
 ## Reste à faire — Expérience Premium (au 4 octobre 2026, après le lot P6)
 
 P0 → P5 et les correctifs Lighthouse sont publiés sur staging (`865c85d`, Railway `3bc79b16`). **Lot P6 « Performance mobile » fait,

@@ -31,6 +31,11 @@ interface CachedBriefing {
 }
 
 const briefingCache = new Map<string, CachedBriefing>();
+export type BriefingProviders = {
+  rss:typeof getRadarRss; disasters:typeof getDisasterEventsSnapshot;
+  markets:typeof getLiveMarkets; channels:typeof getAfricanChannelsSummary; now:()=>number;
+};
+const defaultProviders:BriefingProviders={rss:getRadarRss,disasters:getDisasterEventsSnapshot,markets:getLiveMarkets,channels:getAfricanChannelsSummary,now:Date.now};
 
 /**
  * Nettoie le cache des briefings (pour les tests unitaires)
@@ -45,12 +50,12 @@ export function clearBriefingCache(): void {
 export async function getLiveBriefing(options: {
   countryCode?: string | null;
   forceRefresh?: boolean;
-} = {}): Promise<LiveBriefingSnapshot> {
+} = {}, providers:BriefingProviders=defaultProviders): Promise<LiveBriefingSnapshot> {
   const targetCode = options.countryCode ? options.countryCode.toUpperCase() : null;
   const scope = targetCode ? 'country' : 'continent';
   const cacheKey = targetCode ?? 'continent';
 
-  const now = Date.now();
+  const now = providers.now();
   const cached = briefingCache.get(cacheKey);
   if (!options.forceRefresh && cached && now - cached.cachedAt < BRIEFING_CACHE_TTL_MS) {
     return cached.snapshot;
@@ -58,10 +63,10 @@ export async function getLiveBriefing(options: {
 
   // Collecte concurrente des 4 sources vivantes du cockpit
   const [rssData, disastersData, marketsData, channelsData] = await Promise.all([
-    getRadarRss().catch(() => ({ articles: [], sources: [], updatedAt: new Date().toISOString(), stale: true })),
-    getDisasterEventsSnapshot().catch(() => ({ type: 'FeatureCollection' as const, metadata: { source: '', attribution: '', totalEvents: 0, earthquakesCount: 0, gdacsAlertsCount: 0, generatedAt: '' }, features: [] })),
-    getLiveMarkets().catch(() => ({ commodities: [], forex: [], alerts: [], updatedAt: new Date().toISOString(), disclaimer: '' })),
-    getAfricanChannelsSummary().catch((): LiveChannelsSummarySnapshot => ({ updatedAt: new Date().toISOString(), totalChannels: 0, totalDirectWeb: 0, countries: {} })),
+    providers.rss().catch(() => ({ articles: [], sources: [], updatedAt: new Date(now).toISOString(), stale: true })),
+    providers.disasters().catch(() => ({ type: 'FeatureCollection' as const, metadata: { source: '', attribution: '', totalEvents: 0, earthquakesCount: 0, gdacsAlertsCount: 0, generatedAt: '' }, features: [] })),
+    providers.markets().catch(() => ({ commodities: [], forex: [], alerts: [], updatedAt: new Date(now).toISOString(), disclaimer: '' })),
+    providers.channels().catch((): LiveChannelsSummarySnapshot => ({ updatedAt: new Date(now).toISOString(), totalChannels: 0, totalDirectWeb: 0, countries: {} })),
   ]);
 
   // Filtrage selon le périmètre (pays ou continent)
@@ -219,7 +224,7 @@ export async function getLiveBriefing(options: {
     scope,
     targetCountryCode: targetCode ?? undefined,
     targetName,
-    generatedAt: new Date().toISOString(),
+    generatedAt: new Date(now).toISOString(),
     periodCovered: 'Dernières 12 heures',
     headline,
     executiveSummary,

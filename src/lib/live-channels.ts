@@ -17,7 +17,7 @@ import type { Channel } from '@/types/channel';
 
 const SUMMARY_CACHE_TTL_MS = 10 * 60_000;
 const CHANNELS_CACHE_TTL_MS = 5 * 60_000;
-const VISIBLE_STREAM_STATUSES = ['BROWSER_OK', 'VLC_ONLY', 'UNTESTED'] as const;
+import { catalogHasVisibleStream, catalogStreamCondition } from './catalog-visibility';
 
 const AFRICAN_COUNTRY_NAME_BY_CODE = new Map(
   AFRICAN_COUNTRIES.map((c) => [c.code, c.name] as const),
@@ -30,7 +30,7 @@ interface CachedEntry<T> {
 
 let summaryCache: CachedEntry<LiveChannelsSummarySnapshot> | null = null;
 let summaryInFlight: Promise<LiveChannelsSummarySnapshot> | null = null;
-const countryChannelsCache = new Map<string, CachedEntry<Channel[]>>();
+const countryChannelsCache = new Map<string, CachedEntry<{channels:Channel[];total:number}>>();
 
 export function _clearLiveChannelsCache() {
   summaryCache = null;
@@ -99,115 +99,35 @@ export async function getAfricanChannelsSummary(
 }
 
 export async function getChannelsForAfricanCountry(
-  countryCode: string,
-  canPlay: boolean,
-  limit = 40,
-  customDb: LiveChannelsDb = db,
+  countryCode: string, canPlay: boolean, limit = 40, customDb: LiveChannelsDb = db, localPlayback = false,
 ): Promise<LiveCountryChannelsSnapshot> {
   const normalizedCode = countryCode.trim().toUpperCase();
   const countryName = AFRICAN_COUNTRY_NAME_BY_CODE.get(normalizedCode) ?? normalizedCode;
+  if (!AFRICAN_COUNTRY_NAME_BY_CODE.has(normalizedCode)) return {countryCode:normalizedCode,countryName,channels:[],total:0,canPlay};
+  limit = Math.max(1, Math.min(100, Math.trunc(limit) || 40));
   const now = Date.now();
-
-  const cached = countryChannelsCache.get(normalizedCode);
-  if (cached && now - cached.timestamp < CHANNELS_CACHE_TTL_MS) {
-    return {
-      countryCode: normalizedCode,
-      countryName,
-      channels: cached.data.slice(0, limit),
-      total: cached.data.length,
-      canPlay,
-    };
-  }
-
-  const freshnessCutoffDate = new Date(now - PLAYBACK_SOURCE_FRESHNESS_MS);
-
-  // 1. Fetch active channels for this country
-  const channelRows = await customDb
-    .select()
-    .from(channels)
-    .where(
-      and(
-        eq(channels.active, true),
-        eq(channels.countryCode, normalizedCode),
-        publicCatalogChannelCondition(),
-      ),
-    )
-    .orderBy(asc(channels.name), asc(channels.id))
-    .limit(limit * 3);
-
-  if (channelRows.length === 0) {
-    return {
-      countryCode: normalizedCode,
-      countryName,
-      channels: [],
-      total: 0,
-      canPlay,
-    };
-  }
-
-  const channelIds = channelRows.map((c) => c.id);
-
-  // 2. Fetch non-offline streams for these channels
-  const streamRows = await customDb
-    .select({
-      channelId: streams.channelId,
-      url: streams.url,
-      status: streams.status,
-      verificationState: streams.verificationState,
-      directEligibility: streams.directEligibility,
-      lastSuccessAt: streams.lastSuccessAt,
-    })
-    .from(streams)
-    .where(
-      and(
-        eq(streams.active, true),
-        inArray(streams.status, VISIBLE_STREAM_STATUSES),
-        sql`${streams.status} != 'OFFLINE'`,
-        sql`${streams.directEligibility} != 'OFFLINE'`,
-        inArray(streams.channelId, channelIds),
-      ),
-    );
-
-  const streamsByChannelId = new Map<string, typeof streamRows>();
-  for (const stream of streamRows) {
-    const list = streamsByChannelId.get(stream.channelId) ?? [];
-    list.push(stream);
-    streamsByChannelId.set(stream.channelId, list);
-  }
-
-  const visibleChannels: Channel[] = [];
-
-  for (const ch of channelRows) {
-    const chStreams = streamsByChannelId.get(ch.id) ?? [];
-    if (chStreams.length === 0) continue;
-
-    const availabilityStatus = resolveChannelAvailability(
-      chStreams,
-      freshnessCutoffDate,
-    );
-    if (availabilityStatus === 'OFFLINE') continue;
-
-    visibleChannels.push({
-      id: ch.id,
-      name: ch.name,
-      logoUrl: ch.logoUrl,
-      groupTitle: ch.groupTitle,
-      countryCode: ch.countryCode,
-      playbackMode: resolvePlaybackMode(chStreams),
-      availabilityStatus,
-    });
-  }
-
-  countryChannelsCache.set(normalizedCode, {
-    data: visibleChannels,
-    timestamp: now,
+  const key = normalizedCode + ':' + localPlayback + ':' + limit;
+  const cached = countryChannelsCache.get(key);
+  if (cached && now - cached.timestamp < CHANNELS_CACHE_TTL_MS) return {countryCode:normalizedCode,countryName,...cached.data,canPlay};
+  for (const [key,entry] of countryChannelsCache) if(now-entry.timestamp>=CHANNELS_CACHE_TTL_MS)countryChannelsCache.delete(key);
+  const condition = and(eq(channels.active,true),eq(channels.countryCode,normalizedCode),publicCatalogChannelCondition(),catalogHasVisibleStream(localPlayback));
+  const [channelRows, counts] = await Promise.all([
+    customDb.select().from(channels).where(condition).orderBy(asc(channels.name),asc(channels.id)).limit(limit),
+    customDb.select({total:sql<number>`count(*)::int`}).from(channels).where(condition),
+  ]);
+  const total=counts[0]?.total ?? 0;
+  const streamRows=channelRows.length ? await customDb.select({channelId:streams.channelId,url:streams.url,status:streams.status,
+    verificationState:streams.verificationState,directEligibility:streams.directEligibility,lastSuccessAt:streams.lastSuccessAt})
+    .from(streams).where(and(catalogStreamCondition(undefined,localPlayback),inArray(streams.channelId,channelRows.map(c=>c.id)))) : [];
+  const byChannel=new Map<string,typeof streamRows>();
+  for(const stream of streamRows) {const group=byChannel.get(stream.channelId)??[];group.push(stream);byChannel.set(stream.channelId,group);}
+  const visible:Channel[]=channelRows.map(ch=>{
+    const sources=byChannel.get(ch.id)??[];
+    return {id:ch.id,name:ch.name,logoUrl:ch.logoUrl,groupTitle:ch.groupTitle,countryCode:ch.countryCode,
+      playbackMode:resolvePlaybackMode(sources),availabilityStatus:resolveChannelAvailability(sources,new Date(now-PLAYBACK_SOURCE_FRESHNESS_MS))};
   });
-
-  return {
-    countryCode: normalizedCode,
-    countryName,
-    channels: visibleChannels.slice(0, limit),
-    total: visibleChannels.length,
-    canPlay,
-  };
+  if(countryChannelsCache.size>=256)countryChannelsCache.delete(countryChannelsCache.keys().next().value!);
+  const data={channels:visible,total};
+  countryChannelsCache.set(key,{data,timestamp:now});
+  return {countryCode:normalizedCode,countryName,...data,canPlay};
 }

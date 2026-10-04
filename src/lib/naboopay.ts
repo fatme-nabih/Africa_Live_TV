@@ -100,19 +100,23 @@ export class NabooPayApiError extends Error {
   }
 }
 
-async function readProviderJson(response: Response) {
+async function readProviderJson(response: Response, signal: AbortSignal) {
   const reader = response.body?.getReader();
   if (!reader) throw new NabooPayApiError('Réponse NabooPay vide.', 502, 'invalide');
 
   const decoder = new TextDecoder();
   let text = '';
   let bytesRead = 0;
+  const cancel = () => { void reader.cancel().catch(() => {}); };
+  signal.addEventListener('abort', cancel, { once: true });
+  try {
+  signal.throwIfAborted();
   while (true) {
     const { done, value } = await reader.read();
+    signal.throwIfAborted();
     if (done) break;
     bytesRead += value.byteLength;
     if (bytesRead > MAX_PROVIDER_RESPONSE_BYTES) {
-      await reader.cancel();
       throw new NabooPayApiError('Réponse NabooPay trop volumineuse.', 502, 'invalide');
     }
     text += decoder.decode(value, { stream: true });
@@ -124,6 +128,11 @@ async function readProviderJson(response: Response) {
   } catch {
     throw new NabooPayApiError('Réponse NabooPay non JSON.', 502, 'invalide');
   }
+  } finally {
+    signal.removeEventListener('abort', cancel);
+    void reader.cancel().catch(() => {});
+    reader.releaseLock();
+  }
 }
 
 function providerError(status: number) {
@@ -134,13 +143,21 @@ function providerError(status: number) {
   return new NabooPayApiError(`NabooPay a répondu avec le statut ${status}.`, status, type);
 }
 
-async function providerFetch(path: string, init: RequestInit) {
+export type NabooPayTransport = { fetch?: typeof fetch; timeoutMs?: number };
+async function providerFetch<T>(path: string, init: RequestInit, parse: (json: unknown) => T, transport: NabooPayTransport = {}) {
   const apiKey = process.env.NABOOPAY_API_KEY;
   if (!apiKey) throw new NabooPayApiError('Configuration NabooPay absente.', 500, 'configuration');
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), transport.timeoutMs ?? PROVIDER_TIMEOUT_MS);
+  let removeAbort = () => {};
+  const deadline = new Promise<never>((_, reject) => {
+    const abort = () => reject(new NabooPayApiError('Délai NabooPay dépassé.', 504, 'timeout'));
+    controller.signal.addEventListener('abort', abort, { once: true });
+    removeAbort = () => controller.signal.removeEventListener('abort', abort);
+  });
   try {
-    return await fetch(`${NABOOPAY_API_ORIGIN}${path}`, {
+    return await Promise.race([deadline, (async () => {
+    const response = await (transport.fetch ?? fetch)(`${NABOOPAY_API_ORIGIN}${path}`, {
       ...init,
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -149,42 +166,48 @@ async function providerFetch(path: string, init: RequestInit) {
       },
       signal: controller.signal,
     });
+    if (!response.ok) { void response.body?.cancel().catch(() => {}); throw providerError(response.status); }
+    return parse(await readProviderJson(response, controller.signal));
+    })()]);
   } catch (error) {
+    if (error instanceof NabooPayApiError) throw error;
     if (error instanceof Error && error.name === 'AbortError') {
       throw new NabooPayApiError('Délai NabooPay dépassé.', 504, 'timeout');
     }
     throw new NabooPayApiError('NabooPay est injoignable.', 503, 'indisponibilite');
   } finally {
     clearTimeout(timeout);
+    removeAbort();
   }
 }
 
 export async function createNabooPayTransaction(
   request: NabooPayTransactionRequest,
+  transport: NabooPayTransport = {},
 ): Promise<NabooPayTransactionResponse> {
   const parsedRequest = NabooPayTransactionRequestSchema.parse(request);
-  const response = await providerFetch('/api/v2/transactions', {
+  return providerFetch('/api/v2/transactions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(parsedRequest),
-  });
-  if (!response.ok) throw providerError(response.status);
-  const parsed = NabooPayTransactionResponseSchema.safeParse(await readProviderJson(response));
+  }, json => {
+  const parsed = NabooPayTransactionResponseSchema.safeParse(json);
   if (!parsed.success) throw new NabooPayApiError('Réponse de création NabooPay invalide.', 502, 'invalide');
   return parsed.data;
+  }, transport);
 }
 
-export async function getNabooPayTransaction(orderId: string) {
+export async function getNabooPayTransaction(orderId: string, transport: NabooPayTransport = {}) {
   if (!orderId || orderId.length > 200) {
     throw new NabooPayApiError('Identifiant NabooPay invalide.', 400, 'validation');
   }
-  const response = await providerFetch(`/api/v2/transactions/${encodeURIComponent(orderId)}`, {
+  return providerFetch(`/api/v2/transactions/${encodeURIComponent(orderId)}`, {
     method: 'GET',
-  });
-  if (!response.ok) throw providerError(response.status);
-  const parsed = NabooPayTransactionPayloadSchema.safeParse(await readProviderJson(response));
+  }, json => {
+  const parsed = NabooPayTransactionPayloadSchema.safeParse(json);
   if (!parsed.success) throw new NabooPayApiError('Réponse de lecture NabooPay invalide.', 502, 'invalide');
   return parsed.data;
+  }, transport);
 }
 
 export function verifyNabooPayWebhookSignature(payload: string, signature: string) {

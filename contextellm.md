@@ -1,6 +1,13 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 4 octobre 2026 (D-4 et D-5 publiés sur staging), fuseau Africa/Dakar.
+Dernière mise à jour : 4 octobre 2026 (publication COR GitHub/Railway staging autorisée, en cours), fuseau Africa/Dakar. Lire d’abord [l’état courant concis](docs/etat-courant.md), la [publication COR](docs/publication-correctifs-2026-10-04.md), puis le [dossier local](docs/correctifs-audit-validation-2026-10-04.md).
+
+## Audit et plan des correctifs — 4 octobre 2026
+
+- Audit approfondi local : [rapport F1–F12](docs/audit-code-2026-10-04.md). Deux priorités : droits NabooPay recrédités par recalcul et branche UNTESTED permissive hors local.
+- À la demande du propriétaire, [plan détaillé en cinq lots](docs/plan-correctifs-audit-2026-10-04.md) et [backlog de 29 tickets COR](docs/backlog-correctifs-audit-2026-10-04.md) préparés.
+- **Implémentation locale demandée et réalisée.** 26 tickets reçus localement ; COR-506 partiel, COR-900 avec réserves, COR-901 conditionnel. Remboursement validé : retrait de l’achat puis reconstruction aux dates d’origine. Next 16.3.8, 364 unités et 23 intégrations PostgreSQL, build/audit production reçus ; détail des E2E et mesures dans le dossier COR.
+- **Publication GitHub et Railway staging expressément demandée après le bilan local**, en cours ; les réserves COR-506/COR-900 restent ouvertes. Aucun changement de droits historiques, activation de paiement ou configuration distante. Pas de nouvelle migration ; `.env*` conservés. Staging revérifié : rôle staging, MVP désactivé, 20/20 migrations identiques, déploiement D-4/D-5 encore actif avant livraison COR. Poursuivre les réceptions ouvertes sans recommencer les correctifs reçus.
 
 ## D-4 / D-5 publiés — 4 octobre 2026 (lire en premier)
 

@@ -40,6 +40,25 @@ test.describe('Page de paiement — interface utilisateur', () => {
     await expect(page.getByRole('main').getByRole('alert')).toContainText('Veuillez vous connecter');
   });
 
+  test('COR-202 : une issue incertaine conserve sa clé après rechargement et propose le suivi',async({page})=>{
+    const keys:string[]=[];
+    const attempt='11111111-1111-4111-8111-111111111111';
+    await page.route('**/api/checkout/naboopay',route=>{
+      keys.push(route.request().postDataJSON().idempotencyKey);
+      return route.fulfill({json:{checkout_url:null,status:'reconciliation_required',checkout_attempt_id:attempt}});
+    });
+    for(let visit=0;visit<2;visit++){
+      await page.goto('/pricing');
+      await page.getByLabel('Prénom').fill('Test');
+      await page.getByLabel('Nom',{exact:true}).fill('User');
+      await page.getByPlaceholder('+221771234567').fill('+221771234567');
+      await page.getByRole('button',{name:'Activer pour 990 FCFA'}).click();
+      await expect(page.getByRole('main').getByRole('alert')).toContainText('N’effectuez pas un second paiement');
+      await expect(page.getByRole('link',{name:'Suivre la vérification du paiement'})).toHaveAttribute('href',`/pricing/success?order_id=${attempt}`);
+    }
+    expect(keys).toHaveLength(2);expect(keys[1]).toBe(keys[0]);
+  });
+
   test('Affiche une erreur si le téléphone est mal formaté', async ({ page }) => {
     const creations: string[] = [];
     page.on('request', request => { if (request.url().includes('/api/checkout/naboopay')) creations.push(request.url()); });

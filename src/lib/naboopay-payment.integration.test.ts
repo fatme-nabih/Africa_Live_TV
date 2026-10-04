@@ -31,7 +31,7 @@ import { and, eq } from 'drizzle-orm';
 import { db, pool } from '../db';
 import { naboopayTransactions, subscriptions, users } from '../db/schema';
 import { assertIntegrationTarget } from './integration-test-safety';
-import { applyVerifiedNabooPayPayment } from './naboopay-payment';
+import { applyVerifiedNabooPayPayment as applyPayment } from './naboopay-payment';
 import type { NabooPayTransactionPayload, NabooPayStatus } from './naboopay';
 
 const integrationEnabled = process.env.CLERK_BILLING_INTEGRATION_TEST === '1';
@@ -47,6 +47,8 @@ const T3 = '2026-09-01T10:03:00.000Z';
 
 
 const DAY_MS = 86_400_000;
+const TEST_NOW = new Date(T1);
+const applyVerifiedNabooPayPayment = (payload: NabooPayTransactionPayload) => applyPayment(payload, TEST_NOW);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -62,8 +64,8 @@ async function seedUser() {
     clerkUserId: `clerk_integ_${id}`,
     email: `integ-${id.slice(0, 8)}@test.local`,
     status: 'active',
-    trialStartedAt: new Date(Date.now() - 10 * DAY_MS).toISOString(),
-    trialEndsAt: new Date(Date.now() - 5 * DAY_MS).toISOString(),
+    trialStartedAt: new Date(TEST_NOW.getTime() - 10 * DAY_MS).toISOString(),
+    trialEndsAt: new Date(TEST_NOW.getTime() - 5 * DAY_MS).toISOString(),
   });
   createdUserIds.push(id);
   return id;
@@ -136,16 +138,12 @@ async function getUserSubscription(userId: string) {
   return sub ?? null;
 }
 
-/** Assert that a date is approximately N days from now (±1 day tolerance). */
+/** Assert the exact acquired end, with an explicit offset for fixture purchases. */
 function assertDaysFromNow(actual: string | null, expectedDays: number, label: string) {
   assert.ok(actual, `${label}: date should not be null`);
   const actualMs = new Date(actual).getTime();
-  const expectedMs = Date.now() + expectedDays * DAY_MS;
-  const driftDays = Math.abs(actualMs - expectedMs) / DAY_MS;
-  assert.ok(
-    driftDays < 1,
-    `${label}: expected ~${expectedDays} days from now, drift was ${driftDays.toFixed(2)} days`,
-  );
+  const expectedMs = TEST_NOW.getTime() + expectedDays * DAY_MS;
+  assert.equal(actualMs,expectedMs,label);
 }
 
 // ---------------------------------------------------------------------------
@@ -163,6 +161,7 @@ after(async () => {
   for (const id of createdUserIds) {
     await db.delete(users).where(eq(users.id, id));
   }
+  await pool.end();
 });
 
 // ---------------------------------------------------------------------------
@@ -286,12 +285,13 @@ test('full refund sets subscription to expired with immediate cutoff', { skip: !
   // Subscription must be EXPIRED (not canceled) → immediate revocation
   const expiredSub = await getUserSubscription(userId);
   assert.equal(expiredSub?.status, 'expired', 'Must be expired, not canceled');
+  assert.equal(expiredSub?.currentPeriodStart,null);
 
-  // Period end should be ≈ now (immediate cutoff, not end-of-period)
+  // The acquired end returns to the trial; access status is expired.
   const drift = Math.abs(
-    new Date(expiredSub!.currentPeriodEnd!).getTime() - Date.now(),
+    new Date(expiredSub!.currentPeriodEnd!).getTime() - TEST_NOW.getTime(),
   );
-  assert.ok(drift < 10_000, `Period end should be ≈ now, drift was ${drift}ms`);
+  assert.equal(drift, 5 * DAY_MS);
 });
 
 // ---------------------------------------------------------------------------
@@ -315,7 +315,7 @@ test('partial refund keeps subscription active with recalculated period', { skip
   assert.equal(sub?.status, 'active', 'One valid payment remains → still active');
   assertDaysFromNow(
     sub!.currentPeriodEnd,
-    30,
+    30+1/1440,
     'Period should reflect one monthly payment only',
   );
 });
@@ -404,5 +404,50 @@ test('reconciliation: completed webhook after failed creates subscription', { sk
   sub = await getUserSubscription(userId);
   assert.ok(sub, 'Subscription should be created after reconciliation');
   assert.equal(sub.status, 'active');
-  assertDaysFromNow(sub.currentPeriodEnd, 30, 'Period should be 30 days');
+  assertDaysFromNow(sub.currentPeriodEnd, 30+1/1440, 'Period should be 30 days from the verified purchase');
+});
+
+test('F1: pending/failed keep ten remaining days and cannot reactivate an expired purchase', { skip: !integrationEnabled }, async () => {
+  const userId=await seedUser();const paid=await seedTransaction(userId);
+  await applyPayment(webhookPayload(paid,'completed',T1,T1),TEST_NOW);
+  const before=await getUserSubscription(userId);
+  const later=new Date(TEST_NOW.getTime()+20*DAY_MS);const pending=await seedTransaction(userId);
+  await applyPayment(webhookPayload(pending,'pending',later.toISOString()),later);
+  assert.deepEqual(await getUserSubscription(userId),before);
+  assert.equal(Date.parse(before!.currentPeriodEnd!)-later.getTime(),10*DAY_MS);
+  const expired=new Date(TEST_NOW.getTime()+40*DAY_MS);
+  await applyPayment(webhookPayload(pending,'failed',expired.toISOString()),expired);
+  assert.deepEqual(await getUserSubscription(userId),before);
+  assert.ok(Date.parse(before!.currentPeriodEnd!)<expired.getTime());
+});
+test('F1: different concurrent purchases accumulate once; refund preserves the original payment date', { skip: !integrationEnabled }, async () => {
+  const userId=await seedUser();const a=await seedTransaction(userId),b=await seedTransaction(userId);
+  await Promise.all([applyVerifiedNabooPayPayment(webhookPayload(a,'completed',T1,T1)),applyVerifiedNabooPayPayment(webhookPayload(b,'completed',T2,T2))]);
+  assert.equal(Date.parse((await getUserSubscription(userId))!.currentPeriodEnd!)-TEST_NOW.getTime(),60*DAY_MS);
+  await applyVerifiedNabooPayPayment(webhookPayload(a,'refunded',T3));
+  const [row]=await db.select().from(naboopayTransactions).where(eq(naboopayTransactions.id,a.id));
+  assert.equal(new Date(row.paidAt!).toISOString(),T1);
+  assert.equal(new Date((await getUserSubscription(userId))!.currentPeriodEnd!).toISOString(),new Date(Date.parse(T2)+30*DAY_MS).toISOString());
+});
+
+test('F1: other providers are preserved; completed-but-unfulfilled recovers once with original dates', {skip:!integrationEnabled},async()=>{
+  const userId=await seedUser();const order=await seedTransaction(userId);
+  const providerId=randomUUID();
+  await db.insert(subscriptions).values({id:providerId,userId,provider:'clerk_billing',providerSubscriptionId:'fixture-'+randomUUID(),status:'active',currentPeriodStart:T1,currentPeriodEnd:'2027-09-01T10:01:00Z'});
+  const [before]=await db.select().from(subscriptions).where(eq(subscriptions.id,providerId));
+  await db.update(naboopayTransactions).set({status:'completed',providerUpdatedAt:T3,paidAt:T1}).where(eq(naboopayTransactions.id,order.id));
+  const later=new Date('2026-11-01T00:00:00Z');
+  assert.equal((await applyPayment(webhookPayload(order,'completed',T1,T1),later)).outcome,'fulfilled');
+  const sub=await getUserSubscription(userId);
+  assert.equal(sub?.status,'expired');
+  assert.equal(new Date(sub!.currentPeriodStart!).toISOString(),T1);
+  assert.equal(new Date(sub!.currentPeriodEnd!).toISOString(),'2026-10-01T10:01:00.000Z');
+  const [recovered]=await db.select().from(naboopayTransactions).where(eq(naboopayTransactions.id,order.id));
+  assert.equal(new Date(recovered.providerUpdatedAt!).toISOString(),T3);
+  assert.equal((await applyPayment(webhookPayload(order,'completed',T1,T1),later)).outcome,'updated');
+  await applyPayment(webhookPayload(order,'refunded',T2),later);
+  assert.equal((await getUserSubscription(userId))!.currentPeriodEnd,sub!.currentPeriodEnd);
+  await applyPayment(webhookPayload(order,'refunded',new Date(Date.parse(T3)+60_000).toISOString()),later);
+  assert.equal((await getUserSubscription(userId))!.currentPeriodStart,null);
+  assert.deepEqual((await db.select().from(subscriptions).where(eq(subscriptions.id,providerId)))[0],before);
 });

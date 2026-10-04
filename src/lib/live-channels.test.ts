@@ -8,25 +8,18 @@ import {
 } from './live-channels';
 
 function createMockDb(options: {
+  total?:number;
   summaryRows?: Array<{ countryCode: string | null; channelCount: number; directWebCount: number }>;
   channelRows?: Array<{ id: string; name: string; logoUrl: string | null; groupTitle: string | null; countryCode: string | null }>;
   streamRows?: Array<{ channelId: string; url: string; status: string; verificationState: string; directEligibility: string; lastSuccessAt: string | null }>;
 } = {}): LiveChannelsDb {
-  const mockQueryBuilder = {
-    from: () => mockQueryBuilder,
-    innerJoin: () => mockQueryBuilder,
-    where: () => mockQueryBuilder,
-    groupBy: () => Promise.resolve(options.summaryRows ?? []),
-    orderBy: () => mockQueryBuilder,
-    limit: () => Promise.resolve(options.channelRows ?? []),
-    then: (resolve: (val: unknown) => void) => {
-      resolve(options.streamRows ?? []);
-    },
-  };
-
-  return {
-    select: () => mockQueryBuilder,
-  } as unknown as LiveChannelsDb;
+  return {select: (columns?: {total?:unknown}) => {
+    const countQuery=!!columns?.total;
+    const mockQueryBuilder={from:()=>mockQueryBuilder,where:()=>mockQueryBuilder,orderBy:()=>mockQueryBuilder,
+      limit:(limit:number)=>Promise.resolve((options.channelRows??[]).slice(0,limit)),
+      then:(resolve:(value:unknown)=>void)=>resolve(countQuery?[{total:options.total??options.channelRows?.length??0}]:options.streamRows??[])};
+    return mockQueryBuilder;
+  }} as unknown as LiveChannelsDb;
 }
 
 test('getAfricanChannelsSummary counts references separately from resolver candidates and caches', async () => {
@@ -147,4 +140,12 @@ test('getChannelsForAfricanCountry handles empty country results gracefully', as
   assert.strictEqual(result.canPlay, false);
   assert.strictEqual(result.channels.length, 0);
   assert.strictEqual(result.total, 0);
+});
+
+test('Radar counts 121 visible references without sampling; cached limits and access are independent',async()=>{
+  _clearLiveChannelsCache();
+  const rows=Array.from({length:121},(_,i)=>({id:`ch-${i}`,name:`Channel ${i}`,logoUrl:null,groupTitle:null,countryCode:'SN'}));
+  const custom=createMockDb({channelRows:rows,total:121,streamRows:rows.map(ch=>({channelId:ch.id,url:'https://fixture.test/a.m3u8',status:'UNTESTED',verificationState:'NEVER_CHECKED',directEligibility:'REVIEW_REQUIRED',lastSuccessAt:null}))});
+  for(const limit of [10,40,80]) {const result=await getChannelsForAfricanCountry('SN',true,limit,custom);assert.equal(result.channels.length,limit);assert.equal(result.total,121);}
+  assert.equal((await getChannelsForAfricanCountry('SN',false,40,custom)).canPlay,false);
 });

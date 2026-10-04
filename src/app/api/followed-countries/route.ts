@@ -8,6 +8,7 @@ import { BadRequestError, withApiErrorHandler } from '@/lib/api-errors';
 import { readBoundedJson } from '@/lib/bounded-json';
 import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
 import { authorizeCatalogRequest } from '@/lib/require-app-access';
+import { replaceAccountCountries } from '@/lib/followed-countries-store';
 
 // Pays suivis synchronisés au compte (UX-503b). Simple préférence : tout compte connecté et non bloqué y a droit,
 // sans abonnement (comme la consultation du catalogue). Le stockage de l'appareil reste le repli hors connexion.
@@ -38,13 +39,6 @@ export const PUT = withApiErrorHandler(async (request: Request) => {
   }
 
   const userId = authorization.user.id;
-  await db.transaction(async tx => {
-    await tx.delete(userFollowedCountries).where(eq(userFollowedCountries.userId, userId));
-    if (parsed.data.countries.length > 0) {
-      await tx.insert(userFollowedCountries).values(
-        parsed.data.countries.map((countryCode, position) => ({ userId, countryCode, position })),
-      );
-    }
-  });
-  return NextResponse.json({ countries: await listFollowedCountries(userId) });
+  const countries = await replaceAccountCountries(userId, parsed.data.countries);
+  return NextResponse.json({ countries });
 });

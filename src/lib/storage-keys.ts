@@ -7,6 +7,7 @@ export const STORAGE_KEYS = {
   favoritesMigrated: 'al_favorites_server_migrated',
   recentCountries: 'al_recent_countries',
   followedCountries: 'al_followed_countries',
+  followedCountriesPending: 'al_followed_countries_pending',
   recentChannels: 'al_recent_channels',
   ecoMode: 'al_eco',
   zapList: 'al_zap_list',

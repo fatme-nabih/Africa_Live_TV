@@ -69,4 +69,20 @@ test.describe('Recherche universelle (UX-502)', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
     await expect(page.locator('#inline-player-title')).toHaveText('Alpha Sénégal');
   });
+
+  test('COR-401 : réouverture après cinq minutes recharge les dépêches',async({page})=>{
+    await fixtureCatalog(page);let calls=0;
+    await page.route('**/api/live/rss*',route=>{
+      calls++;
+      return route.fulfill({json:{articles:[{id:'fixture-'+calls,url:'https://news.fixture.test/'+calls,title:`Bulletin nouveau ${calls}`,sourceName:'Fixture',publishedAt:new Date().toISOString(),countryCode:'SN',category:'Politique'}],sources:[],updatedAt:new Date().toISOString()}});
+    });
+    await page.clock.setFixedTime(new Date('2026-10-04T12:00:00Z'));
+    await page.goto('/app?country=SN');await openPalette(page);await input(page).fill('bulletin');
+    await expect(palette(page).getByRole('option',{name:/Bulletin nouveau 1/})).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.clock.setFixedTime(new Date('2026-10-04T12:06:00Z'));
+    await openPalette(page);await input(page).fill('bulletin');
+    await expect(palette(page).getByRole('option',{name:/Bulletin nouveau 2/})).toBeVisible();
+    expect(calls).toBe(2);
+  });
 });

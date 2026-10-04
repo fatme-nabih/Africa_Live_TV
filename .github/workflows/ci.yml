@@ -65,10 +65,16 @@ jobs:
     - name: Check Types
       run: npx tsc --noEmit --incremental false
 
+    - name: Audit production dependencies (required)
+      run: npm audit --omit=dev --audit-level=moderate
+
     - name: Snyk Code SAST Scan
-      if: env.SNYK_TOKEN != ''
-      continue-on-error: true
-      run: npx snyk code test
+      run: |
+        if [ -n "$SNYK_TOKEN" ]; then
+          npx snyk code test
+        else
+          echo "Snyk Code not run: no CI token configured."
+        fi
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
@@ -88,6 +94,36 @@ jobs:
       run: npx playwright install --with-deps chromium
 
     - name: E2E Tests
-      run: npx playwright test e2e/auth-entry.spec.ts e2e/catalogue.spec.ts
+      run: npx playwright test e2e/auth-entry.spec.ts e2e/catalogue.spec.ts e2e/payment.spec.ts e2e/radar-reliability.spec.ts
       env:
         E2E_EXTERNAL_SERVER: 'false'
+        RADAR_BUILD_TEST: 'true'
+
+    # Separate local development workstation mode: synthetic media/providers,
+    # no real payment, no relaxation of the built staging/production app above.
+    - name: Prepare isolated UI account
+      id: ui_account
+      run: npx tsx src/scripts/ui-fixture-user.ts
+
+    - name: Sensitive UI regressions (local fixtures)
+      run: npx playwright test --workers=1 e2e/catalogue.spec.ts e2e/tv-workspace.spec.ts e2e/tv-streaming.spec.ts e2e/player-dock.spec.ts e2e/followed-countries.spec.ts e2e/tv-wall.spec.ts e2e/universal-search.spec.ts e2e/radar-reliability.spec.ts e2e/local-playback.spec.ts e2e/local-playback-api.spec.ts
+      env:
+        E2E_DEV_SERVER: 'true'
+        E2E_ANONYMOUS_MODE: 'false'
+        LOCAL_DEV_MODE: 'true'
+        NEXT_PUBLIC_LOCAL_DEV_MODE: 'true'
+        NEXT_PUBLIC_LOCAL_PLAYBACK: 'true'
+        NEXT_PUBLIC_TV_WALL: 'true'
+
+    - name: Remove owned UI account
+      if: always() && steps.ui_account.outcome == 'success'
+      run: npx tsx src/scripts/ui-fixture-user.ts --cleanup
+
+    - name: Upload E2E failure evidence
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-failures
+        path: |
+          playwright-report/
+          test-results/

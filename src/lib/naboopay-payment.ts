@@ -6,6 +6,7 @@ import { db } from '@/db';
 import { naboopayTransactions, subscriptions, users } from '@/db/schema';
 
 import type { NabooPayTransactionPayload, NabooPayStatus } from './naboopay';
+import { calculatePaymentEntitlement } from './payment-entitlements';
 
 export const NABOOPAY_PLANS = {
   lumina_all_access_monthly: {
@@ -55,8 +56,15 @@ function addDays(date: Date, days: number) {
   return new Date(date.getTime() + days * 86_400_000);
 }
 
-export async function applyVerifiedNabooPayPayment(payload: NabooPayTransactionPayload) {
+export async function applyVerifiedNabooPayPayment(payload: NabooPayTransactionPayload, now = new Date()) {
   return db.transaction(async (tx) => {
+    // Every path locks the account first, then its order. Locking separate orders
+    // first can deadlock when two payments update the same account concurrently.
+    const [candidate] = await tx.select({ userId: naboopayTransactions.userId }).from(naboopayTransactions)
+      .where(eq(naboopayTransactions.providerOrderId, payload.order_id));
+    if (!candidate) return { outcome: 'unknown_order' as const };
+    const [user] = await tx.select().from(users).where(eq(users.id, candidate.userId)).for('update');
+    if (!user) return { outcome: 'unknown_order' as const };
     const [transaction] = await tx.select().from(naboopayTransactions)
       .where(eq(naboopayTransactions.providerOrderId, payload.order_id)).for('update');
 
@@ -69,16 +77,15 @@ export async function applyVerifiedNabooPayPayment(payload: NabooPayTransactionP
     const isCurrentlyTerminal = transaction.status === 'completed' || transaction.status === 'canceled' || transaction.status === 'refunded';
     
     // Ignore older or exact same date webhooks to prevent race conditions
-    if (payloadDate <= currentProviderDate) {
+    if (payloadDate <= currentProviderDate && !(payload.transaction_status === 'completed' && transaction.status === 'completed' && !transaction.fulfilledAt)) {
       return { outcome: 'updated' as const, status: transaction.status as NabooPayStatus };
     }
 
     // Prevent moving backward from a terminal state, unless it's a refund
-    if (isCurrentlyTerminal && payload.transaction_status !== 'refunded') {
+    if (isCurrentlyTerminal && payload.transaction_status !== 'refunded' && !(transaction.status === 'completed' && !transaction.fulfilledAt && payload.transaction_status === 'completed')) {
       return { outcome: 'updated' as const, status: transaction.status as NabooPayStatus };
     }
 
-    const now = new Date();
     let fulfilledAt = transaction.fulfilledAt;
 
     if (payload.transaction_status === 'completed') {
@@ -90,17 +97,16 @@ export async function applyVerifiedNabooPayPayment(payload: NabooPayTransactionP
       status: payload.transaction_status,
       providerStatus: payload.transaction_status,
       providerCreatedAt: payload.created_at,
-      paidAt: payload.paid_at ?? payload.updated_at,
-      providerUpdatedAt: payload.updated_at,
+      paidAt: transaction.paidAt ?? (payload.transaction_status === 'completed' ? payload.paid_at ?? payload.updated_at : null),
+      providerUpdatedAt: payloadDate > currentProviderDate ? payload.updated_at : transaction.providerUpdatedAt,
       updatedAt: now.toISOString(),
       fulfilledAt: fulfilledAt,
     }).where(eq(naboopayTransactions.id, transaction.id));
 
-    // Lock the user to serialize concurrent transactions
-    const [user] = await tx.select().from(users)
-      .where(eq(users.id, transaction.userId)).for('update');
-      
-    if (!user) return { outcome: 'unknown_order' as const };
+    // Non-payment events cannot regrant or repair historical rights.
+    if (payload.transaction_status !== 'completed' && payload.transaction_status !== 'refunded') {
+      return { outcome: 'updated' as const, status: payload.transaction_status };
+    }
 
     // Fetch ALL non-refunded completed transactions to recalculate rights
     const allValidTransactions = await tx.select().from(naboopayTransactions).where(and(
@@ -108,32 +114,34 @@ export async function applyVerifiedNabooPayPayment(payload: NabooPayTransactionP
       eq(naboopayTransactions.status, 'completed')
     )).orderBy(naboopayTransactions.paidAt);
 
-    let periodEnd = new Date(user.trialEndsAt);
-    let activePlanCode = 'lumina_all_access_monthly';
-    let hasValidPurchases = false;
-
-    for (const txn of allValidTransactions) {
-      const plan = NABOOPAY_PLANS[txn.planCode as NabooPayPlanCode];
-      if (!plan) continue;
-      
-      activePlanCode = txn.planCode;
-      hasValidPurchases = true;
-      
-      const periodStart = periodEnd > now ? periodEnd : now;
-      periodEnd = addDays(periodStart, plan.durationDays);
-    }
+    const entitlement = calculatePaymentEntitlement(user.trialEndsAt, allValidTransactions);
+    let periodEnd = new Date(entitlement.currentPeriodEnd);
+    let periodStart = entitlement.currentPeriodStart;
 
     const [existingSubscription] = await tx.select().from(subscriptions).where(and(
       eq(subscriptions.userId, transaction.userId),
       eq(subscriptions.provider, 'naboopay'),
     )).limit(1).for('update');
 
-    if (hasValidPurchases) {
+    // Preserve historical grants on a new purchase; reducing real legacy rights
+    // is a separate repair operation. A verified refund follows the agreed
+    // reconstruction rule. This branch never anchors an old purchase to now.
+    if (existingSubscription?.currentPeriodEnd && payload.transaction_status === 'completed' && !transaction.fulfilledAt) {
+      const previous = calculatePaymentEntitlement(user.trialEndsAt, allValidTransactions.filter(t => t.id !== transaction.id));
+      const grantedEnd = Date.parse(existingSubscription.currentPeriodEnd);
+      if (grantedEnd > Date.parse(previous.currentPeriodEnd)) {
+        const paidDate = transaction.paidAt ?? payload.paid_at ?? payload.updated_at;
+        const start = new Date(Math.max(grantedEnd, Date.parse(paidDate)));
+        periodStart = start.toISOString();
+        periodEnd = addDays(start, NABOOPAY_PLANS[transaction.planCode as NabooPayPlanCode].durationDays);
+      }
+    }
+    if (entitlement.hasPurchases) {
       if (existingSubscription) {
         await tx.update(subscriptions).set({
-          status: 'active',
-          planCode: activePlanCode,
-          currentPeriodStart: now.toISOString(),
+          status: periodEnd > now ? 'active' : 'expired',
+          planCode: entitlement.planCode!,
+          currentPeriodStart: periodStart,
           currentPeriodEnd: periodEnd.toISOString(),
           cancelAtPeriodEnd: true,
           graceEndsAt: null,
@@ -145,9 +153,9 @@ export async function applyVerifiedNabooPayPayment(payload: NabooPayTransactionP
           userId: transaction.userId,
           provider: 'naboopay',
           providerSubscriptionId: payload.order_id,
-          planCode: activePlanCode,
-          status: 'active',
-          currentPeriodStart: now.toISOString(),
+          planCode: entitlement.planCode!,
+          status: periodEnd > now ? 'active' : 'expired',
+          currentPeriodStart: periodStart,
           currentPeriodEnd: periodEnd.toISOString(),
           cancelAtPeriodEnd: true,
         });
@@ -157,7 +165,9 @@ export async function applyVerifiedNabooPayPayment(payload: NabooPayTransactionP
       if (existingSubscription) {
         await tx.update(subscriptions).set({
           status: 'expired',
-          currentPeriodEnd: now.toISOString(),
+          currentPeriodStart: null,
+          currentPeriodEnd: entitlement.currentPeriodEnd,
+          graceEndsAt: null,
           updatedAt: now.toISOString(),
         }).where(eq(subscriptions.id, existingSubscription.id));
       }

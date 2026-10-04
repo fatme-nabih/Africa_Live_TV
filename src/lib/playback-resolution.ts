@@ -11,11 +11,10 @@ import {
   playbackSessions,
   streams,
 } from '@/db/schema';
-import { isLocalDevMode } from './local-dev';
-import { isLocalPlaybackMode } from './local-playback-mode';
-import { isTrustedLocalRequest } from './local-request';
+import { usesLocalPlaybackPolicy } from './local-playback-request';
 import { isLocalPlaybackCandidate } from './local-playback-policy';
 import { selectBestStream } from '@/lib/channel-selection';
+import {publicCatalogChannelCondition} from './public-catalog-visibility';
 import {
   isPlaybackSourceEligible,
   MAX_PLAYBACK_ATTEMPTS_PER_SESSION,
@@ -25,25 +24,6 @@ import {
 } from '@/lib/playback-resolution-policy';
 
 const PLAYABLE_STATUSES = ['BROWSER_OK', 'VLC_ONLY', 'UNTESTED'] as const;
-
-function isUntestedPlaybackCandidate(
-  source: typeof streams.$inferSelect,
-  destination: PlaybackDestination,
-) {
-  if (source.status === 'OFFLINE' || source.directEligibility === 'OFFLINE') {
-    return false;
-  }
-  try {
-    const url = new URL(source.url);
-    if (url.username || url.password) return false;
-    if (destination === 'web') {
-      return url.protocol === 'https:' && !source.mixedContent;
-    }
-    return ['http:', 'https:'].includes(url.protocol);
-  } catch {
-    return false;
-  }
-}
 
 export class PlaybackResolutionError extends Error {
   constructor(
@@ -101,9 +81,7 @@ export async function resolvePlaybackAttempt({
   now = new Date(),
   request,
 }: ResolvePlaybackAttemptInput) {
-  const localPlayback = isLocalDevMode() || (
-    isLocalPlaybackMode() && !!request && isTrustedLocalRequest(request)
-  );
+  const localPlayback = usesLocalPlaybackPolicy(request);
   if (!productionPlaybackResolutionEnabled()) {
     throw new PlaybackResolutionError(
       503,
@@ -117,7 +95,7 @@ export async function resolvePlaybackAttempt({
       const [channel] = await tx
         .select({ id: channels.id, name: channels.name })
         .from(channels)
-        .where(and(eq(channels.id, channelId), eq(channels.active, true)))
+        .where(and(eq(channels.id, channelId), eq(channels.active, true),publicCatalogChannelCondition()))
         .limit(1);
       if (!channel) {
         throw new PlaybackResolutionError(
@@ -209,16 +187,14 @@ export async function resolvePlaybackAttempt({
         .where(and(
           eq(streams.channelId, channelId),
           eq(streams.active, true),
-          inArray(streams.status, PLAYABLE_STATUSES),
+          localPlayback ? undefined : inArray(streams.status, PLAYABLE_STATUSES),
         ));
       const eligibleSources = sourceRows.filter(
         (source) =>
           !attemptedStreamIds.has(source.id) &&
           (localPlayback
             ? isLocalPlaybackCandidate(source, destination)
-            : (source.status === 'BROWSER_OK' || source.status === 'VLC_ONLY'
-                ? isPlaybackSourceEligible(source, destination, now)
-                : isUntestedPlaybackCandidate(source, destination))),
+            : isPlaybackSourceEligible(source, destination, now)),
       );
       const preferredExternal = localPlayback && destination !== 'web'
         ? selectBestStream(eligibleSources.filter(source => source.status === 'VLC_ONLY'))

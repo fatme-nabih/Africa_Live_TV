@@ -19,12 +19,15 @@ export default function PricingPage() {
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const attemptKeys = useRef(new Map<string, string>());
+  const [trackingId,setTrackingId]=useState<string|null>(null);
 
   const handleSubscribe = async (planCode: PlanCode) => {
     try {
       setLoading(planCode);
       setMessage(null);
-      const idempotencyKey = attemptKeys.current.get(planCode) ?? crypto.randomUUID();
+      const storageKey='al_checkout_key_'+planCode;
+      const idempotencyKey = attemptKeys.current.get(planCode) ?? sessionStorage.getItem(storageKey) ?? crypto.randomUUID();
+      sessionStorage.setItem(storageKey,idempotencyKey);
       attemptKeys.current.set(planCode, idempotencyKey);
       const request = checkoutRequestSchema.safeParse({
         planCode, firstName, lastName, phone, idempotencyKey,
@@ -57,8 +60,10 @@ export default function PricingPage() {
       if (!data.data.checkout_url) {
         if (data.data.status === 'failed' || data.data.status === 'canceled') {
           attemptKeys.current.delete(planCode);
+          sessionStorage.removeItem(storageKey);
           setMessage('Cette tentative est terminée. Cliquez à nouveau pour créer une nouvelle tentative.');
         } else {
+          setTrackingId(data.data.checkout_attempt_id);
           setMessage('La création est en cours de vérification. N’effectuez pas un second paiement.');
         }
         return;
@@ -164,6 +169,7 @@ export default function PricingPage() {
               className={inputClass}
             />
           </label>
+          {trackingId && <a className="text-sm text-al-gold underline" href={`/pricing/success?order_id=${encodeURIComponent(trackingId)}`}>Suivre la vérification du paiement</a>}
           {message && (
             <div role="alert" className="rounded-control border border-line-gold bg-al-gold/10 p-3 text-sm text-text sm:col-span-2">
               {message}

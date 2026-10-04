@@ -5,7 +5,14 @@ import {
   formatVariation,
   PEGGED_EUR_XOF_RATE,
   PEGGED_EUR_XAF_RATE,
+  usdXofRate,
 } from './live-markets';
+
+test('F9: EUR per USD multiplies the XOF per EUR peg; valid direct XOF wins',()=>{
+  assert.equal(usdXofRate({EUR:0.9}),590.3613);
+  assert.equal(usdXofRate({EUR:0.9,XOF:600}),600);
+  for(const EUR of [0,-1,NaN,Infinity]) assert.throws(()=>usdXofRate({EUR}));
+});
 
 test('PEGGED rates match the official BCEAO / BEAC treaties', () => {
   assert.equal(PEGGED_EUR_XOF_RATE, 655.957);

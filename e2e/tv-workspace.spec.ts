@@ -142,3 +142,29 @@ test('Catalogue expiré simulé : consultation conservée et lecture interdite',
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Lecture directe', exact: true })).toHaveCount(0);
 });
+
+test('COR-301 : GET tardif et deux clics conservent toutes les intentions, puis reprise après erreur',async({page})=>{
+  await fixtureTv(page);
+  const canonical=new Set<string>();let releaseGet!:()=>void;
+  const initial=new Promise<void>(resolve=>{releaseGet=resolve;});let getCalls=0,failPatch=true;
+  await page.route('**/api/favorites',async route=>{
+    if(route.request().method()==='GET') {if(++getCalls===1)await initial;}
+    else {
+      if(failPatch){failPatch=false;await route.fulfill({status:500,json:{error:'fixture outage'}});return;}
+      const body=route.request().postDataJSON();for(const id of body.add??[])canonical.add(id);for(const id of body.remove??[])canonical.delete(id);
+    }
+    await route.fulfill({json:{favorites:[...canonical]}});
+  });
+  await page.goto('/app?country=SN');
+  const a=page.locator('#catalogue').getByRole('button',{name:'Ajouter Alpha 00 aux favoris',exact:true});
+  const b=page.locator('#catalogue').getByRole('button',{name:'Ajouter Alpha 01 aux favoris',exact:true});
+  await a.click();await b.click();releaseGet();
+  await expect(page.getByText(/Le choix reste conservé localement/)).toBeVisible();
+  expect(JSON.parse(await page.evaluate(()=>localStorage.getItem('al_favorites')??'[]'))).toEqual(expect.arrayContaining(['tv-0','tv-1']));
+  await page.evaluate(()=>window.dispatchEvent(new Event('online')));
+  await expect.poll(()=>[...canonical].sort()).toEqual(['tv-0','tv-1']);
+  await expect.poll(()=>page.evaluate(()=>localStorage.getItem('al_favorites_pending'))).toBe('{}');
+  await page.reload();
+  await expect(page.locator('#catalogue').getByRole('button',{name:'Retirer Alpha 00 des favoris',exact:true})).toBeVisible();
+  await expect(page.locator('#catalogue').getByRole('button',{name:'Retirer Alpha 01 des favoris',exact:true})).toBeVisible();
+});

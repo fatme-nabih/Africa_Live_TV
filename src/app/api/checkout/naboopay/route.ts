@@ -1,7 +1,9 @@
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/db';
 import { naboopayTransactions } from '@/db/schema';
-import { createNabooPayTransaction, NabooPayApiError } from '@/lib/naboopay';
+import { createNabooPayTransaction } from '@/lib/naboopay';
+import { paymentCreationFailureStatus } from '@/lib/payment-creation-policy';
+import {reservePaymentCreation} from '@/lib/payment-creation-store';
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { eq, and } from 'drizzle-orm';
@@ -78,7 +80,7 @@ export const POST = withApiErrorHandler(async (request: Request) => {
   const errorUrl = `${origin}/pricing/error?order_id=${checkoutAttemptId}`;
 
   // The unique (user, idempotency key) constraint arbitrates concurrent requests.
-  const [created] = await db.insert(naboopayTransactions).values({
+  const reservation = await reservePaymentCreation({
     id,
     checkoutAttemptId,
     idempotencyKey,
@@ -88,15 +90,10 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     currency: 'XOF',
     status: 'creating',
     payload: {},
-  }).onConflictDoNothing().returning({ id: naboopayTransactions.id });
+  });
 
-  if (!created) {
-    const winner = await db.query.naboopayTransactions.findFirst({
-      where: and(
-        eq(naboopayTransactions.userId, internalUser.id),
-        eq(naboopayTransactions.idempotencyKey, idempotencyKey),
-      ),
-    });
+  if (!reservation.created) {
+    const winner=reservation.transaction;
     if (!winner) throw new ServiceUnavailableError('Tentative de paiement indisponible.', 'CHECKOUT_CONFLICT');
     if (winner.planCode !== planCode) {
       throw new BadRequestError('Une tentative avec cette clé existe déjà pour un forfait différent.', 'IDEMPOTENCY_CONFLICT');
@@ -131,24 +128,22 @@ export const POST = withApiErrorHandler(async (request: Request) => {
       fees_customer_side: true,
     });
   } catch (error) {
-    if (error instanceof NabooPayApiError && error.type === 'timeout') {
-      await db.update(naboopayTransactions).set({ status: 'reconciliation_required' }).where(eq(naboopayTransactions.id, id));
-    } else {
-      await db.update(naboopayTransactions).set({ status: 'failed' }).where(eq(naboopayTransactions.id, id));
-    }
-    throw error;
+    const status = paymentCreationFailureStatus(error);
+    await db.update(naboopayTransactions).set({ status, updatedAt: new Date().toISOString() }).where(eq(naboopayTransactions.id, id));
+    if (status === 'failed') throw error;
+    return NextResponse.json({ checkout_url: null, status, checkout_attempt_id: checkoutAttemptId });
   }
 
   if (!nbpResponse.checkout_url) {
-    await db.update(naboopayTransactions).set({ status: 'failed' }).where(eq(naboopayTransactions.id, id));
-    throw new ServiceUnavailableError('La plateforme de paiement NabooPay ne répond pas correctement.', 'NABOOPAY_UNAVAILABLE');
+    await db.update(naboopayTransactions).set({ status: 'reconciliation_required',providerOrderId:nbpResponse.order_id,updatedAt:new Date().toISOString() }).where(eq(naboopayTransactions.id, id));
+    return NextResponse.json({ checkout_url:null,status:'reconciliation_required',checkout_attempt_id:checkoutAttemptId });
   }
 
   // Atomically update transaction
   await db.update(naboopayTransactions).set({
     providerOrderId: nbpResponse.order_id,
     checkoutUrl: nbpResponse.checkout_url,
-    status: 'pending'
+    status: 'pending', updatedAt: new Date().toISOString(),
   }).where(eq(naboopayTransactions.id, id));
 
   return NextResponse.json({

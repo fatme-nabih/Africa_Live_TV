@@ -14,6 +14,7 @@ import {
   catalogSearchHref, MIN_REMOTE_QUERY, OPEN_UNIVERSAL_SEARCH_EVENT, searchArticles, searchCities, searchCountries,
 } from '@/lib/universal-search';
 import type { Channel } from '@/types/channel';
+import { searchArticlesCache, SEARCH_ARTICLES_TTL_MS } from '@/lib/search-articles-cache';
 
 type Item = {
   id: string;
@@ -26,7 +27,6 @@ type Item = {
 };
 
 // Dépêches lues une fois par session de recherche (le Radar les rafraîchit de son côté) : 5 minutes de validité.
-let articlesCache: { at: number; articles: RadarRssArticle[] } | null = null;
 
 /**
  * Recherche universelle (UX-502) : Ctrl K ou Cmd K partout dans l'espace /app.
@@ -63,7 +63,7 @@ function Palette({ onClose }: { onClose: () => void }) {
   const [active, setActive] = useState(0);
   const [channels, setChannels] = useState<{ query: string; list: Channel[]; canPlay: boolean } | null>(null);
   const [channelsLoading, setChannelsLoading] = useState(false);
-  const [articles, setArticles] = useState<RadarRssArticle[]>(() => articlesCache && Date.now() - articlesCache.at < 5 * 60_000 ? articlesCache.articles : []);
+  const [articles, setArticles] = useState<RadarRssArticle[]>(() => searchArticlesCache.peek() ?? []);
   const now = useNow(60_000);
   const trimmed = query.trim();
   const remote = trimmed.length >= MIN_REMOTE_QUERY;
@@ -100,22 +100,18 @@ function Palette({ onClose }: { onClose: () => void }) {
 
   // Dépêches : une seule lecture du flux, au premier mot assez long.
   useEffect(() => {
-    if (!remote || articles.length || articlesCache) return;
-    const controller = new AbortController();
-    void (async () => {
-      try {
-        const response = await fetch('/api/live/rss', { signal: controller.signal });
-        const body: unknown = await response.json();
-        const list = response.ok && body && typeof body === 'object' && Array.isArray((body as { articles?: unknown }).articles)
-          ? (body as { articles: RadarRssArticle[] }).articles : [];
-        articlesCache = { at: Date.now(), articles: list };
-        setArticles(list);
-      } catch {
-        // Pas de dépêches : la recherche continue sans ce groupe.
-      }
-    })();
-    return () => controller.abort();
-  }, [remote, articles.length]);
+    if (!remote) return;
+    let stopped=false;
+    const load=()=>void searchArticlesCache.load(async()=>{
+      const response=await fetch('/api/live/rss',{signal:AbortSignal.timeout(15_000)});
+      const body:unknown=await response.json();
+      if(!response.ok||!body||typeof body!=='object'||!('articles' in body)||!Array.isArray(body.articles)) throw new Error('RSS_UNAVAILABLE');
+      return body.articles as RadarRssArticle[];
+    }).then(list=>{if(!stopped)setArticles(list);}).catch(()=>{});
+    load();
+    const timer=window.setInterval(load,Math.min(60_000,SEARCH_ARTICLES_TTL_MS));
+    return ()=>{stopped=true;window.clearInterval(timer);};
+  }, [remote]);
 
   const go = useCallback((href: string) => { onClose(); router.push(href); }, [onClose, router]);
 

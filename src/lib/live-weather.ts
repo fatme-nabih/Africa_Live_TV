@@ -4,10 +4,11 @@ import { resolveWeatherTarget, type ResolvedTarget } from './weather-locations';
 import { normalizeOpenMeteo, normalizeWttr, openMeteoUrl } from './weather-adapters';
 import { makeWeatherSnapshot, admissibleWeather, WEATHER_TTL_MS } from './weather-contract';
 import { readWeatherJson, weatherDeadline, WEATHER_DIRECT_TIMEOUT_MS } from './weather-request';
+import { BoundedTtlCache } from './bounded-ttl-cache';
 
 // Compatibility exports for existing server consumers; clients import the pure modules.
 export { QUICK_WEATHER_LOCATIONS, degToCompass, interpretWeatherCode, resolveWeatherTarget } from './weather-locations';
-const weatherCache = new Map<string, LiveWeatherCondition>();
+const weatherCache = new BoundedTtlCache<string, LiveWeatherCondition>(256,60*60_000);
 const pendingWeatherRequests = new Map<string, Promise<LiveWeatherCondition>>();
 export function clearWeatherCacheForTesting() { weatherCache.clear(); pendingWeatherRequests.clear(); }
 
@@ -35,6 +36,7 @@ export async function getRadarWeather(query?: { code?: string; city?: string; la
   }
   let pending = pendingWeatherRequests.get(key);
   if (!pending) {
+    if(pendingWeatherRequests.size>=256) throw new ServiceUnavailableError('Les données météo sont temporairement indisponibles.', 'LIVE_WEATHER_UNAVAILABLE');
     pending = (async () => {
       try { return await fetchProvider(target, 'Open-Meteo'); }
       catch { return await fetchProvider(target, 'wttr.in'); }

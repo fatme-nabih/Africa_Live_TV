@@ -37,10 +37,12 @@ import type { Channel } from '@/types/channel';
 import { BadRequestError, RateLimitError, withApiErrorHandler } from '@/lib/api-errors';
 import { metadataValuesMatching } from '@/lib/catalog-metadata';
 import { catalogStreamCondition } from '@/lib/catalog-visibility';
+import { usesLocalPlaybackPolicy } from '@/lib/local-playback-request';
 import { AFRICAN_COUNTRIES } from '@/lib/live-osint';
 
 
 export const POST = withApiErrorHandler(async (request: Request) => {
+  const localPlayback = usesLocalPlaybackPolicy(request);
   const authorization = await authorizeCatalogRequest(
     { bucket: 'channels.entry', limit: 120 },
     request,
@@ -147,7 +149,7 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     .from(streams)
     .where(
       and(
-        catalogStreamCondition(status),
+        catalogStreamCondition(status,localPlayback),
       ),
     );
   conditions.push(inArray(channels.id, matchingChannelIds));
@@ -205,7 +207,7 @@ export const POST = withApiErrorHandler(async (request: Request) => {
       .from(streams)
       .where(
         and(
-          catalogStreamCondition(status),
+          catalogStreamCondition(status,localPlayback),
           inArray(streams.channelId, channelIds),
         ),
       );
@@ -224,7 +226,7 @@ export const POST = withApiErrorHandler(async (request: Request) => {
         channelStreams,
         freshnessCutoffDate,
       );
-      if (availabilityStatus === 'OFFLINE') continue;
+      if (!localPlayback && availabilityStatus === 'OFFLINE') continue;
 
       visibleRows.push({
         source: channel,

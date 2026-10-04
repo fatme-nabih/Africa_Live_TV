@@ -1,5 +1,19 @@
 # Checklist de non-régression — lots local et Railway
 
+## COR — correctifs locaux du 4 octobre 2026, non publiés
+
+[Résultats par ticket et limites](correctifs-audit-validation-2026-10-04.md), [backlog actuel](backlog-correctifs-audit-2026-10-04.md).
+
+- [x] Droits datés, remboursement reconstruit aux dates d’origine, doublons/concurrence et autres fournisseurs.
+- [x] Politique stricte partagée et frontière de confiance locale ; OFFLINE local essayé sans certification.
+- [x] Délais fournisseur, issues incertaines, réservation/reprise, verrous et écritures supervisées.
+- [x] Favoris/pays avec réponses tardives et erreurs ; contrôles sonores du mur ; TTL recherche, USD/XOF et total Radar.
+- [x] 364 unités sans réseau, 23 intégrations isolées ; typage/lint/migrations/build, audit production sans vulnérabilité.
+- [x] E2E sensibles avec fixtures locales, refus anonymes sur build, compte synthétique nettoyé ; détails des cas ignorés dans le dossier.
+- [ ] COR-506 : comparaison avant/après authentifiée sur build et budget de performance ; mesures partielles disponibles.
+- [ ] Réception connectée membre/admin, conflits entre appareils et matériels réels.
+- [ ] COR-900 complet et publication COR-901 explicitement demandée ; staging conservé.
+
 ## D-4 Pays suivis synchronisés au compte — reçu le 4 octobre 2026 (commit `9b40d94`, publié : Railway staging `490d48be`, 415/415 fichiers, 9/9 E2E distants)
 
 - [x] tsc 0 ; lint 0 ; build ; `npm test` 364 (350/14/0) ; invariants 4/4 ; migration additive appliquée en local, `db:check` sans dérive.

@@ -1,5 +1,10 @@
 # Matrice des environnements — revue du 1er octobre 2026
 
+Complément COR du 4 octobre : [état courant](etat-courant.md), [réception locale](correctifs-audit-validation-2026-10-04.md).
+Next 16.3.8 local, aucune migration ou variable distante supplémentaire. Drapeaux MVP temporairement définis uniquement dans
+les processus de tests, refusés en production ; build servi strict avec Clerk de développement. `.env*` conservés ;
+staging non revérifié pendant COR. Les relevés distants ci-dessous restent datés.
+
 Complément L5 local : AL-T05 disponible exclusivement en développement,
 opt-in désactivé par défaut et au rechargement. Aucun flag `.env` supplémentaire,
 aucune variable distante, aucune migration ; contrôle d'activation absent du

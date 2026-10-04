@@ -28,6 +28,16 @@ test.describe('Mur TV (UX-506)', () => {
     await expect.poll(() => mutedStates(page)).toEqual([true, false, true]);
     await expect(wall.getByRole('button', { name: 'Beta Sénégal : son actif' })).toHaveAttribute('aria-pressed', 'true');
     expect([...resolutions].sort()).toEqual(['sn-1', 'sn-2', 'sn-3']);
+    const first=wall.getByRole('listitem').first();
+    await first.hover();
+    await first.getByRole('button',{name:'Rétablir le son',exact:true}).click();
+    await expect.poll(()=>mutedStates(page)).toEqual([false,true,true]);
+    await expect(wall.getByRole('button',{name:'Alpha Sénégal : son actif'})).toHaveAttribute('aria-pressed','true');
+    await first.getByRole('button',{name:'Couper le son',exact:true}).click();
+    await expect.poll(()=>mutedStates(page)).toEqual([true,true,true]);
+    const third=wall.getByRole('listitem').nth(2);await third.hover();
+    await third.getByRole('button',{name:'Rétablir le son',exact:true}).click();
+    await expect.poll(()=>mutedStates(page)).toEqual([true,true,false]);
   });
 
   test('en Éco data ou sur un écran étroit, le mur explique pourquoi il ne s’affiche pas', async ({ page }) => {

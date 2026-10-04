@@ -24,7 +24,8 @@ export default defineConfig({
   webServer: process.env.E2E_EXTERNAL_SERVER === 'true'
     ? undefined
     : {
-        command: process.env.CI ? 'npm run start:local' : 'npm run dev',
+        command: process.env.E2E_DEV_SERVER === 'true' && process.env.DEPLOYMENT_ENV === 'local'
+          ? 'npm run dev' : process.env.CI ? 'npm run start:local' : 'npm run dev',
         url: process.env.E2E_BASE_URL ?? 'http://localhost:3001',
         // Reusing another checkout on port 3001 can produce a false positive.
         reuseExistingServer: !process.env.CI && process.env.E2E_REUSE_SERVER === 'true',

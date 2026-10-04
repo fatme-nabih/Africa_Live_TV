@@ -1,83 +1,70 @@
 'use client';
-
 import { useEffect } from 'react';
 import { writeFollowedCountries } from '@/components/tv/hooks';
-import {
-  FOLLOWED_COUNTRIES_EVENT,
-  mergeFollowedCountries,
-  parseFollowedCountries,
-  sameFollowedCountries,
-} from '@/lib/followed-countries';
+import { FOLLOWED_COUNTRIES_EVENT, mergeFollowedCountries, parseFollowedCountries, sameFollowedCountries } from '@/lib/followed-countries';
 import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
 import { STORAGE_KEYS } from '@/lib/storage-keys';
 
-const AFRICAN_CODES: ReadonlySet<string> = new Set(AFRICAN_COUNTRIES.map(country => country.code));
-const ENDPOINT = '/api/followed-countries';
-
-function readDeviceCountries() {
-  try {
-    return parseFollowedCountries(window.localStorage.getItem(STORAGE_KEYS.followedCountries), AFRICAN_CODES);
-  } catch {
-    return [];
-  }
+const AFRICAN_CODES=new Set(AFRICAN_COUNTRIES.map(c=>c.code));
+let accountQueue:Promise<unknown>=Promise.resolve();
+function serialize<T>(task:()=>Promise<T>) {const next=accountQueue.catch(()=>{}).then(task);accountQueue=next.catch(()=>{});return next;}
+function readDevice() {
+  try {return parseFollowedCountries(localStorage.getItem(STORAGE_KEYS.followedCountries),AFRICAN_CODES);} catch {return [];}
+}
+class SyncResponseError extends Error {constructor(readonly status:number){super('COUNTRIES_SYNC_FAILED');}}
+async function requestCountries(countries?:string[]) {
+  const init:RequestInit=countries ? {method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({countries})} : {cache:'no-store'};
+  const response=await fetch('/api/followed-countries',{...init,signal:AbortSignal.timeout(15_000)});
+  if(!response.ok) throw new SyncResponseError(response.status);
+  const body:unknown=await response.json();
+  if(!body||typeof body!=='object'||!('countries' in body)||!Array.isArray(body.countries)) throw new Error('INVALID_COUNTRIES_RESPONSE');
+  return parseFollowedCountries(JSON.stringify(body.countries),AFRICAN_CODES);
 }
 
-async function readAccountCountries(response: Response) {
-  const body: unknown = await response.json();
-  const countries = body && typeof body === 'object' && 'countries' in body ? body.countries : [];
-  return parseFollowedCountries(JSON.stringify(countries), AFRICAN_CODES);
-}
-
-/**
- * Pays suivis synchronisés au compte (UX-503b), monté dans la coquille des pages connectées.
- * À l'ouverture : le compte fait foi, enrichi des pays de l'appareil ; ensuite chaque changement est envoyé (regroupé, 800 ms).
- * Le stockage de l'appareil reste la source d'affichage : hors connexion ou en cas d'erreur, rien ne change pour l'utilisateur.
- */
 export default function FollowedCountriesSync() {
-  useEffect(() => {
-    let stopped = false;
-    let accountCountries: string[] | null = null;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-
-    const send = async (countries: string[]) => {
-      const response = await fetch(ENDPOINT, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ countries }),
-      });
-      if (response.ok && !stopped) accountCountries = await readAccountCountries(response);
-    };
-
-    (async () => {
+  useEffect(()=>{
+    let stopped=false, busy=false, initialized=false, publishing=false, blocked=false;
+    let revision=0, retries=0;
+    let account:string[]=[];
+    let timer:ReturnType<typeof setTimeout>|undefined;
+    const schedule=(delay=800)=>{clearTimeout(timer);if(!stopped&&!blocked) timer=setTimeout(()=>void synchronize(),delay);};
+    const synchronize=async()=>{
+      if(stopped||busy||blocked)return;
+      busy=true;
       try {
-        const response = await fetch(ENDPOINT, { cache: 'no-store' });
-        if (!response.ok || stopped) return;
-        const account = await readAccountCountries(response);
-        accountCountries = account;
-        const device = readDeviceCountries();
-        const merged = mergeFollowedCountries(account, device);
-        if (!sameFollowedCountries(merged, device)) writeFollowedCountries(merged);
-        if (!sameFollowedCountries(merged, account)) await send(merged);
-      } catch {
-        // Réseau ou session indisponible : les pays suivis restent ceux de l'appareil.
-      }
-    })();
-
-    const onChange = () => {
-      if (accountCountries === null) return;
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        const device = readDeviceCountries();
-        if (accountCountries && !sameFollowedCountries(device, accountCountries)) send(device).catch(() => {});
-      }, 800);
+        await serialize(async()=>{
+          if(stopped)return;
+          if(!initialized) {
+            const before=revision;
+            account=await requestCountries();
+            if(stopped)return;
+            initialized=true;
+            const device=readDevice();
+            const hasPending=localStorage.getItem(STORAGE_KEYS.followedCountriesPending)==='true';
+            const merged=hasPending||before!==revision ? device : mergeFollowedCountries(account,device);
+            if(!sameFollowedCountries(merged,device)) {publishing=true;writeFollowedCountries(merged);publishing=false;}
+          }
+          while(!stopped) {
+            const device=readDevice();
+            if(sameFollowedCountries(device,account)) {localStorage.removeItem(STORAGE_KEYS.followedCountriesPending);break;}
+            const sentRevision=revision;
+            account=await requestCountries(device);
+            if(stopped)return;
+            if(sentRevision===revision&&sameFollowedCountries(readDevice(),account)) localStorage.removeItem(STORAGE_KEYS.followedCountriesPending);
+          }
+        });
+        retries=0;
+      } catch(error) {
+        blocked=error instanceof SyncResponseError && [401,403,429].includes(error.status);
+        if(!blocked&&++retries<=3) schedule(1_000*2**(retries-1));
+      } finally {busy=false;}
     };
-    window.addEventListener(FOLLOWED_COUNTRIES_EVENT, onChange);
-    return () => {
-      stopped = true;
-      clearTimeout(timer);
-      window.removeEventListener(FOLLOWED_COUNTRIES_EVENT, onChange);
-    };
-  }, []);
-
+    const onChange=()=>{if(publishing)return;revision++;localStorage.setItem(STORAGE_KEYS.followedCountriesPending,'true');schedule();};
+    const onOnline=()=>{if(blocked)return;retries=0;schedule(0);};
+    schedule(0);
+    window.addEventListener(FOLLOWED_COUNTRIES_EVENT,onChange);
+    window.addEventListener('online',onOnline);
+    return ()=>{stopped=true;clearTimeout(timer);window.removeEventListener(FOLLOWED_COUNTRIES_EVENT,onChange);window.removeEventListener('online',onOnline);};
+  },[]);
   return null;
 }
