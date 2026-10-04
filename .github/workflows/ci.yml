@@ -36,9 +36,9 @@ jobs:
       ENABLE_LOCAL_VLC: 'false'
       PLAYBACK_ELIGIBILITY_READY: 'false'
       PAYMENTS_ENABLED: 'false'
-      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3001
-      BROWSER_TEST_ORIGIN: http://127.0.0.1:3001
-      E2E_BASE_URL: http://127.0.0.1:3001
+      NEXT_PUBLIC_APP_URL: http://localhost:3001
+      BROWSER_TEST_ORIGIN: http://localhost:3001
+      E2E_BASE_URL: http://localhost:3001
       E2E_ANONYMOUS_MODE: 'true'
       PORT: '3001'
       # CI-only non-production credentials — not used unless PAYMENTS_ENABLED=true.
