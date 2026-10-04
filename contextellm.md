@@ -2,7 +2,13 @@
 
 Dernière mise à jour : 4 octobre 2026 (fin du lot P6), fuseau Africa/Dakar.
 
-## Lot P6 « Performance mobile » — 4 octobre 2026 (lire en premier)
+## Instance Clerk de production (D-2) — 4 octobre 2026 (lire en premier)
+
+- Staging utilise désormais l'**instance Clerk de production** (`pk_live`, `clerk.africatv.sn`, DNS OVH, Google OAuth propre, webhook) ;
+  `.env.local` garde l'instance de dev (la production refuse localhost). CSP corrigée (`32d1a66`, Railway `047d66d7` SUCCESS, 9/9 E2E distants).
+  Détail : [dossier P6, dernière section](docs/publication-premium-p6-2026-10-04.md). Reste : compte admin de production, renommer « Afrika_Live ».
+
+## Lot P6 « Performance mobile » — 4 octobre 2026 (lire ensuite)
 
 - **Fait, committé (`7e27319` + docs `c710769`) et publié sur staging : Railway `e077db96` SUCCESS** (409/409 fichiers, 9/9 E2E distants).
   Lighthouse staging mobile : landing **93**, CGU 97, tarifs 75, connexion 73 ; desktop 99/99/95/93 ; [dossier](docs/publication-premium-p6-2026-10-04.md).

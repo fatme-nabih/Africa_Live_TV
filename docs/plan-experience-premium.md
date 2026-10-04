@@ -352,7 +352,7 @@ Radar et TV (serveur de dev, session requise) : accessibilité 100, CLS ≤ 0,02
 | # | Décision | Effet | Par défaut si rien n'est décidé |
 |---|---|---|---|
 | D-1 | ~~Lot P6 « Performance mobile »~~ **fait et publié le 4 octobre 2026** (§6, `e077db96`) | Staging mobile : landing 93, CGU 97, tarifs 75, connexion 73 | — |
-| D-2 | **Instance Clerk de production** sur `africatv.sn` + renommer l'application « Afrika_Live » → « Africa Live » dans le tableau de bord Clerk | Supprime les cookies tiers (bonnes pratiques 78 → ~100) et le nom erroné sur 19 écrans `frFR` ; prépare la production | Configuration Clerk inchangée (action du propriétaire, jamais faite par l'agent) |
+| D-2 | ~~Instance Clerk de production~~ **faite le 4 octobre 2026** (`africatv.sn` conservé ; CSP corrigée `32d1a66`, Railway `047d66d7`) ; reste : renommer « Afrika_Live » dans Clerk, compte admin de production | /sign-in 78, /pricing bonnes pratiques 96 | — |
 | D-3 | **Briefing L6** (UX-507) : nom, durée, fenêtre, mode de génération (cf. `plan-dashboard-backlog.md`, D1) | Débloque UX-507 branché sur les pays suivis | Briefing masqué |
 | D-4 | **Synchronisation des pays suivis au compte** (UX-503b) | Ticket de **migration** : sauvegarde Railway restaurable préalable, `npm run db:migrate:deploy` | Pays suivis sur l'appareil seulement |
 | D-5 | **Mur TV en production** : poser `NEXT_PUBLIC_TV_WALL=true` sur Railway | Active `/app/mur` (desktop ≥ 1 280 px) | Inactif en production |

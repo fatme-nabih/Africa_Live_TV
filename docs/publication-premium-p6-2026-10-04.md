@@ -52,3 +52,23 @@ Mobile : 3 passages, médiane (mesure de la landing faite après le retour des c
 
 Profils Clerk connectés sur staging (landing d'un membre), paiement réel, appareils Android et VLC réel : hors réception. Preuves
 locales : `.local-logs/publication-p6/` et `.local-logs/p6/after-staging*` (ignorés par Git).
+
+## Instance Clerk de production (D-2) — 4 octobre 2026, après-midi
+
+Faite par le propriétaire dans Clerk, Google Cloud, OVH et Railway (l'agent n'a modifié aucune de ces configurations ; vérifications en
+lecture seule) : instance de production sur `africatv.sn` (domaine conservé, marque « Africa Live »), identifiants Google OAuth propres
+(projet Google Cloud « Africa Live », redirection `https://clerk.africatv.sn/v1/oauth_callback`), 5 CNAME chez OVH (`clerk`, `accounts`,
+`clkmail`, `clk._domainkey`, `clk2._domainkey`, propagés et vérifiés par Clerk, certificats émis), webhook
+`https://staging.africatv.sn/api/webhooks/clerk` (user.created/updated/deleted, session.created/ended/removed/revoked), clés `pk_live` /
+`sk_live` et `CLERK_WEBHOOK_SIGNING_SECRET` posées sur Railway (redéploiement `2f9852a6` SUCCESS). `.env.local` garde l'instance de dev.
+
+- **Défaut trouvé par l'E2E distant** : la CSP (`next.config.ts`) n'autorisait que `*.clerk.accounts.dev` ; le navigateur bloquait
+  `clerk.africatv.sn` (« failed_to_load_clerk_js ») et les widgets de connexion / inscription ne s'affichaient plus. Correctif
+  [`32d1a66`](https://github.com/fatme-nabih/Africa_Live_TV/commit/32d1a66) (origine Clerk déduite de la clé publique,
+  `src/lib/clerk-csp.ts` testé ; Cloudflare Turnstile autorisé en `script-src` et `frame-src`), déployé sur accord explicite :
+  **`047d66d7` SUCCESS**, 411/411 fichiers identiques, santé 200, widget de connexion affiché, **9/9 E2E distants**.
+- Plus de poignée de main : `/sign-in` répond 200 directement ; scripts Clerk servis par `clerk.africatv.sn`.
+- Lighthouse staging mobile (×3, médiane) : `/sign-in` **73 → 78**, bonnes pratiques 79 (cookie Cloudflare `__cf_bm` posé par
+  `img.clerk.com` sur l'icône Google du widget, hors de notre code) ; `/pricing` 75, bonnes pratiques **79 → 96**. Accessibilité 100.
+- À faire par le propriétaire : créer son compte sur l'instance de production et lui remettre le rôle admin (métadonnées Clerk) ; les
+  comptes de l'instance de développement ne sont pas repris.
