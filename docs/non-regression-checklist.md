@@ -1,5 +1,14 @@
 # Checklist de non-régression — lots local et Railway
 
+## D-4 Pays suivis synchronisés au compte — reçu le 4 octobre 2026 (commit `9b40d94`, publié : Railway staging `490d48be`, 415/415 fichiers, 9/9 E2E distants)
+
+- [x] tsc 0 ; lint 0 ; build ; `npm test` 364 (350/14/0) ; invariants 4/4 ; migration additive appliquée en local, `db:check` sans dérive.
+- [x] E2E MVP 150 : 149 réussis, 1 ignoré, 0 échec ; E2E Clerk 8/8 ; `/api/followed-countries` anonyme → 307.
+- [x] Accès, quotas des autres API, lecture, paiement, `.env*`, Railway, Clerk, DNS inchangés ; aucune dépendance ajoutée.
+- [x] Sauvegarde Railway restaurable avant migration (`backups/railway/railway-2026-10-04T14-32-53-630Z`, inventaire identique) ; pré-déploiement `db:migrate:deploy` (20 migrations) ; 9 E2E distants ; table présente en ligne.
+- [x] D-5 : `NEXT_PUBLIC_TV_WALL=true` compilée, `/app/mur` anonyme → 307. [ ] Rendu connecté du mur et synchronisation entre deux appareils (propriétaire).
+- [ ] D-6 logos officiels.
+
 ## Expérience Premium P6 « Performance mobile » — reçue le 4 octobre 2026 (commit `7e27319`, publiée : Railway staging `e077db96`, 409/409 fichiers, 9/9 E2E distants)
 
 Preuves : [production-progress.md](production-progress.md) « Lot P6 » et [audit, section P6](audit-a11y-performance-2026-10-03.md).

@@ -134,6 +134,16 @@ Cette clé étant liée au compte Windows courant, une destination durable et sa
 gestion de clé restent à décider avant de revendiquer un véritable plan de
 reprise hors poste.
 
+Le 4 octobre 2026 (avant la migration 0019), la redirection de port SSH
+`ssh -L 15432:localhost:5432` a été **refusée par Railway** (« unknown channel
+type: unsupported »). La sauvegarde `backups/railway/railway-2026-10-04T14-32-53-630Z` a été faite
+avec `RAILWAY_BACKUP_USE_SSH=true` via un relais TCP local hors projet : un
+serveur sur `127.0.0.1:15432` ouvre pour chaque connexion
+`railway ssh --service Postgres -- bash -c 'exec 3<>/dev/tcp/127.0.0.1/5432; ...'` ;
+les variables viennent de `railway run --service Postgres` et l'URL est
+construite dans un script, sans afficher de secret. `pg_dump` et `pg_restore`
+s'exécutent dans le conteneur. `railway ssh` échoue par intermittence : relancer.
+
 ## Rollback applicatif
 
 Déclencheurs : échec du healthcheck, erreurs 5xx nouvelles, authentification

@@ -331,7 +331,8 @@ de rétention est le plus rapide et la base L5 (zapping) existe déjà.
 | P3–P4 | `412574d`, `06b662f` | `990745ba` | [publication-premium-p3p4-2026-10-03.md](publication-premium-p3p4-2026-10-03.md) |
 | P5 | `090ce01` | `75bf069d` | [publication-premium-p5-2026-10-03.md](publication-premium-p5-2026-10-03.md) |
 | Correctifs Lighthouse | `865c85d` | `3bc79b16` | même dossier, section finale |
-| P6 « Performance mobile » | [`7e27319`](https://github.com/fatme-nabih/Africa_Live_TV/commit/7e27319) | **`e077db96`** (actif) | [dossier de publication P6](publication-premium-p6-2026-10-04.md) |
+| P6 « Performance mobile » | [`7e27319`](https://github.com/fatme-nabih/Africa_Live_TV/commit/7e27319) | `e077db96` | [dossier de publication P6](publication-premium-p6-2026-10-04.md) |
+| D-2 suites, D-4, D-5 | `32d1a66`, `2caf8ad`, [`9b40d94`](https://github.com/fatme-nabih/Africa_Live_TV/commit/9b40d94) | **`490d48be`** (actif) | même dossier, sections finales |
 
 HEAD documentaire `f260400` (et suivants). **49 tickets faits sur 50** (UX-001 → UX-508 et reliquats UX-209, UX-212, UX-213, UX-214) ;
 **UX-507 bloqué** (briefing = lot L6, différé par la décision D1 du propriétaire). Preuves par lot : sections « Lot P0 » à « Lot P5 » de
@@ -354,13 +355,28 @@ Radar et TV (serveur de dev, session requise) : accessibilité 100, CLS ≤ 0,02
 | D-1 | ~~Lot P6 « Performance mobile »~~ **fait et publié le 4 octobre 2026** (§6, `e077db96`) | Staging mobile : landing 93, CGU 97, tarifs 75, connexion 73 | — |
 | D-2 | ~~Instance Clerk de production~~ **faite le 4 octobre 2026** (`africatv.sn` conservé ; CSP corrigée `32d1a66`, Railway `047d66d7`)  ; application renommée « Africa Live », compte admin de production créé, carte « Mon accès » admin corrigée (`2caf8ad`, `7e1bb51d`) | /sign-in 78, /pricing bonnes pratiques 96 | — |
 | D-3 | **Briefing L6** (UX-507) : nom, durée, fenêtre, mode de génération (cf. `plan-dashboard-backlog.md`, D1) | Débloque UX-507 branché sur les pays suivis | Briefing masqué |
-| D-4 | **Synchronisation des pays suivis au compte** (UX-503b) | Ticket de **migration** : sauvegarde Railway restaurable préalable, `npm run db:migrate:deploy` | Pays suivis sur l'appareil seulement |
-| D-5 | **Mur TV en production** : poser `NEXT_PUBLIC_TV_WALL=true` sur Railway | Active `/app/mur` (desktop ≥ 1 280 px) | Inactif en production |
-| D-6 | **Logos officiels Wave / Orange Money** (kit marchand NabooPay / opérateurs) | Remplace les pictogrammes locaux de `PaymentMethods` | Pictogrammes locaux |
+| D-4 | ~~Synchronisation des pays suivis au compte~~ **faite et publiée le 4 octobre 2026** (UX-503b, `9b40d94`, Railway `490d48be`) | Migration additive `0019_followed_countries` appliquée en ligne (20 migrations) après sauvegarde vérifiée `backups/railway/railway-2026-10-04T14-32-53-630Z` | — |
+| D-5 | ~~Mur TV en production~~ **fait le 4 octobre 2026** : `NEXT_PUBLIC_TV_WALL=true` posée avec `--skip-deploys`, compilée par le déploiement `490d48be` | `/app/mur` actif (desktop ≥ 1 280 px) ; rendu connecté à confirmer par le propriétaire | — |
+| D-6 | **Logos officiels Wave / Orange Money** : feu vert le 4 octobre 2026, **en attente des fichiers officiels** (kit marchand NabooPay / opérateurs, à déposer dans `public/payment/` avec leurs conditions d'usage ; l'agent ne télécharge pas de logos de marque) | Remplace les pictogrammes locaux de `PaymentMethods` | Pictogrammes locaux |
 | D-7 | **Source sismique** pour la tuile d'alerte du Radar | Réintroduire un séisme (USGS retiré en RW-009, E2E l'interdit) | Tuile « Alerte météo » seule |
 | D-8 | **Tests sur Android réel** (lecteur, PiP, Éco data, Radar), lecteur d'écran (TalkBack), VLC réel | Réception sur appareil | Mesures simulées seulement |
 | D-9 | **Lighthouse du Radar et de la TV en production** : session requise (Lighthouse des DevTools du navigateur du propriétaire, connecté à staging) | Notes officielles des deux écrans principaux | Mesurés sur le serveur de développement |
 | D-10 | **Promotion en production** (`africatv.sn`, `www`) | Lancement | Staging seulement (AGENTS.md : jamais implicite) |
+
+#### A bis. Suite immédiate (4 octobre 2026, fin de session) — dans cet ordre
+
+> **Étapes 1 à 3 faites le 4 octobre 2026** (sauvegarde vérifiée, D-5, D-4 publié : `9b40d94`, Railway `490d48be`). La redirection de
+> port `ssh -L` est refusée par Railway : utiliser le relais `railway ssh -- bash` décrit dans le runbook. Reste l'étape 4.
+
+1. **Confirmation du propriétaire** puis sauvegarde Railway restaurable : `npm run backup:restore-drill:railway` en mode tunnel SSH
+   (`railway ssh config --dry-run` / `--path` vers un fichier temporaire, jamais `~/.ssh/config` ; `ssh -F <fichier> -N -L 15432:localhost:5432 <alias>` ;
+   variables lancées via `railway run --service Postgres` sans jamais afficher les secrets ; `RAILWAY_BACKUP_USE_SSH=true`,
+   `RAILWAY_BACKUP_CONFIRMED_ROLE=staging`, `RAILWAY_BACKUP_CONFIRMED_PROJECT_ID` = `RAILWAY_PROJECT_ID`, `POSTGRES_BIN_DIR` = client PostgreSQL
+   local, `DATABASE_PUBLIC_URL` vers `localhost:15432/railway`). Dernière sauvegarde : `backups/railway/railway-2026-09-29T23-01-49-939Z`.
+2. D-5 : `railway variable set NEXT_PUBLIC_TV_WALL=true --skip-deploys` (service `Africa_Live_TV`, environnement staging).
+3. Commit de D-4 (code + migration + E2E), push, paquet et déploiement (`.local-logs/publication-p6/` : `prepare-upload`, `deploy`, preuve SHA,
+   `health`, `e2e-remote`) ; vérifier la table `user_followed_countries`, `/api/followed-countries` anonyme 307, `/app/mur`.
+4. D-6 dès réception des logos ; puis D-3 (briefing L6 → UX-507), D-7, D-8, D-9, D-10.
 
 #### B. Lot P6 — « Performance mobile » (fait en local le 4 octobre 2026)
 

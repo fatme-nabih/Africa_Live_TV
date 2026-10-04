@@ -73,6 +73,21 @@ lecture seule) : instance de production sur `africatv.sn` (domaine conservé, ma
 - À faire par le propriétaire : créer son compte sur l'instance de production et lui remettre le rôle admin (métadonnées Clerk) ; les
   comptes de l'instance de développement ne sont pas repris.
 
+## D-4 (pays suivis au compte) et D-5 (mur TV) — 4 octobre 2026, soir
+
+Sur confirmation explicite du propriétaire :
+
+| Étape | Résultat |
+|---|---|
+| Sauvegarde avant migration | `backups/railway/railway-2026-10-04T14-32-53-630Z` ; restauration isolée : 22 tables, 14 505 chaînes, 15 646 sources, 3 utilisateurs, 32 favoris, 19 migrations, identiques ; base temporaire supprimée |
+| D-5 | `NEXT_PUBLIC_TV_WALL=true`, `--skip-deploys` (aucun déploiement déclenché) |
+| Commit / push | [`9b40d94`](https://github.com/fatme-nabih/Africa_Live_TV/commit/9b40d94) sur `main` |
+| Déploiement | **`490d48be` SUCCESS** (release `release-2026-10-04T14-34-57.217Z`, 521 fichiers) |
+| Migration | `user_followed_countries` présente, 20 migrations appliquées |
+| Preuves | 415/415 fichiers applicatifs identiques, rôle `staging` ; santé 200 (deux domaines) ; 9/9 E2E distants ; `/api/followed-countries` et `/app/mur` anonymes → 307 ; lien « Mur TV » compilé |
+
+Limites : rendu connecté du mur TV et synchronisation entre deux appareils à confirmer par le propriétaire.
+
 ## Suite D-2 — compte administrateur et carte « Mon accès » — 4 octobre 2026
 
 - Le propriétaire a créé son compte sur l'instance de production (connexion Google), retrouvé le rôle administrateur (onglet Admin

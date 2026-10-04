@@ -1,8 +1,31 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 4 octobre 2026 (fin du lot P6), fuseau Africa/Dakar.
+Dernière mise à jour : 4 octobre 2026 (D-4 et D-5 publiés sur staging), fuseau Africa/Dakar.
 
-## Instance Clerk de production (D-2) — 4 octobre 2026 (lire en premier)
+## D-4 / D-5 publiés — 4 octobre 2026 (lire en premier)
+
+- **Publiés sur staging** après confirmation du propriétaire : sauvegarde vérifiée `backups/railway/railway-2026-10-04T14-32-53-630Z` (inventaire identique, base isolée
+  supprimée), `NEXT_PUBLIC_TV_WALL=true` (`--skip-deploys`), commit [`9b40d94`](https://github.com/fatme-nabih/Africa_Live_TV/commit/9b40d94),
+  **Railway `490d48be` SUCCESS** (actif) : migration 0019 appliquée (20 migrations), 415/415 fichiers identiques, santé 200, 9/9 E2E distants,
+  `/api/followed-countries` et `/app/mur` anonymes → 307. Détail : section « Publication D-4 et D-5 » de [production-progress.md](docs/production-progress.md).
+- **Piège nouveau** : Railway refuse la redirection de port `ssh -L` ; sauvegarde par relais TCP local (`railway ssh -- bash` + `/dev/tcp`),
+  scripts hors projet ; `railway ssh` échoue par intermittence (relancer). Voir [runbook](docs/railway-preproduction-runbook.md).
+- Reste : D-6 (logos officiels dans `public/payment/`), rendu connecté du mur TV à confirmer par le propriétaire, puis D-3 (L6 → UX-507), D-7 → D-10.
+- Les mentions « non committé / non publié » de la section suivante sont historiques.
+
+## D-4 / D-5 / D-6 — 4 octobre 2026, fin de session (historique)
+
+- **D-4 (pays suivis synchronisés au compte, UX-503b) fait et vérifié en local, NON committé, NON publié** : table `user_followed_countries`,
+  migration additive `drizzle/0019_followed_countries.sql`, API `/api/followed-countries`, `FollowedCountriesSync` dans `AppShell` (membre),
+  E2E `followed-countries` (API simulée + 3 tests) et `auth-entry`. tsc 0, lint 0, 364 tests (350/14/0), invariants 4/4, build, E2E MVP 149 + 1
+  ignoré / 0 échec, E2E Clerk 8/8. Détail : section D-4 de [production-progress.md](docs/production-progress.md).
+- **Rien n'a été fait sur Railway pour D-4/D-5** : sauvegarde restaurable, variable `NEXT_PUBLIC_TV_WALL=true` (`--skip-deploys`), commit, push,
+  déploiement avec migration → **sur confirmation explicite du propriétaire**. Procédure : [plan §5.2 A bis](docs/plan-experience-premium.md).
+- **D-6** : attente des logos officiels Wave / Orange Money (`public/payment/`).
+- Arbre de travail volontairement sale (D-4). Environnement : `npm run dev` mode Clerk sur 3001 (`.env.local` = instance Clerk de **dev**),
+  users = 2. Prompt de reprise : [docs/prompt-reprise-d4-d5-d6.md](docs/prompt-reprise-d4-d5-d6.md).
+
+## Instance Clerk de production (D-2) — 4 octobre 2026 (lire ensuite)
 
 - Staging utilise désormais l'**instance Clerk de production** (`pk_live`, `clerk.africatv.sn`, DNS OVH, Google OAuth propre, webhook) ;
   `.env.local` garde l'instance de dev (la production refuse localhost). CSP corrigée (`32d1a66`, Railway `047d66d7` SUCCESS, 9/9 E2E distants).

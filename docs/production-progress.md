@@ -5,9 +5,47 @@
 P0 → P5 et les correctifs Lighthouse sont publiés sur staging (`865c85d`, Railway `3bc79b16`). **Lot P6 « Performance mobile » fait,
 committé (`7e27319`) et publié sur staging (`e077db96`)** (section suivante) : landing 90 en Lighthouse mobile (build servi local), `/pricing` 78,
 `/sign-in` 79. Lighthouse mobile **sur staging** : landing **93**, `/cgu` 97, `/pricing` 75, `/sign-in` 73 ([dossier](publication-premium-p6-2026-10-04.md)).
-Restent : **UX-507** (briefing L6), et les décisions
-D-2 → D-10 du [plan §5.2](plan-experience-premium.md) — D-2 (instance Clerk de production) est désormais la principale marge de
+D-2 (instance Clerk de production) **faite**. **D-4 (pays suivis au compte) et D-5 (mur TV) publiés** sur staging (section suivante) ;
+D-6 (logos) en attente des fichiers officiels. Restent : **UX-507** (briefing L6), et les décisions
+D-3, D-7 → D-10 du [plan §5.2](plan-experience-premium.md) — D-2 (instance Clerk de production) est désormais la principale marge de
 `/sign-in` et des bonnes pratiques.
+
+## Publication D-4 et D-5 — 4 octobre 2026
+
+Confirmation explicite du propriétaire (sauvegarde, variable, commit, push, déploiement avec migration). Dans l'ordre :
+
+1. **Sauvegarde restaurable avant migration** : `backups/railway/railway-2026-10-04T14-32-53-630Z` (AES-256-GCM, clé DPAPI), restaurée dans une base isolée puis supprimée ;
+   inventaire identique : 22 tables, 14 505 chaînes, 15 646 sources, 3 utilisateurs, 32 favoris, 19 migrations ; 21,7 s.
+   La redirection de port SSH (`ssh -L`) est désormais **refusée par Railway** (« unknown channel type: unsupported ») : le transport
+   `railway-ssh-private-tunnel` passe par un relais TCP local hors projet (chaque connexion = `railway ssh -- bash` vers
+   `/dev/tcp/127.0.0.1/5432` dans le conteneur Postgres), aucune modification de Railway ni du code. Voir le runbook.
+2. **D-5** : `NEXT_PUBLIC_TV_WALL=true` posée avec `--skip-deploys` (service `Africa_Live_TV`), aucun déploiement déclenché.
+3. **D-4** : Railway **`490d48be` SUCCESS** (commit [`9b40d94`](https://github.com/fatme-nabih/Africa_Live_TV/commit/9b40d94)) ; pré-déploiement `db:migrate:deploy` : table `user_followed_countries` présente, **20 migrations**, 0 ligne.
+   415/415 fichiers applicatifs identiques par SSH (rôle `staging`), santé 200 sur les deux domaines (404 transitoire du domaine
+   Railway juste après la bascule, puis 200 ×4), météo anonyme 401, `/app/live` 307, **9/9 E2E distants**,
+   `/api/followed-countries` anonyme → 307 (connexion), `/app/mur` anonyme → 307 ; lien « Mur TV » présent dans le JavaScript client
+   (le drapeau est compilé à `true`).
+
+Limites : rendu du mur TV et synchronisation entre deux appareils non vus avec une session réelle sur staging (à confirmer par le
+propriétaire sur desktop ≥ 1 280 px). `railway ssh` échoue par intermittence (« An error occurred connecting to your service ») : la
+preuve SHA relance désormais chaque lot jusqu'à 5 fois.
+
+## D-4 « Pays suivis synchronisés au compte » (UX-503b) — fait en local le 4 octobre 2026, publié le même jour (ci-dessus)
+
+Feu vert du propriétaire pour D-4, D-5 et D-6. Les actions Railway ont été faites après confirmation explicite (section précédente).
+
+| Élément | Détail |
+|---|---|
+| Schéma | `user_followed_countries` (`user_id` → `users` en cascade, `country_code` `^[A-Z]{2}$`, `position` 0–4 unique par utilisateur, `updated_at`) ; migration **additive** `drizzle/0019_followed_countries.sql` (une table, aucune modification ni suppression) ; appliquée à `africa_live_dev` (`npm run db:migrate`), `db:check` sans dérive, `db:check:migrations` OK |
+| API | `src/app/api/followed-countries/route.ts` : GET (60/min) et PUT (30/min) via `authorizeCatalogRequest` (compte connecté non bloqué, sans abonnement) ; `followedCountriesSchema` (0–5 codes, sans doublon) + pays africains seulement ; remplacement transactionnel ; route ajoutée aux routes protégées du middleware (`src/proxy.ts`) |
+| Client | `src/components/shell/FollowedCountriesSync.tsx` monté par `AppShell` en mode membre (app, compte, admin) : à l'ouverture le compte fait foi, enrichi des pays de l'appareil (`mergeFollowedCountries`, testé) ; ensuite chaque changement est envoyé (800 ms) ; le stockage `al_followed_countries` reste la source d'affichage et le repli |
+| E2E | `followed-countries` : API simulée en mémoire (aucune écriture en base entre les tests) + 3 nouveaux tests (nouvel appareil, premier appareil, API réelle : validation 400, ordre, remise à zéro) ; `auth-entry` : la route fait partie des API protégées vérifiées en anonyme |
+
+Vérification : tsc 0, lint 0, `npm test` 364 (350/14/0), invariants 4/4, build réussi ; E2E MVP 19 specs **150 tests : 149 réussis, 1 ignoré, 0 échec** ;
+E2E Clerk 8/8 (+ `auth-entry` rejoué 3/3 après ajout de la route). Environnement : `npm run dev` mode Clerk sur 3001, ligne technique supprimée
+(users = 2), captures L5 restaurées.
+
+Reste : D-6, en attente des logos officiels (`public/payment/`).
 
 ## Publication Premium P6 — 4 octobre 2026
 
