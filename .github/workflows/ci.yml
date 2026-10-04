@@ -68,12 +68,23 @@ jobs:
     - name: Audit production dependencies (required)
       run: npm audit --omit=dev --audit-level=moderate
 
-    - name: Snyk Code SAST Scan
+    - name: Snyk Code SAST Scan (when available)
       run: |
         if [ -n "$SNYK_TOKEN" ]; then
-          npx snyk code test
+          scan_log="$RUNNER_TEMP/snyk-code.log"
+          if npx snyk code test > "$scan_log" 2>&1; then
+            cat "$scan_log"
+          else
+            scan_status=$?
+            if grep -q 'SNYK-CODE-0005' "$scan_log"; then
+              echo "::warning::Snyk Code not run: the organization has not enabled Snyk Code (SNYK-CODE-0005)."
+            else
+              cat "$scan_log"
+              exit "$scan_status"
+            fi
+          fi
         else
-          echo "Snyk Code not run: no CI token configured."
+          echo "::warning::Snyk Code not run: no CI token configured."
         fi
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

@@ -14,3 +14,5 @@ Le propriétaire a expressément demandé la mise à jour GitHub et Railway apr�
 ## Réception distante
 
 Publication en cours. Commit, déploiement, état de CI, preuves SHA-256, santé et E2E distants seront consignés après vérification. Aucune réparation d’abonnement réel, activation de paiement ou modification Clerk/DNS/OVHcloud/plan d’hébergement n’est incluse.
+
+Premier passage CI du candidat `5e97ce8` : installation, lint, typage et audit production réussis, arrêt avant les tests sur `SNYK-CODE-0005` (Snyk Code non activé pour l’organisation). Le workflow distingue désormais cette indisponibilité explicite d’une vulnérabilité ou d’une erreur de scan : avertissement pour ce seul code ou jeton absent, échec conservé pour les autres issues. Aucun changement d’abonnement ou d’état Snyk. Audit production et suites de validation restent obligatoires ; aucun scan SAST reçu n’est revendiqué.
