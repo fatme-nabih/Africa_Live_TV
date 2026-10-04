@@ -1,6 +1,6 @@
 # Checklist de non-régression — lots local et Railway
 
-## COR — correctifs locaux du 4 octobre 2026, non publiés
+## COR — correctifs publiés sur staging le 4 octobre 2026
 
 [Résultats par ticket et limites](correctifs-audit-validation-2026-10-04.md), [backlog actuel](backlog-correctifs-audit-2026-10-04.md).
 
@@ -12,7 +12,9 @@
 - [x] E2E sensibles avec fixtures locales, refus anonymes sur build, compte synthétique nettoyé ; détails des cas ignorés dans le dossier.
 - [ ] COR-506 : comparaison avant/après authentifiée sur build et budget de performance ; mesures partielles disponibles.
 - [ ] Réception connectée membre/admin, conflits entre appareils et matériels réels.
-- [ ] COR-900 complet et publication COR-901 explicitement demandée ; staging conservé.
+- [ ] COR-900 complet : réserves de profilage, sessions connectées et appareils maintenues.
+- [x] Publication expressément demandée : GitHub `main` (`6dad01c`), Railway `4319e870` SUCCESS actif, 438/438 fichiers SHA-256, 10/10 E2E distants, santé 200, 20 migrations inchangées et modes locaux désactivés. [Preuves](publication-correctifs-2026-10-04.md).
+- [x] COR-901 reçu : CI [37226297937](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/37226297937) réussie, 364 unités, 23 intégrations, 9 E2E de build (10 ignorés), 59 E2E sensibles (1 ignoré), nettoyage des fixtures. Snyk Code indisponible, aucun scan SAST reçu ; audit production obligatoire réussi.
 
 ## D-4 Pays suivis synchronisés au compte — reçu le 4 octobre 2026 (commit `9b40d94`, publié : Railway staging `490d48be`, 415/415 fichiers, 9/9 E2E distants)
 

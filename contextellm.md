@@ -1,13 +1,13 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 4 octobre 2026 (publication COR GitHub/Railway staging autorisée, en cours), fuseau Africa/Dakar. Lire d’abord [l’état courant concis](docs/etat-courant.md), la [publication COR](docs/publication-correctifs-2026-10-04.md), puis le [dossier local](docs/correctifs-audit-validation-2026-10-04.md).
+Dernière mise à jour : 4 octobre 2026 (COR publié sur GitHub et Railway staging ; CI reçue), fuseau Africa/Dakar. Lire d’abord [l’état courant concis](docs/etat-courant.md), la [publication COR](docs/publication-correctifs-2026-10-04.md), puis le [dossier local](docs/correctifs-audit-validation-2026-10-04.md).
 
 ## Audit et plan des correctifs — 4 octobre 2026
 
 - Audit approfondi local : [rapport F1–F12](docs/audit-code-2026-10-04.md). Deux priorités : droits NabooPay recrédités par recalcul et branche UNTESTED permissive hors local.
 - À la demande du propriétaire, [plan détaillé en cinq lots](docs/plan-correctifs-audit-2026-10-04.md) et [backlog de 29 tickets COR](docs/backlog-correctifs-audit-2026-10-04.md) préparés.
-- **Implémentation locale demandée et réalisée.** 26 tickets reçus localement ; COR-506 partiel, COR-900 avec réserves, COR-901 conditionnel. Remboursement validé : retrait de l’achat puis reconstruction aux dates d’origine. Next 16.3.8, 364 unités et 23 intégrations PostgreSQL, build/audit production reçus ; détail des E2E et mesures dans le dossier COR.
-- **Publication GitHub et Railway staging expressément demandée après le bilan local**, en cours ; les réserves COR-506/COR-900 restent ouvertes. Aucun changement de droits historiques, activation de paiement ou configuration distante. Pas de nouvelle migration ; `.env*` conservés. Staging revérifié : rôle staging, MVP désactivé, 20/20 migrations identiques, déploiement D-4/D-5 encore actif avant livraison COR. Poursuivre les réceptions ouvertes sans recommencer les correctifs reçus.
+- **Implémentation locale demandée et réalisée.** 26 tickets reçus localement ; COR-506 partiel, COR-900 avec réserves, COR-901 publication reçue. Remboursement validé : retrait de l’achat puis reconstruction aux dates d’origine. Next 16.3.8, 364 unités et 23 intégrations PostgreSQL, build/audit production reçus ; détail des E2E et mesures dans le dossier COR.
+- **Publication GitHub et Railway staging expressément demandée après le bilan local et effectuée** : code `6dad01c`, Railway `4319e870-a9a3-417d-82b5-c85440183ac4` SUCCESS actif ; 438/438 fichiers identiques, santé 200 sur les deux domaines, 10/10 E2E distants. CI [37226297937](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/37226297937) SUCCESS : 364 unités, 23 intégrations, 9 E2E de build (10 ignorés), 59 E2E sensibles (1 ignoré), fixtures nettoyées. COR-901 reçu ; réserves COR-506/COR-900 et Snyk Code indisponible maintenues. Aucun changement de droits historiques, activation de paiement ou configuration distante. Pas de nouvelle migration ; `.env*` conservés. Rôle staging et MVP désactivé confirmés, 20/20 migrations identiques. Local Clerk/dev relancé sur 3001, compte et catalogue synthétiques nettoyés. Poursuivre les réceptions ouvertes sans recommencer les correctifs reçus.
 
 ## D-4 / D-5 publiés — 4 octobre 2026 (lire en premier)
 

@@ -1,10 +1,10 @@
 # Backlog des correctifs de l'audit — Africa Live
 
-Date : 4 octobre 2026. **Correctifs reçus localement ; publication GitHub et Railway staging autorisée, en cours.** [Publication](publication-correctifs-2026-10-04.md), [dossier de réception locale](correctifs-audit-validation-2026-10-04.md), [état courant](etat-courant.md).
+Date : 4 octobre 2026. **Correctifs publiés sur GitHub et Railway staging sur demande ; CI réussie.** [Publication](publication-correctifs-2026-10-04.md), [dossier de réception locale](correctifs-audit-validation-2026-10-04.md), [état courant](etat-courant.md).
 
-[Plan détaillé et critères d'acceptation](<C:/Users/GAMER PC/Africa_Live_TV/docs/plan-correctifs-audit-2026-10-04.md>) · [Audit et preuves](<C:/Users/GAMER PC/Africa_Live_TV/docs/audit-code-2026-10-04.md>) · [Backlog de production](<C:/Users/GAMER PC/Africa_Live_TV/docs/production-backlog.md>).
+[Plan détaillé et critères d'acceptation](plan-correctifs-audit-2026-10-04.md) · [Audit et preuves](audit-code-2026-10-04.md) · [Backlog de production](production-backlog.md).
 
-29 tickets : 26 répartis dans les cinq lots, 1 préparation, 1 réception globale, 1 publication conditionnelle. Statut actuel : **26 reçus localement, COR-506 partiel, COR-900 avec réserves, COR-901 autorisé en cours**. Chaque correctif inclut ses tests ; COR-501/502 consolident la couverture et la CI. Les statuts initiaux du plan étaient 28 à faire et 1 conditionnel.
+29 tickets : 26 répartis dans les cinq lots, 1 préparation, 1 réception globale, 1 publication conditionnelle. Statut actuel : **26 reçus localement, COR-506 partiel, COR-900 avec réserves, COR-901 publication staging reçue**. Chaque correctif inclut ses tests ; COR-501/502 consolident la couverture et la CI. Les statuts initiaux du plan étaient 28 à faire et 1 conditionnel.
 
 P1 : préalable à la fiabilité d'un parcours critique. P2 : fonctionnement/résilience. P3 : amélioration secondaire. Charge indicative : S localisée, M plusieurs chemins, L règle métier ou orchestration complexe ; aucun engagement de date.
 
@@ -40,7 +40,7 @@ P1 : préalable à la fiabilité d'un parcours critique. P2 : fonctionnement/ré
 | COR-506 | 5 / P3 | Performance | Baseline/comparaison SQL, API, mémoire et mur sous charge locale | COR-503, COR-504, COR-505 | M | Partiel |
 | COR-507 | 5 / P3 | Documentation | État courant concis, historique conservé, preuves par ticket | Lots 1–4 reçus | S | Reçu localement |
 | COR-900 | Réception / P1 | Ensemble | Dossier local final, contrôles globaux et limites restantes | Lots 1–5 reçus | M | Réception avec réserves |
-| COR-901 | Publication / P1 | Ensemble ou lot candidat | Préparation et réception staging, sauvegarde/compatibilité si migration | Lot reçu + autorisation explicite | M | Autorisé, en cours |
+| COR-901 | Publication / P1 | Ensemble ou lot candidat | Préparation et réception staging, sauvegarde/compatibilité si migration | Lot reçu + autorisation explicite | M | Reçu sur staging |
 
 Les dépendances du tableau sont techniques. L'ordre opérationnel reste **préparation → lot 1 → lot 2 → lot 3 → lot 4 → lot 5 → réception globale**. Les tâches indépendantes ne nécessitent pas toutes le code du lot précédent ; l'exception possible COR-206 est décrite dans le plan. Une publication isolée de correctif suit sa propre réception et une autorisation explicite.
 
@@ -86,4 +86,4 @@ Réception locale du 4 octobre 2026, base HEAD `2ab18b6` : [résultats par ticke
 - [x] Lot 4 reçu localement : cache, taux et catalogue.
 - [ ] Lot 5 : code, tests, CI et extractions reçus localement ; COR-506 reste partiel (avant/après authentifié sur build, budget).
 - [ ] COR-900 : dossier local établi, réception complète avec réserves de profilage, sessions et appareils.
-- [ ] COR-901 autorisé : publication en cours, réception distante à consigner.
+- [x] COR-901 : publication demandée et reçue (`6dad01c`, `4319e870`, 438/438 fichiers, 10/10 E2E distants) ; CI réussie, réserves COR-506/COR-900 maintenues.

@@ -45,13 +45,13 @@ Les verrous sont acquis compte puis commande. Attribution, dates et marqueur d�
 | COR-401/402 | Recherche : TTL réel, requête partagée, réponse vide valide, échec non mis en cache. Tests contrôlés + E2E après six minutes. USD/XOF : multiplication EUR × 655,957 et taux direct prioritaire, exemple 0,9 → 590,3613 testé. |
 | COR-403 | Catalogue et résolveur autorisent OFFLINE actif uniquement pour une requête locale de confiance ; filtres frontend retirés. Intégration + API réelle : aucune mutation santé/éligibilité/date de succès. Exclusions publiques conservées. |
 | COR-404 | Liste SQL bornée et total exact avec même prédicat ; cache par pays/mode/limite, `canPlay` par requête. 121 chaînes, limites 10/40/80, accès distinct, unités et PostgreSQL. |
-| COR-501/502 | Briefing avec fournisseurs/horloge injectés ; `npm test` refuse le réseau externe et PostgreSQL réels. CI exige audit production, intégrations, build, accès/paiement stricts et E2E sensibles sur fixtures locales ; nettoyage du compte synthétique détenu. Workflow distant non exécuté. |
+| COR-501/502 | Briefing avec fournisseurs/horloge injectés ; `npm test` refuse le réseau externe et PostgreSQL réels. CI exige audit production, intégrations, build, accès/paiement stricts et E2E sensibles sur fixtures locales ; nettoyage du compte synthétique détenu. Réception distante ultérieure réussie : run 37226297937, détail dans le dossier de publication. |
 | COR-503/504 | Résolution et annulations dans `usePlaybackResolution`, HLS/native et nettoyage dans `useMediaLifecycle` ; catalogue et favoris dans `useCatalog`/`useFavorites`. Machine de lecture unique conservée ; suites lecture, reprise, remplacement, lecteur réduit, mur et préférences. |
 | COR-505 | Météo : LRU 256, expiration maximale 60 min, 256 requêtes en vol au plus ; cardinalité 10 000 testée. Résolveur relit toujours les sources actives même après un listing en cache (intégration retrait). Contrats d’invalidation ci-dessous. |
 | COR-506 | Protocole et premiers profils implémentés ; **réception partielle** : SQL/health sur build local et lectures synthétiques en dev. Comparaison complète avant/après HTTP/mur sur build connecté et budget de performance non établis. |
 | COR-507 | État courant court, handoff, backlog et preuves mis à jour ; historique de publication conservé et daté. |
 | COR-900 | Dossier local consolidé avec réserves explicites sur COR-506, sessions connectées et appareils. Réception complète encore ouverte. |
-| COR-901 | Publication autorisée après le bilan local ; suivi et preuves distantes dans le dossier de publication. Les réserves COR-506/COR-900 restent ouvertes. |
+| COR-901 | Publication autorisée après le bilan local et reçue : `6dad01c`, Railway `4319e870` SUCCESS, 438/438 fichiers, 10/10 E2E distants, CI réussie. Dossier de publication séparé ; réserves COR-506/COR-900 maintenues. |
 
 ## Vérifications finales
 

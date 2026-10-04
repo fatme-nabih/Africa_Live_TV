@@ -1,13 +1,17 @@
 # Progression — préparation production
 
-## Correctifs de l’audit — implémentation locale du 4 octobre 2026
+## Correctifs de l’audit — publiés sur staging le 4 octobre 2026
 
 Sur demande du propriétaire : droits datés et remboursements selon décision explicite, éligibilité stricte, transport/reprise NabooPay,
 workers, préférences, mur, caches et Radar corrigés ; Next 16.3.8, tests/CI renforcés et responsabilités lecteur/TV extraites.
-26 tickets reçus localement ; COR-506 profilage partiel, COR-900 réception avec réserves, COR-901 non exécuté.
+26 tickets reçus localement ; COR-506 profilage partiel, COR-900 réception avec réserves ; COR-901 publication staging reçue.
 364 unités sans réseau et 23 intégrations PostgreSQL, typage/lint/migrations/build et audit production réussis ;
 [preuves E2E, mesures, règle des droits et limites](correctifs-audit-validation-2026-10-04.md), [état courant](etat-courant.md).
-Diff non committé/non publié, aucune migration supplémentaire, `.env*` et états distants conservés. Les publications suivantes sont historiques.
+Publication expressément demandée après le bilan local : GitHub `main`, code `6dad01c` ; Railway `4319e870` SUCCESS actif,
+438/438 fichiers identiques, santé 200 sur les deux domaines, 10/10 E2E distants et 20 migrations inchangées.
+[CI réussie](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/37226297937) : 364 unités, 23 intégrations, build/audit production,
+9 E2E de build (10 ignorés), 59 E2E sensibles (1 ignoré) et nettoyage des fixtures. Snyk Code indisponible, aucun scan SAST reçu.
+[Dossier de publication et compléments CI](publication-correctifs-2026-10-04.md). Aucune migration supplémentaire, `.env*` et configuration distante conservés. Les publications suivantes sont historiques.
 
 ## Reste à faire — Expérience Premium (au 4 octobre 2026, après le lot P6)
 

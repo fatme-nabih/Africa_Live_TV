@@ -1,8 +1,8 @@
 # Plan des correctifs de l'audit — Africa Live
 
-Date : 4 octobre 2026. Statut : correctifs reçus localement ; COR-506 partiel et COR-900 avec réserves. Publication GitHub et Railway staging expressément autorisée après le bilan, en cours. [Réception locale](correctifs-audit-validation-2026-10-04.md), [publication](publication-correctifs-2026-10-04.md).
+Date : 4 octobre 2026. Statut : correctifs reçus localement ; COR-506 partiel et COR-900 avec réserves. COR-901 reçu : publication GitHub et Railway staging expressément demandée après le bilan et effectuée (`6dad01c`, `4319e870`), CI réussie. [Réception locale](correctifs-audit-validation-2026-10-04.md), [publication](publication-correctifs-2026-10-04.md).
 
-Sources : [audit du code](<C:/Users/GAMER PC/Africa_Live_TV/docs/audit-code-2026-10-04.md>), [backlog de ce plan](<C:/Users/GAMER PC/Africa_Live_TV/docs/backlog-correctifs-audit-2026-10-04.md>), [checklist existante](<C:/Users/GAMER PC/Africa_Live_TV/docs/non-regression-checklist.md>), [runbook staging](<C:/Users/GAMER PC/Africa_Live_TV/docs/railway-preproduction-runbook.md>).
+Sources : [audit du code](audit-code-2026-10-04.md), [backlog de ce plan](backlog-correctifs-audit-2026-10-04.md), [checklist existante](non-regression-checklist.md), [runbook staging](railway-preproduction-runbook.md).
 
 ## 1. Résultat attendu et périmètre
 
