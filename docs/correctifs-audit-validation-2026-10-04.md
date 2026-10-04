@@ -69,7 +69,7 @@ Les verrous sont acquis compte puis commande. Attribution, dates et marqueur d�
 
 Logs détaillés ignorés par Git dans `.local-logs/` : `corrections-unit-final.log`, `corrections-integration-final.log`, `corrections-types-final.log`, `corrections-lint-final.log`, `corrections-migrations-final.log`, `corrections-build-final.log`, `corrections-audit-final.log`, `corrections-e2e-ui-final.log`, `corrections-e2e-wall-final.log`, `corrections-e2e-catalogue-final.log`, `corrections-e2e-build-final.log`, `corrections-e2e-profile-final.log` et les deux profils JSON. Les premiers essais échoués restent historiques ; seuls leurs scénarios corrigés et rejoués sont reçus.
 
-L’audit avec les dépendances de développement conservait 9 alertes (4 modérées, 5 élevées) lors de la mise à jour. Aucun `audit fix --force`. L’audit production est obligatoire en CI ; Snyk devient bloquant lorsqu’un token CI est fourni et reste non exécuté sans celui-ci.
+L’audit avec les dépendances de développement conservait 9 alertes (4 modérées, 5 élevées) lors de la mise à jour. Aucun `audit fix --force`. L’audit production est obligatoire en CI. Snyk reste bloquant pour une vulnérabilité ou une erreur de scan ; l’absence de token et `SNYK-CODE-0005` (fonction non activée pour l’organisation) produisent un avertissement explicite de scan non exécuté. Cette indisponibilité a été constatée pendant la publication ; aucun abonnement ou état Snyk n’a été modifié.
 
 ## Mesures locales et limites de COR-506
 

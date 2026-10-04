@@ -114,7 +114,7 @@ jobs:
     # no real payment, no relaxation of the built staging/production app above.
     - name: Prepare isolated UI account
       id: ui_account
-      run: npx tsx src/scripts/ui-fixture-user.ts
+      run: npx tsx src/scripts/ui-fixture-user.ts --catalog
 
     - name: Sensitive UI regressions (local fixtures)
       run: npx playwright test --workers=1 e2e/catalogue.spec.ts e2e/tv-workspace.spec.ts e2e/tv-streaming.spec.ts e2e/player-dock.spec.ts e2e/followed-countries.spec.ts e2e/tv-wall.spec.ts e2e/universal-search.spec.ts e2e/radar-reliability.spec.ts e2e/local-playback.spec.ts e2e/local-playback-api.spec.ts

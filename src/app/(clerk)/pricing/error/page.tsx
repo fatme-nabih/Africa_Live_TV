@@ -8,9 +8,11 @@ import OffAirScreen from '@/components/brand/OffAirScreen';
 import { ButtonLink } from '@/components/ui';
 
 export default async function PricingErrorPage(props: { searchParams: Promise<{ order_id?: string }> }) {
-  const { userId } = await auth();
   const searchParams = await props.searchParams;
   const orderId = searchParams.order_id;
+  // The generic public message needs no account lookup. Any order-specific
+  // information still requires Clerk and the owning internal account below.
+  const userId = orderId ? (await auth()).userId : null;
   
   let errorMessage = "Une erreur est survenue lors de votre paiement. Veuillez réessayer.";
 

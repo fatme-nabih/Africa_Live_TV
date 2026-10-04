@@ -38,9 +38,11 @@ function isLoopbackTarget(req: NextRequest) {
 export default async function proxy(req: NextRequest, event: NextFetchEvent) {
   if (isAnonymousE2EMode()) {
     if (!isLoopbackTarget(req)) return NextResponse.json({ error: 'Accès local uniquement.' }, { status: 403 });
-    if (isProtectedRoute(req)) {
+    // CI has no real Clerk session. Reject Radar APIs here as well, so their
+    // handlers cannot call auth() without Clerk middleware context.
+    if (isProtectedRoute(req) || /^\/api\/live(?:\/|$)/.test(req.nextUrl.pathname)) {
       if (req.nextUrl.pathname.startsWith('/api/')) {
-        return NextResponse.json({ error: 'Authentification requise.' }, { status: 401 });
+        return NextResponse.json({ error: 'Authentification requise.', code: 'AUTHENTICATION_REQUIRED' }, { status: 401 });
       }
       return NextResponse.redirect(new URL('/sign-in', req.url));
     }
