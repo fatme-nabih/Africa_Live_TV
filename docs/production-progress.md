@@ -1,5 +1,88 @@
 # Progression — préparation production
 
+## Reste à faire — Expérience Premium (au 4 octobre 2026, après le lot P6)
+
+P0 → P5 et les correctifs Lighthouse sont publiés sur staging (`865c85d`, Railway `3bc79b16`). **Lot P6 « Performance mobile » fait et
+vérifié en local, committé (`7e27319`)** (section suivante) : landing 90 en Lighthouse mobile (build servi local), `/pricing` 78,
+`/sign-in` 79. Restent : commit et publication de P6 puis mesure sur staging (sur demande), **UX-507** (briefing L6), et les décisions
+D-2 → D-10 du [plan §5.2](plan-experience-premium.md) — D-2 (instance Clerk de production) est désormais la principale marge de
+`/sign-in` et des bonnes pratiques.
+
+## Expérience Premium — Lot P6 « Performance mobile » — 4 octobre 2026
+
+Périmètre : [plan-experience-premium.md](plan-experience-premium.md) §6, UX-601 à UX-606, feu vert du propriétaire le 4 octobre 2026.
+Commit applicatif [`7e27319`](https://github.com/fatme-nabih/Africa_Live_TV/commit/7e27319) (39 fichiers), **non publié** au moment de cette section. Aucune migration, aucun changement `.env*`, Railway, Clerk (configuration) ou DNS ; aucune dépendance
+ajoutée (`sharp`, déjà présent via Next, a servi une fois à produire l'image du fond). Machine de lecture, accès, éligibilité, quotas,
+API et parcours NabooPay inchangés (`/pricing` identique au commit `865c85d`). Routes protégées : protection inchangée (même matcher
+`isProtectedRoute`, même `auth.protect()`).
+
+Méthode : Lighthouse mobile ×3 (médiane) ; référence sur **staging**, puis chaque ticket sur un **build servi en local**
+(`DEPLOYMENT_ENV=local`, port 3001, drapeaux locaux à `false`), aucun déploiement n'ayant été demandé. Détail et cascade réseau :
+[audit, section « Lot P6 »](audit-a11y-performance-2026-10-03.md).
+
+| Ticket | État | Preuve |
+|---|---|---|
+| UX-601 Landing statique | Fait | La mesure a corrigé l'hypothèse : le « premier octet de 2,1 s » était une **poignée de main Clerk** (3 redirections vers `clerk.accounts.dev`, instance de développement) sur toute page passée par le middleware. `src/lib/public-static-pages.ts` (testé) : `/`, `/pricing`, `/cgu`, `/privacy`, `/contact` (chemins exacts, aucune API ni route protégée) ne passent plus par `clerkMiddleware` ; les gardes du mode MVP et du mode E2E anonyme restent appliquées avant. `src/app/page.tsx` : plus d'`auth()`, `revalidate = 600` (route ○), zones membre via `SessionSwitch` (version visiteur dans le HTML). Premier octet simulé de la landing 3 025 → 16 ms, FCP 2,30 → 1,85 s. |
+| UX-604 Polices | Fait | `subsets: ["latin"]` pour Manrope et Unbounded : 2 préchargements au lieu de 4 (−130 Ko, dont 115 Ko d'Unbounded latin-ext) ; les `@font-face` latin-ext restent déclarés (chargés seulement si un caractère l'exige). `display: swap` et repli ajusté inchangés, CLS 0. Landing 78 → 81, `/pricing` 71 → 76. |
+| UX-602 Fond de marque | Fait | `public/brand/backdrop-480.webp` (19 Ko au lieu de 34 Ko, 480 px, WebP q55 depuis `africa-live-logo.png`), servi sans l'optimiseur, `loading="eager"` + `fetchPriority="high"` (il était en `lazy`, donc découvert tard). Halo, masque, opacités, Éco data et transparence réduite inchangés ; rendu identique à l'œil (captures P5 / P6 à 1366). LCP landing 4,65 → 4,08 s, perf. 81 → 86. |
+| UX-603 Clerk où il sert | Fait | Groupe de routes `src/app/(clerk)/` (aucune URL changée) avec `layout.tsx` = `ClerkProvider` (mêmes props) pour `app`, `account`, `admin`, `pricing`, `sign-in`, `sign-up`, `player` ; le layout racine ne charge plus Clerk. Landing, CGU, confidentialité, contact : **0 script Clerk**. `SessionSwitch` lit l'indice `__client_uat` (`src/lib/session-hint.ts`, testé ; cookie vérifié lisible et à `0` hors session) : un membre voit « Ouvrir le dashboard », « Accéder au dashboard », « Mon compte » ; le `UserButton` et le lien Administration ne sont plus sur la landing (ils restent dans l'application). JS landing 194 → **143 Ko** gzip, scripts transférés 577 → 182 Ko, perf. **90**, bonnes pratiques **100**. `app-entry.test.ts` lit `(clerk)/layout.tsx` (mêmes assertions de redirection + type du fournisseur) ; `radar-access.test.ts` suit les nouveaux chemins. |
+| UX-605 Tuiles du Radar | Fait | `RadarTiles` : plus d'`aria-label` ; le nom est le texte visible (libellé, valeur, sous-texte) complété par du texte `sr-only` (ponctuation, « en cours de chargement », périmètre, « Observation automatisée, pas une alerte officielle », « Voir … »). E2E `radar-live` : 5 assertions adaptées de façon équivalente (à 390 px le nom commence par le libellé court affiché ; même valeur, même réserve, même destination). |
+| UX-606 Retouches | Fait | `countLabel` (`src/lib/format.ts`, testé) : « 1 dépêche / 8 dépêches », « 1 chaîne référencée » dans l'infobulle de la carte et l'état vide du fil. H1 de `/admin` : 24 px sous 640 px, `text-balance`. |
+
+### Défauts trouvés et corrigés
+
+- Tuiles du Radar : un `.sr-only` (position absolue) ajoute une espace dans le nom accessible (« 3 . Bienvenue ») → ponctuation par
+  contenu généré (`.sr-after` dans `globals.css`, invisible, hors du contrôle « texte < 12 px ») ; Lighthouse : `label-content-name-mismatch`
+  **réussi** sur le Radar (avertissement depuis P3), accessibilité 100.
+- TV à 360 px en développement : le lien « Mur TV » s'affichait (`hidden` perdait contre l'`inline-flex` du bouton) → enveloppe
+  `hidden xl:block`. Sans effet en production (drapeau `NEXT_PUBLIC_TV_WALL` non posé).
+- Image du hero : ancien libellé « 8 dépêche(s) » et bouton « Mur TV » → image regénérée.
+
+### Essai retiré faute de gain
+
+- zod (63 Ko gzip) chargé au clic sur « Activer » dans `/pricing` : poids JS inchangé (302,6 Ko), zod arrive aussi par la coquille commune
+  (`AppHeader` → `shell-nav` → `radar-workspace` → `radar-data` → contrats). Retiré, `/pricing` identique au commit `865c85d`.
+
+### Lighthouse mobile (médiane de 3)
+
+| Page | Staging `865c85d` | Local `865c85d` | **Local P6 final** | LCP final | TBT final | Bonnes pratiques |
+|---|---|---|---|---|---|---|
+| Landing | 69 | 76 | **90** (91/90/90) | 3,62 s | 23 ms | **100** |
+| `/pricing` | 64 | 72 | **78** (77/78/78) | 4,70 s | 242 ms | 79 |
+| `/sign-in` | 64 | 73 | **79** (79/76/79) | 4,63 s | 164 ms | 79 |
+| `/cgu` | — | — | **93** | 3,24 s | 26 ms | 100 |
+
+Accessibilité **100** partout, CLS 0 (connexion 0,017, inchangé). Poids JS de premier chargement (gzip) : landing 194 → 143 Ko ;
+TV 321,9 Ko, Radar 330,1 Ko, `/pricing` 302,6 Ko (stables).
+
+### Vérification (code final)
+
+| Contrôle | Résultat |
+|---|---|
+| `npx tsc --noEmit` | 0 erreur |
+| `npm run lint` | 0 erreur, 0 avertissement |
+| `npm test` | 360 tests : 346 réussis, 14 ignorés, 0 échec (référence 355 : +5 — `public-static-pages` 2, `session-hint` 2, `count-label` 1) |
+| `npm run test:invariants` | 4/4 |
+| `npm run build` | Réussi, landing ○ (revalidation 10 min), serveur arrêté |
+| E2E mode MVP (19 specs, `--workers=1`) | 147 tests : 141 réussis, 1 ignoré (« build servi »), 5 échecs (tuiles UX-605 : `.sr-only` ajoutait une espace avant la ponctuation, « 3 . ») corrigés par `.sr-after` ; `radar-live` rejoué **25/25** ; après la correction du lien « Mur TV » : `tv-wall`, `tv-workspace`, `a11y` rejoués **11/11** |
+| E2E mode Clerk (dev, anonyme) | 8/8 (auth-entry, payment) |
+| axe-core WCAG 2.1 A/AA (360 px) | 0 violation : landing, `/pricing`, `/sign-in`, `/cgu` |
+
+Contrôle visuel (Edge) : 0 débordement, 0 texte < 12 px, 0 erreur de page — `premium-p6-<page>-<largeur>.png` pour landing,
+pricing, sign-in, cgu (360/768/1366, mode Clerk) ; image du hero regénérée (`public/landing/hero-radar-tv.webp`, 42 Ko, données fictives, script `.local-logs/p4/hero-shot.ts`) : elle montrait « 8 dépêche(s) » et, à 360 px, un bouton « Mur TV ».
+
+### Limites et réserves
+
+- **Objectif ≥ 90 atteint pour la landing (et les CGU) seulement**, et **en local** : staging non remesuré (publication non demandée).
+  `/pricing` (78) et `/sign-in` (79) ont besoin de Clerk (342 Ko de scripts) ; `/sign-in` garde la poignée de main de l'instance de
+  développement (≈ 1 s), que l'instance de production (D-2) supprime. Pistes non faites : sortir zod de la coquille commune ; différer
+  Clerk sur `/pricing` (ticket paiement dédié).
+- Landing d'un membre connecté non vérifiée avec une vraie session (l'agent ne se connecte pas) : à contrôler par le propriétaire
+  (attendu : « Ouvrir le dashboard » en haut, « Accéder au dashboard » dans le hero, « Mon compte » en pied de page).
+- Si la base est injoignable pendant le build Railway, la landing est servie sans chiffres jusqu'à sa première régénération (≤ 10 min
+  après une visite), comme le prévoit déjà `getPublicStats()` (aucun chiffre plutôt qu'un chiffre faux).
+- Capture de `/admin` à 360 px non faite (session administrateur requise).
+
 ## Publication Premium P5 et audit Lighthouse — 3 octobre 2026
 
 Publication demandée par le propriétaire : P5 committé (`090ce01`), poussé sur `main`, Railway staging

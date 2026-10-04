@@ -1,6 +1,37 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 3 octobre 2026, fuseau Africa/Dakar.
+Dernière mise à jour : 4 octobre 2026 (fin du lot P6), fuseau Africa/Dakar.
+
+## Lot P6 « Performance mobile » — 4 octobre 2026 (lire en premier)
+
+- **Fait et vérifié en local, commit applicatif `7e27319`** (feu vert du propriétaire le 4 octobre). Staging inchangé (`3bc79b16`).
+  Détail : section « Lot P6 » de [production-progress.md](docs/production-progress.md) ; mesures : [audit, section P6](docs/audit-a11y-performance-2026-10-03.md).
+- Découverte : le « premier octet de 2,1 s » était la **poignée de main Clerk** (instance de développement, 3 redirections), pas le rendu.
+  Pages publiques `/`, `/pricing`, `/cgu`, `/privacy`, `/contact` hors middleware Clerk (`src/lib/public-static-pages.ts`) ; landing
+  statique (`revalidate = 600`), session lue par l'indice `__client_uat` (`SessionSwitch`) ; **routes Clerk déplacées dans
+  `src/app/(clerk)/`** (URL inchangées, `ClerkProvider` dans `(clerk)/layout.tsx`) ; polices : préchargement `latin` seul ; fond de marque
+  `public/brand/backdrop-480.webp` ; tuiles du Radar nommées par leur texte visible (`.sr-after`) ; `countLabel` ; H1 /admin.
+- Lighthouse mobile, build servi local, médiane de 3 : landing **76 → 90** (bonnes pratiques 100), `/cgu` 93, `/pricing` 72 → 78,
+  `/sign-in` 73 → 79 ; accessibilité 100. `/pricing` et `/sign-in` restent sous 90 (Clerk 342 Ko ; poignée de main dev → D-2).
+- Vérification : tsc 0, lint 0, 360 tests (346/14/0), invariants 4/4, build (landing ○), E2E MVP 141 + 1 ignoré + 5 échecs corrigés
+  (radar-live 25/25, tv-wall/tv-workspace/a11y 11/11), E2E Clerk 8/8, axe 0 violation, captures `premium-p6-*`.
+- Pièges nouveaux : après un déplacement de route, supprimer `.next/dev/types` et `.next/types` ; `.sr-only` ajoute une espace dans un
+  nom accessible ; une page qui appelle `auth()` ne doit pas entrer dans `CLERK_FREE_PUBLIC_PAGES` ; une page Clerk va dans `(clerk)`.
+- Environnement laissé : `npm run dev` en mode **Clerk** sur 3001 (onglet « dev server (Clerk) »), santé 200, `/app` anonyme 307 ;
+  ligne technique MVP supprimée (users = 2) ; captures L5 restaurées. Outils : `.local-logs/p6/` (`cycle.sh`, `lh-median.cjs`…).
+- Suite : bilan au propriétaire ; commit / push / publication de P6 puis Lighthouse staging **uniquement sur demande**.
+
+## Point de reprise — 4 octobre 2026 (avant P6)
+
+- **Expérience Premium P0 → P5 faite et publiée sur Railway staging** (`just-compassion`, rôle staging, jamais promu) ; dernier applicatif
+  `865c85d` (correctifs Lighthouse), déploiement actif **`3bc79b16`** ; 49 tickets sur 50, **UX-507 bloqué** (briefing L6, décision D1).
+- État et reste à faire : [plan §5.1 / §5.2](docs/plan-experience-premium.md) (décisions **D-1 → D-10**, repères de code), backlog du
+  **lot P6 « Performance mobile »** proposé (§6, UX-601 → 606, en attente du feu vert). Audit : [audit-a11y-performance](docs/audit-a11y-performance-2026-10-03.md).
+- Vérification de référence : tsc 0, lint 0, 355 tests (341/14/0), invariants 4/4, build, E2E MVP 146 + 1 ignoré, E2E Clerk 8/8, 9/9 E2E distants.
+- Lighthouse staging : accessibilité 100, SEO 100, desktop 85–88, **mobile 57–69**, bonnes pratiques 78–79 (Clerk de développement).
+- Environnement laissé : `npm run dev` en mode **Clerk** sur 3001, santé 200 ; ligne technique MVP supprimée ; arbre Git propre sauf ces
+  mises à jour documentaires. Outils hors projet : Lighthouse `.local-logs/tools/lighthouse`, scripts `.local-logs/p4|p5|publication-*`.
+- **Prompt de reprise : [docs/prompt-reprise-premium-p6.md](docs/prompt-reprise-premium-p6.md).**
 
 ## Publication P5 et audit Lighthouse — 3 octobre 2026
 

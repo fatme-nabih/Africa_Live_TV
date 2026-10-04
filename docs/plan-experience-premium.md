@@ -1,6 +1,6 @@
 # Africa Live — Rapport d'expérience et plan « Premium »
 
-Date : 2 octobre 2026 (mis à jour le 3 octobre 2026 : P0–P2 publiés, P3 committé en local, P4 fait non committé) · Africa/Dakar · HEAD `1ff0e53` (P3 `412574d` + documentation, non poussés).
+Date : 2 octobre 2026 (mis à jour le 4 octobre 2026 : P0–P5 faits et publiés sur staging, correctifs Lighthouse publiés ; reste : décisions du propriétaire et lot P6 proposé) · Africa/Dakar · applicatif `865c85d`, Railway staging `3bc79b16`.
 Périmètre : lecture du code (`src/app`, `src/components`, `globals.css`),
 captures réelles de `docs/screenshots` (staging connecté, TV 1366/390, L5),
 audits existants (`audit-produit-professionnel.md`, `audit-agencement-dashboard.md`).
@@ -308,7 +308,7 @@ plancher 12 px, capitales espacées réservées aux sur-titres courts.
 Six lots, chacun livrable seul, testé (unitaires + E2E existants + nouveaux),
 documenté dans `production-progress.md`. Estimations en jours-dev effectifs.
 
-| Lot | Thème | Durée | Valeur | État (3 octobre 2026) |
+| Lot | Thème | Durée | Valeur | État (4 octobre 2026) |
 |---|---|---|---|---|
 | **P0** | Hygiène et socle design | 3 j | Cohérence immédiate | ✅ Fait et vérifié (02/10), publié (03/10) |
 | **P1** | Coquille unique et navigation | 3 j | Fluidité inter-pages | ✅ Fait et vérifié (02/10), publié (03/10) |
@@ -316,91 +316,80 @@ documenté dans `production-progress.md`. Estimations en jours-dev effectifs.
 | **P3** | Radar « vivant » | 5 j | Identité du produit | ✅ Fait et vérifié (03/10), publié (03/10, `412574d`) |
 | **P4** | Landing, tarifs, compte | 3 j | Conversion | ✅ Fait et vérifié (03/10), publié (03/10, `06b662f`) |
 | **P5** | Aimants avancés et finition | 5 j | Habitude, différenciation | ✅ Fait et vérifié (03/10), publié (03/10, `090ce01`, correctifs Lighthouse `865c85d`) ; UX-507 bloqué (L6) |
+| **P6** | Performance mobile (proposé) | 3 j | Notes mobile ≥ 90, data | ⏳ En attente du feu vert (§5.2 D-1, §6 « Lot P6 ») |
 
 Ordre recommandé : P0 → P1 → P2 → P3 → P4 → P5. P2 avant P3 car le gain
 de rétention est le plus rapide et la base L5 (zapping) existe déjà.
 
-### 5.1 État d'avancement et reste à faire (mis à jour le 3 octobre 2026)
+### 5.1 État d'avancement (mis à jour le 4 octobre 2026, lot P6 compris)
 
-**Publié (P3–P4, 3 octobre)** : P3 (`412574d`) et P4 (`06b662f`) sont poussés et publiés sur Railway staging (`990745ba`, 9/9 E2E distants) — [dossier](publication-premium-p3p4-2026-10-03.md).
+**Tout est publié sur Railway staging** (`just-compassion`, rôle `staging`, jamais promu en production), à la demande du propriétaire :
 
-**Publié** : P0, P1 et P2 sont committés et publiés sur GitHub `main` (applicatif `1ef60b5`, documentation `01279c0`) et sur
-Railway staging, à la demande du propriétaire ([dossier de publication](publication-premium-2026-10-03.md)).
+| Lot | Commit applicatif | Railway staging | Dossier |
+|---|---|---|---|
+| P0–P2 | `1ef60b5` | `117f35ed` | [publication-premium-2026-10-03.md](publication-premium-2026-10-03.md) |
+| P3–P4 | `412574d`, `06b662f` | `990745ba` | [publication-premium-p3p4-2026-10-03.md](publication-premium-p3p4-2026-10-03.md) |
+| P5 | `090ce01` | `75bf069d` | [publication-premium-p5-2026-10-03.md](publication-premium-p5-2026-10-03.md) |
+| Correctifs Lighthouse | `865c85d` | **`3bc79b16`** (actif) | même dossier, section finale |
+| P6 « Performance mobile » | [`7e27319`](https://github.com/fatme-nabih/Africa_Live_TV/commit/7e27319) | non publié | [production-progress.md](production-progress.md), section « Lot P6 » |
 
-**Fait, vérifié, committé en local (`412574d`), non poussé, non publié** : P3 « Radar vivant » (UX-301 → 308, 8 tickets), le 3 octobre 2026. Au total 34 tickets
-faits et 1 partiel (UX-209) sur 50 à la fin de P3. Preuves, mesures de la carte, défauts corrigés et limites : section « Expérience Premium — Lot
-P3 » de [production-progress.md](production-progress.md) ; captures `docs/screenshots/premium-p3-*`. Dernière vérification complète
-(fin de P3) : `tsc` 0 erreur, `lint` 0, `npm test` 341 tests (327 réussis, 14 ignorés, 0 échec), invariants 4/4, `build` réussi,
-E2E mode MVP 132 réussis + 1 ignoré sur 134 (un échec de test corrigé, voir production-progress.md), E2E mode Clerk 8/8.
+HEAD documentaire `f260400` (et suivants). **49 tickets faits sur 50** (UX-001 → UX-508 et reliquats UX-209, UX-212, UX-213, UX-214) ;
+**UX-507 bloqué** (briefing = lot L6, différé par la décision D1 du propriétaire). Preuves par lot : sections « Lot P0 » à « Lot P5 » de
+[production-progress.md](production-progress.md) ; audit d'accessibilité et de performance : [audit-a11y-performance-2026-10-03.md](audit-a11y-performance-2026-10-03.md).
 
-**Fait et vérifié, non committé** : P4 « Landing, tarifs, compte » (UX-401 → 407 + UX-212), le 3 octobre 2026 : 42 tickets faits et
-1 partiel (UX-209) sur 50, plus le reliquat UX-214 fait. Preuves, mesures (chiffres réels : 11 771 chaînes, 371 africaines, 36 pays)
-et limites : section « Lot P4 » de [production-progress.md](production-progress.md) ; captures `docs/screenshots/premium-p4-*`. Dernière
-vérification complète (fin de P4) : `tsc` 0, `lint` 0, `npm test` 348 (334 réussis, 14 ignorés, 0 échec), invariants 4/4, build réussi,
-E2E MVP 135 tests (132 réussis + 1 ignoré, 2 échecs corrigés puis specs rejoués 67/67), E2E Clerk 8/8.
+Dernière vérification complète (code `865c85d`) : `tsc` 0, `lint` 0, `npm test` 355 tests (341 réussis, 14 ignorés, 0 échec), invariants 4/4,
+`npm run build` réussi, E2E mode MVP 19 specs / 147 tests (146 réussis, 1 ignoré « build servi »), E2E mode Clerk 8/8, **9/9 E2E distants**,
+402/402 fichiers applicatifs identiques par SSH.
 
-**Fait et vérifié, non committé** : P5 « Aimants et finition » le 3 octobre 2026 (UX-501 → 506, UX-508, UX-209 suite, UX-213) ; **UX-507 bloqué**
-(briefing = L6 différé, arbitrage D1 du propriétaire). Preuves : section « Lot P5 » de [production-progress.md](production-progress.md) et
-[audit daté](audit-a11y-performance-2026-10-03.md). Vérification : tsc 0, lint 0, 355 tests (341/14/0), invariants 4/4, build, E2E MVP
-145 + 1 ignoré (1 échec corrigé, specs rejoués), E2E Clerk 8/8 ; poids JS TV −38 %.
+Lighthouse sur staging (après correctifs) : **accessibilité 100** et **SEO 100** partout ; performance desktop 85–88 (96–98 en build servi
+local) ; **performance mobile 57–69** (LCP 5,2–6,5 s) ; **bonnes pratiques 78–79** (cookies tiers de l'instance Clerk de développement).
+Radar et TV (serveur de dev, session requise) : accessibilité 100, CLS ≤ 0,024.
 
-**Reste à faire** : UX-507 (après décision L6) ; synchronisation des pays suivis au compte (ticket de migration) ; Lighthouse (outil à autoriser).
-Historique — tickets P5 + 2 reliquats : UX-209 suite, UX-213, un lot à la fois. Le tableau P4 ci-dessous est conservé pour l'historique :
+### 5.2 Ce qu'il reste à faire (4 octobre 2026)
 
-| Lot | Tickets | Points d'attention |
+#### A. Décisions du propriétaire (rien n'avance sans elles)
+
+| # | Décision | Effet | Par défaut si rien n'est décidé |
+|---|---|---|---|
+| D-1 | ~~Lot P6 « Performance mobile »~~ **fait en local le 4 octobre 2026** (§6) ; reste : commit et publication sur demande | Landing 90 ; tarifs 78 et connexion 79 (Clerk) | Non publié |
+| D-2 | **Instance Clerk de production** sur `africatv.sn` + renommer l'application « Afrika_Live » → « Africa Live » dans le tableau de bord Clerk | Supprime les cookies tiers (bonnes pratiques 78 → ~100) et le nom erroné sur 19 écrans `frFR` ; prépare la production | Configuration Clerk inchangée (action du propriétaire, jamais faite par l'agent) |
+| D-3 | **Briefing L6** (UX-507) : nom, durée, fenêtre, mode de génération (cf. `plan-dashboard-backlog.md`, D1) | Débloque UX-507 branché sur les pays suivis | Briefing masqué |
+| D-4 | **Synchronisation des pays suivis au compte** (UX-503b) | Ticket de **migration** : sauvegarde Railway restaurable préalable, `npm run db:migrate:deploy` | Pays suivis sur l'appareil seulement |
+| D-5 | **Mur TV en production** : poser `NEXT_PUBLIC_TV_WALL=true` sur Railway | Active `/app/mur` (desktop ≥ 1 280 px) | Inactif en production |
+| D-6 | **Logos officiels Wave / Orange Money** (kit marchand NabooPay / opérateurs) | Remplace les pictogrammes locaux de `PaymentMethods` | Pictogrammes locaux |
+| D-7 | **Source sismique** pour la tuile d'alerte du Radar | Réintroduire un séisme (USGS retiré en RW-009, E2E l'interdit) | Tuile « Alerte météo » seule |
+| D-8 | **Tests sur Android réel** (lecteur, PiP, Éco data, Radar), lecteur d'écran (TalkBack), VLC réel | Réception sur appareil | Mesures simulées seulement |
+| D-9 | **Lighthouse du Radar et de la TV en production** : session requise (Lighthouse des DevTools du navigateur du propriétaire, connecté à staging) | Notes officielles des deux écrans principaux | Mesurés sur le serveur de développement |
+| D-10 | **Promotion en production** (`africatv.sn`, `www`) | Lancement | Staging seulement (AGENTS.md : jamais implicite) |
+
+#### B. Lot P6 — « Performance mobile » (fait en local le 4 octobre 2026)
+
+Constat mesuré (Lighthouse staging) : l'élément LCP est partout le fond de marque décoratif `BrandBackdrop` ; la landing est rendue à chaque
+requête (`auth()` dans `src/app/page.tsx` : **2,1 s de premier octet** mesurés) ; Clerk (`ClerkProvider` dans le layout racine) charge son
+JavaScript sur toutes les pages publiques. Deux essais simples sur le fond (`loading="eager"`, `preload`) n'ont **pas** donné de gain mesurable
+et ont été retirés. Tickets en §6 « Lot P6 ». Règle : **mesurer avant / après** chaque ticket (Lighthouse staging ×3, médiane), ne garder que
+ce qui gagne.
+
+**Fait le 4 octobre 2026** : la mesure a corrigé l'hypothèse — les 2,1 s venaient de la **poignée de main Clerk** (3 redirections, instance
+de développement), pas du rendu. Pages publiques statiques hors middleware Clerk (`src/lib/public-static-pages.ts`), landing statique
+revalidée, polices `latin` préchargées seules, fond de marque dédié, Clerk limité au groupe `(clerk)`. Suite possible (non faite) :
+sortir zod de la coquille commune ; différer Clerk sur `/pricing` (ticket paiement dédié) ; D-2 pour `/sign-in`.
+
+#### C. Repères de code pour la suite (relevés le 4 octobre 2026)
+
+| Sujet | Où | Pièges connus |
 |---|---|---|
-| **P4 Landing, tarifs, compte** (7) | UX-401 → 407 + reliquats UX-212, UX-214 | Chiffres de la landing issus de la base, jamais en dur. Parcours NabooPay inchangé (E2E paiement simulé verts). UX-404 « Mon activité » peut réutiliser `recent-channels`, favoris, pays récents, et le repère `al_radar_visit` du Radar. UX-405 : widgets Clerk encore en anglais. |
-| **P5 Aimants et finition** (8) | UX-501 → 508 + reliquats UX-209 (suite), UX-213 | UX-501 mini-lecteur persistant : touche au lecteur, donc E2E lecture obligatoires, une seule source active (le Radar utilise déjà `InlinePlayerModal` ; le mini-lecteur persistant le remplacera ou le prolongera). UX-502 : la barre de recherche (Ctrl K) existe déjà pour le catalogue TV. UX-503 : la synchronisation au compte est un **ticket de migration séparé**, sauvegarde Railway préalable. UX-505 : mesurer le poids JS de la TV et du Radar avant/après ; l'image `BrandBackdrop` est signalée comme LCP en développement (`loading="eager"`). UX-508 : audit a11y + Lighthouse, rapport daté dans `docs/`. |
-
-**Reliquats identifiés pendant P0–P2** (à traiter dans le lot indiqué ; détail en §6) :
-UX-209 (tiroir unique des filtres, suite), UX-212 (Éco data visible sur mobile), UX-213 (contrôle du lecteur ancré à harmoniser),
-UX-214 (capturer `/account` et `/admin` avec une session Clerk — action du propriétaire).
-
-**Questions ouvertes pour le propriétaire** (5. et 6. nouvelles en P4) :
-1. ~~Committer P0–P2 avant P3~~ — **résolue** : P0–P2 sont committés et publiés (`1ef60b5`, `01279c0`). P3 est committé en local (`412574d`) à la demande du propriétaire, non poussé ni déployé ;
-   push et publication restent à sa demande explicite.
-2. Fournir une session Clerk (ou valider lui-même) pour capturer `/account` et `/admin` (UX-214).
-3. Faire valider sur appareil Android réel le lecteur (raccourcis, PiP, plein écran), le mode Éco data et la fluidité du Radar :
-   seuls Edge et Chromium sont testés, les mesures de performance sont simulées (bridage CPU/réseau).
-4. **Nouvelle (P3)** : la tuile « Alerte météo/séisme » n'a pas de séisme (couche USGS retirée en RW-009, appel interdit par les E2E).
-   Réintroduire une source sismique est un choix produit à valider ; sinon la tuile reste « Alerte météo ».
-5. **P4** : logos officiels Wave / Orange Money (kit marchand) à fournir ; pictogrammes locaux en attendant.
-6. **P4** : le nom de l'application dans le tableau de bord Clerk est « Afrika_Live » (masqué par la traduction, à corriger côté Clerk).
-
-### 5.2 Préparation de P4 et P5 (repères de code, relevés le 3 octobre 2026)
-
-Repères pour ne pas tout redécouvrir. Ils n'engagent pas : relire le code avant d'agir et mettre ce tableau à jour si l'un d'eux change.
-
-**P4 — Landing, tarifs, compte** (✅ fait le 3 octobre 2026 ; repères conservés pour l'historique — voir production-progress.md « Lot P4 »)
-
-| Ticket | Repères dans le code | Pièges et décisions par défaut |
-|---|---|---|
-| UX-401 | `src/app/page.tsx` (676 lignes, composant serveur ; en mode MVP local il redirige vers `/app/live`). `LandingDashboardPreview.tsx` : aujourd'hui une icône de globe, pas une capture. Chiffres **en dur** à supprimer : catégories « 1 400+ / 650+ / 1 200+ / 980+ chaînes » (≈ l. 77-80) et « 11 700+ chaînes » (≈ l. 471 et 533). | Chiffres depuis la base : `publicCatalogChannelCondition()` (`src/lib/public-catalog-visibility.ts`) exclut Canal+ des réponses publiques ; il n'existe **pas encore** de compteur public (`getAfricanChannelsSummary` est derrière l'accès). Prévoir une requête de comptage légère et mise en cache (lire les guides de cache de `node_modules/next/dist/docs/` : la page appelle `auth()`, donc reste dynamique), sans donnée personnelle. Image du hero : à produire avec des **données simulées** (jamais de contenu d'éditeur dans un fichier public), WebP < 60 Ko, `next/image`. |
-| UX-402 | `metrics` (4 « métriques » qui n'en sont pas) et `features` de `page.tsx` ; `Globe2` y sert deux fois. | 3 bénéfices clairs, ton Teranga sobre, une icône par idée. |
-| UX-403 | `src/app/pricing/page.tsx` (242 lignes, composant client) : boutons « Payer avec NabooPay (990 FCFA) » et « (9 900 FCFA) ». Identifiants internes `lumina_all_access_*` à **ne pas** changer (alias d'affichage déjà en place, UX-008). 9 900 FCFA = 10 mois de 990 FCFA : « 2 mois offerts » est exact. | `e2e/payment.spec.ts` cherche `/Payer avec NabooPay/i` : mettre le libellé à jour dans le même ticket avec une assertion équivalente ; parcours NabooPay (appels, redirections, webhooks) inchangé. Logos Wave / Orange Money / CB : fichiers locaux, aucun chargement tiers. |
-| UX-404 | `src/app/account/page.tsx` (148 lignes) : « Mon accès » puis `UserProfile` de Clerk. Sources locales pour « Mon activité » : `useRecentChannels()`, favoris (`/api/favorites`), pays récents (`al_recent_countries`), dernière visite du Radar (`al_radar_visit`). | Aucune migration. Jauge de jours restants à partir de la décision d'accès déjà calculée (`getCurrentAccessDecision`). La page exige une session Clerk : captures par le propriétaire (UX-214). |
-| UX-405 | `src/app/layout.tsx` : `ClerkProvider appearance.variables` avec des couleurs en **hex littéraux** et un rayon. | À aligner sur les jetons (police, rayons, éléments). **`@clerk/localizations` n'est pas installé** : l'ajouter est une nouvelle dépendance (décision du propriétaire) ; **par défaut**, passer un objet `localization` partiel écrit à la main, sans dépendance. Captures sign-in / sign-up à 360 / 768 / 1366 px (mode Clerk). |
-| UX-406 | Pas de `error.tsx` ni de `loading.tsx` à la racine de `src/app/` ; `not-found.tsx` (48 lignes) porte déjà le ton « hors antenne ». | `EmptyState` / `ErrorState` du design system partout ; jamais de message technique brut. |
-| UX-407 | `faqs` de `page.tsx` (6 questions longues). | 5 questions courtes, ton factuel, aucune promesse invérifiable. |
-| UX-212 | `EcoToggle` est dans `AppHeader` mais caché sous 640 px. | Accessible en ≤ 2 gestes à 360 px, `aria-pressed`, E2E. |
-| UX-214 | `/account` et `/admin`. | **Action du propriétaire** : fournir une session Clerk. |
-
-Vérification propre à P4 : la landing, `/pricing` et `/sign-in` sont testées en **mode Clerk** (en mode MVP elles redirigent vers le Radar) ; `e2e/auth-entry.spec.ts` et `e2e/payment.spec.ts` sont les garde-fous.
-
-**P5 — Aimants et finition**
-
-| Ticket | Repères dans le code | Pièges et décisions par défaut |
-|---|---|---|
-| UX-501 | `InlinePlayerModal` (utilisée par la TV et le Radar) ; `Player.tsx` (1 035 lignes) ; layout `/app` = `AppShell`. | Mini-lecteur persistant dans le layout `/app` : **une seule source active**, arrêt propre, quotas respectés ; remplace ou prolonge la modale. E2E lecture obligatoires : `tv-streaming`, `anchored-player`, `local-playback`, `radar-live`. |
-| UX-502 | Recherche Ctrl K déjà présente pour le catalogue TV (`useOpenSearch`, `CountryPicker`). | Réutiliser les API existantes (catalogue, pays) ; pas de nouvelle route sans ticket. |
-| UX-503 | Clés locales `al_recent_countries`, `al_favorites`. | Pays suivis en local d'abord ; la synchronisation au compte est un **ticket de migration séparé**, sauvegarde Railway préalable. |
-| UX-504 | `src/app/manifest.ts` (manifeste unique depuis P0). | Raccourcis Radar / TV, écran hors-ligne « hors antenne », Lighthouse PWA installable. |
-| UX-505 | `framer-motion` reste dans 5 composants (`CategoryTabs`, `FilterSidebar`, `InlinePlayerModal`, `PlayerOverlays`, `Player`) ; l'image `BrandBackdrop` est signalée comme LCP en développement. | Mesurer le poids JS de la TV et du Radar avant/après (le Radar charge déjà la modale à la demande) ; `loading="eager"` sur le logo ; CSS plutôt que bibliothèque là où il suffit. |
-| UX-506 → 508, UX-209 suite, UX-213 | Voir §6. | Mur TV derrière un drapeau (desktop) ; briefing = lot L6 ; audit a11y + Lighthouse, rapport daté dans `docs/`. |
-
-**Décisions du propriétaire en attente** (après P5) : (8) **briefing L6** (UX-507) ; (9) ~~Lighthouse~~ installé hors du projet ; ~~publier les corrections de l'audit~~ fait (`865c85d`) ; landing statique (performance mobile) ; instance Clerk de production ; (10) activer le mur TV en production (`NEXT_PUBLIC_TV_WALL`) ; (11) ~~publier P5~~ fait (`090ce01`, Railway `75bf069d`) ; (1) ~~publier P3–P4~~ résolue (publiés le 3 octobre) ; (2) source sismique pour la tuile d'alerte ? ; (3) ~~traduction Clerk~~ résolue : `@clerk/localizations` 4.9.0 ; (4) ~~session Clerk pour UX-214~~ résolue ; (5) validation sur Android réel ; (6) logos officiels Wave / Orange Money ; (7) nom « Afrika_Live » dans le tableau de bord Clerk.
-
-Repères ajoutés en P4 utiles à P5 : chiffres publics `getPublicStats()` (`src/lib/public-stats-server.ts`, cache 1 h) ; écran partagé `OffAirScreen` (404, erreurs, hors-ligne PWA d'UX-504) ; `PlanCard` / `PaymentMethods` / `Faq` ; `loading.tsx` racine (penser au piège d'hydratation en E2E) ; bascule Éco visible dès 360 px.
+| Landing | `src/app/page.tsx` : **statique** (`revalidate = 600`), sans `auth()` ni Clerk (P6) ; `getPublicStats()` en cache 1 h ; zones membre via `src/components/marketing/SessionSwitch.tsx` (indice `__client_uat`, `src/lib/session-hint.ts`) | Version visiteur d'abord ; aucun `UserButton` ni lien Administration sur la landing ; `redirect('/app/live')` du mode MVP conservé ; si la base est injoignable au build, page sans chiffres jusqu'à la régénération (≤ 10 min). |
+| Fond de marque | `src/components/brand/BrandBackdrop.tsx` (`public/brand/backdrop-480.webp`, 19 Ko, sans optimiseur, `loading="eager"` + `fetchPriority="high"`, opacité 6 %) | Élément LCP de chaque page ; ne pas casser l'identité (décision §0.3 : le grand logo reste). Régénérer depuis `public/africa-live-logo.png` (sharp, 480 px, webp q55). |
+| Clerk | `src/app/(clerk)/layout.tsx` (`ClerkProvider`) pour app, compte, admin, tarifs, connexion, inscription, lecteur séparé ; middleware sauté pour `/`, `/pricing`, `/cgu`, `/privacy`, `/contact` (`src/lib/public-static-pages.ts`) | Une nouvelle page qui utilise Clerk va **dans** le groupe `(clerk)` ; une page qui appelle `auth()` ne doit **pas** figurer dans `CLERK_FREE_PUBLIC_PAGES`. `@clerk/shared` 4.20.0 ; `app-entry.test.ts` lit `(clerk)/layout.tsx`. |
+| Lecteur unique | `src/components/player/PlayerDock.tsx` (layout `/app`), `Player` props `compact`, `forceMuted` | Même instance de `<Player>` à position stable : ne jamais la sortir de l'arbre (sinon relance du flux). |
+| Recherche | `src/components/search/UniversalSearch.tsx`, `src/lib/universal-search.ts` (`OPEN_UNIVERSAL_SEARCH_EVENT`) | Ctrl K = palette ; le bouton « Rechercher » de la barre ouvre la palette dans `/app`, la recherche TV ailleurs. |
+| Pays suivis | `src/lib/followed-countries.ts`, clé `al_followed_countries`, hooks `useFollowedCountries` / `writeFollowedCountries` | Synchronisation = migration (D-4). |
+| PWA | `public/sw.js` (cache = `offline.html` + 2 images), `public/offline.html`, `src/app/manifest.ts`, `ServiceWorkerRegister` (production seulement) | Ne jamais mettre en cache média, API ou image distante. |
+| Mur TV | `src/app/app/mur/`, `src/lib/tv-wall.ts` (`NEXT_PUBLIC_TV_WALL`) | Actif en développement seulement par défaut. |
+| Filtres TV | `FilterSidebar` = tiroir unique ; `CatalogSearchField` dans la barre d'outils ; E2E : `e2e/helpers/filters.ts` (`withFilters`, `openFilters`) | Les filtres ne sont plus visibles sans ouvrir le tiroir. |
+| Mesures | Lighthouse 12.8.2 hors projet : `.local-logs/tools/lighthouse` ; P6 : `.local-logs/p6/cycle.sh <nom> [pages]` (build, service local, ×3, médiane via `lh-median.cjs`) et `measure-js.cjs` (chemins du groupe `(clerk)`) ; scripts `.local-logs/p5/lh-run.sh` (base, pages, `mobile`/`desktop`, dossier) et `lh-summary.cjs` ; CLS par élément : `.local-logs/p5/cls-sources.cjs` ; poids JS par route : `.local-logs/p5/measure-js.cjs` (lit `.next`) ; build servi local : `DEPLOYMENT_ENV=local`, port 3001, drapeaux locaux à `false` | Dossiers ignorés par Git, recréables. |
+| Publication | Scripts `.local-logs/publication-lh/` (`prepare-upload`, `deploy`, `remote-proof-chunked` par lots de 30, `health`, `e2e-remote`) | Un envoi CLI peut être coupé par le réseau : vérifier la liste des déploiements avant de relancer. |
 
 ---
 
@@ -489,6 +478,27 @@ Taille : S ≤ ½ j, M ≈ 1 j, L ≈ 2–3 j.
 | UX-507 | P3 | — | Briefing du matin = lot L6 existant, branché sur Pays suivis | Selon `plan-dashboard-backlog.md` | ⛔ Bloqué — L6 différé (décision D1 du propriétaire) |
 | UX-508 | P2 | M | Audit a11y final (axe + clavier + lecteur d'écran) et Lighthouse ≥ 90 perf/a11y sur Radar et TV | Rapport daté dans `docs/` | ✅ P5 — 03/10/2026 ([rapport](audit-a11y-performance-2026-10-03.md) ; axe 0 violation ; Lighthouse non lancé) |
 
+### Lot P6 — Performance mobile (feu vert le 4 octobre 2026 ; fait et vérifié en local, commit `7e27319`, non publié)
+
+Objectif : Lighthouse mobile ≥ 90 sur la landing, `/pricing` et `/sign-in` (staging), sans perte d'accessibilité (100) ni de fonctionnalité.
+Chaque ticket : mesure avant / après (Lighthouse staging ×3, médiane, et `measure-js.cjs`), sinon abandon documenté.
+
+| ID | Prio | Taille | Ticket | Critères d'acceptation | État |
+|---|---|---|---|---|---|
+| UX-601 | P1 | M | Landing **statique** (revalidée) : retirer `auth()` du rendu serveur, état connecté lu côté client (`<Show>` Clerk), chiffres publics revalidés | Premier octet < 300 ms sur staging ; `auth-entry` vert ; mode MVP inchangé | ✅ P6 — 04/10/2026 (cause réelle : poignée de main Clerk ; landing ○ revalidée 10 min, pages publiques hors middleware Clerk ; premier octet local 16 ms ; staging non mesuré) |
+| UX-602 | P1 | S | Fond de marque allégé (variante plus petite et moins lourde, ou rendu CSS) sans changer l'identité | LCP mobile réduit (mesure) ; rendu identique à l'œil | ✅ P6 — 04/10/2026 (`public/brand/backdrop-480.webp` 19 Ko, immédiat ; LCP landing 4,65 → 4,08 s) |
+| UX-603 | P2 | M | Clerk chargé seulement où il sert sur les pages publiques (landing sans widget Clerk) | JS de la landing réduit (mesure) ; connexion / inscription / compte inchangés ; `app-entry.test.ts` adapté de façon équivalente | ✅ P6 — 04/10/2026 (groupe `(clerk)` ; landing 194 → 143 Ko gzip, perf. 90, bonnes pratiques 100) |
+| UX-604 | P2 | S | Polices : vérifier préchargement et sous-ensembles d'Unbounded / Manrope (Next `next/font`) | Aucun FOIT ; CLS 0 conservé | ✅ P6 — 04/10/2026 (préchargement `latin` seul : −130 Ko ; latin-ext toujours déclaré) |
+| UX-605 | P3 | S | Radar : nom accessible des tuiles qui commence par le texte visible (règle `label-content-name-mismatch`), sans perdre « pas une alerte officielle » | 6 E2E `radar-live` équivalents verts | ✅ P6 — 04/10/2026 (nom = texte visible + compléments `sr-only` ; 5 assertions adaptées) |
+| UX-606 | P3 | S | Infobulle de la carte « 8 dépêche(s) » → accord singulier / pluriel ; titre H1 de `/admin` trop grand à 360 px | Captures 360 / 1366 | ✅ P6 — 04/10/2026 (`countLabel` ; H1 /admin 24 px sous 640 px ; capture /admin : session admin requise, non faite ; en plus : lien « Mur TV » masqué sous 1 280 px, image du hero regénérée) |
+
+Résultat (build servi local, Lighthouse mobile, médiane de 3) : landing **76 → 90**, `/cgu` 93, `/pricing` 72 → **78**, `/sign-in`
+73 → **79** ; accessibilité 100 partout. Objectif ≥ 90 atteint pour la landing seulement : `/pricing` et `/sign-in` ont besoin de Clerk
+(342 Ko de scripts) et `/sign-in` garde la poignée de main de l'instance de développement (D-2). Détail : [audit, section P6](audit-a11y-performance-2026-10-03.md).
+
+Hors lot (décisions D-2 à D-10 du §5.2) : instance Clerk de production, UX-507 (L6), UX-503b (migration), mur TV en production, logos
+officiels, source sismique, Android réel, Lighthouse connecté, promotion en production.
+
 ### Reliquats identifiés pendant P0–P2
 
 Rien n'y est bloquant ; chaque reliquat est rattaché au lot où il coûte le moins.
@@ -528,7 +538,7 @@ UI légers, sans données personnelles supplémentaires :
   le navigateur ; aucune mise en cache serveur (cohérent avec la politique média).
 - **Promesses commerciales** : chiffres uniquement issus de la base ; pas de
   « garanti », « instantané » sans preuve.
-- **Arbre de travail** : P0, P1 et P2 sont committés et publiés (`1ef60b5`, `01279c0`), P3 est committé en local (`412574d`, non poussé) ; l'arbre doit être propre au début d'un lot. Inspecter
+- **Arbre de travail** : P0 → P5 et les correctifs Lighthouse sont committés et publiés (dernier applicatif `865c85d`) ; l'arbre doit être propre au début d'un lot. Inspecter
   `git status --short` avant d'éditer et ne jamais utiliser de commande Git destructive pour « nettoyer ». Un commit local n'est fait
   que sur demande explicite ; push et déploiement Railway idem.
 - **Libellés et E2E** : `e2e/dashboard-reception`, `radar-*`, `tv-workspace`,
@@ -569,13 +579,29 @@ UI légers, sans données personnelles supplémentaires :
   (`PerformanceObserver` + `Performance.getMetrics`, CPU ×4).
 - **Fond de carte** : ne pas réintroduire un fond en tuiles par défaut sans mesurer (OpenFreeMap : ≈ 1,27 Mo à l'échelle du
   continent). Les contours viennent de `public/maps/africa-countries.json` (régénérable par `scripts/build-africa-countries.mjs`).
+- **Lecteur unique (P5)** : `PlayerDock` garde une seule instance de `<Player>` à position stable ; ne pas l'envelopper conditionnellement
+  (remontage = flux relancé). En mini-lecteur, `compact` coupe les raccourcis globaux. Les vidéos de test sont des clips de 4 s (`ended`).
+- **Ctrl K et filtres (P5)** : Ctrl K ouvre la palette universelle, plus le champ du catalogue ; les filtres TV sont dans un tiroir à
+  ouvrir (`e2e/helpers/filters.ts`). Les rangées de l'accueil TV chargent aussi `/api/channels` : viser précisément la requête testée.
+- **Mesures (P5)** : Playwright `page.evaluate` d'une fonction transpilée par `tsx` peut échouer (`__name is not defined`) : passer du
+  JavaScript brut (`addScriptTag`). Un build de production refuse le mode MVP ; un build servi en local exige `DEPLOYMENT_ENV=local` sur
+  le port 3001 avec les drapeaux locaux à `false`. CLS : réserver la hauteur (unité `lh`) des textes qui changent à l'arrivée des
+  données ; exclure de l'ancrage de défilement (`overflow-anchor: none`) les lignes qui se réorganisent.
+- **Windows (P4–P5)** : `EUNKNOWN` à l'écriture d'un fichier surveillé par le serveur dev : réessayer après 500 ms ; `npm ci` échoue
+  (EPERM) si le serveur dev tourne ; preuve SHA par SSH Railway : lots de 30 fichiers (commande tronquée au-delà).
 - **Shell** : les remplacements multilignes avec `\\` ou `\s` dans un heredoc perdent leurs échappements ; utiliser l'outil d'écriture
   ou d'édition. `python` lancé sans fichier bloque (processus à tuer).
+- **Performance (P6)** : sur staging, toute page passée par le middleware Clerk subit à la première visite une **poignée de main** de
+  l'instance de développement (3 redirections, 1 à 2 s) ; c'est elle, et non le rendu, qui faisait le « premier octet » de 2,1 s. Lire la
+  cascade réseau du rapport Lighthouse (`network-requests`, `redirects`) avant toute hypothèse. `subsets` de `next/font/google` ne règle
+  que le **préchargement**. Les routes Clerk vivent dans `src/app/(clerk)/` : après un déplacement de route, supprimer
+  `.next/dev/types` et `.next/types` (anciens chemins, échec du typage au build). Un `redirect()` de page passe par le flux (le
+  `loading.tsx` racine) : réponse 200 + redirection côté client, comme avant P6.
 
 ## 9. Prochaine étape
 
-1. Le propriétaire revoit le bilan P4, répond aux décisions en attente du §5.2 et donne son feu vert pour **P5** ; commit, push et
-   publication de P3–P4 uniquement sur sa demande.
-2. Nouvelle session : coller [prompt-reprise-premium-p4.md](prompt-reprise-premium-p4.md) (lecture des documents, annonce du plan de
-   lot en 5 lignes, un lot à la fois, bilan fait / vérifié / limites, attente du feu vert).
-3. P5 commence par le mini-lecteur persistant (UX-501, E2E lecture obligatoires) ; voir les repères du §5.2.
+1. Le propriétaire tranche les décisions du §5.2 A (en particulier **D-1 : feu vert pour le lot P6 « Performance mobile »**).
+2. Nouvelle session : coller [prompt-reprise-premium-p6.md](prompt-reprise-premium-p6.md) (lecture des documents, rappel des décisions en
+   une ligne, annonce du plan de lot en 5 lignes, un lot à la fois, bilan fait / vérifié / limites, attente du feu vert).
+3. ~~P6 commence par UX-601~~ P6 fait en local le 4 octobre 2026, commit `7e27319` ; push, publication puis mesure Lighthouse sur
+   staging uniquement sur demande du propriétaire.
