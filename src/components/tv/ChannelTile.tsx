@@ -66,7 +66,8 @@ export function ShareChannelLink({ channel, label, className = '', tabIndex }: {
 }
 
 /** Partage WhatsApp d'une dépêche : titre, rédaction, adresse de l'article chez l'éditeur. */
-export function ShareArticleLink({ title, sourceName, url }: { title: string; sourceName?: string; url: string }) {
+/** `compact` : icône seule (fil des dépêches), le nom accessible reste complet. */
+export function ShareArticleLink({ title, sourceName, url, compact = false }: { title: string; sourceName?: string; url: string; compact?: boolean }) {
   const origin = useOrigin();
   if (!origin) return null;
   const share = articleShare({ title, sourceName, articleUrl: url, origin });
@@ -77,10 +78,13 @@ export function ShareArticleLink({ title, sourceName, url }: { title: string; so
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`Partager « ${title} » sur WhatsApp`}
-      className="inline-flex min-h-9 items-center gap-1.5 rounded-control px-2 text-xs font-semibold text-text-muted transition-colors hover:text-al-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold"
+      title={compact ? 'Partager sur WhatsApp' : undefined}
+      className={compact
+        ? 'inline-flex size-9 shrink-0 items-center justify-center rounded-control text-text-muted transition-colors hover:bg-surface-2 hover:text-al-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold'
+        : 'inline-flex min-h-9 items-center gap-1.5 rounded-control px-2 text-xs font-semibold text-text-muted transition-colors hover:text-al-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold'}
     >
       <Share2 className="size-3.5" aria-hidden="true" />
-      Partager
+      {!compact && 'Partager'}
     </a>
   );
 }

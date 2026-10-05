@@ -4,6 +4,7 @@ import ArticleRow from '@/components/radar/ArticleRow';
 import { Button, Chip, EmptyState, ErrorState, Skeleton } from '@/components/ui';
 import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
 import { canonicalArticleUrl } from '@/lib/radar-data';
+import { groupByTime, RADAR_TIME_GROUP_LABELS } from '@/lib/radar-time-groups';
 import type { LiveChannelsSummarySnapshot } from '@/lib/live-channels-types';
 import type { RadarArticle, RadarCountry } from '@/lib/live-osint-types';
 import type { ScopeCounts, ScopeTab } from '@/lib/radar-articles';
@@ -151,7 +152,17 @@ export default function NewsFeed({
           <p className="px-4 py-6 text-center text-xs text-text-muted">Toutes les dépêches de cette vue sont à la une, plus haut.</p>
         ) : (
           <>
-            {rows.slice(0, limit).map(row)}
+            {/* Séparateurs horaires (R2) : collants dans la colonne défilante du bureau, simples intertitres sur mobile. */}
+            {groupByTime(rows.slice(0, limit), article => article.indexedAt, now).map((section, index) => (
+              <section key={`${section.group ?? 'all'}-${index}`} aria-label={section.group ? RADAR_TIME_GROUP_LABELS[section.group] : undefined} className="divide-y divide-line">
+                {section.group && (
+                  <h3 className="bg-surface-1/95 px-4 pb-1.5 pt-3 text-xs font-bold uppercase tracking-wide text-al-gold backdrop-blur sm:px-5 xl:sticky xl:top-0 xl:z-10">
+                    {RADAR_TIME_GROUP_LABELS[section.group]}
+                  </h3>
+                )}
+                {section.items.map(row)}
+              </section>
+            ))}
             {rows.length > limit && (
               <div className="p-4 text-center">
                 <Button variant="secondary" size="sm" onClick={() => setLimit(value => value + PAGE_SIZE)}>
