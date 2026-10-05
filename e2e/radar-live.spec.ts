@@ -347,6 +347,45 @@ test.describe('Regarder une chaîne du pays (UX-306, R1)', () => {
   });
 });
 
+// R4 : recherche dans le fil et rubriques déduites, côté navigateur ; les dépêches à la une sont comprises dans les résultats.
+test.describe('Recherche et rubriques du fil (R4)', () => {
+  const articles = [
+    article('a', { title: 'Les Lions de la Teranga battent la Gambie', sourceName: 'APS (Sénégal)', publishedAt: minutesAgo(2) }),
+    article('b', { title: 'Le gouvernement présente le budget 2027', sourceName: 'Le Soleil', publishedAt: minutesAgo(5) }),
+    article('c', { title: 'Festival de jazz : Saint-Louis en fête', sourceName: 'Seneweb', publishedAt: minutesAgo(8) }),
+    article('d', { title: 'Match amical : les Éléphants tenus en échec', sourceName: 'Fraternité Matin', publishedAt: minutesAgo(12), countryCode: 'CI' }),
+    article('e', { title: 'Un titre sans rubrique évidente', sourceName: 'Walf', publishedAt: minutesAgo(15) }),
+  ];
+  const feed = (page: Page) => page.getByRole('article', { name: 'Fil et chaînes du pays' });
+
+  test('une rubrique filtre le fil, la recherche ignore accents et casse, et tout se réinitialise', async ({ page }) => {
+    await page.setViewportSize({ width: 1366, height: 900 });
+    await radar(page, articles);
+    await page.goto('/app/live');
+    await expect(feed(page).getByText('Un titre sans rubrique évidente')).toBeVisible();
+    const topics = feed(page).getByRole('group', { name: 'Rubriques' });
+    await topics.getByRole('button', { name: 'Sport (2)', exact: true }).click();
+    await expect(topics.getByRole('button', { name: 'Sport (2)', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    // La dépêche à la une fait partie des résultats.
+    await expect(feed(page).getByRole('link', { name: 'Les Lions de la Teranga battent la Gambie', exact: true })).toBeVisible();
+    await expect(feed(page).getByRole('link', { name: 'Match amical : les Éléphants tenus en échec', exact: true })).toBeVisible();
+    await expect(feed(page).getByText('2 dépêches trouvées, « À la une » comprises')).toBeVisible();
+    await expect(feed(page).getByText('Un titre sans rubrique évidente')).toHaveCount(0);
+
+    const search = feed(page).getByRole('searchbox', { name: 'Rechercher dans les dépêches' });
+    await search.fill('ELEPHANTS');
+    await expect(feed(page).getByText('1 dépêche trouvée, « À la une » comprises')).toBeVisible();
+    await search.fill('cote d ivoire');
+    await expect(feed(page).getByRole('link', { name: 'Match amical : les Éléphants tenus en échec', exact: true })).toBeVisible();
+    await search.fill('introuvable');
+    await expect(feed(page).getByText('Aucune dépêche ne correspond')).toBeVisible();
+    await feed(page).getByRole('button', { name: 'Effacer la recherche et la rubrique' }).click();
+    await expect(search).toHaveValue('');
+    await expect(feed(page).getByText('Un titre sans rubrique évidente')).toBeVisible();
+    await expect(topics.getByRole('button', { name: 'Sport (2)', exact: true })).toHaveAttribute('aria-pressed', 'false');
+  });
+});
+
 test.describe('Carte (UX-305)', () => {
   test('fond sombre par défaut : aucun serveur de tuiles tiers ; le satellite est un choix', async ({ page }) => {
     await page.setViewportSize({ width: 1366, height: 800 });

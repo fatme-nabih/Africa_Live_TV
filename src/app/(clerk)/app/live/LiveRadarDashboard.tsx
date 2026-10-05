@@ -189,6 +189,7 @@ function RadarWorkspace() {
                 scopeTab={articles.scopeTab}
                 tabCounts={articles.tabCounts}
                 total={fresh.shown.length}
+                shown={fresh.shown}
                 rows={rows}
                 unknownDate={articles.visibleUnknownArticles}
                 now={now}
