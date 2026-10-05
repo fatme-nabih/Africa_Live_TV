@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { ExternalLink, Play } from 'lucide-react';
-import { Badge, Button, cn, Skeleton } from '@/components/ui';
+import { ExternalLink } from 'lucide-react';
+import { Badge, cn, Skeleton } from '@/components/ui';
 import { ShareArticleLink } from '@/components/tv/ChannelTile';
 import { useEcoMode } from '@/components/tv/hooks';
 import { fallbackTone } from '@/lib/channel-fallback';
@@ -61,10 +61,8 @@ export default function FeaturedStories({
   stories,
   countryName,
   countries,
-  channelCounts,
   now,
   since,
-  onWatchCountry,
 }: {
   className?: string;
   /** Dépêches pas encore arrivées : un gabarit de même taille évite le saut de mise en page. */
@@ -73,10 +71,8 @@ export default function FeaturedStories({
   /** Pays affiché (filtre), ou `null` pour toute l'Afrique. */
   countryName: string | null;
   countries: RadarCountry[];
-  channelCounts: Record<string, number>;
   now: number;
   since: number | null;
-  onWatchCountry: (code: string) => void;
 }) {
   if (stories.length === 0) {
     return (
@@ -97,7 +93,6 @@ export default function FeaturedStories({
   }
   const [lead, ...others] = stories;
   const leadCountry = countries.find(country => country.code === lead.countryCode);
-  const canWatchLead = Boolean(lead.countryCode && (channelCounts[lead.countryCode] ?? 0) > 0);
   return (
     <section aria-labelledby="radar-une" className={className}>
       <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-2">
@@ -124,17 +119,6 @@ export default function FeaturedStories({
               {EDITORIAL_LABELS[editorialKind(lead)]}{leadCountry ? ` · ${leadCountry.name}` : ''}
             </p>
             <div className="relative z-10 mt-auto flex flex-wrap items-center gap-2 pt-1">
-              {canWatchLead && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => onWatchCountry(lead.countryCode!)}
-                  aria-label={`Regarder le direct du pays : ${leadCountry?.name ?? lead.countryCode}`}
-                  icon={<Play aria-hidden="true" className="h-3.5 w-3.5 fill-current" />}
-                >
-                  Regarder le direct du pays
-                </Button>
-              )}
               <ShareArticleLink title={lead.title} sourceName={lead.sourceName ?? undefined} url={lead.url} />
             </div>
           </div>
@@ -163,17 +147,6 @@ export default function FeaturedStories({
                   <div className="relative z-10 mt-auto flex flex-wrap items-center gap-1 pt-0.5">
                     <span className="text-xs text-text-muted">{country?.name ?? EDITORIAL_LABELS[editorialKind(story)]}</span>
                     <span className="ml-auto flex items-center gap-1">
-                      {story.countryCode && (channelCounts[story.countryCode] ?? 0) > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => onWatchCountry(story.countryCode!)}
-                          aria-label={`Regarder le direct : ${country?.name ?? story.countryCode}`}
-                          className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line-gold bg-al-gold/10 px-2.5 text-xs font-semibold text-al-gold transition hover:bg-al-gold/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold"
-                        >
-                          <Play aria-hidden="true" className="h-3 w-3 fill-current" />
-                          Direct
-                        </button>
-                      )}
                       <ShareArticleLink title={story.title} sourceName={story.sourceName ?? undefined} url={story.url} />
                     </span>
                   </div>

@@ -276,7 +276,10 @@ test.describe('Arrivées en douceur (UX-308)', () => {
   });
 });
 
-test.describe('Regarder le direct du pays (UX-306)', () => {
+// R1 : plus de bouton « Direct » par dépêche (il lançait une chaîne du pays sans lien avec l'article) ;
+// la TV du pays se lance depuis le filtre pays du fil, avec un libellé qui ne promet pas le direct de l'article.
+test.describe('Regarder une chaîne du pays (UX-306, R1)', () => {
+  const watch = (page: Page) => page.getByRole('button', { name: 'Regarder une chaîne : Sénégal', exact: true });
   const sn = FIXTURE_CHANNELS.filter(channel => channel.countryCode === 'SN');
   async function liveSetup(page: Page, channels = sn) {
     await mockVlc(page);
@@ -289,14 +292,13 @@ test.describe('Regarder le direct du pays (UX-306)', () => {
     await page.route('**/api/live/channels?country=*', route => route.fulfill({ json: { channels, total: channels.length, canPlay: true } }));
   }
 
-  test('depuis la une : le pays est choisi, la modale s’ouvre sur une chaîne du navigateur, le zapping marche, la page reste', async ({ page }) => {
+  test('depuis le filtre pays : la modale s’ouvre sur une chaîne du navigateur, le zapping marche, la page reste', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await liveSetup(page);
-    await page.goto('/app/live');
-    await stories(page).getByRole('button', { name: /^Regarder le direct du pays/ }).click();
+    await page.goto('/app/live?country=SN');
+    await watch(page).click();
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
-    await expect(page).toHaveURL(/country=SN/);
     await expect(page.locator('#inline-player-title').filter({ hasText: 'Alpha Sénégal' })).toBeVisible();
     await expect.poll(() => dialog.locator('video').evaluate(video => (video as HTMLVideoElement).currentTime)).toBeGreaterThan(0);
     await dialog.getByRole('button', { name: 'Chaîne suivante' }).click();
@@ -310,13 +312,15 @@ test.describe('Regarder le direct du pays (UX-306)', () => {
     expect(recent[0]).toBe('Beta Sénégal');
   });
 
-  test('depuis une ligne du fil : bouton « Direct » du pays de la dépêche', async ({ page }) => {
+  test('aucune dépêche ne propose de « Direct » : sans pays choisi, aucun lancement de chaîne depuis le fil', async ({ page }) => {
     await page.setViewportSize({ width: 1366, height: 900 });
     await liveSetup(page);
     await page.goto('/app/live');
     const feed = page.getByRole('article', { name: 'Fil et chaînes du pays' });
-    await feed.getByRole('button', { name: 'Regarder le direct : Sénégal' }).first().click();
-    await expect(page.locator('#inline-player-title').filter({ hasText: 'Alpha Sénégal' })).toBeVisible();
+    await expect(feed.getByText('Titre r1')).toBeVisible();
+    await expect(feed.getByRole('button', { name: /direct|Regarder/i })).toHaveCount(0);
+    await expect(stories(page).getByRole('button', { name: /direct|Regarder/i })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /Partager « Titre r1 »/ })).toBeVisible();
   });
 
   test('depuis la liste des chaînes du pays', async ({ page }) => {
@@ -324,7 +328,7 @@ test.describe('Regarder le direct du pays (UX-306)', () => {
     await liveSetup(page);
     await page.goto('/app/live?country=SN');
     // Attendre un contenu rendu après hydratation : un clic plus tôt donne le focus à l'onglet sans le sélectionner.
-    await expect(stories(page).getByRole('button', { name: /^Regarder le direct du pays/ })).toBeVisible();
+    await expect(watch(page)).toBeVisible();
     await page.getByRole('tab', { name: /Chaînes TV/ }).click();
     await page.getByRole('button', { name: 'Regarder Gamma Sénégal', exact: true }).click();
     await expect(page.locator('#inline-player-title').filter({ hasText: 'Gamma Sénégal' })).toBeVisible();
@@ -333,8 +337,8 @@ test.describe('Regarder le direct du pays (UX-306)', () => {
   test('un pays sans chaîne à lancer : message clair, pas de lecteur vide', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await liveSetup(page, []);
-    await page.goto('/app/live');
-    await stories(page).getByRole('button', { name: /^Regarder le direct du pays/ }).click();
+    await page.goto('/app/live?country=SN');
+    await watch(page).click();
     await expect(page.getByText('Aucune chaîne à lancer pour Sénégal pour le moment.')).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByRole('button', { name: 'Voir les chaînes', exact: true }).click();

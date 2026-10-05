@@ -66,10 +66,6 @@ function RadarWorkspace() {
     const keys = featuredKeys(featured);
     return fresh.shown.filter(article => !keys.has(canonicalArticleUrl(article.url)));
   }, [fresh.shown, featured]);
-  const channelCounts = useMemo(
-    () => Object.fromEntries(Object.entries(summary?.countries ?? {}).map(([code, info]) => [code, info.channelCount])),
-    [summary],
-  );
 
   const showChannels = useCallback(() => setPanelTab('channels'), []);
   const player = useRadarPlayer({
@@ -164,10 +160,8 @@ function RadarWorkspace() {
             stories={featured}
             countryName={activeCountry?.name ?? null}
             countries={AFRICAN_COUNTRIES}
-            channelCounts={channelCounts}
             now={now}
             since={visit.since}
-            onWatchCountry={player.watchCountry}
           />
           <RadarFeedPanel
             className="xl:col-span-7 xl:col-start-1 xl:row-start-2"

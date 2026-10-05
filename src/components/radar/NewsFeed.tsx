@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Newspaper } from 'lucide-react';
+import { Newspaper, Play } from 'lucide-react';
 import ArticleRow from '@/components/radar/ArticleRow';
 import { Button, Chip, EmptyState, ErrorState, Skeleton } from '@/components/ui';
 import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
@@ -50,16 +50,16 @@ export default function NewsFeed({
   onRetry: () => void;
 }) {
   const [limit, setLimit] = useState(PAGE_SIZE);
+  // Seul point d'entrée vers la TV depuis le fil : un pays choisi, une chaîne de ce pays (jamais présentée comme le direct d'un article).
+  const countryChannelCount = activeCountry ? (channelsSummary?.countries[activeCountry.code]?.channelCount ?? 0) : 0;
   const liveEditorials = rss?.availability?.filter(source => source.status === 'available' || source.status === 'empty').length ?? rss?.sources.length;
   const row = (article: RadarArticle) => (
     <ArticleRow
       key={canonicalArticleUrl(article.url)}
       article={article}
       country={AFRICAN_COUNTRIES.find(country => country.code === article.countryCode)}
-      channelCount={article.countryCode ? channelsSummary?.countries[article.countryCode]?.channelCount : undefined}
       now={now}
       since={since}
-      onWatchCountry={onWatchCountry}
       onSelectCountry={onSelectCountry}
     />
   );
@@ -75,7 +75,7 @@ export default function NewsFeed({
               Fil des dépêches
             </div>
             <p className="mt-0.5 text-xs text-text-muted">
-              {activeCountry ? `Dépêches liées à : ${activeCountry.name}` : 'Afrique et international'} · {total} dépêches · 24 h
+              {activeCountry ? `Dépêches liées à : ${activeCountry.name}` : 'Afrique et international'} · dernières 24 h
             </p>
           </div>
           {rss && liveEditorials !== undefined && (
@@ -94,9 +94,21 @@ export default function NewsFeed({
       </div>
 
       {activeCountry && (
-        <div className="flex items-center justify-between border-b border-al-green/10 bg-al-green/[0.05] px-4 py-2 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-al-green/10 bg-al-green/[0.05] px-4 py-2 text-xs">
           <span className="text-text">Filtre pays : <strong>{activeCountry.name}</strong></span>
-          <button type="button" onClick={() => onSelectCountry(null)} className="min-h-9 px-2 text-text-muted hover:text-text">Tout afficher</button>
+          <span className="flex flex-wrap items-center gap-1">
+            {countryChannelCount > 0 && (
+              <button
+                type="button"
+                onClick={() => onWatchCountry(activeCountry.code)}
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line-gold bg-al-gold/10 px-2.5 font-semibold text-al-gold transition hover:bg-al-gold/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold"
+              >
+                <Play aria-hidden="true" className="h-3 w-3 fill-current" />
+                Regarder une chaîne : {activeCountry.name}
+              </button>
+            )}
+            <button type="button" onClick={() => onSelectCountry(null)} className="min-h-9 px-2 text-text-muted hover:text-text">Tout afficher</button>
+          </span>
         </div>
       )}
 
