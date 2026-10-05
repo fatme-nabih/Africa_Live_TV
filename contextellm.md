@@ -2,6 +2,18 @@
 
 Dernière mise à jour : 4 octobre 2026 (COR publié sur GitHub et Railway staging ; CI reçue), fuseau Africa/Dakar. Lire d’abord [l’état courant concis](docs/etat-courant.md), la [publication COR](docs/publication-correctifs-2026-10-04.md), puis le [dossier local](docs/correctifs-audit-validation-2026-10-04.md).
 
+## Vérification complète des flux — 5 octobre 2026 (lire en premier)
+
+- 12 396 flux recontrôlés (10 passages, 4 oct. 19 h 10 → 5 oct. 01 h 24 UTC) puis **copiés sur Railway staging** avec le feu vert du
+  propriétaire, après sauvegarde chiffrée vérifiée. Flux : 4 557 navigateur, 2 442 VLC, 5 295 OFFLINE confirmés, 102 non testables.
+  Chaînes : 4 511 navigateur, 2 057 VLC seulement, 5 108 hors ligne (masquées sur staging), 102 non testables ; 6 665 visibles en public.
+  Détail : première section de [production-progress.md](docs/production-progress.md). Outils : `.local-logs/streams-2026-10-04/`.
+- **Cycle de 15 jours décidé par le propriétaire** : validité d'un contrôle portée de 7 à 16 jours (`src/lib/stream-freshness.ts`,
+  commit `573dba0`, CI [37355267984](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/37355267984) SUCCESS) **publié sur
+  staging après autorisation explicite : Railway `df049618-d475-4689-bedd-ecc45a970ae4` SUCCESS**, 438/438 fichiers identiques, santé 200
+  sur les deux domaines, 10/10 E2E distants (`.local-logs/publication-freshness/`). Tâche Windows « Africa Live - verification des flux » (tous les 15 jours, 20 h,
+  première le 19 octobre) : `.local-logs/stream-cycle/run-cycle.cjs`, journaux `runs/`, résultat `last-result.json`.
+
 ## Audit et plan des correctifs — 4 octobre 2026
 
 - Audit approfondi local : [rapport F1–F12](docs/audit-code-2026-10-04.md). Deux priorités : droits NabooPay recrédités par recalcul et branche UNTESTED permissive hors local.

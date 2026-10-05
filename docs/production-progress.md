@@ -1,5 +1,37 @@
 # Progression — préparation production
 
+## Vérification complète des flux et mise à jour Railway — 4–5 octobre 2026
+
+Sur demande du propriétaire : contrôle réseau des 12 396 flux depuis le poste local (origine CORS `https://staging.africatv.sn`),
+10 passages du 4 octobre 19 h 10 au 5 octobre 01 h 24 UTC (`verify-streams.ts --all`, revues `--review-generic-query` /
+`--review-time-window-query`, puis passages planifiés jusqu'à confirmation). Hors ligne confirmés selon la politique existante
+(3 échecs persistants ou 5 temporaires espacés), sans modification de code.
+
+| Flux | Nombre | Chaînes (meilleur badge) | Nombre |
+|---|---|---|---|
+| BROWSER_OK sains | 4 557 | Navigateur | 4 511 |
+| VLC_ONLY sains | 2 442 | VLC seulement | 2 057 |
+| OFFLINE confirmés | 5 295 | Hors ligne (masquées hors local) | 5 108 |
+| UNTESTED (97 jetons personnels, 5 rtmp/mmsh) | 102 | Non testables | 102 |
+
+- 475 URL à paramètres revues (149 saines) ; les 97 liens à jeton/signature restent volontairement non testés.
+- Sauvegarde locale `backups/local-sync/local-before-stream-verify-2026-10-04T19-10-01-257Z.dump` ; sauvegarde Railway chiffrée
+  `backups/railway/railway-before-stream-verify-2026-10-05T01-24-23-254Z` (restauration de contrôle : 11 778 / 12 396 / 3 utilisateurs / 48 favoris).
+- Railway staging : colonnes de vérification copiées par id en une transaction (`.local-logs/streams-2026-10-04/railway-apply.cjs`),
+  empreinte d'état identique au local après écriture, utilisateurs et favoris inchangés, 6 665 chaînes visibles au catalogue public
+  (Canal+ exclu), `/api/health` 200. Aucun déploiement, variable, migration ou code modifié.
+- En local, la règle MVP laisse tout le catalogue visible (hors ligne compris).
+- **Cycle de 15 jours** (décision du propriétaire, 5 octobre) : fraîcheur portée de 7 à 16 jours (`STREAM_FRESHNESS_TTL_DAYS`,
+  commit `573dba0` ; tsc 0, lint 0, 364 unités, 23 intégrations, invariants 4/4). Contrepartie : une source morte peut rester
+  affichée jusqu'au cycle suivant. Vérification depuis le poste local (réseau sénégalais), pas depuis Railway (US West).
+  Tâche planifiée Windows « Africa Live - verification des flux » : tous les 15 jours à 20 h, premier passage le 19 octobre,
+  réveil du PC, session ouverte requise ; `.local-logs/stream-cycle/run-cycle.cjs` enchaîne sauvegarde locale, `--all`, passages
+  planifiés jusqu'à confirmation (9 h max), sauvegarde Railway chiffrée et copie transactionnelle (arrêt si le catalogue diffère).
+- **Publié sur staging** sur autorisation explicite du propriétaire : CI [37355267984](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/37355267984)
+  SUCCESS, instantané Git (552 fichiers, aucun fichier privé) envoyé par Railway CLI, déploiement `df049618-d475-4689-bedd-ecc45a970ae4`
+  SUCCESS, 438/438 fichiers applicatifs identiques, rôle staging / `NODE_ENV=production`, santé 200 sur les deux domaines, météo 401 et
+  accès protégés 307, 10/10 E2E distants. Aucune migration, variable ou configuration Railway modifiée.
+
 ## Correctifs de l’audit — publiés sur staging le 4 octobre 2026
 
 Sur demande du propriétaire : droits datés et remboursements selon décision explicite, éligibilité stricte, transport/reprise NabooPay,
