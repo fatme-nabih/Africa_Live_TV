@@ -1,8 +1,20 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 4 octobre 2026 (COR publié sur GitHub et Railway staging ; CI reçue), fuseau Africa/Dakar. Lire d’abord [l’état courant concis](docs/etat-courant.md), la [publication COR](docs/publication-correctifs-2026-10-04.md), puis le [dossier local](docs/correctifs-audit-validation-2026-10-04.md).
+Dernière mise à jour : 5 octobre 2026 (refonte Radar R1–R4 committée en local, publication Railway en attente), fuseau Africa/Dakar. Lire d’abord [l’état courant concis](docs/etat-courant.md), la [publication COR](docs/publication-correctifs-2026-10-04.md), puis le [dossier local](docs/correctifs-audit-validation-2026-10-04.md).
 
-## Vérification complète des flux — 5 octobre 2026 (lire en premier)
+## Refonte du Radar R1–R4 — 5 octobre 2026 (lire en premier)
+
+- Lots R1 (`68e0ddf`, retrait des « Direct » trompeurs), R2 (`8d28d43`, fil format agence et séparateurs horaires), R3 (`dc2ddcd`,
+  carte pleine hauteur, météo condensée) et R4 (`c0ae888`, recherche et rubriques déduites) committés en local. Doublons (R4 point 3)
+  différés. Détail et contrôles : première section de [production-progress.md](docs/production-progress.md).
+- **Railway staging NON mis à jour** (reste `573dba0`) : premier `railway up` en erreur réseau, nouvelle tentative bloquée par le
+  contrôle d'autorisation de l'agent. Paquet prêt : `node .local-logs/publication-radar/deploy.cjs` puis `status.cjs`,
+  `remote-proof.cjs`, `health.cjs`, `e2e-remote.cjs`. Pas de migration. Rien de poussé sur GitHub.
+- E2E MVP en local : arrêter le serveur Clerk de 3001, lancer `npm run dev` avec `LOCAL_DEV_MODE` et `NEXT_PUBLIC_LOCAL_DEV_MODE`
+  à `true`, recréer l'utilisateur `africa-live-local-user` (ligne de `setup-local.ts`, `setup:local` refuse car `.env.local` existe),
+  `E2E_EXTERNAL_SERVER=true`, puis supprimer l'utilisateur et relancer le serveur Clerk.
+
+## Vérification complète des flux — 5 octobre 2026
 
 - 12 396 flux recontrôlés (10 passages, 4 oct. 19 h 10 → 5 oct. 01 h 24 UTC) puis **copiés sur Railway staging** avec le feu vert du
   propriétaire, après sauvegarde chiffrée vérifiée. Flux : 4 557 navigateur, 2 442 VLC, 5 295 OFFLINE confirmés, 102 non testables.

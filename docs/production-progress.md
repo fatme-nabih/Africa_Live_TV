@@ -1,5 +1,32 @@
 # Progression — préparation production
 
+## Refonte du Radar, lots R1 à R4 — 5 octobre 2026
+
+Demandée par le propriétaire après analyse de la page Radar : un lot à la fois, bilan, feu vert, commit sur demande.
+
+| Lot | Commit | Contenu |
+|---|---|---|
+| R1 | `68e0ddf` | Retrait des boutons « Direct » par dépêche et du « Regarder le direct du pays » d'« À la une » : ils lançaient une chaîne quelconque du pays, sans lien avec l'article. Un seul accès honnête, « Regarder une chaîne : <pays> », dans la barre du filtre pays. Ligne « région » et compte de dépêches répété retirés. |
+| R2 | `8d28d43` | Fil au format agence : heure à gauche, titre, puis source · rubrique · pays sur une ligne ; point de couleur au lieu du badge ; partage en icône. Séparateurs « Dernière heure / Il y a 1 à 3 h / Plus tôt aujourd'hui / Hier » (`src/lib/radar-time-groups.ts`), collants dans la colonne du bureau, calculés après hydratation. |
+| R3 | `dc2ddcd` | Carte à pleine hauteur de sa rangée (800 px = « À la une » à 1366 px) ; attribution sur une ligne de légende, Esri crédité seulement en vue satellite. Météo : ville nommée une fois, liste des pays et villes rapides dans un même bandeau, sous-titres redondants retirés (carte ~40 % plus courte). |
+| R4 | `c0ae888` | Recherche dans le fil (titre, source, rubrique, pays ; sans accents ni casse) et rubriques déduites Politique / Économie / Sécurité / Société / Sport / Culture (`src/lib/radar-topics.ts`) : libellé du flux s'il est clair, sinon mots-clés du titre, mots ambigus exclus. Filtrage dans le navigateur sur toute la vue, « À la une » comprise. |
+
+- Mesure préalable à R4 (échantillon réel de 257 dépêches) : 57 libellés de rubrique hétérogènes, ~60 % sans vraie rubrique ;
+  le classement range ~65 % des dépêches, le reste reste dans « Toutes ». Seulement 9 paires de titres proches entre rédactions :
+  le regroupement des doublons (point 3 de R4) est **différé** sur décision du propriétaire.
+- Limites : classement indicatif (une dépêche peut tomber dans deux rubriques) ; recherche et rubrique remises à zéro au changement
+  de pays ou de périmètre.
+- Contrôles : tsc 0, `eslint . --max-warnings=0` 0, `npm test` 372 réussis / 0 échec (dont 8 nouveaux), build de production local
+  réussi. E2E MVP (radar-live, radar-workspace, radar-reliability, radar-weather, a11y, app-shell, dashboard-reception,
+  universal-search, followed-countries) : 93 réussis, 1 ignoré, 0 échec ; tests UX-306 réécrits pour R1, nouveau test R4.
+  Captures vérifiées à 360 et 1366 px. Compte synthétique local recréé pour les E2E puis supprimé ; serveur Clerk relancé.
+- Aucune migration, variable, API ou configuration modifiée.
+- **Publication Railway staging demandée par le propriétaire, non effectuée** : paquet préparé depuis `c0ae888`
+  (`.local-logs/publication-radar/`, 556 fichiers dont 442 applicatifs, aucun fichier privé). Premier envoi `railway up` : erreur
+  réseau vers backboard.railway.com ; la nouvelle tentative a été bloquée par le contrôle d'autorisation de l'agent. Staging reste
+  sur `573dba0`. Reprendre avec `node .local-logs/publication-radar/deploy.cjs`, puis `status.cjs`, `remote-proof.cjs`,
+  `health.cjs`, `e2e-remote.cjs`. Rien n'est poussé sur GitHub.
+
 ## Vérification complète des flux et mise à jour Railway — 4–5 octobre 2026
 
 Sur demande du propriétaire : contrôle réseau des 12 396 flux depuis le poste local (origine CORS `https://staging.africatv.sn`),
