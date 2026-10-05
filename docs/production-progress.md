@@ -21,11 +21,13 @@ Demandée par le propriétaire après analyse de la page Radar : un lot à la fo
   universal-search, followed-countries) : 93 réussis, 1 ignoré, 0 échec ; tests UX-306 réécrits pour R1, nouveau test R4.
   Captures vérifiées à 360 et 1366 px. Compte synthétique local recréé pour les E2E puis supprimé ; serveur Clerk relancé.
 - Aucune migration, variable, API ou configuration modifiée.
-- **Publication Railway staging demandée par le propriétaire, non effectuée** : paquet préparé depuis `c0ae888`
-  (`.local-logs/publication-radar/`, 556 fichiers dont 442 applicatifs, aucun fichier privé). Premier envoi `railway up` : erreur
-  réseau vers backboard.railway.com ; la nouvelle tentative a été bloquée par le contrôle d'autorisation de l'agent. Staging reste
-  sur `573dba0`. Reprendre avec `node .local-logs/publication-radar/deploy.cjs`, puis `status.cjs`, `remote-proof.cjs`,
-  `health.cjs`, `e2e-remote.cjs`. Rien n'est poussé sur GitHub.
+- **Publié sur Railway staging** à la demande du propriétaire : l'envoi par l'agent ayant échoué (erreur réseau, puis tentative
+  bloquée par le contrôle d'autorisation), le propriétaire a lancé lui-même `prepare-upload.cjs` et `deploy.cjs`
+  (`.local-logs/publication-radar/`) depuis `53fce10` (code applicatif identique à `c0ae888`). **Railway `c151b5b1` SUCCESS** ;
+  vérifications par l'agent : 442/442 fichiers applicatifs identiques sur le serveur, rôle `staging`, `NODE_ENV=production` ;
+  `/api/health` 200 (processus et base) sur `staging.africatv.sn` et le domaine Railway ; météo anonyme 401, `/app/live`,
+  `/app/mur` et `/api/followed-countries` anonymes → 307 vers la connexion ; 10/10 E2E distants. Pas de migration.
+  Rien n'est poussé sur GitHub (pas de CI pour ces commits).
 
 ## Vérification complète des flux et mise à jour Railway — 4–5 octobre 2026
 

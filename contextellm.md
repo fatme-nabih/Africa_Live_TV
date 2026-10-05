@@ -1,15 +1,15 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 5 octobre 2026 (refonte Radar R1–R4 committée en local, publication Railway en attente), fuseau Africa/Dakar. Lire d’abord [l’état courant concis](docs/etat-courant.md), la [publication COR](docs/publication-correctifs-2026-10-04.md), puis le [dossier local](docs/correctifs-audit-validation-2026-10-04.md).
+Dernière mise à jour : 5 octobre 2026 (refonte Radar R1–R4 publiée sur Railway staging, non poussée sur GitHub), fuseau Africa/Dakar. Lire d’abord [l’état courant concis](docs/etat-courant.md), la [publication COR](docs/publication-correctifs-2026-10-04.md), puis le [dossier local](docs/correctifs-audit-validation-2026-10-04.md).
 
 ## Refonte du Radar R1–R4 — 5 octobre 2026 (lire en premier)
 
 - Lots R1 (`68e0ddf`, retrait des « Direct » trompeurs), R2 (`8d28d43`, fil format agence et séparateurs horaires), R3 (`dc2ddcd`,
   carte pleine hauteur, météo condensée) et R4 (`c0ae888`, recherche et rubriques déduites) committés en local. Doublons (R4 point 3)
   différés. Détail et contrôles : première section de [production-progress.md](docs/production-progress.md).
-- **Railway staging NON mis à jour** (reste `573dba0`) : premier `railway up` en erreur réseau, nouvelle tentative bloquée par le
-  contrôle d'autorisation de l'agent. Paquet prêt : `node .local-logs/publication-radar/deploy.cjs` puis `status.cjs`,
-  `remote-proof.cjs`, `health.cjs`, `e2e-remote.cjs`. Pas de migration. Rien de poussé sur GitHub.
+- **Publié sur Railway staging : `c151b5b1` SUCCESS** depuis `53fce10` (envoi lancé par le propriétaire, l'envoi par l'agent ayant
+  été bloqué). 442/442 fichiers identiques, santé 200 sur les deux domaines, refus anonymes conservés, 10/10 E2E distants.
+  Scripts : `.local-logs/publication-radar/`. Pas de migration. **Rien de poussé sur GitHub** : pas de CI pour R1–R4.
 - E2E MVP en local : arrêter le serveur Clerk de 3001, lancer `npm run dev` avec `LOCAL_DEV_MODE` et `NEXT_PUBLIC_LOCAL_DEV_MODE`
   à `true`, recréer l'utilisateur `africa-live-local-user` (ligne de `setup-local.ts`, `setup:local` refuse car `.env.local` existe),
   `E2E_EXTERNAL_SERVER=true`, puis supprimer l'utilisateur et relancer le serveur Clerk.
