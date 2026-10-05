@@ -521,7 +521,7 @@ export default function TacticalVectorMap({
   );
 
   return (
-    <div className="relative w-full overflow-hidden rounded-xl border border-line bg-black/60">
+    <div className="relative flex w-full flex-1 flex-col overflow-hidden rounded-xl border border-line bg-black/60">
       <div className="relative z-10 flex flex-wrap items-center gap-2 border-b border-line bg-black/60 p-2">
         <div role="group" aria-label="Fond de carte" className="flex items-center rounded-xl border border-line bg-black/60 p-0.5">
           {modeButton('dark', 'Sombre', 'Fond sombre léger : consomme peu de données')}
@@ -559,7 +559,8 @@ export default function TacticalVectorMap({
 
       <div
         ref={mapContainerRef}
-        className="h-[420px] sm:h-[520px] w-full"
+        // Sur grand écran la carte occupe toute la hauteur de sa rangée (à côté de « À la une ») : plus de vide sous la carte (R3).
+        className="h-[420px] w-full sm:h-[520px] xl:h-auto xl:min-h-[520px] xl:flex-1"
         style={{ background: 'var(--color-surface-1)' }}
       />
 
@@ -588,6 +589,10 @@ export default function TacticalVectorMap({
             Effacer le filtre
           </button>
         )}
+        {/* Attribution obligatoire, sur une ligne : l'imagerie Esri n'est créditée que lorsqu'elle est affichée. */}
+        <p className="w-full text-text-muted">
+          Contours : Natural Earth{basemapMode === 'satellite' && <> · Imagerie © Esri, Maxar, Earthstar Geographics</>}
+        </p>
       </div>
     </div>
   );

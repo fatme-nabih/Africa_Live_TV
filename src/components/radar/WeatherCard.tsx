@@ -72,7 +72,7 @@ export default function WeatherCard({
           </span>
           <div className="min-w-0">
             <div className="flex items-center gap-2 text-sm font-bold text-text">
-              Météo locale
+              Météo
               <span className="font-normal text-text-faint" aria-hidden="true">·</span>
               <span className="truncate">{place}</span>
             </div>
@@ -107,13 +107,14 @@ export default function WeatherCard({
       </div>
 
       <div id="radar-meteo-corps" hidden={!open}>
-        <div className="flex flex-wrap items-center gap-2 border-t border-line px-4 py-2.5 sm:px-5">
+        {/* Un seul bandeau de choix (R3) : la liste de tous les pays, puis les villes rapides qui défilent à côté. */}
+        <div className="flex items-center gap-2 border-t border-line bg-black/40 py-2 pl-4 sm:pl-5">
           <select
             id="weather-country-select"
             aria-label="Choisir le pays ou la ville pour la météo"
             value={activeWeatherCode}
             onChange={event => onSelectCountry(event.target.value)}
-            className="min-h-11 rounded-control border border-line bg-surface-2 px-2.5 text-xs font-medium text-text hover:border-line-gold focus:border-al-gold focus:outline-none focus:ring-1 focus:ring-al-gold/50"
+            className="min-h-11 w-32 shrink-0 rounded-control border border-line bg-surface-2 px-2 text-xs font-medium text-text hover:border-line-gold focus:border-al-gold focus:outline-none focus:ring-1 focus:ring-al-gold/50 sm:w-40"
           >
             <optgroup label={`Pays et territoires africains (${AFRICAN_COUNTRIES.length})`}>
               {[...AFRICAN_COUNTRIES].sort((a, b) => a.name.localeCompare(b.name, 'fr')).map(country => {
@@ -126,9 +127,7 @@ export default function WeatherCard({
               })}
             </optgroup>
           </select>
-        </div>
-
-        <div aria-label="Villes rapides" className="no-scrollbar flex gap-1.5 overflow-x-auto border-t border-line bg-black/40 px-4 py-2 text-xs sm:px-5">
+          <div aria-label="Villes rapides" className="no-scrollbar flex min-w-0 flex-1 gap-1.5 overflow-x-auto pr-4 text-xs sm:pr-5">
           {(weather?.quickLocations && weather.quickLocations.length > 0 ? weather.quickLocations : QUICK_WEATHER_LOCATIONS).map(location => {
             const isActive = activeWeatherCode === location.code;
             return (
@@ -146,6 +145,7 @@ export default function WeatherCard({
               </button>
             );
           })}
+          </div>
         </div>
 
         <div className="p-4 sm:p-5">
@@ -165,7 +165,7 @@ export default function WeatherCard({
             </div>
           ) : weather ? (
             <div className="space-y-3">
-              <div className="flex flex-col justify-between gap-3 rounded-control border border-line bg-surface-2/60 p-3.5 sm:flex-row sm:items-center">
+              <div className="rounded-control border border-line bg-surface-2/60 p-3.5">
                 <div className="flex items-center gap-3.5">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-line bg-surface-1">
                     <WeatherIconDisplay icon={weather.current.weatherIcon} isDay={weather.current.isDay} />
@@ -175,20 +175,18 @@ export default function WeatherCard({
                       <span className="font-display text-3xl font-bold tracking-tight text-text tabular-nums">{weather.current.temperatureC}°C</span>
                       <span className="text-xs font-semibold text-text-muted">Ressenti {weather.current.apparentTemperatureC}°C</span>
                     </div>
-                    <p className="mt-0.5 text-xs font-semibold text-text">{weather.current.weatherDescription}</p>
+                    {/* La ville est déjà dans le titre : seuls le pays et la région la situent ici. */}
+                    <p className="mt-0.5 text-xs text-text-muted">
+                      <span className="font-semibold text-text">{weather.current.weatherDescription}</span> · {weather.current.countryName} · {weather.current.region}
+                    </p>
                   </div>
-                </div>
-                <div className="text-left sm:text-right">
-                  <div className="text-sm font-bold text-text">{weather.current.locationName}</div>
-                  <div className="text-xs text-text-muted">{weather.current.countryName} · {weather.current.region}</div>
-                  <div className="mt-1 font-mono text-xs text-text-muted">{weather.current.timezone ?? 'Fuseau inconnu'}</div>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <Metric icon={<Wind className="h-3 w-3" />} label="Vent" value={weather.current.windSpeedKmh} unit="km/h" detail={`${weather.current.windDirectionCompass} (${weather.current.windDirectionDeg}°)`} />
-                <Metric icon={<Droplets className="h-3 w-3" />} label="Humidité" value={weather.current.relativeHumidityPercent} unit="%" detail="Hygrométrie" />
-                <Metric icon={<CloudRain className="h-3 w-3" />} label="Pluie" value={weather.current.precipitationMm} unit="mm" detail="Précipitations" />
+                <Metric icon={<Droplets className="h-3 w-3" />} label="Humidité" value={weather.current.relativeHumidityPercent} unit="%" />
+                <Metric icon={<CloudRain className="h-3 w-3" />} label="Pluie" value={weather.current.precipitationMm} unit="mm" />
                 <Metric
                   icon={<Compass className="h-3 w-3" />}
                   label="Relevé"

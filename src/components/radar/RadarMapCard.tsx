@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Info, Radar } from 'lucide-react';
+import { Radar } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
 import type { LiveChannelsSummarySnapshot } from '@/lib/live-channels-types';
@@ -47,7 +47,7 @@ export default function RadarMapCard({
     return () => media.removeEventListener('change', update);
   }, []);
   return (
-    <article aria-label="Carte du Radar" className={`relative overflow-hidden rounded-card border border-line bg-surface-1 ${className}`}>
+    <article aria-label="Carte du Radar" className={`relative flex flex-col overflow-hidden rounded-card border border-line bg-surface-1 ${className}`}>
       <div className="h-[2px] w-full bg-tricolor-bar absolute top-0 left-0 right-0 opacity-80" />
       <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 border-b border-line px-4 py-3 sm:px-5">
         <div className="flex items-center gap-2 text-sm font-bold text-text">
@@ -59,7 +59,7 @@ export default function RadarMapCard({
         <p className="text-xs text-text-muted">Où ça se passe, pays par pays.</p>
       </div>
 
-      <div className="p-2 sm:p-3">
+      <div className="flex flex-1 flex-col p-2 sm:p-3">
         {!desktopMap && (
           <Button
             variant="secondary"
@@ -74,7 +74,7 @@ export default function RadarMapCard({
         )}
         {/* Sur grand écran, la place de la carte (barre d'outils, carte, légende : 614 px mesurés) est réservée dès le rendu serveur :
             plus de saut quand la carte remplace le bouton « Afficher la carte » après hydratation (CLS mesuré par Lighthouse). */}
-        <div id="radar-map" className="xl:min-h-[614px]">
+        <div id="radar-map" className="flex flex-1 flex-col xl:min-h-[614px]">
           {showMap ? (
             <TacticalVectorMap
               countries={AFRICAN_COUNTRIES}
@@ -88,11 +88,6 @@ export default function RadarMapCard({
             <p className="p-3 text-xs text-text-muted xl:hidden">Carte à la demande, pour économiser vos données. Le choix du pays et les dépêches fonctionnent sans elle.</p>
           )}
         </div>
-      </div>
-
-      <div className="border-t border-line bg-black/40 px-4 py-3 text-xs leading-5 text-text-muted sm:px-5">
-        <Info aria-hidden="true" className="mr-1.5 inline h-3.5 w-3.5 align-[-2px] text-al-gold/80" />
-        Contours des pays : Natural Earth (domaine public). Imagerie satellite (option) © Esri, Maxar, Earthstar Geographics. Les repères situent les rédactions et les télévisions référencées.
       </div>
     </article>
   );
