@@ -13,6 +13,7 @@ import {
   AwaitingUserOverlay,
   FailureOverlay,
   ExternalOpeningOverlay,
+  ExternalReadyOverlay,
   ExternalOpenedOverlay,
   ExternalSuggestedOverlay,
 } from './player/PlayerOverlays';
@@ -108,6 +109,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
   const externalLaunchPendingRef = useRef(false);
   const launchIdRef = useRef<string | null>(null);
   const externalControllerRef = useRef<AbortController | null>(null);
+  const preparedExternalAttemptRef = useRef<ActiveAttempt | null>(null);
   const bufferingTimeoutRef = useRef<number | null>(null);
   const [state, dispatch] = useReducer(playbackReducer, initialPlaybackState);
   const [resolvedChannel, setResolvedChannel] = React.useState({ channelId, name: channelName });
@@ -206,6 +208,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
     automaticDecisionsRef.current.clear();
     externalLaunchRequestedRef.current = false;
     externalLaunchPendingRef.current = false;
+    preparedExternalAttemptRef.current = null;
     launchIdRef.current = crypto.randomUUID();
     externalControllerRef.current?.abort();
     dispatch({ type: 'SELECT_CHANNEL', channelId: channelId || null });
@@ -224,6 +227,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
       selectedChannelIdRef.current = '';
       cancelResolution();
       externalControllerRef.current?.abort();
+      externalControllerRef.current = null;
       stopStartupTimeout();
     };
   }, [channelId, handleResolutionFailure, resolveWebSource, stopStartupTimeout, cancelResolution]);
@@ -442,8 +446,9 @@ export default function Player({ channelId, channelName = '', anchored = false, 
       onExternalHandoff?.();
       return;
     }
+    const mobilePlatform = detectMobilePlatform(navigator.userAgent, navigator.maxTouchPoints);
     if (externalLaunchPendingRef.current) return;
-    if (LOCAL_AUTOMATIC_PLAYBACK && externalLaunchRequestedRef.current && !retry) return;
+    if (LOCAL_AUTOMATIC_PLAYBACK && !mobilePlatform && externalLaunchRequestedRef.current && !retry) return;
     if (retry || !launchIdRef.current) launchIdRef.current = crypto.randomUUID();
     externalLaunchRequestedRef.current = true;
     cancelResolution();
@@ -456,9 +461,10 @@ export default function Player({ channelId, channelName = '', anchored = false, 
     const active = activeAttemptRef.current;
     if (active) telemetryRef.current?.emit(active, 'stopped', { playerEngine: telemetryEngine(active.engine), sessionEnded: true });
     activeAttemptRef.current = null;
+    preparedExternalAttemptRef.current = null;
     dispatch({ type: 'EXTERNAL_REQUESTED', userInitiated: true });
 
-    if (LOCAL_AUTOMATIC_PLAYBACK) {
+    if (LOCAL_AUTOMATIC_PLAYBACK && !mobilePlatform) {
       externalControllerRef.current?.abort();
       const controller = new AbortController();
       externalControllerRef.current = controller;
@@ -506,7 +512,11 @@ export default function Player({ channelId, channelName = '', anchored = false, 
       return;
     }
 
-    const mobilePlatform = detectMobilePlatform(navigator.userAgent);
+    externalControllerRef.current?.abort();
+    const controller = new AbortController();
+    externalControllerRef.current = controller;
+    externalLaunchPendingRef.current = true;
+    const deadline = window.setTimeout(() => controller.abort(), 15_000);
     const body = playbackResolutionRequestSchema.parse({
       channelId,
       destination: 'vlc-mobile',
@@ -516,10 +526,11 @@ export default function Player({ channelId, channelName = '', anchored = false, 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
       cache: 'no-store',
+      signal: controller.signal,
     })
       .then((response) => readApiResponse(response, playbackResolutionResponseSchema))
       .then((payload) => {
-        if (selectedChannelIdRef.current !== channelId) return;
+        if (selectedChannelIdRef.current !== channelId || controller.signal.aborted) return;
 
         const parsed = new URL(payload.sourceUrl);
         if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
@@ -530,6 +541,20 @@ export default function Player({ channelId, channelName = '', anchored = false, 
         const targetUrl = mobilePlatform
           ? buildMobileVlcUrl(safeStreamUrl, mobilePlatform)
           : `vlc://${safeStreamUrl}`;
+        const attempt: ActiveAttempt = {
+          playbackSessionId: payload.playbackSessionId,
+          attemptId: payload.attemptId,
+          channelId,
+          engine: 'vlc',
+          startedAt: performance.now(),
+        };
+        if (mobilePlatform === 'ios') {
+          // Safari must follow a real tap on a prepared link, without another fetch
+          // or a synthetic click between the gesture and the VLC URL navigation.
+          preparedExternalAttemptRef.current = attempt;
+          dispatch({ type: 'EXTERNAL_READY', url: targetUrl });
+          return;
+        }
         const externalLink = document.createElement('a');
         externalLink.setAttribute('href', targetUrl);
         externalLink.setAttribute('rel', 'noopener noreferrer');
@@ -547,13 +572,6 @@ export default function Player({ channelId, channelName = '', anchored = false, 
           activeAttemptRef.current = null;
         }
 
-        const attempt: ActiveAttempt = {
-          playbackSessionId: payload.playbackSessionId,
-          attemptId: payload.attemptId,
-          channelId,
-          engine: 'vlc',
-          startedAt: performance.now(),
-        };
         activeAttemptRef.current = attempt;
         playbackSessionRef.current = {
           id: payload.playbackSessionId,
@@ -565,7 +583,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
         onPlaybackStartedRef.current?.();
       })
       .catch((error: unknown) => {
-        if (selectedChannelIdRef.current !== channelId) return;
+        if (selectedChannelIdRef.current !== channelId || externalControllerRef.current !== controller) return;
         const failure: PlaybackFailure = {
           category: 'unknown',
           code: error instanceof ApiRequestError
@@ -579,8 +597,33 @@ export default function Player({ channelId, channelName = '', anchored = false, 
           errorMessage: failure.message,
         });
         dispatch({ type: 'EXTERNAL_FAILED', failure });
+      })
+      .finally(() => {
+        window.clearTimeout(deadline);
+        if (externalControllerRef.current === controller) externalLaunchPendingRef.current = false;
       });
   }, [anchored, onExternalHandoff, channelId, emitForActiveAttempt, stopStartupTimeout, cancelResolution]);
+
+  const handlePreparedExternalClick = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
+    const attempt = preparedExternalAttemptRef.current;
+    if (!attempt || attempt.channelId !== selectedChannelIdRef.current) {
+      event.preventDefault();
+      return;
+    }
+    if (activeAttemptRef.current?.attemptId !== attempt.attemptId) {
+      attempt.startedAt = performance.now();
+      activeAttemptRef.current = attempt;
+      playbackSessionRef.current = {
+        id: attempt.playbackSessionId,
+        channelId: attempt.channelId,
+        attemptId: attempt.attemptId,
+      };
+      telemetryRef.current?.emit(attempt, 'opened', { playerEngine: 'vlc' });
+      onPlaybackStartedRef.current?.();
+    }
+    dispatch({ type: 'EXTERNAL_OPENED' });
+    // The anchor's native navigation transmits the URL synchronously with the tap.
+  }, []);
 
   useEffect(() => {
     if (anchored) return;
@@ -682,7 +725,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
   const showError = Boolean(visibleFailure);
 
   // « Relancer VLC » : en attente de choix (external-required), l'écran central propose déjà « Lancer VLC » (pas de doublon).
-  const vlcAction = (externalSuggested || externalReady || externalOpened || state.engine === 'vlc') && state.phase !== 'external-required';
+  const vlcAction = (externalSuggested || externalReady || externalOpened || state.engine === 'vlc') && state.phase !== 'external-required' && !state.externalUrl;
   const vlcButton = vlcAction ? (
       <button
         type="button"
@@ -722,10 +765,17 @@ export default function Player({ channelId, channelName = '', anchored = false, 
             tryAnotherSource={tryAnotherSource} 
           />
           <ExternalOpeningOverlay key="external-opening" phase={state.phase} />
+          <ExternalReadyOverlay
+            key="external-ready"
+            url={externalReady ? state.externalUrl : null}
+            onOpen={handlePreparedExternalClick}
+          />
           <ExternalOpenedOverlay 
             key="external-opened"
             externalOpened={externalOpened} 
             openExternalPlayer={openExternalPlayer} 
+            url={state.externalUrl}
+            onOpen={handlePreparedExternalClick}
           />
           <ExternalSuggestedOverlay 
             key="external-suggested"

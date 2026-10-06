@@ -1,5 +1,16 @@
 # Checklist de non-régression — lots local et Railway
 
+## VLC iPhone / CNews — reçu localement le 6 octobre 2026, non publié
+
+[Diagnostic, réception et limites](ios-vlc-cnews-2026-10-06.md).
+
+- [x] iOS prépare un lien VLC complet, attend un vrai clic et conserve le lien au retour sans nouvelle résolution.
+- [x] iPadOS détecté ; Android et bureau conservent leur lancement automatique ; aucun appel VLC desktop depuis mobile.
+- [x] Refus d’accès et protocoles interdits sans lien/lancement ; réponse lente sans lancement avant clic.
+- [x] 398 unités (375/23/0), typage/lint/build et 7 Playwright du composant avec agents mobiles réussis.
+- [x] Diagnostic CNews en lecture seule ; accès, éligibilité, données, `.env*`, services distants et IPTV source conservés.
+- [ ] Publication explicitement autorisée puis réception Safari/VLC sur vrai iPhone, démarrage à froid et relance.
+
 ## COR — correctifs publiés sur staging le 4 octobre 2026
 
 [Résultats par ticket et limites](correctifs-audit-validation-2026-10-04.md), [backlog actuel](backlog-correctifs-audit-2026-10-04.md).

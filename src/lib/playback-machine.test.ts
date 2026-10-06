@@ -62,8 +62,13 @@ test('mobile VLC waits for a second gesture after asynchronous resolution', () =
     userInitiated: true,
   });
   assert.equal(state.phase, 'external-opening');
-  state = playbackReducer(state, { type: 'EXTERNAL_READY' });
+  const url = 'vlc-x-callback://x-callback-url/stream?url=https%3A%2F%2Fmedia.test%2Flive.m3u8';
+  state = playbackReducer(state, { type: 'EXTERNAL_READY', url });
   assert.equal(state.phase, 'external-ready');
+  assert.equal(state.externalUrl, url);
   state = playbackReducer(state, { type: 'EXTERNAL_OPENED' });
   assert.equal(state.phase, 'external-opened');
+  assert.equal(state.externalUrl, url);
+  state = playbackReducer(state, { type: 'SELECT_CHANNEL', channelId: 'other-channel' });
+  assert.equal(state.externalUrl, null);
 });

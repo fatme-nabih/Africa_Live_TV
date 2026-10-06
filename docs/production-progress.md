@@ -1,5 +1,17 @@
 # Progression — préparation production
 
+## VLC iPhone / CNews — fiabilisation locale, 6 octobre 2026
+
+Signalement propriétaire : VLC ouvre sa médiathèque vide sur iPhone pour CNews ; Android fonctionne.
+Le format VideoLAN du lien est conservé ; iOS reçoit maintenant un vrai lien « Ouvrir dans VLC » après préparation,
+puis une relance native sans résolution supplémentaire. Android/bureau automatiques, iPadOS détecté, validation
+HTTP/HTTPS commune et résolutions externes annulables/bornées. [Dossier et limites](ios-vlc-cnews-2026-10-06.md).
+
+398 unités (375 réussies, 23 intégrations ignorées), typage/lint/build verts, 7 Playwright du composant dans Edge.
+CNews : manifeste et première variante HTTPS disponibles depuis le poste ; aucune qualification modifiée.
+**Non committé, non poussé, non publié ; Safari/VLC sur appareil réel et cause exacte à confirmer.**
+Aucun changement de schéma, données métier, `.env*`, service distant ou projet source IPTV.
+
 ## Refonte du Radar, lots R1 à R4 — 5 octobre 2026
 
 Demandée par le propriétaire après analyse de la page Radar : un lot à la fois, bilan, feu vert, commit sur demande.

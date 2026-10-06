@@ -40,6 +40,7 @@ export type PlaybackState = {
   source: PlaybackSource | null;
   attemptId: string | null;
   engine: PlayerEngine | null;
+  externalUrl: string | null;
   failure: PlaybackFailure | null;
   mediaRecoveryCount: number;
 };
@@ -57,7 +58,7 @@ export type PlaybackEvent =
   | { type: 'MEDIA_RECOVERING' }
   | { type: 'STREAM_FAILED'; failure: PlaybackFailure }
   | { type: 'EXTERNAL_REQUESTED'; userInitiated: boolean }
-  | { type: 'EXTERNAL_READY' }
+  | { type: 'EXTERNAL_READY'; url: string }
   | { type: 'EXTERNAL_OPENED' }
   | { type: 'EXTERNAL_FAILED'; failure: PlaybackFailure };
 
@@ -67,6 +68,7 @@ export const initialPlaybackState: PlaybackState = {
   source: null,
   attemptId: null,
   engine: null,
+  externalUrl: null,
   failure: null,
   mediaRecoveryCount: 0,
 };
@@ -128,12 +130,12 @@ export function playbackReducer(state: PlaybackState, event: PlaybackEvent): Pla
     case 'EXTERNAL_REQUESTED':
       return state.failure?.category === 'autoplay' && !event.userInitiated
         ? state
-        : { ...state, phase: 'external-opening', engine: 'vlc' };
+        : { ...state, phase: 'external-opening', engine: 'vlc', externalUrl: null };
     case 'EXTERNAL_READY':
-      return { ...state, phase: 'external-ready', engine: 'vlc', failure: null };
+      return { ...state, phase: 'external-ready', engine: 'vlc', externalUrl: event.url, failure: null };
     case 'EXTERNAL_OPENED':
       return { ...state, phase: 'external-opened', engine: 'vlc', failure: null };
     case 'EXTERNAL_FAILED':
-      return { ...state, phase: 'exhausted', failure: event.failure };
+      return { ...state, phase: 'exhausted', externalUrl: null, failure: event.failure };
   }
 }

@@ -108,25 +108,67 @@ export function ExternalOpeningOverlay({ phase }: { phase: string }) {
   );
 }
 
-export function ExternalOpenedOverlay({ externalOpened, openExternalPlayer }: { externalOpened: boolean; openExternalPlayer: (force: boolean) => void; }) {
+export function ExternalReadyOverlay({ url, onOpen }: {
+  url: string | null;
+  onOpen: React.MouseEventHandler<HTMLAnchorElement>;
+}) {
+  if (!url) return null;
+  return (
+    <div className="dock-fade absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/80 p-6 text-center">
+      <ExternalLink className="mb-3 h-10 w-10 text-al-gold" />
+      <h4 className="text-base sm:text-lg font-bold text-text">Votre chaîne est prête</h4>
+      <p className="mt-1.5 max-w-lg text-xs sm:text-sm text-text-muted">
+        Touchez le bouton pour lire cette chaîne dans VLC.
+      </p>
+      <a
+        href={url}
+        rel="noopener noreferrer"
+        onClick={onOpen}
+        className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-al-yellow px-4 py-2 text-xs sm:text-sm font-bold text-black transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold"
+      >
+        <ExternalLink className="h-3.5 w-3.5" />
+        Ouvrir dans VLC
+      </a>
+    </div>
+  );
+}
+
+export function ExternalOpenedOverlay({ externalOpened, openExternalPlayer, url, onOpen }: {
+  externalOpened: boolean;
+  openExternalPlayer: (force: boolean) => void;
+  url: string | null;
+  onOpen: React.MouseEventHandler<HTMLAnchorElement>;
+}) {
   if (!externalOpened) return null;
   return (
     <div
       className="dock-fade absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/80 p-6 text-center"
     >
       <ExternalLink className="mb-3 h-10 w-10 text-al-gold" />
-      <h4 className="text-base sm:text-lg font-bold text-text">VLC lancé</h4>
+      <h4 className="text-base sm:text-lg font-bold text-text">{url ? 'Ouverture de VLC demandée' : 'VLC lancé'}</h4>
       <p className="mt-1.5 max-w-lg text-xs sm:text-sm text-text-muted">
-        Le flux vidéo a été transmis automatiquement à VLC. La lecture démarre dans votre lecteur.
+        {url
+          ? 'Si la lecture ne démarre pas, ouvrez d’abord VLC, revenez ici puis réessayez.'
+          : 'Le flux vidéo a été transmis automatiquement à VLC. La lecture démarre dans votre lecteur.'}
       </p>
-      <button
+      {url ? (
+        <a
+          href={url}
+          rel="noopener noreferrer"
+          onClick={onOpen}
+          className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-line bg-white/[0.04] px-4 py-2 text-xs font-semibold text-text transition hover:border-al-gold/40 hover:bg-white/[0.08] hover:text-text"
+        >
+          <RefreshCw className="h-3 w-3" />
+          Réessayer dans VLC
+        </a>
+      ) : <button
         type="button"
         onClick={() => openExternalPlayer(true)}
         className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-line bg-white/[0.04] px-4 py-2 text-xs font-semibold text-text transition hover:border-al-gold/40 hover:bg-white/[0.08] hover:text-text"
       >
         <RefreshCw className="h-3 w-3" />
         <span>Relancer VLC</span>
-      </button>
+      </button>}
     </div>
   );
 }

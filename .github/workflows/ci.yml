@@ -117,7 +117,7 @@ jobs:
       run: npx tsx src/scripts/ui-fixture-user.ts --catalog
 
     - name: Sensitive UI regressions (local fixtures)
-      run: npx playwright test --workers=1 e2e/catalogue.spec.ts e2e/tv-workspace.spec.ts e2e/tv-streaming.spec.ts e2e/player-dock.spec.ts e2e/followed-countries.spec.ts e2e/tv-wall.spec.ts e2e/universal-search.spec.ts e2e/radar-reliability.spec.ts e2e/local-playback.spec.ts e2e/local-playback-api.spec.ts
+      run: npx playwright test --workers=1 e2e/catalogue.spec.ts e2e/tv-workspace.spec.ts e2e/tv-streaming.spec.ts e2e/player-dock.spec.ts e2e/followed-countries.spec.ts e2e/tv-wall.spec.ts e2e/universal-search.spec.ts e2e/radar-reliability.spec.ts e2e/local-playback.spec.ts e2e/local-playback-api.spec.ts e2e/mobile-vlc.spec.ts
       env:
         E2E_DEV_SERVER: 'true'
         E2E_ANONYMOUS_MODE: 'false'
