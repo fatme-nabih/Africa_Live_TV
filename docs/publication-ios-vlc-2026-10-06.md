@@ -19,10 +19,27 @@ pour tester CNews sur iPhone. [Diagnostic et réception locale](ios-vlc-cnews-20
 
 ## Publication et réception
 
-En cours. Les identifiants de commit/déploiement et les contrôles distants seront
-consignés après réception. Scripts et preuves privés sous
-`.local-logs/publication-ios-vlc/` ; upload préparé à partir d’un snapshot Git,
-sans `.env*` privés, sauvegardes, journaux locaux ni médias de test.
+Premier commit applicatif `5eff6c0` poussé sur GitHub `main`, Railway
+`50710166-de87-41f4-8bd4-4b7413a2af10` **SUCCESS**. Premier CI
+[`37525287582`](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/37525287582)
+arrêté sur l’audit obligatoire de deux dépendances de production indirectes :
+
+- `sharp` 0.35.4 → **0.35.5**, et ses binaires/libvips associés :
+  [avis du mainteneur](https://github.com/lovell/sharp/security/advisories/GHSA-wq5f-xc86-pv6w).
+- `source-map-js` 1.2.1 → **1.2.2** :
+  [avis de sécurité](https://github.com/advisories/GHSA-68fv-2mgg-jv7q).
+
+Mise à jour ciblée via `npm update sharp source-map-js`, dans les plages déjà
+acceptées par Next/PostCSS/Tailwind ; `package.json` et Next 16.3.8 conservés,
+pas de `--force`. Audit production local reçu : **zéro vulnérabilité** ; build
+et 398 unités (375 réussies, 23 intégrations ignorées) rejoués avec succès après
+la mise à jour. Les résultats de la livraison finale seront consignés
+après réception. Les alertes de l’audit incluant les dépendances de développement
+ne sont pas comprises dans ce résultat de production.
+
+Scripts et preuves privés sous `.local-logs/publication-ios-vlc/` ; upload
+préparé à partir d’un snapshot Git, sans `.env*` privés, sauvegardes, journaux
+locaux ni médias de test.
 
 La lecture Safari/VLC sur le vrai iPhone reste à confirmer par le propriétaire :
 choisir CNews, toucher **Ouvrir dans VLC**, puis tester le retour/relance. Aucun
