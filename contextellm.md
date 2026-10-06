@@ -1,6 +1,6 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 5 octobre 2026 (refonte Radar R1–R4 publiée sur Railway staging, non poussée sur GitHub), fuseau Africa/Dakar. Lire d’abord [l’état courant concis](docs/etat-courant.md), la [publication COR](docs/publication-correctifs-2026-10-04.md), puis le [dossier local](docs/correctifs-audit-validation-2026-10-04.md).
+Dernière mise à jour : 5 octobre 2026 (refonte Radar R1–R4 publiée sur Railway staging, poussée sur GitHub, CI réussie), fuseau Africa/Dakar. Lire d’abord [l’état courant concis](docs/etat-courant.md), la [publication COR](docs/publication-correctifs-2026-10-04.md), puis le [dossier local](docs/correctifs-audit-validation-2026-10-04.md).
 
 ## Refonte du Radar R1–R4 — 5 octobre 2026 (lire en premier)
 
@@ -9,7 +9,8 @@ Dernière mise à jour : 5 octobre 2026 (refonte Radar R1–R4 publiée sur Rail
   différés. Détail et contrôles : première section de [production-progress.md](docs/production-progress.md).
 - **Publié sur Railway staging : `c151b5b1` SUCCESS** depuis `53fce10` (envoi lancé par le propriétaire, l'envoi par l'agent ayant
   été bloqué). 442/442 fichiers identiques, santé 200 sur les deux domaines, refus anonymes conservés, 10/10 E2E distants.
-  Scripts : `.local-logs/publication-radar/`. Pas de migration. **Rien de poussé sur GitHub** : pas de CI pour R1–R4.
+  Scripts : `.local-logs/publication-radar/`. Pas de migration. Poussé sur GitHub (`a55b63c`) ; CI [37370828544](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/37370828544)
+  SUCCESS après relance (premier essai perdu dans une panne GitHub Actions).
 - E2E MVP en local : arrêter le serveur Clerk de 3001, lancer `npm run dev` avec `LOCAL_DEV_MODE` et `NEXT_PUBLIC_LOCAL_DEV_MODE`
   à `true`, recréer l'utilisateur `africa-live-local-user` (ligne de `setup-local.ts`, `setup:local` refuse car `.env.local` existe),
   `E2E_EXTERNAL_SERVER=true`, puis supprimer l'utilisateur et relancer le serveur Clerk.

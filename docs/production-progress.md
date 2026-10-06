@@ -27,7 +27,9 @@ Demandée par le propriétaire après analyse de la page Radar : un lot à la fo
   vérifications par l'agent : 442/442 fichiers applicatifs identiques sur le serveur, rôle `staging`, `NODE_ENV=production` ;
   `/api/health` 200 (processus et base) sur `staging.africatv.sn` et le domaine Railway ; météo anonyme 401, `/app/live`,
   `/app/mur` et `/api/followed-countries` anonymes → 307 vers la connexion ; 10/10 E2E distants. Pas de migration.
-  Rien n'est poussé sur GitHub (pas de CI pour ces commits).
+  Poussé ensuite sur GitHub à la demande du propriétaire (`main` → `a55b63c`, deux commits vides pour déclencher la CI, le
+  premier ayant cité la directive d'évitement dans son message). CI [37370828544](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/37370828544)
+  : premier essai sans exécution (panne GitHub Actions, aucun runner), relancé par le propriétaire, **SUCCESS** au 6 octobre.
 
 ## Vérification complète des flux et mise à jour Railway — 4–5 octobre 2026
 
