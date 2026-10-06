@@ -33,9 +33,31 @@ Mise à jour ciblée via `npm update sharp source-map-js`, dans les plages déj�
 acceptées par Next/PostCSS/Tailwind ; `package.json` et Next 16.3.8 conservés,
 pas de `--force`. Audit production local reçu : **zéro vulnérabilité** ; build
 et 398 unités (375 réussies, 23 intégrations ignorées) rejoués avec succès après
-la mise à jour. Les résultats de la livraison finale seront consignés
-après réception. Les alertes de l’audit incluant les dépendances de développement
+la mise à jour. Les alertes de l’audit incluant les dépendances de développement
 ne sont pas comprises dans ce résultat de production.
+
+### Livraison finale reçue
+
+- Commit de livraison [`8fcfbda`](https://github.com/fatme-nabih/Africa_Live_TV/commit/8fcfbda973c669b274c9c7e01014d08bbb0e57cb)
+  poussé sur `main`, contenant le correctif VLC `5eff6c0` et les dépendances corrigées.
+- Railway **`738d71b8-3a05-45b5-8bb2-f9906d2610fa` SUCCESS**, actif.
+  L’envoi CLI a perdu sa réponse réseau et renvoyé une erreur, mais Railway avait
+  reçu l’archive : identité du message `VLC iPhone - Git 8fcfbda` retrouvée,
+  compilation suivie jusqu’au succès, sans renvoyer un déploiement en double.
+- **442/442 fichiers applicatifs identiques** au snapshot Git (SHA-256), aucun
+  écart. Runtime confirmé : staging, Node production, Next 16.3.8, sharp 0.35.5,
+  source-map-js 1.2.2 ; MVP/lecture locale/VLC desktop/anonyme CI désactivés.
+- Migrations après livraison : **20/20, aucune en attente**, 41 fichiers Drizzle
+  identiques. Aucun changement de schéma ou de configuration distante.
+- Santé **HTTP 200** sur les domaines staging et Railway ; météo anonyme 401,
+  `/app/live`, `/app/mur` et `/api/followed-countries` redirigent vers la connexion.
+- **10/10 E2E distants réussis**, sans session authentifiée ni paiement réel.
+- CI [`37526110709`](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/37526110709)
+  **SUCCESS** : lint/typage/audit production/build, 375 unités (23 ignorées),
+  23/23 intégrations, 9 E2E de build (10 ignorés), **66 E2E UI réussis** (1 ignoré),
+  dont les **sept tests mobiles dans l’application Next**, puis nettoyage des
+  fixtures. Snyk Code demeure indisponible dans l’organisation, avertissement
+  conservé ; aucun scan SAST reçu.
 
 Scripts et preuves privés sous `.local-logs/publication-ios-vlc/` ; upload
 préparé à partir d’un snapshot Git, sans `.env*` privés, sauvegardes, journaux

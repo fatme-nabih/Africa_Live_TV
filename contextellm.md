@@ -1,17 +1,22 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 6 octobre 2026 (fiabilisation VLC iPhone locale, non publiée), fuseau Africa/Dakar. Lire d’abord la section VLC iPhone ci-dessous, puis [l’état courant concis](docs/etat-courant.md), la [publication COR](docs/publication-correctifs-2026-10-04.md) et le [dossier local](docs/correctifs-audit-validation-2026-10-04.md).
+Dernière mise à jour : 6 octobre 2026 (VLC iPhone publié sur GitHub/Railway staging, CI réussie), fuseau Africa/Dakar. Lire d’abord la section VLC iPhone ci-dessous, puis [l’état courant concis](docs/etat-courant.md), la [publication COR](docs/publication-correctifs-2026-10-04.md) et le [dossier local](docs/correctifs-audit-validation-2026-10-04.md).
 
 ## VLC iPhone / CNews — 6 octobre 2026 (lire en premier)
 
 - Signalement propriétaire : VLC se lance sur iPhone mais montre sa médiathèque vide, chaîne **CNews** ; Android fonctionne.
-- Fiabilisation **locale, NON committée / NON poussée / NON publiée** : iOS prépare le flux puis affiche un vrai lien
+- Fiabilisation **publiée sur GitHub et Railway staging à la demande du propriétaire** : iOS prépare le flux puis affiche un vrai lien
   « Ouvrir dans VLC », suivi d’un lien de relance ; Android et bureau gardent le lancement automatique. iPadOS reconnu,
   protocoles HTTP/HTTPS validés et résolutions externes annulables/bornées. [Diagnostic et preuves](docs/ios-vlc-cnews-2026-10-06.md).
 - Réception : 398 unités (375 réussies, 23 intégrations ignorées), typage/lint/build verts, 7 Playwright sur composant réel
   dans Edge avec agents mobiles. CNews : manifeste et variante HTTPS 206 depuis le poste, lecture seule, aucun statut changé.
-- **Appareil réel et cause exacte non reçus** ; ouverture de VLC simulée dans les tests. Après publication expressément demandée,
-  tester Safari/iPhone et CNews avec VLC fermé puis déjà ouvert. Aucun état distant/DB/`.env*` changé ; source IPTV intacte.
+- Publication : code VLC `5eff6c0`, correctifs de dépendances compatibles `8fcfbda` (sharp 0.35.5, source-map-js 1.2.2, audit production 0),
+  Railway **`738d71b8` SUCCESS**, 442/442 fichiers applicatifs identiques, santé 200 sur les deux domaines, 10/10 E2E distants.
+  CI [37526110709](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/37526110709) SUCCESS : 375 unités, 23 intégrations,
+  9 E2E de build et 66 UI (dont sept mobiles) ; cas ignorés et Snyk indisponible détaillés dans le [dossier de publication](docs/publication-ios-vlc-2026-10-06.md).
+- **Appareil réel et cause exacte non reçus** ; ouverture de VLC simulée dans les tests. Le propriétaire peut recharger le staging dans
+  Safari, choisir CNews et toucher « Ouvrir dans VLC », VLC fermé puis déjà ouvert. 20 migrations conservées, configurations distantes/DB/`.env*`
+  inchangées ; source IPTV intacte. L’envoi CLI final a perdu sa réponse réseau mais Railway l’avait reçu, succès vérifié sans double envoi.
 
 ## Refonte du Radar R1–R4 — 5 octobre 2026 (lire en premier)
 

@@ -23,7 +23,7 @@ première variante HTTPS répondent HTTP 206 depuis le poste le 6 octobre.
 Ce contrôle ne confirme pas le décodage vidéo ni l’accès depuis la 4G de
 l’iPhone. Aucun statut de source n’a été modifié.
 
-## Changement local
+## Changement livré
 
 - Sur iPhone/iPad, résolution habituelle autorisée par `/api/playback/resolutions`,
   puis état `external-ready` et vrai lien **Ouvrir dans VLC**. Aucun lancement
@@ -69,11 +69,16 @@ Fichiers : `Player.tsx`, `player/PlayerOverlays.tsx`, `external-playback.ts`,
 
 ## État et suite
 
-**Local uniquement, non committé, non poussé, non déployé.** Aucun changement
-Railway/OVHcloud/Clerk/DNS, aucune migration, aucun relais/conversion/stockage
-média, projet source IPTV conservé. Railway reste staging.
+**Publié sur GitHub et Railway staging le 6 octobre, à la demande expresse du
+propriétaire.** Code VLC `5eff6c0`, dépendances corrigées `8fcfbda`, Railway
+`738d71b8` SUCCESS, 442/442 fichiers applicatifs identiques, santé 200 sur les deux
+domaines, 10/10 E2E distants, CI réussie. [Dossier de publication](publication-ios-vlc-2026-10-06.md).
+Audit production zéro vulnérabilité après mise à jour ciblée de sharp et
+source-map-js ; 20 migrations inchangées. Aucune configuration
+Railway/OVHcloud/Clerk/DNS modifiée, aucun relais/conversion/stockage média,
+projet source IPTV conservé. Railway reste staging.
 
-Après une publication explicitement demandée, réception nécessaire sur le vrai
-iPhone : CNews depuis Safari, VLC fermé puis déjà ouvert, retour/relance, autre
+Réception nécessaire sur le vrai iPhone : recharger le site dans Safari,
+choisir CNews et toucher **Ouvrir dans VLC**, VLC fermé puis déjà ouvert, retour/relance, autre
 chaîne VLC et comparaison Wi-Fi/4G si l’échec persiste. La cause exacte du
 signalement reste à confirmer sur l’appareil.
