@@ -13,7 +13,7 @@ export default function HelpLine({ onDismiss }: { onDismiss: () => void }) {
     <section aria-label="Aide à la lecture" className="relative z-10 border-b border-line bg-surface-1/60">
       <div className="mx-auto flex w-full max-w-7xl items-center gap-1 px-3 sm:gap-2 sm:px-6">
         <MonitorPlay aria-hidden="true" className="size-4 shrink-0 text-al-gold" />
-        <p className="min-w-0 flex-1 truncate py-2 pl-1 text-xs font-semibold text-text sm:text-sm">Certains flux s’ouvrent dans VLC.</p>
+        <p className="min-w-0 flex-1 truncate py-2 pl-1 text-xs font-semibold text-text sm:text-sm">Certaines chaînes s’ouvrent avec VLC.</p>
         <button
           type="button"
           aria-expanded={open}
