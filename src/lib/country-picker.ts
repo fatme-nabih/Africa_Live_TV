@@ -25,6 +25,7 @@ export function normalizeSearch(text: string): string {
 const ALIASES: Record<string, string[]> = {
   CD: ['rdc', 'congo kinshasa', 'zaire'],
   CG: ['congo brazzaville'],
+  CF: ['centrafrique', 'rca'],
   CI: ['ivory coast'],
   SZ: ['swaziland'],
   CV: ['cape verde'],

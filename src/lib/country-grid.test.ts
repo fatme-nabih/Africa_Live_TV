@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { channelCountLabel, countryPlayback, gridCountryName, orderCountryGrid } from './country-grid';
+import { channelCountLabel, countryPlayback, filterCountryGrid, GRID_REGIONS, gridCountryName, orderCountryGrid, regionCounts } from './country-grid';
 
 const countries = [
   { code: 'NG', name: 'Nigéria' },
@@ -46,4 +46,35 @@ test('pluriel et noms courts de la grille', () => {
   assert.equal(channelCountLabel(2), '2 chaînes');
   assert.equal(gridCountryName({ code: 'CD', name: 'République démocratique du Congo' }), 'RD Congo');
   assert.equal(gridCountryName({ code: 'SN', name: 'Sénégal' }), 'Sénégal');
+});
+
+const regional = [
+  { code: 'SN', name: 'Sénégal', region: 'Afrique de l’Ouest' },
+  { code: 'CI', name: 'Côte d’Ivoire', region: 'Afrique de l’Ouest' },
+  { code: 'CD', name: 'République démocratique du Congo', region: 'Afrique centrale' },
+  { code: 'CF', name: 'République centrafricaine', region: 'Afrique centrale' },
+  { code: 'MA', name: 'Maroc', region: 'Afrique du Nord' },
+];
+const grid = { pinned: [regional[0]], others: regional.slice(1) };
+
+test('la recherche ignore accents et casse, accepte le code pays et les noms d’usage', () => {
+  assert.deepEqual(codes(filterCountryGrid(grid, 'senegal', null).pinned), ['SN']);
+  assert.deepEqual(codes(filterCountryGrid(grid, 'COTE', null).others), ['CI']);
+  assert.deepEqual(codes(filterCountryGrid(grid, 'ma', null).others), ['MA']);
+  assert.deepEqual(codes(filterCountryGrid(grid, 'rdc', null).others), ['CD']);
+  assert.deepEqual(codes(filterCountryGrid(grid, 'RD Congo', null).others), ['CD']);
+  assert.deepEqual(codes(filterCountryGrid(grid, 'centrafrique', null).others), ['CF']);
+  assert.deepEqual(filterCountryGrid(grid, 'zzz', null), { pinned: [], others: [] });
+});
+
+test('le filtre par région s’applique aux pays suivis comme aux autres, et se combine à la recherche', () => {
+  assert.deepEqual(filterCountryGrid(grid, '', 'Afrique centrale'), { pinned: [], others: [regional[2], regional[3]] });
+  assert.deepEqual(codes(filterCountryGrid(grid, '', 'Afrique de l’Ouest').pinned), ['SN']);
+  assert.deepEqual(codes(filterCountryGrid(grid, 'congo', 'Afrique centrale').others), ['CD']);
+  assert.deepEqual(filterCountryGrid(grid, '  ', null), grid);
+});
+
+test('chaque région connaît son nombre de pays ; les cinq régions du catalogue sont couvertes', () => {
+  assert.deepEqual(regionCounts(regional), { 'Afrique de l’Ouest': 2, 'Afrique centrale': 2, 'Afrique du Nord': 1 });
+  assert.equal(GRID_REGIONS.length, 5);
 });

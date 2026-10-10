@@ -1,3 +1,4 @@
+import { filterCountries, normalizeSearch } from './country-picker';
 import type { CountryChannelCount } from './live-channels-types';
 
 /** Noms trop longs pour une carte de la grille : le nom complet reste dans le libellé accessible. */
@@ -50,4 +51,40 @@ export function orderCountryGrid<T extends { code: string; name: string }>(
     .filter(country => !pinnedCodes.has(country.code))
     .sort((a, b) => count(b.code) - count(a.code) || a.name.localeCompare(b.name, 'fr'));
   return { pinned, others };
+}
+
+/** Régions de la grille, dans l'ordre d'affichage, avec un libellé court pour les pastilles. */
+export const GRID_REGIONS = [
+  { region: 'Afrique de l’Ouest', label: 'Ouest' },
+  { region: 'Afrique centrale', label: 'Centre' },
+  { region: 'Afrique de l’Est', label: 'Est' },
+  { region: 'Afrique du Nord', label: 'Nord' },
+  { region: 'Afrique australe', label: 'Australe' },
+] as const;
+
+/** Nombre de pays de la grille par région : une pastille sans pays n'est pas proposée. */
+export function regionCounts(countries: readonly { region: string }[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const country of countries) counts[country.region] = (counts[country.region] ?? 0) + 1;
+  return counts;
+}
+
+/**
+ * Recherche (sans accents, code pays, noms d'usage comme « rdc ») et région appliquées aux deux blocs de la grille.
+ * L'ordre reste celui de la grille : pays suivis puis nombre de chaînes.
+ */
+export function filterCountryGrid<T extends { code: string; name: string; region: string }>(
+  grid: { pinned: T[]; others: T[] },
+  query: string,
+  region: string | null,
+): { pinned: T[]; others: T[] } {
+  const all = [...grid.pinned, ...grid.others];
+  const matches = normalizeSearch(query)
+    ? new Set([
+        ...filterCountries(all, query).map(country => country.code),
+        ...all.filter(country => normalizeSearch(gridCountryName(country)).includes(normalizeSearch(query))).map(country => country.code),
+      ])
+    : null;
+  const keep = (country: T) => (!region || country.region === region) && (!matches || matches.has(country.code));
+  return { pinned: grid.pinned.filter(keep), others: grid.others.filter(keep) };
 }

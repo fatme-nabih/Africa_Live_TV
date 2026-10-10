@@ -52,3 +52,38 @@ test('chaque carte affiche le drapeau SVG du pays, décoratif, sans changer le n
   await expect(senegal).toHaveAttribute('aria-label', 'Sénégal, pays suivi : 6 dans le navigateur, 19 chaînes');
   expect(await page.locator('main button svg[data-flag]').count()).toBe(6);
 });
+
+test('recherche sans accents et noms d’usage, annonce du nombre de pays, Entrée ouvre le premier', async ({ page }) => {
+  await page.goto('/?kind=country-grid&followed=SN');
+  const search = page.getByRole('searchbox', { name: 'Rechercher un pays' });
+  await search.fill('rdc');
+  await expect(page.locator('main button[aria-label*=" : "]')).toHaveCount(1);
+  await expect(page.getByRole('button', { name: /^République démocratique du Congo/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Vos pays' })).toHaveCount(0);
+  await expect(page.getByRole('status').filter({ hasText: '1 pays affiché' })).toHaveCount(1);
+  await search.fill('cote');
+  await expect(page.getByRole('button', { name: /^Côte d’Ivoire/ })).toBeVisible();
+  await search.press('Enter');
+  await expect(page.getByTestId('grid-choice')).toHaveText('CI');
+});
+
+test('les pastilles de région filtrent, se combinent à la recherche et le cas vide propose d’effacer', async ({ page }) => {
+  await page.goto('/?kind=country-grid&followed=SN');
+  const regions = page.getByRole('group', { name: 'Filtrer par région' });
+  await expect(regions.getByRole('button')).toHaveText(['Toutes', 'Ouest 4', 'Centre 1', 'Est 1']);
+  await regions.getByRole('button', { name: 'Afrique centrale, 1 pays' }).click();
+  await expect(regions.getByRole('button', { name: 'Afrique centrale, 1 pays' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('main button[aria-label*=" : "]')).toHaveCount(1);
+  await page.getByRole('searchbox', { name: 'Rechercher un pays' }).fill('senegal');
+  await expect(page.getByText('Aucun pays ne correspond à « senegal ».')).toBeVisible();
+  await page.getByRole('button', { name: 'Effacer les filtres' }).click();
+  await expect(page.getByRole('searchbox', { name: 'Rechercher un pays' })).toHaveValue('');
+  await expect(regions.getByRole('button', { name: 'Toutes' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('main button[aria-label*=" : "]')).toHaveCount(6);
+  // Un second clic sur la région active revient à « Toutes ».
+  await regions.getByRole('button', { name: /^Afrique de l’Ouest/ }).click();
+  await expect(page.getByRole('heading', { name: 'Vos pays' })).toBeVisible();
+  await expect(page.locator('main button[aria-label*=" : "]')).toHaveCount(4);
+  await regions.getByRole('button', { name: /^Afrique de l’Ouest/ }).click();
+  await expect(regions.getByRole('button', { name: 'Toutes' })).toHaveAttribute('aria-pressed', 'true');
+});

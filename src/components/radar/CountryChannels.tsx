@@ -1,8 +1,9 @@
-import { ArrowRight, ChevronRight, ExternalLink, Play, Star } from 'lucide-react';
-import { Badge, Button, EmptyState, ErrorState, Skeleton } from '@/components/ui';
+import { useState } from 'react';
+import { ArrowRight, ChevronRight, ExternalLink, Play, Search, Star, X } from 'lucide-react';
+import { Badge, Button, Chip, EmptyState, ErrorState, Skeleton } from '@/components/ui';
 import CountryFlag from '@/components/radar/CountryFlag';
 import { ChannelArt } from '@/components/tv/ChannelTile';
-import { countryPlayback, gridCountryName, orderCountryGrid } from '@/lib/country-grid';
+import { countryPlayback, filterCountryGrid, GRID_REGIONS, gridCountryName, orderCountryGrid, regionCounts } from '@/lib/country-grid';
 import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
 import type { LiveChannelsSummarySnapshot } from '@/lib/live-channels-types';
 import type { RadarCountry } from '@/lib/live-osint-types';
@@ -119,7 +120,28 @@ export default function CountryChannels({
     );
   }
 
-  const { pinned, others } = orderCountryGrid(AFRICAN_COUNTRIES, channelsSummary?.countries, followedCountries);
+  return <CountryGrid channelsSummary={channelsSummary} followedCountries={followedCountries} onSelectCountry={onSelectCountry} />;
+}
+
+/** Grille de tous les pays : recherche et région filtrent les deux blocs (vos pays, autres pays). */
+function CountryGrid({
+  channelsSummary,
+  followedCountries,
+  onSelectCountry,
+}: {
+  channelsSummary: LiveChannelsSummarySnapshot | null;
+  followedCountries: readonly string[];
+  onSelectCountry: (code: string | null) => void;
+}) {
+  const [query, setQuery] = useState('');
+  const [region, setRegion] = useState<string | null>(null);
+  const grid = orderCountryGrid(AFRICAN_COUNTRIES, channelsSummary?.countries, followedCountries);
+  const perRegion = regionCounts([...grid.pinned, ...grid.others]);
+  const { pinned, others } = filterCountryGrid(grid, query, region);
+  const shown = pinned.length + others.length;
+  const filtering = Boolean(query.trim()) || region !== null;
+  const reset = () => { setQuery(''); setRegion(null); };
+
   const card = (country: RadarCountry, followed: boolean) => {
     const playback = countryPlayback(channelsSummary?.countries[country.code]);
     return (
@@ -149,10 +171,63 @@ export default function CountryChannels({
 
   return (
     <div className="flex-1 divide-y divide-line overflow-y-auto">
-      <div className="border-b border-line bg-black/20 px-4 py-3 sm:px-5">
-        <div className="text-xs font-bold text-text">Télévisions d’Afrique référencées</div>
-        <p className="mt-0.5 text-xs text-text-muted">Choisissez un pays pour voir ses chaînes et les regarder ici :</p>
+      <div className="space-y-3 border-b border-line bg-black/20 px-4 py-3 sm:px-5">
+        <div>
+          <div className="text-xs font-bold text-text">Télévisions d’Afrique référencées</div>
+          <p className="mt-0.5 text-xs text-text-muted">Choisissez un pays pour voir ses chaînes et les regarder ici :</p>
+        </div>
+        <div className="relative">
+          <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted" />
+          <input
+            type="search"
+            value={query}
+            onChange={event => setQuery(event.target.value)}
+            onKeyDown={event => {
+              // Entrée ouvre le premier pays trouvé : taper « sen » puis Entrée suffit.
+              const first = pinned[0] ?? others[0];
+              if (event.key === 'Enter' && query.trim() && first) onSelectCountry(first.code);
+            }}
+            placeholder="Rechercher un pays…"
+            aria-label="Rechercher un pays"
+            enterKeyHint="go"
+            className="min-h-11 w-full rounded-control border border-line bg-surface-2 pl-9 pr-10 text-sm text-text placeholder:text-text-muted hover:border-line-gold focus:border-al-gold focus:outline-none focus:ring-1 focus:ring-al-gold/50 sm:min-h-9 sm:text-xs [&::-webkit-search-cancel-button]:hidden"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              aria-label="Effacer la recherche"
+              className="absolute right-1 top-1/2 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-control text-text-muted hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold"
+            >
+              <X aria-hidden="true" className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+        {/* Une seule ligne qui défile sur téléphone, plusieurs lignes sur ordinateur. */}
+        <div role="group" aria-label="Filtrer par région" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] sm:flex-wrap sm:overflow-visible [&::-webkit-scrollbar]:hidden">
+          <Chip selected={region === null} onClick={() => setRegion(null)} className="shrink-0">Toutes</Chip>
+          {GRID_REGIONS.filter(item => perRegion[item.region]).map(item => (
+            <Chip
+              key={item.region}
+              selected={region === item.region}
+              onClick={() => setRegion(current => (current === item.region ? null : item.region))}
+              aria-label={`${item.region}, ${perRegion[item.region]} pays`}
+              title={item.region}
+              className="shrink-0"
+            >
+              {item.label} <span className="tabular-nums text-text-muted">{perRegion[item.region]}</span>
+            </Chip>
+          ))}
+        </div>
+        <p role="status" className="sr-only">{filtering ? `${shown} pays affiché${shown > 1 ? 's' : ''}` : ''}</p>
       </div>
+
+      {shown === 0 && (
+        <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
+          <p className="text-sm text-text">Aucun pays ne correspond{query.trim() ? ` à « ${query.trim()} »` : ''}.</p>
+          <Button variant="secondary" size="sm" onClick={reset}>Effacer les filtres</Button>
+        </div>
+      )}
 
       {pinned.length > 0 && (
         <section aria-labelledby="radar-pays-suivis" className="px-3 pt-3 sm:px-4 sm:pt-4">
@@ -161,10 +236,12 @@ export default function CountryChannels({
         </section>
       )}
 
-      <section aria-labelledby={pinned.length > 0 ? 'radar-autres-pays' : undefined} className="p-3 sm:p-4">
-        {pinned.length > 0 && <h3 id="radar-autres-pays" className="mb-2 text-xs font-bold uppercase tracking-wide text-text-muted">Autres pays</h3>}
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{others.map(country => card(country, false))}</div>
-      </section>
+      {others.length > 0 && (
+        <section aria-labelledby={pinned.length > 0 ? 'radar-autres-pays' : undefined} className="p-3 sm:p-4">
+          {pinned.length > 0 && <h3 id="radar-autres-pays" className="mb-2 text-xs font-bold uppercase tracking-wide text-text-muted">Autres pays</h3>}
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{others.map(country => card(country, false))}</div>
+        </section>
+      )}
     </div>
   );
 }

@@ -39,7 +39,7 @@ const server = http.createServer(async (request, response) => {
     return;
   }
   if (request.url === '/components.js') {
-    response.setHeader('Content-Type', 'application/javascript');
+    response.setHeader('Content-Type', 'application/javascript; charset=utf-8');
     response.end(output.outputFiles[0].text);
   } else {
     response.setHeader('Content-Type', 'text/html');
