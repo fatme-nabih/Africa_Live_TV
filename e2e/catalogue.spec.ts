@@ -1,4 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { withFilters } from './helpers/filters';
 
 const hasAuthenticatedState = Boolean(process.env.E2E_STORAGE_STATE);
@@ -41,6 +43,16 @@ test.describe('catalogue, filtres, favoris et lecteur', () => {
     const firstCard = page.locator('#catalogue button[aria-label^="Regarder "]').first();
     await expect(firstCard).toBeVisible();
     const channelName = (await firstCard.getAttribute('aria-label'))!.replace(/^Regarder /, '');
+    // This scenario exercises a healthy source, including the separate window.
+    // An unreachable manifest now correctly ends its attempt and triggers retries.
+    await page.context().route('https://media.invalid/**', async route => {
+      const name = path.basename(new URL(route.request().url()).pathname);
+      await route.fulfill({
+        body: await readFile(path.join(process.cwd(), 'e2e/fixtures/hls', name)),
+        contentType: name.endsWith('.m3u8') ? 'application/vnd.apple.mpegurl' : 'video/mp2t',
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      });
+    });
     await page.context().route('**/api/playback/resolutions', async (route) => {
       const body = route.request().postDataJSON();
       expect(body).toMatchObject({
@@ -59,7 +71,7 @@ test.describe('catalogue, filtres, favoris et lecteur', () => {
           playbackSessionId: '11111111-1111-4111-8111-111111111111',
           attemptId: '22222222-2222-4222-8222-222222222222',
           channel: { id: body.channelId, name: channelName },
-          sourceUrl: 'https://media.invalid/live.m3u8',
+          sourceUrl: 'https://media.invalid/index.m3u8',
         }),
       });
     });
