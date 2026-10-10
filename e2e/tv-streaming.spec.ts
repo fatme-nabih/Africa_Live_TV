@@ -244,27 +244,40 @@ test.describe('Lecteur : commandes, raccourcis et zapping', () => {
   });
 });
 
-test.describe('Partage WhatsApp', () => {
+test.describe('Menu de partage', () => {
   test('une chaîne : titre et lien du lecteur Africa Live, jamais l’URL du flux', async ({ page }) => {
     await fixtureCatalog(page);
     await page.goto('/app');
-    const link = region(page, 'Info').getByRole('link', { name: 'Partager Alpha Sénégal sur WhatsApp', exact: true });
-    await expect(link).toBeVisible();
-    await expect(link).toHaveAttribute('target', '_blank');
-    await expect(link).toHaveAttribute('rel', /noopener/);
-    const href = (await link.getAttribute('href'))!;
+    const button = region(page, 'Info').getByRole('button', { name: 'Partager Alpha Sénégal', exact: true });
+    await expect(button).toHaveAttribute('aria-haspopup', 'menu');
+    await button.click();
+    const menu = page.getByRole('menu', { name: 'Partager Alpha Sénégal' });
+    const whatsapp = menu.getByRole('menuitem', { name: 'WhatsApp' });
+    await expect(whatsapp).toBeFocused();
+    await expect(whatsapp).toHaveAttribute('target', '_blank');
+    await expect(whatsapp).toHaveAttribute('rel', /noopener/);
+    const href = (await whatsapp.getAttribute('href'))!;
     expect(href.startsWith('https://wa.me/?text=')).toBe(true);
     const text = decodeURIComponent(href.split('?text=')[1]);
     expect(text).toContain('Alpha Sénégal');
     expect(text).toContain('/player/sn-1');
     expect(text).not.toMatch(/m3u8|media\.fixture|logos\.fixture/);
+    const facebook = (await menu.getByRole('menuitem', { name: 'Facebook' }).getAttribute('href'))!;
+    expect(facebook.startsWith('https://www.facebook.com/sharer/sharer.php?u=')).toBe(true);
+    expect(decodeURIComponent(facebook.split('?u=')[1])).toMatch(/\/player\/sn-1$/);
+    // Le menu ne lance pas la chaîne de la carte, et Échap rend le focus au bouton.
+    await page.keyboard.press('Escape');
+    await expect(menu).toHaveCount(0);
+    await expect(button).toBeFocused();
+    await expect(page).toHaveURL(/\/app$/);
   });
 
   test('une dépêche : titre, rédaction, article de l’éditeur et origine Africa Live', async ({ page }) => {
     await page.setViewportSize({ width: 1366, height: 900 });
     await fixtureRadar(page, { weatherOk: true });
     await page.goto('/app/live?country=SN');
-    const link = page.getByRole('link', { name: /^Partager « Dépêche Sénégal récente » sur WhatsApp$/ }).first();
+    await page.getByRole('button', { name: /^Partager « Dépêche Sénégal récente »$/ }).first().click();
+    const link = page.getByRole('menu').getByRole('menuitem', { name: 'WhatsApp' });
     await expect(link).toBeVisible();
     const text = decodeURIComponent((await link.getAttribute('href'))!.split('?text=')[1]);
     expect(text).toContain('Dépêche Sénégal récente');

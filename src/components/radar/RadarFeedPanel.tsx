@@ -21,6 +21,7 @@ export default function RadarFeedPanel({
   channelsLoading,
   channelsError,
   playingChannelId,
+  followedCountries,
   onSelectCountry,
   onPlayChannel,
   onOpenPopout,
@@ -38,6 +39,7 @@ export default function RadarFeedPanel({
   channelsLoading: boolean;
   channelsError: string | null;
   playingChannelId: string | null;
+  followedCountries: readonly string[];
   onSelectCountry: (code: string | null) => void;
   onPlayChannel: (channel: Channel) => void;
   onOpenPopout: (channel: Channel) => void;
@@ -82,6 +84,7 @@ export default function RadarFeedPanel({
             error={channelsError}
             channelsSummary={channelsSummary}
             activePlayChannelId={playingChannelId}
+            followedCountries={followedCountries}
             onSelectCountry={onSelectCountry}
             onPlayChannel={onPlayChannel}
             onOpenPopout={onOpenPopout}

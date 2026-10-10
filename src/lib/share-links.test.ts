@@ -42,3 +42,13 @@ test('le message est borné pour tenir dans un lien WhatsApp', () => {
   assert.equal(text.length, 1_000);
   assert.ok(text.endsWith('…'));
 });
+
+test('Facebook reçoit seulement l’adresse publique, encodée ; le menu du téléphone garde titre et message', () => {
+  const article = articleShare({ title: ' Sénégal : la Teranga ', sourceName: 'APS', articleUrl: 'https://aps.sn/article?id=7&x=1', origin: 'https://africatv.sn' })!;
+  assert.equal(article.facebook, 'https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Faps.sn%2Farticle%3Fid%3D7%26x%3D1');
+  assert.equal(article.title, 'Sénégal : la Teranga');
+  const channel = channelShare({ name: 'RTS 1', id: 'rts-1', origin: 'https://africatv.sn' })!;
+  assert.equal(decodeURIComponent(channel.facebook.split('?u=')[1]), 'https://africatv.sn/player/rts-1');
+  assert.equal(channel.title, 'RTS 1 en direct sur Africa Live');
+  assert.ok(!channel.facebook.includes('Regarde'));
+});

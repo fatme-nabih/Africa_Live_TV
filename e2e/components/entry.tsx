@@ -13,10 +13,37 @@ import { useRadarData } from '../../src/components/radar/useRadarData';
 import { useRadarPlayer } from '../../src/components/radar/useRadarPlayer';
 import { saveCheckoutAttempt } from '../../src/lib/checkout-attempt';
 import LiveMarketTicker from '../../src/components/radar/LiveMarketTicker';
+import CountryChannels from '../../src/components/radar/CountryChannels';
+import { ShareArticleLink } from '../../src/components/tv/ChannelTile';
+import type { LiveChannelsSummarySnapshot } from '../../src/lib/live-channels-types';
 function TestTicker() {
   const [token, setToken] = React.useState(0);
   const [country, setCountry] = React.useState('');
   return <main className="p-3"><button onClick={() => setToken(value => value + 1)}>Refresh ticker</button><button onClick={() => { document.documentElement.dataset.eco = document.documentElement.dataset.eco === 'true' ? 'false' : 'true'; }}>Toggle test eco</button><LiveMarketTicker refreshToken={token} onSelectCountry={setCountry}/><p data-testid="ticker-country">{country}</p></main>;
+}
+const gridSummary: LiveChannelsSummarySnapshot = { updatedAt: '2026-10-10T12:00:00Z', totalChannels: 103, totalDirectWeb: 52, countries: Object.fromEntries(
+  ([['NG',50,25],['SN',19,6],['CI',25,14],['CD',21,4],['SO',7,0],['ML',1,1]] as const).map(([code,channelCount,directWebCount]) => [code,{ countryCode:code,channelCount,directWebCount }])) };
+function TestCountryGrid() {
+  const followed = (new URLSearchParams(location.search).get('followed') ?? '').split(',').filter(Boolean);
+  const [chosen,setChosen] = React.useState<string|null>(null);
+  return <main className="max-w-3xl bg-black p-3 text-text"><CountryChannels selectedCountry={null} activeCountry={null} countryChannels={[]} loading={false} error={null} channelsSummary={gridSummary} activePlayChannelId={null} followedCountries={followed} onSelectCountry={setChosen} onPlayChannel={() => {}} onOpenPopout={() => {}} onRetry={() => {}}/><p data-testid="grid-choice">{chosen}</p></main>;
+}
+function TestShare() {
+  const [cardClicks,setCardClicks] = React.useState(0);
+  const [escapes,setEscapes] = React.useState(0);
+  React.useEffect(() => {
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape' && !event.defaultPrevented) setEscapes(value => value + 1); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+  // Carte rognée (overflow hidden) collée en bas à droite : le menu doit quand même rester entier et visible.
+  return <main className="min-h-screen bg-black p-3 text-text">
+    <div onClick={() => setCardClicks(value => value + 1)} className="fixed bottom-2 right-2 flex h-12 w-40 items-center justify-end overflow-hidden rounded-card border border-line">
+      <ShareArticleLink compact title="Dépêche test" sourceName="APS" url="https://aps.sn/article?id=7"/>
+    </div>
+    <button>Après</button>
+    <p data-testid="share-state">{JSON.stringify({ cardClicks, escapes })}</p>
+  </main>;
 }
 function TestPricing() {
   return <><button onClick={() => saveCheckoutAttempt('lumina_all_access_monthly',{ key:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',attemptId:'B' })}>Replace attempt</button><Pricing/></>;
@@ -54,5 +81,5 @@ function TestPlayer() {
 
 const kind = new URLSearchParams(location.search).get('kind');
 createRoot(document.getElementById('root')!).render(
-  kind === 'ticker' ? <TestTicker /> : kind === 'pricing' ? <TestPricing /> : kind === 'success' ? <Success /> : kind === 'radar' ? <TestRadar /> : kind === 'countries' || kind === 'favorites' ? <TestPreferences kind={kind}/> : kind === 'dock' ? <PlayerDockProvider><DockActions /></PlayerDockProvider> : <TestPlayer />,
+  kind === 'ticker' ? <TestTicker /> : kind === 'country-grid' ? <TestCountryGrid /> : kind === 'share' ? <TestShare /> : kind === 'pricing' ? <TestPricing /> : kind === 'success' ? <Success /> : kind === 'radar' ? <TestRadar /> : kind === 'countries' || kind === 'favorites' ? <TestPreferences kind={kind}/> : kind === 'dock' ? <PlayerDockProvider><DockActions /></PlayerDockProvider> : <TestPlayer />,
 );

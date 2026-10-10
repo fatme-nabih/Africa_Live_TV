@@ -2,6 +2,7 @@
 
 import { Play, Share2, Star } from 'lucide-react';
 import { useState, useSyncExternalStore } from 'react';
+import ShareMenu from '@/components/share/ShareMenu';
 import { Badge } from '@/components/ui';
 import { channelInitials, fallbackTone } from '@/lib/channel-fallback';
 import { categoryLabels } from '@/lib/catalog-metadata';
@@ -44,28 +45,20 @@ export function ChannelArt({ channel, className = '' }: { channel: Channel; clas
   );
 }
 
-/** Lien de partage WhatsApp : titre + adresse du lecteur Africa Live, jamais l'URL du flux. */
+/** Partage d'une chaîne (WhatsApp, Facebook, menu du téléphone, copie) : titre + adresse du lecteur Africa Live, jamais l'URL du flux. */
 export function ShareChannelLink({ channel, label, className = '', tabIndex }: { channel: Channel; label?: string; className?: string; tabIndex?: number }) {
   const origin = useOrigin();
   if (!origin) return null;
   const share = channelShare({ name: channel.name, id: channel.id, origin });
   if (!share) return null;
   return (
-    <a
-      href={share.href}
-      target="_blank"
-      rel="noopener noreferrer"
-      tabIndex={tabIndex}
-      aria-label={`Partager ${label ?? channel.name} sur WhatsApp`}
-      title="Partager sur WhatsApp"
-      className={className}
-    >
+    <ShareMenu share={share} label={`Partager ${label ?? channel.name}`} tabIndex={tabIndex} triggerClassName={className}>
       <Share2 className="size-3.5" aria-hidden="true" />
-    </a>
+    </ShareMenu>
   );
 }
 
-/** Partage WhatsApp d'une dépêche : titre, rédaction, adresse de l'article chez l'éditeur. */
+/** Partage d'une dépêche : titre, rédaction, adresse de l'article chez l'éditeur. */
 /** `compact` : icône seule (fil des dépêches), le nom accessible reste complet. */
 export function ShareArticleLink({ title, sourceName, url, compact = false }: { title: string; sourceName?: string; url: string; compact?: boolean }) {
   const origin = useOrigin();
@@ -73,19 +66,16 @@ export function ShareArticleLink({ title, sourceName, url, compact = false }: { 
   const share = articleShare({ title, sourceName, articleUrl: url, origin });
   if (!share) return null;
   return (
-    <a
-      href={share.href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={`Partager « ${title} » sur WhatsApp`}
-      title={compact ? 'Partager sur WhatsApp' : undefined}
-      className={compact
-        ? 'inline-flex size-9 shrink-0 items-center justify-center rounded-control text-text-muted transition-colors hover:bg-surface-2 hover:text-al-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold'
-        : 'inline-flex min-h-9 items-center gap-1.5 rounded-control px-2 text-xs font-semibold text-text-muted transition-colors hover:text-al-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold'}
+    <ShareMenu
+      share={share}
+      label={`Partager « ${title} »`}
+      triggerClassName={compact
+        ? 'inline-flex size-9 shrink-0 items-center justify-center rounded-control text-text-muted transition-colors hover:bg-surface-2 hover:text-al-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold aria-expanded:bg-surface-2 aria-expanded:text-al-green'
+        : 'inline-flex min-h-9 items-center gap-1.5 rounded-control px-2 text-xs font-semibold text-text-muted transition-colors hover:text-al-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold aria-expanded:text-al-green'}
     >
       <Share2 className="size-3.5" aria-hidden="true" />
       {!compact && 'Partager'}
-    </a>
+    </ShareMenu>
   );
 }
 

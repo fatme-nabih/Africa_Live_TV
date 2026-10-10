@@ -1,6 +1,8 @@
-import { ArrowRight, ExternalLink, Play } from 'lucide-react';
+import { ArrowRight, ChevronRight, ExternalLink, Play, Star } from 'lucide-react';
 import { Badge, Button, EmptyState, ErrorState, Skeleton } from '@/components/ui';
+import CountryFlag from '@/components/radar/CountryFlag';
 import { ChannelArt } from '@/components/tv/ChannelTile';
+import { countryPlayback, gridCountryName, orderCountryGrid } from '@/lib/country-grid';
 import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
 import type { LiveChannelsSummarySnapshot } from '@/lib/live-channels-types';
 import type { RadarCountry } from '@/lib/live-osint-types';
@@ -14,6 +16,7 @@ export default function CountryChannels({
   error,
   channelsSummary,
   activePlayChannelId,
+  followedCountries,
   onSelectCountry,
   onPlayChannel,
   onOpenPopout,
@@ -26,6 +29,7 @@ export default function CountryChannels({
   error: string | null;
   channelsSummary: LiveChannelsSummarySnapshot | null;
   activePlayChannelId: string | null;
+  followedCountries: readonly string[];
   onSelectCountry: (code: string | null) => void;
   onPlayChannel: (channel: Channel) => void;
   onOpenPopout: (channel: Channel) => void;
@@ -115,8 +119,33 @@ export default function CountryChannels({
     );
   }
 
-  const availableCountries = AFRICAN_COUNTRIES.filter(country => (channelsSummary?.countries[country.code]?.channelCount ?? 0) > 0)
-    .sort((a, b) => (channelsSummary?.countries[b.code]?.channelCount ?? 0) - (channelsSummary?.countries[a.code]?.channelCount ?? 0));
+  const { pinned, others } = orderCountryGrid(AFRICAN_COUNTRIES, channelsSummary?.countries, followedCountries);
+  const card = (country: RadarCountry, followed: boolean) => {
+    const playback = countryPlayback(channelsSummary?.countries[country.code]);
+    return (
+      <button
+        key={country.code}
+        type="button"
+        onClick={() => onSelectCountry(country.code)}
+        aria-label={`${country.name}${followed ? ', pays suivi' : ''} : ${playback.inBrowser > 0 ? playback.primary : 'chaînes avec VLC'}, ${playback.totalLabel}`}
+        className={`group flex min-h-16 items-center justify-between gap-2 rounded-control border p-3 text-left transition hover:border-line-gold hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold ${followed ? 'border-line-gold bg-al-gold/[0.06]' : 'border-line bg-surface-2/60'}`}
+      >
+        <span className="min-w-0">
+          <span className="flex items-center gap-2">
+            <CountryFlag code={country.code} />
+            <span className="truncate text-sm font-bold text-text" title={country.name}>{gridCountryName(country)}</span>
+            {followed && <Star aria-hidden="true" className="h-3.5 w-3.5 shrink-0 fill-current text-al-gold" />}
+          </span>
+          <span className="mt-1 flex flex-wrap items-baseline gap-x-1.5 pl-8 text-xs">
+            <span className={`font-semibold tabular-nums ${playback.inBrowser > 0 ? 'text-al-green' : 'text-al-gold'}`}>{playback.primary}</span>
+            <span aria-hidden="true" className="text-text-muted">·</span>
+            <span className="tabular-nums text-text-muted">{playback.totalLabel}</span>
+          </span>
+        </span>
+        <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-text-muted transition group-hover:translate-x-0.5 group-hover:text-al-gold" />
+      </button>
+    );
+  };
 
   return (
     <div className="flex-1 divide-y divide-line overflow-y-auto">
@@ -125,32 +154,17 @@ export default function CountryChannels({
         <p className="mt-0.5 text-xs text-text-muted">Choisissez un pays pour voir ses chaînes et les regarder ici :</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-2 p-3 sm:grid-cols-2 sm:p-4">
-        {availableCountries.map(country => {
-          const info = channelsSummary?.countries[country.code];
-          return (
-            <button
-              key={country.code}
-              type="button"
-              onClick={() => onSelectCountry(country.code)}
-              className="group flex min-h-14 items-center justify-between rounded-control border border-line bg-surface-2/60 p-3 text-left transition hover:border-line-gold hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold"
-            >
-              <span className="min-w-0 pr-2">
-                <span className="block text-xs font-bold text-text">{country.name}</span>
-                <span className="mt-0.5 block text-xs text-text-muted">{country.region}</span>
-              </span>
-              <span className="shrink-0 text-right">
-                <span className="inline-flex items-center rounded-pill border border-line-gold bg-al-gold/10 px-2 py-0.5 text-xs font-bold tabular-nums text-al-gold">
-                  {info?.channelCount ?? 0} chaînes
-                </span>
-                {(info?.directWebCount ?? 0) > 0 && (
-                  <span className="mt-0.5 block text-xs font-semibold text-al-green">{info?.directWebCount} dans le navigateur</span>
-                )}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      {pinned.length > 0 && (
+        <section aria-labelledby="radar-pays-suivis" className="px-3 pt-3 sm:px-4 sm:pt-4">
+          <h3 id="radar-pays-suivis" className="mb-2 text-xs font-bold uppercase tracking-wide text-al-gold">Vos pays</h3>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{pinned.map(country => card(country, true))}</div>
+        </section>
+      )}
+
+      <section aria-labelledby={pinned.length > 0 ? 'radar-autres-pays' : undefined} className="p-3 sm:p-4">
+        {pinned.length > 0 && <h3 id="radar-autres-pays" className="mb-2 text-xs font-bold uppercase tracking-wide text-text-muted">Autres pays</h3>}
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{others.map(country => card(country, false))}</div>
+      </section>
     </div>
   );
 }

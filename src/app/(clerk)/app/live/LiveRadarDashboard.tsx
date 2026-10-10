@@ -14,6 +14,7 @@ import RadarMapCard from '@/components/radar/RadarMapCard';
 import RadarTiles from '@/components/radar/RadarTiles';
 import WeatherCard from '@/components/radar/WeatherCard';
 import { scrollToSection } from '@/components/radar/scrollToSection';
+import { useFollowedCountries } from '@/components/tv/hooks';
 import { useFreshArticles } from '@/components/radar/useFreshArticles';
 import { useLiveWeather } from '@/components/radar/useLiveWeather';
 import { useNow } from '@/components/radar/useNow';
@@ -38,6 +39,7 @@ export default function LiveRadarDashboard() {
 
 function RadarWorkspace() {
   const { selectedCountry, selectCountry, unknownCountry } = useRadarCountry();
+  const followedCountries = useFollowedCountries();
   const data = useRadarData(selectedCountry);
   const articles = useRadarArticles(data.windowed, selectedCountry);
   const now = useNow();
@@ -163,6 +165,7 @@ function RadarWorkspace() {
             channelsLoading={data.countryChannelsLoading}
             channelsError={data.countryChannelsError}
             playingChannelId={dock.channel?.id ?? null}
+            followedCountries={followedCountries}
             onSelectCountry={selectCountry}
             onPlayChannel={player.open}
             onOpenPopout={popoutFromList}

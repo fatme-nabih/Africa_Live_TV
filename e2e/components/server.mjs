@@ -43,7 +43,7 @@ const server = http.createServer(async (request, response) => {
     response.end(output.outputFiles[0].text);
   } else {
     response.setHeader('Content-Type', 'text/html');
-    const styles = new URL(request.url, 'http://localhost').searchParams.get('kind') === 'ticker' ? '<link rel="stylesheet" href="/ticker.css">' : '';
+    const styles = new URL(request.url, 'http://localhost').searchParams.get('kind')?.match(/^(ticker|country-grid|share)$/) ? '<link rel="stylesheet" href="/ticker.css">' : '';
     response.end('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1">' + styles + '<div id="root"></div><script src="/components.js"></script>');
   }
 });
