@@ -47,7 +47,7 @@ export default function ShareMenu({
     window.clearTimeout(closeTimer.current);
     setOpen(false);
     setCopy('idle');
-    if (restoreFocus) triggerRef.current?.focus();
+    if (restoreFocus) triggerRef.current?.focus({ preventScroll: true });
   }, []);
 
   // Position sous le bouton (au-dessus s'il manque de place), toujours dans l'écran ; focus sur le premier choix.
@@ -62,17 +62,22 @@ export default function ShareMenu({
     const top = below + height <= window.innerHeight - EDGE ? below : Math.max(EDGE, rect.top - height - GAP);
     menu.style.left = `${Math.max(EDGE, left)}px`;
     menu.style.top = `${top}px`;
-    menu.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
+    // Sans défilement : le menu est dans la couche supérieure, la rangée de chaînes autour ne doit pas bouger.
+    menu.querySelector<HTMLElement>('[role="menuitem"]')?.focus({ preventScroll: true });
   }, [open]);
 
-  // Clic ailleurs, défilement ou redimensionnement : le menu se ferme (sa position ne suivrait plus le bouton).
+  // Clic ailleurs, ou bouton déplacé par un défilement/redimensionnement : le menu se ferme (il ne suivrait plus le bouton).
   useEffect(() => {
     if (!open) return;
     const outside = (event: PointerEvent) => {
       const target = event.target as Node;
       if (!menuRef.current?.contains(target) && !triggerRef.current?.contains(target)) close();
     };
-    const dismiss = (event: Event) => { if (!menuRef.current?.contains(event.target as Node)) close(); };
+    const start = triggerRef.current?.getBoundingClientRect();
+    const dismiss = () => {
+      const now = triggerRef.current?.getBoundingClientRect();
+      if (!start || !now || Math.abs(now.top - start.top) > 1 || Math.abs(now.left - start.left) > 1) close();
+    };
     document.addEventListener('pointerdown', outside, true);
     window.addEventListener('scroll', dismiss, true);
     window.addEventListener('resize', dismiss);
@@ -89,7 +94,7 @@ export default function ShareMenu({
     const items = [...(menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])];
     const index = items.indexOf(document.activeElement as HTMLElement);
     // Les flèches restent dans le menu : elles ne déplacent pas le focus de la grille de chaînes autour.
-    const focus = (next: number) => { event.preventDefault(); event.stopPropagation(); items[(next + items.length) % items.length]?.focus(); };
+    const focus = (next: number) => { event.preventDefault(); event.stopPropagation(); items[(next + items.length) % items.length]?.focus({ preventScroll: true }); };
     if (event.key === 'Escape') {
       // Échap ferme seulement le menu, pas la fenêtre du lecteur autour.
       event.preventDefault();

@@ -41,6 +41,10 @@ function TestShare() {
     <div onClick={() => setCardClicks(value => value + 1)} className="fixed bottom-2 right-2 flex h-12 w-40 items-center justify-end overflow-hidden rounded-card border border-line">
       <ShareArticleLink compact title="Dépêche test" sourceName="APS" url="https://aps.sn/article?id=7"/>
     </div>
+    {/* Rangée qui défile, comme les rangées de chaînes de la TV : le bouton est en partie hors de la zone visible. */}
+    <section aria-label="Rangée" className="mt-24 w-72"><div role="list" data-testid="share-row" className="flex snap-x snap-proximity gap-3 overflow-x-auto">
+      <div role="listitem" className="flex h-12 w-[26rem] shrink-0 snap-start items-center justify-end border border-line"><ShareArticleLink compact title="Dépêche rangée" url="https://aps.sn/rangee"/></div>
+    </div></section>
     <button>Après</button>
     <p data-testid="share-state">{JSON.stringify({ cardClicks, escapes })}</p>
   </main>;

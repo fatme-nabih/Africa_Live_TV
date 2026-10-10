@@ -76,3 +76,22 @@ test('avec le partage du téléphone : « Plus d’options » ouvre le menu nati
     text: `Dépêche test (APS)\nhttps://aps.sn/article?id=7\nVia Africa Live : ${new URL(page.url()).origin}`,
   });
 });
+
+test('depuis une rangée qui défile, le menu reste ouvert et la rangée ne bouge pas', async ({ page }) => {
+  await page.goto('/?kind=share');
+  const row = page.getByTestId('share-row');
+  // Le menu ouvert, le focus sur ses choix ne doit plus faire défiler la rangée (ce qui le refermait).
+  await page.getByRole('button', { name: 'Partager « Dépêche rangée »' }).click();
+  const menu = page.getByRole('menu', { name: 'Partager « Dépêche rangée »' });
+  await expect(menu.getByRole('menuitem', { name: 'WhatsApp' })).toBeFocused();
+  const opened = await row.evaluate(element => element.scrollLeft);
+  await page.waitForTimeout(400);
+  await expect(menu).toBeVisible();
+  expect(await row.evaluate(element => element.scrollLeft)).toBe(opened);
+  await page.keyboard.press('ArrowDown');
+  await expect(menu.getByRole('menuitem', { name: 'Facebook' })).toBeFocused();
+  await expect(menu).toBeVisible();
+  // Un vrai défilement de la rangée déplace le bouton : le menu se ferme.
+  await row.evaluate((element, left) => { element.scrollLeft = left > 60 ? 0 : 120; }, opened);
+  await expect(menu).toHaveCount(0);
+});
