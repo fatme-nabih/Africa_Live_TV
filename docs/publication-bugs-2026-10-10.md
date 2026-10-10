@@ -78,8 +78,10 @@ sauvegarde chiffrée/métadonnées/clé protégée conservés hors Git.
 
 **Publication reçue**, avec les réserves d'appareils/profils de BUG-903. Les
 commits ultérieurs de clôture ne changent que la documentation ; l'applicatif
-Railway est identique au code actuel de GitHub. Serveur local du propriétaire
-conservé sur 3001 et fichiers `.env*` intacts. Aucun changement de rôle staging,
+Railway est identique au code actuel de GitHub. Aucun arrêt/redémarrage du serveur
+local par les commandes de publication ; observé actif pendant le passage,
+port 3001 libre au constat final (cause non établie). Fichiers `.env*` intacts.
+Aucun changement de rôle staging,
 plan, DNS, Clerk, paiement activé ou tâche Windows.
 
 Preuves privées : `.local-logs/publication-bugs-2026-10-10/` : `preflight.json`,

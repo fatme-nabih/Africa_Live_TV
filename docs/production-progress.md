@@ -10,7 +10,8 @@ CI [38058708112](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/3805
 SUCCESS : 404 unités, 40 intégrations, 16 E2E build (10 ignorés), 53 composants,
 68 UI (un ignoré), fixtures nettoyées ; audit production 0, Snyk Code indisponible.
 Catalogue/favoris/droits conservés ; un profil synchronisé (seulement dates de
-traitement), rôles/statuts/essais identiques. Serveur local du propriétaire conservé.
+traitement), rôles/statuts/essais identiques. Aucune commande de publication n'a
+arrêté le serveur local ; port 3001 observé libre au dernier contrôle.
 Les paragraphes suivants relatent la réception avant publication.
 
 Complément au cours de l'essai du propriétaire : **BUG-905, bouton Clerk en
