@@ -12,6 +12,7 @@ export const checkoutResponseSchema = z.object({
   checkout_url: z.string().url().nullable(),
   status: z.enum(['creating', 'pending', 'completed', 'failed', 'canceled', 'refunded', 'reconciliation_required']),
   checkout_attempt_id: z.string().min(1),
+  idempotency_key: z.string().uuid().optional(),
 }).strict();
 
 export const checkoutStatusResponseSchema = z.object({

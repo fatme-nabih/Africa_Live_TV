@@ -26,6 +26,7 @@ import { FOCUS_SEARCH_EVENT } from '@/lib/shell-nav';
 import { isCatalogHome } from '@/lib/tv-rows';
 import { saveZapList } from '@/lib/zap-list';
 import { migrateLegacyStorageOnce, STORAGE_KEYS, VLC_NOTICE_CHANGE_EVENT } from '@/lib/storage-keys';
+import { localJsonStorage } from '@/lib/safe-storage';
 import type { Channel } from '@/types/channel';
 import { AlertCircle, ExternalLink, Filter, LayoutGrid, LayoutList, List, MonitorPlay, Play, RefreshCw } from 'lucide-react';
 
@@ -40,7 +41,7 @@ const ANCHORED_PLAYER_AVAILABLE = process.env.NODE_ENV === 'development';
 function readVlcNoticeDismissed() {
   if (typeof window === 'undefined') return false;
   migrateLegacyStorageOnce();
-  return window.localStorage.getItem(VLC_NOTICE_STORAGE_KEY) === 'true';
+  return localJsonStorage.readJson(VLC_NOTICE_STORAGE_KEY,value => typeof value === 'boolean' ? value : null,false).value;
 }
 
 function subscribeToVlcNotice(callback: () => void) {
@@ -152,8 +153,7 @@ function CatalogWorkspace() {
   const openPlayerForChannel = useCallback((channel: Channel) => {
     setAnchoredChannel(null);
     setSelectedChannel(channel);
-    dock.close();
-    saveZapList(playlist ?? channels, window.localStorage);
+    try { saveZapList(playlist ?? channels, window.localStorage); } catch { /* keep the window action usable */ }
     recordRecentChannel(channel);
     const result = launchPlayer({
       channelId: channel.id,
@@ -165,12 +165,15 @@ function CatalogWorkspace() {
     });
 
     if (result.mode === 'separate-window') {
+      dock.close();
       playerWindowRef.current = result.handle;
       setPlayerWindowStatus('open');
     } else if (result.mode === 'blocked') {
       playerWindowRef.current = null;
       setPlayerWindowStatus('blocked');
     }
+    if (result.mode === 'same-tab') dock.close();
+    return result;
   }, [channels, playlist, dock]);
 
   const closePlayerWindow = useCallback(() => {
@@ -224,7 +227,7 @@ function CatalogWorkspace() {
   }, [selectedChannelLabel]);
 
   const dismissVlcNotice = useCallback(() => {
-    window.localStorage.setItem(VLC_NOTICE_STORAGE_KEY, 'true');
+    localJsonStorage.writeJson(VLC_NOTICE_STORAGE_KEY, true);
     window.dispatchEvent(new Event(VLC_NOTICE_CHANGE_EVENT));
   }, []);
 

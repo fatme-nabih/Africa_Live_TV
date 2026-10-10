@@ -105,13 +105,16 @@ jobs:
       run: npx playwright install --with-deps chromium
 
     - name: E2E Tests
-      run: npx playwright test e2e/auth-entry.spec.ts e2e/catalogue.spec.ts e2e/payment.spec.ts e2e/radar-reliability.spec.ts
+      run: npx playwright test e2e/auth-entry.spec.ts e2e/catalogue.spec.ts e2e/payment.spec.ts e2e/radar-reliability.spec.ts e2e/account-controls-hydration.spec.ts
       env:
         E2E_EXTERNAL_SERVER: 'false'
         RADAR_BUILD_TEST: 'true'
 
     # Separate local development workstation mode: synthetic media/providers,
     # no real payment, no relaxation of the built staging/production app above.
+    - name: Component regressions (isolated providers, public playback mode)
+      run: npx playwright test -c playwright.components.config.ts
+
     - name: Prepare isolated UI account
       id: ui_account
       run: npx tsx src/scripts/ui-fixture-user.ts --catalog

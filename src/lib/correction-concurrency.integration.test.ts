@@ -7,6 +7,7 @@ import { db, pool } from '@/db';
 import { users, channels, streams, naboopayTransactions, userFollowedCountries } from '@/db/schema';
 import { assertIntegrationTarget } from './integration-test-safety';
 import { replaceAccountCountries } from './followed-countries-store';
+import { countryListVersion, CountryVersionConflict } from './country-version';
 import {reservePaymentCreation} from './payment-creation-store';
 import { claimPaymentReconciliation } from './payment-reconciliation';
 import { withWorkerLock } from './worker-lock';
@@ -27,15 +28,29 @@ test('F3/F4: concurrent creation keys and reloads share the uncertain reservatio
   assert.equal((await reservePaymentCreation(values())).created,false);
   await db.delete(naboopayTransactions).where(eq(naboopayTransactions.userId,userId));
 });
+
+test('B01: pending protects all new keys; a terminal key stays idempotent and next explicit key can reserve', { skip: !enabled }, async () => {
+  await assertIntegrationTarget(pool);
+  const owner = await user(), other = await user();
+  const values = (userId = owner) => ({ id: randomUUID(), userId, checkoutAttemptId: randomUUID(), idempotencyKey: randomUUID(), planCode: 'lumina_all_access_monthly', amount: 990, status: 'creating' });
+  const a = values(); const first = await reservePaymentCreation(a);
+  await db.update(naboopayTransactions).set({ status: 'pending' }).where(eq(naboopayTransactions.id, first.transaction.id));
+  assert.equal((await reservePaymentCreation(values())).transaction.id, a.id);
+  await db.update(naboopayTransactions).set({ status: 'completed' }).where(eq(naboopayTransactions.id, a.id));
+  assert.equal((await reservePaymentCreation(a)).created, false);
+  assert.equal((await reservePaymentCreation(values())).created, true);
+  assert.equal((await reservePaymentCreation({ ...values(other), idempotencyKey: a.idempotencyKey })).created, true);
+});
 test('F6: concurrent country replacements are atomic and return their own snapshots', {skip:!enabled},async()=>{
   const id=await user();
-  const lists=[['SN','CI'],['ML','GN'],[],['NG']];
-  const result=await Promise.all(lists.map(list=>replaceAccountCountries(id,list)));
-  assert.deepEqual(result,lists);
+  const lists=[['SN','CI'],['ML','GN'],['NG']];
+  const result=await Promise.all(lists.map(list=>replaceAccountCountries(id,list,countryListVersion([])).catch(error => error)));
+  assert.equal(result.filter(item => !(item instanceof CountryVersionConflict)).length,1);
   const rows=await db.select().from(userFollowedCountries).where(eq(userFollowedCountries.userId,id));
   assert.ok(lists.some(list=>JSON.stringify(list)===JSON.stringify(rows.sort((a,b)=>a.position-b.position).map(r=>r.countryCode))));
-  await replaceAccountCountries(id,['SN']);
-  await assert.rejects(replaceAccountCountries(id,['CI','CI']));
+  const winner = result.find(item => !(item instanceof CountryVersionConflict));
+  await replaceAccountCountries(id,['SN'],winner.version);
+  await assert.rejects(replaceAccountCountries(id,['CI','CI'],countryListVersion(['SN'])));
   assert.deepEqual((await db.select().from(userFollowedCountries).where(eq(userFollowedCountries.userId,id))).map(r=>r.countryCode),['SN']);
 });
 test('F4: ambiguous creations cannot starve 121 identifiable orders; leases rotate and expire', {skip:!enabled},async()=>{

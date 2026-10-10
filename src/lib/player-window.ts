@@ -45,7 +45,7 @@ export function launchPlayer({
 }: LaunchPlayerOptions): PlayerLaunchResult {
   const url = buildPlayerPath(channelId);
   if (isMobilePlayerDevice(userAgent, platform, maxTouchPoints)) {
-    navigateCurrentTab(url);
+    try { navigateCurrentTab(url); } catch { return { mode: 'blocked', url }; }
     return { mode: 'same-tab', url };
   }
 

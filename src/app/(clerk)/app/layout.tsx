@@ -29,5 +29,5 @@ export default async function AppLayout({
 
   const admin = await getAdministratorAccess();
   // Le lecteur unique vit dans le layout : il continue quand on passe du Radar à la TV (UX-501) ; Ctrl K ouvre la recherche universelle (UX-502).
-  return <AppShell admin={admin.allowed}><PlayerDockProvider><UniversalSearch />{children}</PlayerDockProvider></AppShell>;
+  return <AppShell admin={admin.allowed} preferenceIdentity={{ userId: user.id, clerkUserId: user.clerkUserId, local: decision.reason === 'local_development' }}><PlayerDockProvider><UniversalSearch />{children}</PlayerDockProvider></AppShell>;
 }

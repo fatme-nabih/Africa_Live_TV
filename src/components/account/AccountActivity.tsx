@@ -4,7 +4,7 @@ import { Heart, History, MapPin, Radar, Star, X } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useSyncExternalStore } from 'react';
 import { useNow } from '@/components/radar/useNow';
-import { useFollowedCountries, useRecentChannels, writeFollowedCountries } from '@/components/tv/hooks';
+import { useFollowedCountries, useRecentChannels, useWriteFollowedCountries } from '@/components/tv/hooks';
 import { ButtonLink, EmptyState } from '@/components/ui';
 import { flagEmoji, parseRecentCountries, RECENT_COUNTRIES_EVENT } from '@/lib/country-picker';
 import { makePrimaryCountry, toggleFollowedCountry } from '@/lib/followed-countries';
@@ -13,6 +13,7 @@ import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
 import { parseVisit } from '@/lib/radar-visit';
 import { formatAgo } from '@/lib/relative-time';
 import { STORAGE_KEYS } from '@/lib/storage-keys';
+import { LegacyPreferencesRecovery } from '@/components/shell/FollowedCountriesSync';
 
 const AFRICAN_CODES: ReadonlySet<string> = new Set(AFRICAN_COUNTRIES.map(country => country.code));
 
@@ -40,6 +41,7 @@ function read(key: string) {
 export default function AccountActivity({ favoritesCount }: { favoritesCount: number }) {
   const recents = useRecentChannels();
   const followed = useFollowedCountries();
+  const writeFollowedCountries = useWriteFollowedCountries();
   const countriesRaw = useSyncExternalStore(subscribe, () => read(STORAGE_KEYS.recentCountries), () => null);
   const visitRaw = useSyncExternalStore(subscribe, () => read(STORAGE_KEYS.radarVisit), () => null);
   // 0 avant le montage : le serveur ne connaît pas l'appareil, le premier rendu client est identique.
@@ -54,8 +56,9 @@ export default function AccountActivity({ favoritesCount }: { favoritesCount: nu
     <section aria-labelledby="activity-title" className="rounded-card border border-line bg-surface-1/90 p-5 sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="activity-title" className="font-display text-xl font-bold text-text">Mon activité</h2>
-        <p className="text-xs text-text-muted">Chaînes, pays et visite : gardés sur cet appareil</p>
+        <p className="text-xs text-text-muted">Chaînes et visite : cet appareil · pays et favoris : votre compte</p>
       </div>
+      <LegacyPreferencesRecovery />
 
       {hydrated && empty ? (
         <EmptyState

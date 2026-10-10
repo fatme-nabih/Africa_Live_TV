@@ -49,6 +49,10 @@ export const supportRequestAdminActionSchema = z.object({
   }
 });
 
+export function allowsSupportRequestTransition(status: string, action: z.infer<typeof supportRequestAdminActionSchema>['action']) {
+  return !(status === 'sources_disabled' && action === 'in_review');
+}
+
 export function canonicalizeStreamUrl(value: string) {
   try {
     const parsed = new URL(value);

@@ -8,11 +8,12 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { eq, and } from 'drizzle-orm';
 import { readBoundedJson } from '@/lib/bounded-json';
-import { BadRequestError, UnauthorizedError, ServiceUnavailableError, RateLimitError, withApiErrorHandler } from '@/lib/api-errors';
+import { ApiError, BadRequestError, UnauthorizedError, ServiceUnavailableError, RateLimitError, withApiErrorHandler } from '@/lib/api-errors';
 import { ensureInternalUser } from '@/lib/identity';
 import { consumeRateLimit } from '@/lib/rate-limit';
 import { NABOOPAY_PLANS } from '@/lib/naboopay-payment';
 import { checkoutRequestSchema } from '@/lib/payment-contracts';
+import { actionableCheckoutUrl, type CheckoutStatus } from '@/lib/payment-attempt-policy';
 
 export const POST = withApiErrorHandler(async (request: Request) => {
   if (process.env.PAYMENTS_ENABLED !== 'true') {
@@ -27,6 +28,7 @@ export const POST = withApiErrorHandler(async (request: Request) => {
   if (internalUser.status === 'blocked' || internalUser.status === 'deleted') {
     throw new UnauthorizedError('Utilisateur bloqué ou supprimé.');
   }
+  if (request.headers.get('x-checkout-protocol') !== '2') throw new ApiError('Rechargez la page pour reprendre votre tentative de paiement.',409,'CHECKOUT_CLIENT_OUTDATED');
 
   const body = await readBoundedJson(request, 8 * 1_024);
   const parsed = checkoutRequestSchema.safeParse(body);
@@ -52,9 +54,10 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     }
     // Return the existing transaction
     return NextResponse.json({
-      checkout_url: existingTx.checkoutUrl || null,
+      checkout_url: actionableCheckoutUrl(existingTx.status as CheckoutStatus, existingTx.checkoutUrl),
       status: existingTx.status,
       checkout_attempt_id: existingTx.checkoutAttemptId,
+      idempotency_key: existingTx.idempotencyKey,
     });
   }
 
@@ -99,9 +102,10 @@ export const POST = withApiErrorHandler(async (request: Request) => {
       throw new BadRequestError('Une tentative avec cette clé existe déjà pour un forfait différent.', 'IDEMPOTENCY_CONFLICT');
     }
     return NextResponse.json({
-      checkout_url: winner.checkoutUrl,
+      checkout_url: actionableCheckoutUrl(winner.status as CheckoutStatus, winner.checkoutUrl),
       status: winner.status,
       checkout_attempt_id: winner.checkoutAttemptId,
+      idempotency_key: winner.idempotencyKey,
     });
   }
 
@@ -131,12 +135,12 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     const status = paymentCreationFailureStatus(error);
     await db.update(naboopayTransactions).set({ status, updatedAt: new Date().toISOString() }).where(eq(naboopayTransactions.id, id));
     if (status === 'failed') throw error;
-    return NextResponse.json({ checkout_url: null, status, checkout_attempt_id: checkoutAttemptId });
+    return NextResponse.json({ checkout_url: null, status, checkout_attempt_id: checkoutAttemptId, idempotency_key: idempotencyKey });
   }
 
   if (!nbpResponse.checkout_url) {
     await db.update(naboopayTransactions).set({ status: 'reconciliation_required',providerOrderId:nbpResponse.order_id,updatedAt:new Date().toISOString() }).where(eq(naboopayTransactions.id, id));
-    return NextResponse.json({ checkout_url:null,status:'reconciliation_required',checkout_attempt_id:checkoutAttemptId });
+    return NextResponse.json({ checkout_url:null,status:'reconciliation_required',checkout_attempt_id:checkoutAttemptId,idempotency_key:idempotencyKey });
   }
 
   // Atomically update transaction
@@ -150,5 +154,6 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     checkout_url: nbpResponse.checkout_url,
     status: 'pending',
     checkout_attempt_id: checkoutAttemptId,
+    idempotency_key: idempotencyKey,
   });
 });

@@ -1,70 +1,30 @@
 'use client';
-import { useEffect } from 'react';
-import { writeFollowedCountries } from '@/components/tv/hooks';
-import { FOLLOWED_COUNTRIES_EVENT, mergeFollowedCountries, parseFollowedCountries, sameFollowedCountries } from '@/lib/followed-countries';
-import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
-import { STORAGE_KEYS } from '@/lib/storage-keys';
-
-const AFRICAN_CODES=new Set(AFRICAN_COUNTRIES.map(c=>c.code));
-let accountQueue:Promise<unknown>=Promise.resolve();
-function serialize<T>(task:()=>Promise<T>) {const next=accountQueue.catch(()=>{}).then(task);accountQueue=next.catch(()=>{});return next;}
-function readDevice() {
-  try {return parseFollowedCountries(localStorage.getItem(STORAGE_KEYS.followedCountries),AFRICAN_CODES);} catch {return [];}
+import { useMemo, useSyncExternalStore } from 'react';
+import { usePreferences } from './usePreferences';
+import { importLegacyChoices, legacyChoices, preferenceStore, updatePreferences } from '@/lib/preference-store';
+import { formatCountryName } from '@/lib/format';
+const EMPTY_LEGACY = '{"countries":[],"favorites":[]}';
+function subscribeLegacy(callback: () => void) { window.addEventListener('storage',callback); return () => window.removeEventListener('storage',callback); }
+export function LegacyPreferencesRecovery() {
+  const { owner } = usePreferences();
+  const raw = useSyncExternalStore(subscribeLegacy,() => JSON.stringify(legacyChoices()),() => EMPTY_LEGACY);
+  const legacy = useMemo(() => JSON.parse(raw) as ReturnType<typeof legacyChoices>,[raw]);
+  if (!owner || (!legacy.countries.length && !legacy.favorites.length)) return null;
+  return <button className="mt-3 text-sm underline" onClick={() => updatePreferences(preferenceStore(owner),state => ({ ...state, legacyHandled: false }))}>Reprendre les choix de cet appareil</button>;
 }
-class SyncResponseError extends Error {constructor(readonly status:number){super('COUNTRIES_SYNC_FAILED');}}
-async function requestCountries(countries?:string[]) {
-  const init:RequestInit=countries ? {method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({countries})} : {cache:'no-store'};
-  const response=await fetch('/api/followed-countries',{...init,signal:AbortSignal.timeout(15_000)});
-  if(!response.ok) throw new SyncResponseError(response.status);
-  const body:unknown=await response.json();
-  if(!body||typeof body!=='object'||!('countries' in body)||!Array.isArray(body.countries)) throw new Error('INVALID_COUNTRIES_RESPONSE');
-  return parseFollowedCountries(JSON.stringify(body.countries),AFRICAN_CODES);
-}
-
 export default function FollowedCountriesSync() {
-  useEffect(()=>{
-    let stopped=false, busy=false, initialized=false, publishing=false, blocked=false;
-    let revision=0, retries=0;
-    let account:string[]=[];
-    let timer:ReturnType<typeof setTimeout>|undefined;
-    const schedule=(delay=800)=>{clearTimeout(timer);if(!stopped&&!blocked) timer=setTimeout(()=>void synchronize(),delay);};
-    const synchronize=async()=>{
-      if(stopped||busy||blocked)return;
-      busy=true;
-      try {
-        await serialize(async()=>{
-          if(stopped)return;
-          if(!initialized) {
-            const before=revision;
-            account=await requestCountries();
-            if(stopped)return;
-            initialized=true;
-            const device=readDevice();
-            const hasPending=localStorage.getItem(STORAGE_KEYS.followedCountriesPending)==='true';
-            const merged=hasPending||before!==revision ? device : mergeFollowedCountries(account,device);
-            if(!sameFollowedCountries(merged,device)) {publishing=true;writeFollowedCountries(merged);publishing=false;}
-          }
-          while(!stopped) {
-            const device=readDevice();
-            if(sameFollowedCountries(device,account)) {localStorage.removeItem(STORAGE_KEYS.followedCountriesPending);break;}
-            const sentRevision=revision;
-            account=await requestCountries(device);
-            if(stopped)return;
-            if(sentRevision===revision&&sameFollowedCountries(readDevice(),account)) localStorage.removeItem(STORAGE_KEYS.followedCountriesPending);
-          }
-        });
-        retries=0;
-      } catch(error) {
-        blocked=error instanceof SyncResponseError && [401,403,429].includes(error.status);
-        if(!blocked&&++retries<=3) schedule(1_000*2**(retries-1));
-      } finally {busy=false;}
-    };
-    const onChange=()=>{if(publishing)return;revision++;localStorage.setItem(STORAGE_KEYS.followedCountriesPending,'true');schedule();};
-    const onOnline=()=>{if(blocked)return;retries=0;schedule(0);};
-    schedule(0);
-    window.addEventListener(FOLLOWED_COUNTRIES_EVENT,onChange);
-    window.addEventListener('online',onOnline);
-    return ()=>{stopped=true;clearTimeout(timer);window.removeEventListener(FOLLOWED_COUNTRIES_EVENT,onChange);window.removeEventListener('online',onOnline);};
-  },[]);
-  return null;
+  const { owner, snapshot, retry } = usePreferences('countries');
+  usePreferences('favorites');
+  const raw = useSyncExternalStore(subscribeLegacy,() => JSON.stringify(legacyChoices()),() => EMPTY_LEGACY);
+  const legacy = useMemo(() => JSON.parse(raw) as ReturnType<typeof legacyChoices>,[raw]);
+  if (!owner) return null;
+  const offer = !snapshot.legacyHandled && (legacy.countries.length > 0 || legacy.favorites.length > 0);
+  return <>
+    {snapshot.errors.countries && <p role="status" className="px-4 py-2 text-sm text-text-muted">{snapshot.errors.countries} <button onClick={retry} className="underline">Réessayer</button></p>}
+    {offer && <aside className="mx-4 my-2 rounded-control border border-line p-3 text-sm text-text">
+      <p>Des choix de cet appareil n’ont pas de compte identifié : {legacy.countries.map(code => formatCountryName(code)).join(', ')}{legacy.favorites.length ? ` · ${legacy.favorites.length} favoris` : ''}. Vous pouvez les ajouter au compte actuel.</p>
+      <button className="mr-3 underline" onClick={() => importLegacyChoices(owner)}>Ajouter ces choix à mon compte</button>
+      <button className="underline" onClick={() => updatePreferences(preferenceStore(owner),state => ({ ...state, legacyHandled: true }))}>Garder pour plus tard</button>
+    </aside>}
+  </>;
 }

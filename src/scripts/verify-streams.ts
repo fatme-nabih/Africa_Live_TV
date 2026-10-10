@@ -305,6 +305,16 @@ export function buildVerificationUpdate(
   now: Date,
   reviewedQuery: 'generic' | 'time-window' | null = null,
 ) {
+  if (result.evidence === 'invalid' || result.evidence === 'incomplete') {
+    return {
+      status: 'UNTESTED', verificationState: 'STALE', directEligibility: 'REVIEW_REQUIRED',
+      eligibilityReason: 'MEDIA_EVIDENCE_REVIEW_REQUIRED', eligibilityCheckedAt: now.toISOString(),
+      corsAllowed: result.corsAllowed, mixedContent: result.mixedContent, httpStatus: result.httpStatus,
+      failureReason: result.failureReason, lastCheckedAt: now.toISOString(),
+      nextCheckAt: new Date(now.getTime() + TEMPORARY_FAILURE_MAX_MS).toISOString(),
+      updatedAt: now.toISOString(),
+    } satisfies Partial<typeof streams.$inferInsert>;
+  }
   if (result.available && result.playableStatus) {
     const eligibility = decideDirectEligibility({
       url: stream.url,

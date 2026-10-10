@@ -86,7 +86,7 @@ test('country filters and favorites work without Clerk', async ({ page }) => {
   } finally {
     const cleaned = await page.request.patch('/api/favorites', {
       headers: { Origin: new URL(page.url()).origin },
-      data: { remove: [candidate.id] },
+      data: { remove: [candidate.id], owner: existingFavorites.owner },
     });
     expect(cleaned.status()).toBe(200);
   }

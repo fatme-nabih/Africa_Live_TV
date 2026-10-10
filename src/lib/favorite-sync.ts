@@ -1,4 +1,4 @@
-export type FavoriteIntent = { desired:boolean; revision:number };
+export type FavoriteIntent = { desired:boolean; revision:number|string };
 export function mergeFavoriteIntents(canonical:string[],intents:Record<string,FavoriteIntent>) {
   const result = new Set(canonical);
   for (const [id,intent] of Object.entries(intents)) { if(intent.desired) result.add(id); else result.delete(id); }

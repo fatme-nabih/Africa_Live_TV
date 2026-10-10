@@ -235,13 +235,17 @@ async function fetchPinned(
   );
 }
 
+const responseUrlChains = new WeakMap<Response, readonly string[]>();
+export function upstreamResponseUrlChain(response: Response) { return responseUrlChains.get(response) ?? []; }
 export async function safeUpstreamFetch(
   initialUrl: URL,
   init: RequestInit = {},
   redirects = 0,
+  chain: readonly string[] = [],
 ): Promise<Response> {
   const response = await fetchPinned(initialUrl, init, redirects > 0);
-  if (response.status < 300 || response.status >= 400) return response;
+  const urls = [...chain, initialUrl.href];
+  if (response.status < 300 || response.status >= 400) { responseUrlChains.set(response, urls); return response; }
 
   const location = response.headers.get('location');
   await response.body?.cancel().catch(() => undefined);
@@ -249,7 +253,7 @@ export async function safeUpstreamFetch(
     throw new Error('UPSTREAM_REDIRECT_REJECTED');
   }
 
-  return safeUpstreamFetch(new URL(location, initialUrl), init, redirects + 1);
+  return safeUpstreamFetch(new URL(location, initialUrl), init, redirects + 1, urls);
 }
 
 export async function readResponseTextWithLimit(

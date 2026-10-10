@@ -1,9 +1,11 @@
 'use client';
 
-import { useMemo, useSyncExternalStore } from 'react';
+import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { ECO_EVENT, effectiveEco, readEcoRaw, readSaveData } from '@/lib/eco-mode';
 import { parseRecentCountries, RECENT_COUNTRIES_EVENT } from '@/lib/country-picker';
-import { FOLLOWED_COUNTRIES_EVENT, parseFollowedCountries } from '@/lib/followed-countries';
+import { FOLLOWED_COUNTRIES_EVENT } from '@/lib/followed-countries';
+import { chooseCountries, displayCountries } from '@/lib/preference-store';
+import { usePreferences } from '@/components/shell/usePreferences';
 import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
 import { parseRecentChannels, pushRecentChannel } from '@/lib/recent-channels';
 import { DEFAULT_FOLLOWED_COUNTRY } from '@/lib/tv-rows';
@@ -26,7 +28,6 @@ function subscribe(events: string[]) {
 const subscribeEco = subscribe([ECO_EVENT]);
 const subscribeRecents = subscribe([RECENTS_EVENT]);
 const subscribeCountries = subscribe([RECENT_COUNTRIES_EVENT, FOLLOWED_COUNTRIES_EVENT]);
-const subscribeFollowed = subscribe([FOLLOWED_COUNTRIES_EVENT]);
 const AFRICAN_CODES: ReadonlySet<string> = new Set(AFRICAN_COUNTRIES.map(country => country.code));
 
 /** Mode Éco data effectif (choix de l'utilisateur, sinon Save-Data du navigateur). Faux côté serveur. */
@@ -79,27 +80,16 @@ function readCountriesRaw() {
   }
 }
 
-function readFollowedRaw() {
-  try {
-    return window.localStorage.getItem(STORAGE_KEYS.followedCountries);
-  } catch {
-    return null;
-  }
-}
 
 /** Pays suivis (UX-503), le principal d'abord. */
 export function useFollowedCountries(): string[] {
-  const raw = useSyncExternalStore(subscribeFollowed, readFollowedRaw, () => null);
-  return useMemo(() => parseFollowedCountries(raw, AFRICAN_CODES), [raw]);
+  const { snapshot } = usePreferences();
+  return useMemo(() => displayCountries(snapshot),[snapshot]);
 }
 
-export function writeFollowedCountries(list: readonly string[]) {
-  try {
-    window.localStorage.setItem(STORAGE_KEYS.followedCountries, JSON.stringify(list));
-    window.dispatchEvent(new Event(FOLLOWED_COUNTRIES_EVENT));
-  } catch {
-    // Stockage indisponible : le suivi n'est pas mémorisé.
-  }
+export function useWriteFollowedCountries() {
+  const { owner } = usePreferences();
+  return useCallback((list: readonly string[]) => chooseCountries(owner,list),[owner]);
 }
 
 /** Pays de l'accueil TV : le pays principal suivi, sinon le dernier choisi dans la barre, sinon le Sénégal. */

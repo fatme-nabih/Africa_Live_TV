@@ -57,7 +57,7 @@ export default async function AccountPage(props: {
     : null;
 
   return (
-    <AppShell admin={isAdmin}>
+    <AppShell admin={isAdmin} preferenceIdentity={user ? { userId: user.id, clerkUserId: user.clerkUserId, local: accessDecision.reason === 'local_development' } : undefined}>
     <main className="relative flex-1 overflow-hidden bg-black px-4 py-8 text-text sm:px-6">
       <BrandBackdrop variant="app" />
 

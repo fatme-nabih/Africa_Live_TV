@@ -8,7 +8,7 @@ import { recordRecentChannel } from '@/components/tv/hooks';
 import { ShareChannelLink } from '@/components/tv/ChannelTile';
 import { categoryLabels } from '@/lib/catalog-metadata';
 import { formatCountryName } from '@/lib/format';
-import { launchPlayer } from '@/lib/player-window';
+import { launchPlayer, type PlayerLaunchResult } from '@/lib/player-window';
 import { saveZapList, zapNeighbors } from '@/lib/zap-list';
 import type { Channel } from '@/types/channel';
 
@@ -22,7 +22,7 @@ export type DockRequest = {
   /** La page d'origine suit la chaîne courante (sélection, mise en avant). Oublié dès qu'on change de page. */
   onZap?: (channel: Channel) => void;
   /** Fenêtre séparée gérée par la page d'origine ; à défaut, ouverture générique. Oublié dès qu'on change de page. */
-  onPopout?: (channel: Channel) => void;
+  onPopout?: (channel: Channel) => PlayerLaunchResult;
 };
 
 type DockView = 'expanded' | 'mini';
@@ -94,6 +94,7 @@ function PlayerDockFrame({
   const expanded = view === 'expanded';
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const [popoutError, setPopoutError] = useState<string | null>(null);
 
   const zapTo = useCallback((target: Channel) => {
     setState(current => current && { ...current, channel: target, zapped: true });
@@ -101,12 +102,14 @@ function PlayerDockFrame({
   }, [setState, state]);
 
   const popout = useCallback(() => {
+    let result: PlayerLaunchResult;
+    try {
     if (state.onPopout) {
-      state.onPopout(channel);
+      result = state.onPopout(channel);
     } else {
-      if (playlist) saveZapList([...playlist], window.localStorage);
+      if (playlist) { try { saveZapList([...playlist], window.localStorage); } catch { /* device storage is optional */ } }
       recordRecentChannel(channel);
-      launchPlayer({
+      result = launchPlayer({
         channelId: channel.id,
         userAgent: navigator.userAgent,
         platform: navigator.platform,
@@ -115,7 +118,9 @@ function PlayerDockFrame({
         navigateCurrentTab: (url) => window.location.assign(url),
       });
     }
-    onClose();
+    } catch { result = { mode: 'blocked', url: '' }; }
+    if (result.mode === 'blocked') setPopoutError('Le navigateur a refusé la fenêtre. La lecture continue ici ; vous pouvez réessayer.');
+    else onClose();
   }, [channel, playlist, state, onClose]);
 
   // Fenêtre plein écran seulement : Échap ferme, la page ne défile pas, le focus reste dans la fenêtre.
@@ -234,6 +239,7 @@ function PlayerDockFrame({
           </div>
         </div>
         <div className={expanded ? 'flex flex-1 flex-col justify-center bg-black/60 p-2 sm:p-5' : 'bg-black'}>
+          {popoutError && <p role="alert" className="px-3 py-2 text-sm text-text">{popoutError}</p>}
           <Player
             key={channel.id}
             channelId={channel.id}

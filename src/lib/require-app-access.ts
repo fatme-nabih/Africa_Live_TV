@@ -29,6 +29,7 @@ async function authorizeRequest(
   const access = await getCurrentAccessDecision();
 
   if (!access.user) {
+    if (access.decision.status === 'blocked') return { ok:false as const,response:NextResponse.json({ error:'Cette identité ne peut plus accéder à l’application.',code:'IDENTITY_DELETED' },{ status:403 }) };
     return {
       ok: false as const,
       response: NextResponse.json(

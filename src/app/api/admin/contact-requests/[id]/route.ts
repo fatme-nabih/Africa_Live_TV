@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, ne } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 
 import { db } from '@/db';
@@ -8,7 +8,8 @@ import { BadRequestError, ForbiddenError, NotFoundError, ApiError, withApiErrorH
 import { readBoundedJson } from '@/lib/bounded-json';
 import { requireAdminApiAccess } from '@/lib/require-admin-api';
 import { normalizeCatalogSearch } from '@/lib/catalog-query';
-import { canonicalizeStreamUrl, supportRequestAdminActionSchema } from '@/lib/support-request-contracts';
+import { allowsSupportRequestTransition, canonicalizeStreamUrl, supportRequestAdminActionSchema } from '@/lib/support-request-contracts';
+import { lockCatalogPublication } from '@/lib/catalog-publication-lock';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -22,9 +23,11 @@ export const PATCH = withApiErrorHandler(async (request: Request, context: unkno
 
   const now = new Date().toISOString();
   const result = await db.transaction(async (tx) => {
+    await lockCatalogPublication(tx);
     const [item] = await tx.select().from(supportRequests)
       .where(eq(supportRequests.id, id)).for('update').limit(1);
     if (!item) throw new NotFoundError('Cette demande est introuvable.', 'REQUEST_NOT_FOUND');
+    if (!allowsSupportRequestTransition(item.status, parsed.data.action)) throw new ApiError('Une demande ayant désactivé des sources nécessite une décision explicite de levée du retrait.', 409, 'TAKEDOWN_TRANSITION_CONFLICT');
 
     let status: string;
     let affectedStreamIds: string[] = [];
@@ -41,10 +44,16 @@ export const PATCH = withApiErrorHandler(async (request: Request, context: unkno
           ));
         affectedStreamIds = [...new Set(priorDisableEvents.flatMap((event) => event.affectedStreamIds))];
         if (affectedStreamIds.length > 0) {
+          const otherReports = await tx.select().from(supportRequests).where(and(ne(supportRequests.id, id), eq(supportRequests.subject, 'removal'), eq(supportRequests.status, 'sources_disabled')));
+          const candidates = await tx.select({ id: streams.id, url: streams.url, normalizedName: channels.normalizedName }).from(streams).innerJoin(channels, eq(streams.channelId, channels.id)).where(inArray(streams.id, affectedStreamIds));
+          affectedStreamIds = candidates.filter(source => !otherReports.some(report => report.channelName?.normalize('NFKC').toLowerCase().replace(/\s+/g,' ').trim() === source.normalizedName && (!report.sourceUrl || canonicalizeStreamUrl(report.sourceUrl) === canonicalizeStreamUrl(source.url)))).map(source => source.id);
+        }
+        if (affectedStreamIds.length > 0) {
           await tx.update(streams).set({
             active: true,
             inactiveAt: null,
             directEligibility: 'REVIEW_REQUIRED',
+            status: 'UNTESTED', verificationState: 'STALE',
             eligibilityReason: 'TAKEDOWN_REVIEW_CLOSED',
             eligibilityCheckedAt: null,
             updatedAt: now,

@@ -1,5 +1,37 @@
 # Progression — préparation production
 
+## B01–B20/A1 — reçus localement, 10 octobre 2026
+
+Complément au cours de l'essai du propriétaire : **BUG-905, bouton Clerk en
+erreur d'hydratation, corrigé et reçu localement**. HTML initial identique puis
+montage du widget ; trois E2E SSR/hydratation, lint/types et session réelle Radar
+après rechargement sans erreur. [Dossier](hydratation-clerk-2026-10-10.md).
+Serveur du propriétaire conservé ; non committé, non publié.
+
+Les 21 défauts ont été corrigés dans les lots L0→L7 ; 37 tickets locaux vérifiés,
+deux réserves distinctes (appareils/profils réels BUG-903, publication BUG-904).
+[Dossier, fiches et preuves](validation-correctifs-bugs-2026-10-09.md),
+[backlog](backlog-correctifs-bugs-2026-10-09.md). Code non committé, non publié.
+
+404 unités réussies, 40 intégrations PostgreSQL isolées, 53 composants dans Edge,
+13 E2E auth/paiement sur build strict, 34 UI TV/pays/dock/lecture (33 puis un cas
+corrigé/rejoué), 64 Radar + worker de build reçu séparément, deux nouveaux tests
+popup/dock. Types/lint/build/invariants/migrations verts, audit production 0.
+Les 40 intégrations ignorées par `npm test` ont été reçues séparément.
+
+Migration additive 0020 appliquée uniquement en local après restauration reçue
+de la sauvegarde : 21 migrations à `africa_live_dev`, anciennes 20 intactes.
+Huit empreintes métier identiques et fixtures supprimées ; `.env*` et source
+IPTV conservés, port 3001 libéré. Aucun état distant changé. Le dernier relevé
+staging conserve 20 migrations ; nouvelle sauvegarde/restauration et
+`db:migrate:deploy` nécessaires avant une publication expressément demandée.
+
+Contrats nouveaux : checkout protocole 2, préférences avec propriétaire et pays
+avec version ; anciens onglets refusés 409 sans mutation. Les 6 999 sources
+historiquement qualifiées ont seulement été inventoriées ; recontrôle ciblé et
+droits/profils réels restent des opérations distinctes. Safari/iOS/Android
+physiques et parcours Clerk/paiement réels ne sont pas certifiés par les mocks.
+
 ## VLC iPhone / CNews — publié sur staging, 6 octobre 2026
 
 Signalement propriétaire : VLC ouvre sa médiathèque vide sur iPhone pour CNews ; Android fonctionne.
@@ -13,7 +45,9 @@ CNews : manifeste et première variante HTTPS disponibles depuis le poste ; aucu
 audit production 0), Railway `738d71b8` SUCCESS, 442/442 fichiers identiques, deux domaines santé 200, 10/10 E2E distants.
 CI [37526110709](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/37526110709) SUCCESS : 375 unités, 23 intégrations,
 9 E2E de build et 66 UI dont sept mobiles. [Publication et limites](publication-ios-vlc-2026-10-06.md).
-**Safari/VLC sur appareil réel et cause exacte à confirmer par le propriétaire.**
+**CNews fonctionne sur le vrai iPhone**, confirmé par le propriétaire (VLC 3.7.3, build 475). Une chaîne Nickelodeon/Pluto joue aussi.
+Naruto Shippuden et Dragon Ball Z renvoient 403 depuis le poste, sans secours enregistré ; pas de nouvelle livraison du lanceur
+sur la base de ces refus. [Diagnostic et limites](diagnostic-vlc-flux-2026-10-06.md). Appareils/autres flux non tous reçus.
 Aucun changement de schéma, données métier, `.env*`, service distant ou projet source IPTV.
 
 ## Refonte du Radar, lots R1 à R4 — 5 octobre 2026

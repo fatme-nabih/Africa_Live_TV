@@ -1,5 +1,25 @@
 # Checklist de non-régression — lots local et Railway
 
+## B01–B20/A1 — réception locale du 10 octobre 2026, non publiée
+
+[Preuves individuelles, contrats et réserves](validation-correctifs-bugs-2026-10-09.md).
+
+- [x] Complément BUG-905 : compte Clerk déjà prêt côté navigateur, hydratation sans décalage ; 3 E2E SSR, lint/types, Radar avec session réelle et rechargement reçus. [Dossier](hydratation-clerk-2026-10-10.md).
+- [x] Les 21 défauts disposent d'une preuve corrigée dédiée ; 37 tickets locaux reçus.
+- [x] Paiement terminal/incertain, nouvelle clé sur geste, propriétaire/idempotence ; remboursement J1→J5 sans recréer l'essai.
+- [x] Vrai hls.js, fatal/délais/retards ; natif MP4 Éco sans requête avant geste ; refus popup conserve la vidéo ; sept simulations VLC mobile.
+- [x] Ressources amont, HTTPS/CORS, preuve média/clé/MAP/plages et limites mémoire/deadline ; propagation worker/SQL/résolveur, historique conservé.
+- [x] Révisions Clerk, suppression avant création, replay/concurrence ; API retrait 409 et import/admin sérialisés dans les deux ordres.
+- [x] Stockage facultatif, compte A→B→A et inconnu, import ancien explicite, CAS pays, favoris 101/250, échec partiel, quotas/refus/deux onglets.
+- [x] Radar succès/erreurs/finally dépassés et pays ; alias, lien humain Atom, Unicode/texte échappé.
+- [x] 404 unités et 40 intégrations isolées ; types/lint/build, invariants 4/4, `db:check`/journal, audit production 0.
+- [x] 53 composants, 13 E2E build auth/paiement, 34 UI TV/pays/dock/lecture, 64 Radar + worker build, deux nouveaux popup/dock ; détails des reprises dans le dossier.
+- [x] Sauvegarde locale restaurée avant migration additive 0020 ; 21 migrations locales, anciennes 20 intactes ; aucun backfill ou changement de droits réel.
+- [x] Fixtures/schémas nettoyés, huit empreintes métier conservées, `.env*` et IPTV intacts, port 3001 libéré ; aucun commit/push/déploiement/changement distant.
+- [ ] BUG-903 : Safari/HLS natif et iOS/Android physiques, vrais profils Clerk membre/admin/bloqué, paiement/remboursement et appareils multiples.
+- [ ] BUG-904 conditionnel : revue/autorisation, sauvegarde Railway, migration `db:migrate:deploy`, contrats anciens/rollback, santé/auth/webhooks staging.
+- [ ] Recontrôle ciblé des classifications historiques : 6 999 sources inventoriées sans sonde réelle ; runner avec sélection explicite requis avant demande autorisée.
+
 ## VLC iPhone / CNews — publié sur staging le 6 octobre 2026
 
 [Diagnostic, réception et limites](ios-vlc-cnews-2026-10-06.md).
@@ -12,7 +32,9 @@
 - [x] Publication explicitement autorisée : GitHub `8fcfbda`, Railway `738d71b8` SUCCESS, 442/442 fichiers, santé 200 sur les deux domaines,
   10/10 E2E distants ; 20 migrations et modes staging conservés. [Preuves](publication-ios-vlc-2026-10-06.md).
 - [x] Dépendances indirectes sharp/source-map-js corrigées, audit production 0 ; CI réussie, 23 intégrations et 66 E2E UI dont sept mobiles.
-- [ ] Réception Safari/VLC sur vrai iPhone, démarrage à froid et relance, cause exacte du signalement.
+- [x] Réception partielle sur vrai iPhone : bouton confirmé, VLC 3.7.3 (475), **CNews fonctionne** selon le propriétaire.
+- [ ] Autres chaînes, démarrage à froid et relance systématiques. Naruto Shippuden/Dragon Ball Z : sources refusées 403 lors du diagnostic,
+  aucun secours enregistré ; ne pas traiter ces refus par une nouvelle modification du lanceur. [Diagnostic](diagnostic-vlc-flux-2026-10-06.md).
 
 ## COR — correctifs publiés sur staging le 4 octobre 2026
 

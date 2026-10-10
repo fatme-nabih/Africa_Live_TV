@@ -44,7 +44,8 @@ export function migrateLegacyStorage(storage: StorageLike): number {
         storage.setItem(current, value);
         migrated += 1;
       }
-      storage.removeItem(legacy);
+      // Account preferences have no provable owner: keep their original copy recoverable.
+      if (current === STORAGE_KEYS.vlcNoticeDismissed) storage.removeItem(legacy);
     } catch {
       // Stockage indisponible : on conserve l'ancienne valeur et on continue.
     }

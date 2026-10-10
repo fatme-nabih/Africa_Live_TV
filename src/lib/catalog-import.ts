@@ -14,6 +14,7 @@ import {
 } from '@/db/schema';
 import { serializeLanguageCodes } from '@/lib/channel-language';
 import { canonicalizeStreamUrl } from '@/lib/support-request-contracts';
+import { lockCatalogPublication } from './catalog-publication-lock';
 
 const BATCH_SIZE = 500;
 const MAX_REPORTED_ERRORS = 100;
@@ -373,6 +374,7 @@ export async function runCatalogDraftImport({
     );
 
     await db.transaction(async (tx) => {
+      await lockCatalogPublication(tx);
       const [stagedChannels, stagedStreams] = await Promise.all([
         tx
           .select()

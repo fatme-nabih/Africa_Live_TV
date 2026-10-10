@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Gift, ShieldCheck } from 'lucide-react';
 import BrandBackdrop from '@/components/brand/BrandBackdrop';
 import Faq from '@/components/marketing/Faq';
@@ -9,6 +9,8 @@ import PlanCard, { PLAN_COPY } from '@/components/pricing/PlanCard';
 import AppShell from '@/components/shell/AppShell';
 import { Button } from '@/components/ui';
 import { checkoutRequestSchema, checkoutResponseSchema } from '@/lib/payment-contracts';
+import { checkoutAction, safeCheckoutDestination } from '@/lib/payment-attempt-policy';
+import { CHECKOUT_PLANS, readCheckoutAttempt, saveCheckoutAttempt, replaceCheckoutAttempt, finishCheckoutAttempt } from '@/lib/checkout-attempt';
 
 type PlanCode = 'lumina_all_access_monthly' | 'lumina_all_access_annual';
 
@@ -18,17 +20,25 @@ export default function PricingPage() {
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState<string | null>(null);
-  const attemptKeys = useRef(new Map<string, string>());
+  const busy = useRef(false);
   const [trackingId,setTrackingId]=useState<string|null>(null);
+  useEffect(() => {
+    let active = true;
+    queueMicrotask(() => {
+      const attempt = CHECKOUT_PLANS.map(readCheckoutAttempt).find(value => value?.attemptId);
+      if (active && attempt?.attemptId) setTrackingId(attempt.attemptId);
+    });
+    return () => { active = false; };
+  }, []);
 
   const handleSubscribe = async (planCode: PlanCode) => {
+    if (busy.current) return;
+    busy.current = true;
     try {
       setLoading(planCode);
       setMessage(null);
-      const storageKey='al_checkout_key_'+planCode;
-      const idempotencyKey = attemptKeys.current.get(planCode) ?? sessionStorage.getItem(storageKey) ?? crypto.randomUUID();
-      sessionStorage.setItem(storageKey,idempotencyKey);
-      attemptKeys.current.set(planCode, idempotencyKey);
+      const attempt = readCheckoutAttempt(planCode) ?? { key: crypto.randomUUID(), attemptId: null };
+      const idempotencyKey = attempt.key;
       const request = checkoutRequestSchema.safeParse({
         planCode, firstName, lastName, phone, idempotencyKey,
       });
@@ -36,9 +46,10 @@ export default function PricingPage() {
         setMessage('Renseignez votre nom et un numéro au format international, par exemple +221771234567.');
         return;
       }
+      saveCheckoutAttempt(planCode, attempt);
       const res = await fetch('/api/checkout/naboopay', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Checkout-Protocol': '2' },
         body: JSON.stringify(request.data),
       });
 
@@ -48,7 +59,7 @@ export default function PricingPage() {
           setMessage('Veuillez vous connecter pour vous abonner.');
           return;
         }
-        setMessage('La tentative de paiement n’a pas pu être créée. Réessayez avec la même tentative.');
+        setMessage('L’issue du paiement reste à vérifier. Réessayez avec la même tentative.');
         return;
       }
 
@@ -57,29 +68,31 @@ export default function PricingPage() {
         setMessage('Réponse de paiement invalide. Aucune redirection n’a été effectuée.');
         return;
       }
-      if (!data.data.checkout_url) {
-        if (data.data.status === 'failed' || data.data.status === 'canceled') {
-          attemptKeys.current.delete(planCode);
-          sessionStorage.removeItem(storageKey);
-          setMessage('Cette tentative est terminée. Cliquez à nouveau pour créer une nouvelle tentative.');
-        } else {
-          setTrackingId(data.data.checkout_attempt_id);
-          setMessage('La création est en cours de vérification. N’effectuez pas un second paiement.');
-        }
+      const confirmed = { key: data.data.idempotency_key ?? attempt.key, attemptId: data.data.checkout_attempt_id };
+      if (!replaceCheckoutAttempt(planCode,attempt.key,confirmed)) {
+        setTrackingId(readCheckoutAttempt(planCode)?.attemptId ?? null);
+        const result = checkoutAction(data.data.status,data.data.checkout_url) === 'finished' ? (data.data.status === 'completed' ? 'Paiement réussi. ' : data.data.status === 'refunded' ? 'Paiement remboursé. ' : 'Paiement non abouti. ') : '';
+        setMessage(result + 'Une autre tentative est déjà suivie. Sa vérification reste conservée.');
         return;
       }
-      let parsed: URL;
-      try {
-        parsed = new URL(data.data.checkout_url);
-      } catch {
-        setMessage('URL de paiement invalide.');
+      const action = checkoutAction(data.data.status, data.data.checkout_url);
+      if (action === 'finished') {
+        finishCheckoutAttempt(planCode, confirmed);
+        setTrackingId(current => current === confirmed.attemptId ? null : current);
+        const result = data.data.status === 'completed' ? 'Paiement réussi.' : data.data.status === 'refunded' ? 'Paiement remboursé.' : 'Paiement non abouti.';
+        setMessage(result + ' Cette tentative est terminée. Cliquez à nouveau pour créer une nouvelle tentative.');
         return;
       }
-      if (parsed.protocol !== 'https:' || !(parsed.hostname === 'checkout.naboopay.com' || parsed.hostname.endsWith('.naboopay.com'))) {
+      setTrackingId(confirmed.attemptId);
+      if (action === 'track') {
+        setMessage('La création est en cours de vérification. N’effectuez pas un second paiement.');
+        return;
+      }
+      const safeCheckoutUrl = safeCheckoutDestination(data.data.checkout_url!);
+      if (!safeCheckoutUrl) {
         setMessage('Destination de paiement non autorisée.');
         return;
       }
-      const safeCheckoutUrl = `https://${encodeURIComponent(parsed.hostname)}${parsed.pathname}${parsed.search}`;
       const link = document.createElement('a');
       link.setAttribute('href', safeCheckoutUrl);
       link.setAttribute('rel', 'noopener noreferrer');
@@ -90,6 +103,7 @@ export default function PricingPage() {
     } catch {
       setMessage('Connexion interrompue. Réessayez : la même clé de tentative sera conservée.');
     } finally {
+      busy.current = false;
       setLoading(null);
     }
   };

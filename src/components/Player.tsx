@@ -122,6 +122,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
     if (anchored && videoRef.current) videoRef.current.volume = initialVolume;
   }, [anchored, initialVolume]);
   const hlsRef = useRef<Hls | null>(null);
+  const beginNativeLoadRef = useRef<(() => void) | null>(null);
   const activeAttemptRef = useRef<ActiveAttempt | null>(null);
   const selectedChannelIdRef = useRef(channelId);
   const playbackSessionRef = useRef<{
@@ -301,6 +302,9 @@ export default function Player({ channelId, channelName = '', anchored = false, 
     if (!attemptId || failedAttemptIdsRef.current.has(attemptId)) return;
     failedAttemptIdsRef.current.add(attemptId);
     stopStartupTimeout();
+    hlsRef.current?.destroy(); hlsRef.current = null;
+    videoRef.current?.pause();
+    videoRef.current?.removeAttribute('src'); videoRef.current?.load();
     emitForActiveAttempt('failed', {
       playerEngine: telemetryEngine(engine),
       errorCode: failure.code,
@@ -309,7 +313,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
     dispatch({ type: 'STREAM_FAILED', failure });
   }, [emitForActiveAttempt, stopStartupTimeout]);
 
-  useMediaLifecycle({anchored,channelId,source,attemptId:state.attemptId,videoRef,hlsRef,activeAttemptRef,selectedChannelIdRef,
+  useMediaLifecycle({anchored,eco,beginNativeLoadRef,failedAttemptIdsRef,channelId,source,attemptId:state.attemptId,videoRef,hlsRef,activeAttemptRef,selectedChannelIdRef,
     startupTimeoutRef,networkRecoveryCountRef,mediaRecoveryCountRef,stopStartupTimeout,failCurrentAttempt,updateAttemptEngine,dispatch});
 
   // Son imposé par la page (mur TV) : réappliqué à chaque changement d'état, la lecture elle-même n'est pas touchée.
@@ -325,9 +329,11 @@ export default function Player({ channelId, channelName = '', anchored = false, 
 
     dispatch({ type: 'PLAY_REQUESTED' });
     video.muted = forceMuted ?? !userInitiated;
+    beginNativeLoadRef.current?.();
     hlsRef.current?.startLoad(-1);
     stopStartupTimeout();
     startupTimeoutRef.current = window.setTimeout(() => {
+      if (activeAttemptRef.current?.attemptId !== attempt.attemptId || selectedChannelIdRef.current !== attempt.channelId) return;
       failCurrentAttempt({
         category: 'network',
         code: 'PLAYBACK_START_TIMEOUT',
@@ -368,6 +374,8 @@ export default function Player({ channelId, channelName = '', anchored = false, 
   }, [anchored, eco, startPlayback, state.attemptId, state.phase]);
 
   const handlePlaying = useCallback(() => {
+    const active = activeAttemptRef.current;
+    if (!active || active.channelId !== selectedChannelIdRef.current || failedAttemptIdsRef.current.has(active.attemptId) || videoRef.current?.paused) return;
     setPaused(false);
     stopStartupTimeout();
     networkRecoveryCountRef.current = 0;

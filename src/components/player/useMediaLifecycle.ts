@@ -1,20 +1,23 @@
 'use client';
-import {useEffect,type RefObject,type Dispatch} from 'react';
+import {useEffect,useRef,type RefObject,type Dispatch} from 'react';
 import Hls from 'hls.js';
 import {classifyHlsFailure,nextMediaRecoveryAction,nextNetworkRecoveryAction} from '@/lib/playback-errors';
 import type {PlaybackEvent,PlaybackFailure} from '@/lib/playback-machine';
 import type {PlayerEngine} from '@/lib/playback-events-client';
-import {isLocalPlaybackMode} from '@/lib/local-playback-mode';
-const LOCAL_AUTOMATIC_PLAYBACK=isLocalPlaybackMode();
+const PREPARATION_TIMEOUT_MS = 15_000;
 type Options={anchored:boolean;channelId:string;source:{url:string}|null;attemptId:string|null;
+ eco:boolean;beginNativeLoadRef:RefObject<(()=>void)|null>;
+ failedAttemptIdsRef:RefObject<Set<string>>;
  videoRef:RefObject<HTMLVideoElement|null>;hlsRef:RefObject<Hls|null>;
  activeAttemptRef:RefObject<{attemptId:string}|null>;selectedChannelIdRef:RefObject<string>;
  startupTimeoutRef:RefObject<number|null>;networkRecoveryCountRef:RefObject<number>;mediaRecoveryCountRef:RefObject<number>;
  stopStartupTimeout:()=>void;failCurrentAttempt:(failure:PlaybackFailure,engine?:PlayerEngine)=>void;
  updateAttemptEngine:(engine:PlayerEngine)=>void;dispatch:Dispatch<PlaybackEvent>;
 };
-export function useMediaLifecycle({anchored,channelId,source,attemptId,videoRef,hlsRef,activeAttemptRef,selectedChannelIdRef,
+export function useMediaLifecycle({anchored,eco,beginNativeLoadRef,failedAttemptIdsRef,channelId,source,attemptId,videoRef,hlsRef,activeAttemptRef,selectedChannelIdRef,
  startupTimeoutRef,networkRecoveryCountRef,mediaRecoveryCountRef,stopStartupTimeout,failCurrentAttempt,updateAttemptEngine,dispatch}:Options){
+  const deferredRef = useRef(anchored || eco);
+  useEffect(() => { deferredRef.current = anchored || eco; }, [anchored, eco]);
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !source || !attemptId) return;
@@ -28,13 +31,23 @@ export function useMediaLifecycle({anchored,channelId,source,attemptId,videoRef,
 
     const playbackUrl = source.url;
     const currentAttemptId = attemptId;
-    const isCurrent = () => activeAttemptRef.current?.attemptId === currentAttemptId && selectedChannelIdRef.current === channelId;
+    let ended = false;
+    let preparationTimer: number | null = null;
+    const clearPreparation = () => { if (preparationTimer !== null) window.clearTimeout(preparationTimer); preparationTimer = null; };
+    const isCurrent = () => !ended && !failedAttemptIdsRef.current.has(currentAttemptId) && activeAttemptRef.current?.attemptId === currentAttemptId && selectedChannelIdRef.current === channelId;
+    const finish = (failure: PlaybackFailure, engine?: PlayerEngine) => {
+      if (!isCurrent()) return;
+      ended = true;
+      clearPreparation(); stopStartupTimeout();
+      hlsRef.current?.destroy(); hlsRef.current = null;
+      video.pause(); video.removeAttribute('src'); video.load();
+      failCurrentAttempt(failure, engine);
+    };
+    const startPreparation = () => {
+      clearPreparation();
+      preparationTimer = window.setTimeout(() => finish({ category: 'network', code: 'MEDIA_PREPARATION_TIMEOUT', message: 'Le flux ne répond pas dans le délai attendu.' }), PREPARATION_TIMEOUT_MS);
+    };
     const directFile = /\.(mp4|m4v|webm|og[gv])$/i.test(new URL(playbackUrl).pathname);
-    if (LOCAL_AUTOMATIC_PLAYBACK) {
-      startupTimeoutRef.current = window.setTimeout(() => {
-        if (isCurrent()) failCurrentAttempt({ category: 'network', code: 'MANIFEST_START_TIMEOUT', message: 'Le flux ne répond pas dans le délai attendu.' });
-      }, 12_000);
-    }
 
     if (!directFile && Hls.isSupported()) {
       updateAttemptEngine('hls.js');
@@ -51,10 +64,12 @@ export function useMediaLifecycle({anchored,channelId,source,attemptId,videoRef,
         lowLatencyMode: false,
       });
       hlsRef.current = hls;
+      let manifestReady = false;
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         if (!isCurrent()) return;
-        if (anchored) stopStartupTimeout();
+        manifestReady = true;
+        clearPreparation();
         dispatch({ type: 'STREAM_READY', engine: 'hls.js' });
       });
       hls.on(Hls.Events.ERROR, (_event, data) => {
@@ -67,10 +82,14 @@ export function useMediaLifecycle({anchored,channelId,source,attemptId,videoRef,
           corsAllowed: true,
         });
 
-        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR && manifestReady && ![401,403,404,451].includes(httpStatus ?? 0) &&
+          !/manifest|levelLoad|audioTrackLoad|subtitleTrackLoad/i.test(data.details)) {
           if (nextNetworkRecoveryAction(networkRecoveryCountRef.current) === 'retry') {
             networkRecoveryCountRef.current += 1;
             hls.startLoad();
+            if (startupTimeoutRef.current === null) startupTimeoutRef.current = window.setTimeout(() => {
+              finish({ category:'network',code:'NETWORK_RECOVERY_TIMEOUT',message:'Le flux ne parvient pas à reprendre la lecture.' });
+            }, PREPARATION_TIMEOUT_MS);
             return;
           }
         }
@@ -82,21 +101,21 @@ export function useMediaLifecycle({anchored,channelId,source,attemptId,videoRef,
             dispatch({ type: 'MEDIA_RECOVERING' });
             if (action === 'swap-and-recover') hls.swapAudioCodec();
             hls.recoverMediaError();
-            if (LOCAL_AUTOMATIC_PLAYBACK) {
+            {
               stopStartupTimeout();
               startupTimeoutRef.current = window.setTimeout(() => {
-                if (isCurrent()) failCurrentAttempt({ category: 'media', code: 'MEDIA_RECOVERY_TIMEOUT', message: 'Le lecteur ne parvient pas à reprendre le flux.' });
-              }, 12_000);
+                finish({ category: 'media', code: 'MEDIA_RECOVERY_TIMEOUT', message: 'Le lecteur ne parvient pas à reprendre le flux.' });
+              }, PREPARATION_TIMEOUT_MS);
             }
             return;
           }
         }
-        failCurrentAttempt(failure, 'hls.js');
+        finish(failure, 'hls.js');
       });
 
       const handleVideoError = () => {
         if (!isCurrent()) return;
-        failCurrentAttempt(
+        finish(
           {
             category: 'media',
             code: 'VIDEO_ELEMENT_ERROR',
@@ -106,10 +125,12 @@ export function useMediaLifecycle({anchored,channelId,source,attemptId,videoRef,
         );
       };
       video.addEventListener('error', handleVideoError);
+      startPreparation();
       hls.loadSource(playbackUrl);
       hls.attachMedia(video);
 
       return () => {
+        ended = true; clearPreparation();
         stopStartupTimeout();
         video.removeEventListener('error', handleVideoError);
         hls.destroy();
@@ -125,16 +146,17 @@ export function useMediaLifecycle({anchored,channelId,source,attemptId,videoRef,
       dispatch({ type: 'ENGINE_SELECTED', engine: 'native-hls' });
       let readyDispatched = false;
       const ready = () => {
+        if (!isCurrent()) return;
+        clearPreparation();
         if (!readyDispatched && isCurrent()) {
           readyDispatched = true;
-          if (anchored) stopStartupTimeout();
           dispatch({ type: 'STREAM_READY', engine: 'native-hls' });
         }
       };
       const failed = () => {
         if (!isCurrent()) return;
         const code = video.error?.code;
-        failCurrentAttempt(
+        finish(
           code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
             ? {
                 category: 'codec',
@@ -152,9 +174,23 @@ export function useMediaLifecycle({anchored,channelId,source,attemptId,videoRef,
       video.addEventListener('loadedmetadata', ready);
       video.addEventListener('canplay', ready);
       video.addEventListener('error', failed);
-      video.src = playbackUrl;
-      video.load();
+      let loading = false;
+      const begin = () => {
+        if (loading || !isCurrent()) return;
+        loading = true;
+        startPreparation();
+        video.src = playbackUrl;
+        video.load();
+      };
+      beginNativeLoadRef.current = begin;
+      if (deferredRef.current) {
+        // Prepared URL only: no src, load or decoded-media telemetry before the gesture.
+        readyDispatched = true;
+        dispatch({ type: 'STREAM_READY', engine: 'native-hls' });
+      } else begin();
       return () => {
+        ended = true; clearPreparation();
+        if (beginNativeLoadRef.current === begin) beginNativeLoadRef.current = null;
         stopStartupTimeout();
         video.removeEventListener('loadedmetadata', ready);
         video.removeEventListener('canplay', ready);
@@ -165,12 +201,12 @@ export function useMediaLifecycle({anchored,channelId,source,attemptId,videoRef,
       };
     }
 
-    failCurrentAttempt({
+    finish({
       category: 'unsupported',
       code: 'HLS_UNSUPPORTED',
       message: 'Ce navigateur ne prend pas en charge la lecture HLS.',
     });
-  }, [anchored, channelId, failCurrentAttempt, source, attemptId, stopStartupTimeout, updateAttemptEngine,
+  }, [channelId, failCurrentAttempt, source, attemptId, stopStartupTimeout, updateAttemptEngine,beginNativeLoadRef,failedAttemptIdsRef,
     videoRef,hlsRef,activeAttemptRef,selectedChannelIdRef,startupTimeoutRef,networkRecoveryCountRef,mediaRecoveryCountRef,dispatch]);
 
 }

@@ -23,6 +23,24 @@ async function play(page: Page, row: string, name: string) {
 }
 
 test.describe('Lecteur unique (UX-501)', () => {
+  for (const navigated of [false,true]) test(`BUG-203: popup refusée conserve la vidéo en lecture (après navigation=${navigated})`,async ({ page }) => {
+    await page.setViewportSize({ width:1366,height:900 });
+    await page.addInitScript(() => { window.open = () => null; });
+    const resolutions = await setup(page); await page.goto('/app'); await play(page,'Info','Alpha Sénégal');
+    await page.locator('video').evaluate(video => { video.dataset.dockMark = 'retained'; });
+    if (navigated) {
+      await page.getByRole('button',{ name:'Réduire le lecteur' }).click();
+      await page.getByRole('navigation',{ name:'Navigation principale' }).getByRole('link',{ name:/Radar/ }).first().click();
+      await expect(page).toHaveURL(/\/app\/live/);
+      await expect(page.getByRole('navigation',{ name:'Navigation principale' }).getByRole('link',{ name:/Radar/ }).first()).toHaveAttribute('aria-current','page');
+      await mini(page).getByRole('button',{ name:'Agrandir le lecteur' }).click();
+    }
+    const before = await currentTime(page);
+    await page.getByRole('button',{ name:'Ouvrir dans une fenêtre séparée' }).click();
+    await expect(page.getByRole('dialog')).toBeVisible(); await expect(page.locator('video')).toHaveAttribute('data-dock-mark','retained');
+    await expect.poll(() => currentTime(page)).toBeGreaterThan(before); expect(resolutions).toEqual(['sn-1']);
+    await expect(page.getByRole('alert').filter({ hasText:'Le navigateur a refusé la fenêtre' })).toBeVisible();
+  });
   test('réduit, il continue sur le Radar sans relancer le flux ni capturer les touches de la page', async ({ page }) => {
     await page.setViewportSize({ width: 1366, height: 900 });
     const resolutions = await setup(page);

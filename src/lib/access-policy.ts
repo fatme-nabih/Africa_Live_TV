@@ -51,6 +51,7 @@ export function evaluateAccess(
   user: AccessUser | null,
   subscriptions: AccessSubscription[],
   now = new Date(),
+  context: { verifiedNabooPayRefundWithoutCompletedPurchase?: boolean } = {},
 ): AccessDecision {
   if (!user) {
     return {
@@ -122,7 +123,7 @@ export function evaluateAccess(
     };
   }
 
-  if (subscriptions.length > 0) {
+  if (subscriptions.length > 0 && !context.verifiedNabooPayRefundWithoutCompletedPurchase) {
     return {
       status: 'expired',
       hasAccess: false,

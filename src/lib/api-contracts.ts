@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FAVORITE_MUTATION_LIMIT } from './preference-contracts';
 import { canonicalLanguage, categoryCodes } from './catalog-metadata';
 
 import {
@@ -158,12 +159,13 @@ const favoriteIdSchema = z.string().min(1).max(200);
 
 export const favoritesResponseSchema = z.object({
   favorites: z.array(favoriteIdSchema),
+  owner: z.string().optional(),
 });
 
 export const favoriteMutationSchema = z
   .object({
-    add: z.array(favoriteIdSchema).max(100).default([]),
-    remove: z.array(favoriteIdSchema).max(100).default([]),
+    add: z.array(favoriteIdSchema).max(FAVORITE_MUTATION_LIMIT).default([]),
+    remove: z.array(favoriteIdSchema).max(FAVORITE_MUTATION_LIMIT).default([]),
   })
   .transform(({ add, remove }) => ({
     add: [...new Set(add)],
@@ -258,6 +260,8 @@ export function messageForApiError(error: unknown, fallback: string) {
 export const followedCountriesSchema = z
   .object({
     countries: z.array(z.string().regex(/^[A-Z]{2}$/)).max(5),
+    baseVersion: z.string().min(1).max(128).optional(),
+    owner: z.string().min(1).max(256).optional(),
   })
   .strict()
   .refine(({ countries }) => new Set(countries).size === countries.length, { message: 'Pays en double.' });

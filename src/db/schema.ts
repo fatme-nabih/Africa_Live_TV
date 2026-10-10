@@ -32,12 +32,20 @@ export const users = pgTable(
       .notNull()
       .default(sql`(now() + '5 days'::interval)`),
     clerkSyncedAt: timestampWithTimezone('clerk_synced_at'),
+    clerkProfileUpdatedAt: timestampWithTimezone('clerk_profile_updated_at'),
   },
   (table) => [
     unique('users_clerk_user_id_key').on(table.clerkUserId),
     check('users_status_check', sql`${table.status} in ('active', 'blocked', 'deleted')`),
   ],
 );
+
+// Terminal identity marker without retained profile or email; no historical backfill.
+export const clerkIdentityDeletions = pgTable('clerk_identity_deletions', {
+  clerkUserId: text('clerk_user_id').primaryKey(),
+  providerDeletedAt: timestampWithTimezone('provider_deleted_at'),
+  receivedAt: timestampWithTimezone('received_at').notNull().defaultNow(),
+});
 
 export const sessions = pgTable(
   'sessions',

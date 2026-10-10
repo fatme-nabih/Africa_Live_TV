@@ -1,8 +1,17 @@
 'use client';
 
 import { UserButton } from '@clerk/nextjs';
+import { useSyncExternalStore } from 'react';
+
+const subscribeNothing = () => () => {};
+const clientHydrated = () => true;
+const serverHydrated = () => false;
 
 function ClerkAccountControls() {
+  // Clerk may already be loaded in the browser while its server instance is not.
+  // Keep the first browser render identical to the HTML before mounting its UI.
+  const hydrated = useSyncExternalStore(subscribeNothing, clientHydrated, serverHydrated);
+  if (!hydrated) return <span aria-hidden="true" className="inline-block h-8 w-8" />;
   return <UserButton />;
 }
 

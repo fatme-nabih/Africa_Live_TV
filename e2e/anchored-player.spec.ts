@@ -24,7 +24,7 @@ async function fixture(page: Page, options: { expired?: boolean; late?: boolean;
     }).observe(document, { childList: true, subtree: true });
   });
   await page.route('**/api/filters', route => route.fulfill({ json: { countries: ['SN', 'CI'], groups: ['News'], languages: ['fr'], statuses: [] } }));
-  await page.route('**/api/favorites', route => route.fulfill({ json: { favorites: [] } }));
+  await page.route('**/api/favorites', route => route.fulfill({ json: { favorites: [], owner: route.request().headers()['x-preference-owner'] } }));
   await page.route('**/api/channels', route => {
     const { country, search } = route.request().postDataJSON();
     return route.fulfill({ json: { channels: channels.filter(c => (!country || c.countryCode === country) && (!search || c.name.includes(search))), canPlay: !options.expired, hasMore: false, limit: 30, nextCursor: null } });

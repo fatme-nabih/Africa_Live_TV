@@ -6,6 +6,7 @@ import {
   markClerkUserDeleted,
   syncClerkSession,
   syncClerkUser,
+  IdentityDeletedError,
 } from '@/lib/identity';
 import { structuredLog } from '@/lib/structured-log';
 import { BadRequestError, withApiErrorHandler } from '@/lib/api-errors';
@@ -35,7 +36,7 @@ async function syncWebhookUser(user: ClerkUserPayload) {
     email: primaryEmail(user),
     status: user.banned || user.locked ? 'blocked' : 'active',
     createdAt: new Date(user.created_at),
-    syncedAt: new Date(user.updated_at),
+    updatedAt: new Date(user.updated_at),
   });
 }
 
@@ -50,6 +51,7 @@ export const POST = withApiErrorHandler(async (request: NextRequest) => {
     throw new BadRequestError('Invalid webhook signature', 'INVALID_SIGNATURE');
   }
 
+  try {
   if (event.type === 'user.created' || event.type === 'user.updated') {
     await syncWebhookUser(event.data);
   } else if (event.type === 'user.deleted') {
@@ -86,6 +88,10 @@ export const POST = withApiErrorHandler(async (request: NextRequest) => {
       expiresAt: event.data.expire_at ? new Date(event.data.expire_at) : null,
       endedAt: status === 'created' ? null : new Date(event.data.updated_at),
     });
+  }
+  } catch (error) {
+    if (error instanceof IdentityDeletedError) return NextResponse.json({ ok: true, ignored: 'deleted_identity' }, { status: 202 });
+    throw error;
   }
   
   return NextResponse.json({ ok: true });

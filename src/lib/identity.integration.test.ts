@@ -27,12 +27,14 @@ test('identity sync is idempotent and rate limits are enforced', { skip: !enable
       email: 'first@example.test',
       status: 'active',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     });
     const second = await syncClerkUser({
       clerkUserId,
       email: 'updated@example.test',
       status: 'active',
       createdAt: new Date('2026-02-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-02-01T00:00:00.000Z'),
     });
 
     assert.equal(second.id, first.id);

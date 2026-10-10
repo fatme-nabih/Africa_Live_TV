@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { temporalWindow } from '@/lib/radar-data';
 import {
   countByCountry,
@@ -15,14 +15,19 @@ import type { RadarArticle } from '@/lib/live-osint-types';
 import type { RadarRssSnapshot } from '@/lib/rss-collector-types';
 import type { LiveChannelsSummarySnapshot } from '@/lib/live-channels-types';
 import type { Channel } from '@/types/channel';
+import { LatestRequestController } from '@/lib/latest-request';
+import { requestRadarJson } from '@/lib/radar-request';
 
 const REFRESH_INTERVAL_MS = 5 * 60_000;
 const NEWS_UNAVAILABLE = 'Les dépêches sont momentanément indisponibles.';
 
 /** Données du Radar : dépêches, résumé du catalogue TV et chaînes du pays choisi. */
 export function useRadarData(selectedCountry: string | null) {
+  const rssRequests = useRef(new LatestRequestController());
+  const summaryRequests = useRef(new LatestRequestController());
+  const countryController = useRef<AbortController|null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
-  const refresh = useCallback(() => setRefreshToken((value) => value + 1), []);
+  const refresh = useCallback(() => { rssRequests.current.abort(); summaryRequests.current.abort(); countryController.current?.abort(); setRefreshToken((value) => value + 1); }, []);
 
   const [newsError, setNewsError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -32,35 +37,40 @@ export function useRadarData(selectedCountry: string | null) {
   const [summaryError, setSummaryError] = useState(false);
   const [channelsSummary, setChannelsSummary] = useState<LiveChannelsSummarySnapshot | null>(null);
 
-  const [countryChannels, setCountryChannels] = useState<Channel[]>([]);
-  const [countryChannelsLoading, setCountryChannelsLoading] = useState(false);
-  const [countryChannelsError, setCountryChannelsError] = useState<string | null>(null);
-  // Pays auquel appartient la liste chargée : évite de lancer la chaîne d'un pays précédent pendant un changement.
-  const [countryChannelsCountry, setCountryChannelsCountry] = useState<string | null>(null);
+  const [selection,setSelection] = useState({ country:selectedCountry,epoch:0 });
+  if (selection.country !== selectedCountry) setSelection({ country:selectedCountry,epoch:selection.epoch+1 });
+  const [countryResource,setCountryResource] = useState<{ key:string|null; token:number; epoch:number; channels:Channel[]; loading:boolean; error:string|null }>({ key:null,token:-1,epoch:-1,channels:[],loading:false,error:null });
+  const applies = selection.country === selectedCountry && countryResource.epoch === selection.epoch && countryResource.key === selectedCountry && countryResource.token === refreshToken;
+  const countryChannels = applies ? countryResource.channels : [];
+  const countryChannelsLoading = Boolean(selectedCountry) && (!applies || countryResource.loading);
+  const countryChannelsError = applies ? countryResource.error : null;
+  const countryChannelsCountry = applies ? countryResource.key : null;
 
   useEffect(() => {
     let active = true;
-    const controller = new AbortController();
+    const requests = rssRequests.current;
 
     const load = async () => {
+      const request = requests.begin();
       setRefreshing(true);
       try {
-        const response = await fetch('/api/live/rss', { signal: controller.signal, cache: 'no-store' });
-        if (!response.ok) throw new Error(NEWS_UNAVAILABLE);
-        const body: unknown = await response.json();
+        const body = await requestRadarJson('/api/live/rss',request.signal);
         if (!body || typeof body !== 'object' || !Array.isArray((body as RadarRssSnapshot).articles)) throw new Error(NEWS_UNAVAILABLE);
         if (!Array.isArray((body as RadarRssSnapshot).sources) || typeof (body as RadarRssSnapshot).updatedAt !== 'string') throw new Error(NEWS_UNAVAILABLE);
-        if (!active) return;
-        setAsOf(Date.now());
+        if (!active || !requests.isCurrent(request.id)) return;
+        const snapshot = body as RadarRssSnapshot;
+        const collectedAt = Date.parse(snapshot.window?.asOf ?? snapshot.updatedAt);
+        if (!Number.isFinite(collectedAt)) throw new Error(NEWS_UNAVAILABLE);
+        setAsOf(Math.min(collectedAt,Date.now()));
         setRss(body as RadarRssSnapshot);
         setNewsError(null);
       } catch {
-        if (active && !controller.signal.aborted) {
+        if (active && requests.isCurrent(request.id)) {
           setRss(previous => previous && Date.now() - Date.parse(previous.updatedAt) <= 45 * 60_000 ? { ...previous, stale: true } : null);
           setNewsError(NEWS_UNAVAILABLE);
         }
       } finally {
-        if (active) setRefreshing(false);
+        if (active && requests.isCurrent(request.id)) { setRefreshing(false); requests.finish(request.id); }
       }
     };
 
@@ -68,30 +78,28 @@ export function useRadarData(selectedCountry: string | null) {
     const interval = window.setInterval(() => void load(), REFRESH_INTERVAL_MS);
     return () => {
       active = false;
-      controller.abort();
+      requests.abort();
       window.clearInterval(interval);
     };
   }, [refreshToken]);
 
   useEffect(() => {
     let active = true;
-    const controller = new AbortController();
+    const requests = summaryRequests.current;
 
     const loadChannelsSummary = async () => {
+      const request = requests.begin();
       try {
-        const response = await fetch('/api/live/channels?summary=true', {
-          signal: controller.signal,
-          cache: 'no-store',
-        });
-        if (!response.ok) throw new Error('Catalogue indisponible');
-        const body: unknown = await response.json();
-        if (!active) return;
+        const body = await requestRadarJson('/api/live/channels?summary=true',request.signal);
+        if (!active || !requests.isCurrent(request.id)) return;
         if (body && typeof body === 'object' && 'countries' in body) {
           setChannelsSummary(body as LiveChannelsSummarySnapshot);
           setSummaryError(false);
         }
       } catch {
-        if (active && !controller.signal.aborted) setSummaryError(true);
+        if (active && requests.isCurrent(request.id)) setSummaryError(true);
+      } finally {
+        if (requests.isCurrent(request.id)) requests.finish(request.id);
       }
     };
 
@@ -99,7 +107,7 @@ export function useRadarData(selectedCountry: string | null) {
     const interval = window.setInterval(() => void loadChannelsSummary(), 10 * 60_000);
     return () => {
       active = false;
-      controller.abort();
+      requests.abort();
       window.clearInterval(interval);
     };
   }, [refreshToken]);
@@ -109,37 +117,22 @@ export function useRadarData(selectedCountry: string | null) {
 
     let active = true;
     const controller = new AbortController();
+    countryController.current = controller;
 
     const loadCountryChannels = async () => {
-      setCountryChannels([]);
-      setCountryChannelsCountry(null);
-      setCountryChannelsLoading(true);
-      setCountryChannelsError(null);
+      setCountryResource({ key:selectedCountry,token:refreshToken,epoch:selection.epoch,channels:[],loading:true,error:null });
       try {
-        const response = await fetch(
-          `/api/live/channels?country=${encodeURIComponent(selectedCountry)}`,
-          {
-            signal: controller.signal,
-            cache: 'no-store',
-          },
-        );
-        if (!response.ok) {
-          throw new Error('Impossible de charger les chaînes de ce pays.');
-        }
-        const body = (await response.json()) as { channels?: Channel[] };
-        if (!active) return;
+        const body = await requestRadarJson(`/api/live/channels?country=${encodeURIComponent(selectedCountry)}`,controller.signal) as { channels?:Channel[] };
+        if (!active || controller.signal.aborted) return;
         if (Array.isArray(body.channels)) {
-          setCountryChannels(body.channels);
-          setCountryChannelsCountry(selectedCountry);
-        }
-      } catch (error) {
+          setCountryResource({ key:selectedCountry,token:refreshToken,epoch:selection.epoch,channels:body.channels,loading:false,error:null });
+        } else throw new Error('INVALID_COUNTRY_CHANNELS');
+      } catch {
         if (active && !controller.signal.aborted) {
-          setCountryChannelsError(
-            error instanceof Error ? error.message : 'Erreur de chargement des chaînes.',
-          );
+          setCountryResource({ key:selectedCountry,token:refreshToken,epoch:selection.epoch,channels:[],loading:false,error:'Impossible de charger les chaînes de ce pays.' });
         }
       } finally {
-        if (active) setCountryChannelsLoading(false);
+        if (active && !controller.signal.aborted) setCountryResource(previous => ({ ...previous,loading:false }));
       }
     };
 
@@ -147,8 +140,9 @@ export function useRadarData(selectedCountry: string | null) {
     return () => {
       active = false;
       controller.abort();
+      if (countryController.current === controller) countryController.current = null;
     };
-  }, [selectedCountry, refreshToken]);
+  }, [selectedCountry, refreshToken,selection.epoch]);
 
   const merged = useMemo<RadarArticle[]>(() => mergeRadarArticles(radarArticlesFromRss(rss)), [rss]);
   const windowed = useMemo(() => temporalWindow(merged, (article) => article.indexedAt, asOf), [merged, asOf]);

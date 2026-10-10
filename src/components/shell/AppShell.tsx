@@ -8,6 +8,7 @@ import AppHeader, { type ShellMode } from './AppHeader';
 import FollowedCountriesSync from './FollowedCountriesSync';
 import NavLinks from './NavLinks';
 import { useOpenSearch } from './useOpenSearch';
+import AccountPreferences, { type PreferenceIdentity } from './AccountPreferences';
 
 /**
  * Coquille unique des pages connectées (Radar, TV, Compte, Admin) et de la page Tarifs :
@@ -18,11 +19,14 @@ export default function AppShell({
   admin = false,
   mode = 'member',
   children,
+  preferenceIdentity,
 }: {
   admin?: boolean;
   mode?: ShellMode;
   children: ReactNode;
+  preferenceIdentity?: PreferenceIdentity;
 }) {
+  if (preferenceIdentity) return <AccountPreferences identity={preferenceIdentity}><AppShell admin={admin} mode={mode}>{children}</AppShell></AccountPreferences>;
   return (
     <div className="flex min-h-screen flex-col">
       <a

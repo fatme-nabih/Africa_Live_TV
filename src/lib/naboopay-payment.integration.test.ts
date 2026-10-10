@@ -33,6 +33,11 @@ import { naboopayTransactions, subscriptions, users } from '../db/schema';
 import { assertIntegrationTarget } from './integration-test-safety';
 import { applyVerifiedNabooPayPayment as applyPayment } from './naboopay-payment';
 import type { NabooPayTransactionPayload, NabooPayStatus } from './naboopay';
+import { NabooPayTransactionPayloadSchema } from './naboopay';
+import { evaluateUserAccess } from './refund-trial-access';
+import { NABOOPAY_PLANS } from './naboopay-payment';
+import * as apiErrors from './api-errors';
+import { loadSource } from '../../e2e/helpers/load-source';
 
 const integrationEnabled = process.env.CLERK_BILLING_INTEGRATION_TEST === '1';
 
@@ -55,6 +60,56 @@ const applyVerifiedNabooPayPayment = (payload: NabooPayTransactionPayload) => ap
 // ---------------------------------------------------------------------------
 
 const createdUserIds: string[] = [];
+
+test('B01: actual checkout handler returns its owned terminal order without URL, provider call or history change', { skip: !integrationEnabled }, async () => {
+  await assertIntegrationTarget(pool);
+  const userId = await seedUser(), order = await seedTransaction(userId);
+  await db.update(naboopayTransactions).set({ status:'completed',checkoutUrl:'https://checkout.naboopay.com/old' }).where(eq(naboopayTransactions.id,order.id));
+  const [row] = await db.select().from(naboopayTransactions).where(eq(naboopayTransactions.id,order.id));
+  const [user] = await db.select().from(users).where(eq(users.id,userId));
+  let providerCalls = 0;
+  const { POST } = loadSource('app/api/checkout/naboopay/route.ts',{ '@/db':{ db },'@/db/schema':{ users,subscriptions,naboopayTransactions },'@clerk/nextjs/server':{ auth:async()=>({ userId:user.clerkUserId }) },'@/lib/identity':{ ensureInternalUser:async()=>user },'@/lib/api-errors':apiErrors,'@/lib/naboopay-payment':{ NABOOPAY_PLANS },'@/lib/naboopay':{ createNabooPayTransaction:async()=>{ providerCalls++; throw new Error('unexpected provider call'); } },'@/lib/rate-limit':{ consumeRateLimit:async()=>({ allowed:true }) } }) as { POST:(request:Request,context:unknown)=>Promise<Response> };
+  const previous = process.env.PAYMENTS_ENABLED; process.env.PAYMENTS_ENABLED = 'true';
+  try {
+    const payload = JSON.stringify({ planCode:row.planCode,firstName:'Test',lastName:'User',phone:'+221770000000',idempotencyKey:row.idempotencyKey });
+    assert.equal((await POST(new Request('http://localhost:3001/api/checkout/naboopay',{ method:'POST',headers:{ 'content-type':'application/json' },body:payload }),{})).status,409);
+    const response = await POST(new Request('http://localhost:3001/api/checkout/naboopay',{ method:'POST',headers:{ 'content-type':'application/json','x-checkout-protocol':'2' },body:payload }),{});
+    assert.equal(response.status,200); assert.equal((await response.json()).checkout_url,null); assert.equal(providerCalls,0);
+    assert.deepEqual((await db.select().from(naboopayTransactions).where(eq(naboopayTransactions.id,row.id)))[0],row);
+  } finally { if (previous === undefined) delete process.env.PAYMENTS_ENABLED; else process.env.PAYMENTS_ENABLED = previous; }
+});
+
+test('B01: actual status handler refuses an attempt owned by a different account', { skip: !integrationEnabled }, async () => {
+  await assertIntegrationTarget(pool);
+  const a = await seedUser(), b = await seedUser(), order = await seedTransaction(a);
+  const [row] = await db.select().from(naboopayTransactions).where(eq(naboopayTransactions.id,order.id));
+  const [user] = await db.select().from(users).where(eq(users.id,b));
+  const { GET } = loadSource('app/api/checkout/status/route.ts',{ '@/db':{ db },'@/db/schema':{ naboopayTransactions },'@clerk/nextjs/server':{ auth:async()=>({ userId:user.clerkUserId }) },'@/lib/identity':{ ensureInternalUser:async()=>user },'@/lib/api-errors':apiErrors }) as { GET:(request:Request,context:unknown)=>Promise<Response> };
+  assert.equal((await GET(new Request('http://localhost:3001/api/checkout/status?checkout_attempt_id=' + row.checkoutAttemptId),{})).status,404);
+});
+
+test('A1: verified purchase/refund at J1 restores J5 trial, replay and expiration are stable', { skip: !integrationEnabled }, async () => {
+  await assertIntegrationTarget(pool);
+  const userId = await seedUser();
+  const trialEnd = new Date(TEST_NOW.getTime() + 4 * DAY_MS).toISOString();
+  await db.update(users).set({ trialEndsAt: trialEnd }).where(eq(users.id, userId));
+  const order = await seedTransaction(userId);
+  const paid = NabooPayTransactionPayloadSchema.parse(webhookPayload(order, 'completed', T1, T1));
+  const refund = NabooPayTransactionPayloadSchema.parse(webhookPayload(order, 'refunded', T2, T1));
+  await applyPayment(paid, TEST_NOW); await applyPayment(refund, TEST_NOW);
+  const read = async (now = TEST_NOW) => {
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    const rows = await db.select().from(subscriptions).where(eq(subscriptions.userId, userId));
+    return evaluateUserAccess(user, rows, now);
+  };
+  assert.equal((await read()).status, 'trial'); assert.equal((await read()).expiresAt, trialEnd);
+  await applyPayment(refund, TEST_NOW); assert.equal((await read()).expiresAt, trialEnd);
+  assert.equal((await read(new Date(trialEnd))).hasAccess, false);
+  for (const status of ['blocked', 'deleted']) {
+    await db.update(users).set({ status }).where(eq(users.id, userId));
+    assert.equal((await read()).hasAccess, false);
+  }
+});
 
 /** Create a test user with an expired trial (5 days ago). */
 async function seedUser() {

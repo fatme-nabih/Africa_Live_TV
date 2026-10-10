@@ -17,6 +17,11 @@ function sendManifest(response: ServerResponse, content: string) {
   });
   response.end(content);
 }
+function syntheticTs() {
+  const bytes = Buffer.alloc(188 * 3, 255);
+  for (let offset = 0; offset < bytes.length; offset += 188) bytes.set([0x47,0x1f,0xff,0x10], offset);
+  return bytes;
+}
 
 test('checkHlsStream follows redirects, validates a media playlist and cancels the segment body', async () => {
   let segmentClosed!: () => void;
@@ -39,7 +44,7 @@ test('checkHlsStream follows redirects, validates a media playlist and cancels t
     }
     if (request.url === '/segment.ts') {
       response.writeHead(200, { 'Content-Type': 'video/mp2t' });
-      response.write(Buffer.alloc(1024, 1));
+      response.write(syntheticTs());
       const interval = setInterval(() => response.write(Buffer.alloc(1024, 2)), 10);
       response.once('close', () => {
         clearInterval(interval);
@@ -91,7 +96,7 @@ test('checkHlsStream retries temporary HTTP errors with backoff', async () => {
     }
     if (request.url === '/segment.ts') {
       response.writeHead(200, { 'Content-Type': 'video/mp2t' });
-      response.end(Buffer.alloc(16));
+      response.end(syntheticTs());
       return;
     }
     response.writeHead(404).end();

@@ -6,6 +6,7 @@ loadEnvConfig(process.cwd());
 validateServerEnvironment(process.env as Record<string, string | undefined>);
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: '**/components/**',
   fullyParallel: false,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list']],

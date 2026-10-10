@@ -6,7 +6,9 @@ Le propriétaire indique que VLC fonctionne sur Samsung/Android, mais s’ouvre 
 la médiathèque vide sur iPhone après le choix de **CNews**. La capture ne permet
 pas de confirmer si VLC a reçu le lien, si son démarrage à froid a perdu la
 demande, ou si le flux a échoué ensuite. Version de VLC/iOS et lecture sur
-appareil réel non reçues.
+appareil réel initialement non reçues. **Après publication, le propriétaire
+confirme VLC 3.7.3 (475) et la lecture CNews sur le vrai iPhone.**
+[Retour et diagnostic des autres sources](diagnostic-vlc-flux-2026-10-06.md).
 
 Le lien construit utilise déjà le format attendu par le
 [gestionnaire officiel de VideoLAN](https://github.com/videolan/vlc-ios/blob/master/Sources/Helpers/Network/URLHandler.swift) :
@@ -78,7 +80,7 @@ source-map-js ; 20 migrations inchangées. Aucune configuration
 Railway/OVHcloud/Clerk/DNS modifiée, aucun relais/conversion/stockage média,
 projet source IPTV conservé. Railway reste staging.
 
-Réception nécessaire sur le vrai iPhone : recharger le site dans Safari,
+Réception CNews confirmée sur le vrai iPhone. Les autres conditions restent à vérifier : recharger le site dans Safari,
 choisir CNews et toucher **Ouvrir dans VLC**, VLC fermé puis déjà ouvert, retour/relance, autre
 chaîne VLC et comparaison Wi-Fi/4G si l’échec persiste. La cause exacte du
 signalement reste à confirmer sur l’appareil.

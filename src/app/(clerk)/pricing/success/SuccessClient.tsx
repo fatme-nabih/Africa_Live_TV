@@ -6,11 +6,13 @@ import { useSearchParams } from 'next/navigation';
 import { CheckCircle2, Clock, RefreshCw, XCircle } from 'lucide-react';
 
 import { checkoutStatusResponseSchema } from '@/lib/payment-contracts';
+import { isTerminalCheckout } from '@/lib/payment-attempt-policy';
+import { confirmCheckoutAttempt } from '@/lib/checkout-attempt';
 
 const MAX_ATTEMPTS = 12;
 const POLL_DELAY_MS = 3_000;
 
-type TerminalStatus = 'completed' | 'failed' | 'canceled' | 'timeout' | 'error';
+type TerminalStatus = 'completed' | 'failed' | 'canceled' | 'refunded' | 'timeout' | 'error';
 
 type State =
   | { tag: 'polling'; attempt: number }
@@ -42,6 +44,10 @@ function init(orderId: string | null): State {
 export default function SuccessClient() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('order_id');
+  return <SuccessAttempt key={orderId ?? 'missing'} orderId={orderId} />;
+}
+
+function SuccessAttempt({ orderId }: { orderId: string|null }) {
 
   const [state, dispatch] = useReducer(reducer, orderId, init);
 
@@ -67,8 +73,12 @@ export default function SuccessClient() {
           return;
         }
         const s = parsed.data.status;
-        if (s === 'completed' || s === 'failed' || s === 'canceled') {
-          dispatch({ type: 'terminal', status: s });
+        if (isTerminalCheckout(s)) {
+          if (parsed.data.checkout_attempt_id !== orderId) {
+            dispatch({ type: 'terminal', status: 'error' }); return;
+          }
+          confirmCheckoutAttempt(parsed.data.plan, parsed.data.checkout_attempt_id);
+          dispatch({ type: 'terminal', status: s as TerminalStatus });
           return;
         }
         if (attempt + 1 >= MAX_ATTEMPTS) {
@@ -131,14 +141,14 @@ export default function SuccessClient() {
     );
   }
 
-  if (displayStatus === 'failed' || displayStatus === 'canceled') {
+  if (displayStatus === 'failed' || displayStatus === 'canceled' || displayStatus === 'refunded') {
     return (
       <div className="rounded-2xl border border-line bg-surface-1/80 p-8 text-center shadow-2xl">
         <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-al-red/20 bg-al-red/10 text-al-red-soft">
           <XCircle className="h-8 w-8" />
         </div>
-        <h1 className="font-display mb-2 text-2xl font-bold text-text">Paiement non abouti</h1>
-        <p className="mb-6 text-xs text-text-muted leading-relaxed">Le paiement a échoué ou a été annulé.</p>
+        <h1 className="font-display mb-2 text-2xl font-bold text-text">{displayStatus === 'refunded' ? 'Paiement remboursé' : 'Paiement non abouti'}</h1>
+        <p className="mb-6 text-xs text-text-muted leading-relaxed">{displayStatus === 'refunded' ? 'Le remboursement a été confirmé.' : 'Le paiement a échoué ou a été annulé.'}</p>
         <Link
           href="/pricing"
           className="inline-block rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] px-5 py-2.5 text-xs font-semibold text-text transition"

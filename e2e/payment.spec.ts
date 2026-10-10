@@ -71,6 +71,23 @@ test.describe('Page de paiement — interface utilisateur', () => {
     expect(creations).toEqual([]);
   });
 
+  for (const status of ['completed', 'failed', 'canceled', 'refunded']) {
+    test(`BUG-102: ${status} annonce le résultat et le prochain clic renouvelle la clé`, async ({ page }) => {
+      const keys: string[] = [];
+      await page.route('**/api/checkout/naboopay', route => {
+        keys.push(route.request().postDataJSON().idempotencyKey);
+        return route.fulfill({ json: { status, checkout_url: 'https://checkout.naboopay.com/old', checkout_attempt_id: 'old' } });
+      });
+      await page.goto('/pricing');
+      await page.getByLabel('Prénom').fill('Test'); await page.getByLabel('Nom', { exact: true }).fill('User');
+      await page.getByPlaceholder('+221771234567').fill('+221771234567');
+      const button = page.getByRole('button', { name: 'Activer pour 990 FCFA' });
+      await button.click(); await expect(page.getByRole('main').getByRole('alert')).toContainText('Cette tentative est terminée');
+      expect(keys).toHaveLength(1); await button.click(); await expect(button).toBeEnabled();
+      expect(keys).toHaveLength(2); expect(keys[0]).not.toBe(keys[1]);
+    });
+  }
+
   test('Page /pricing/success affiche "Statut indisponible" sans order_id', async ({ page }) => {
     await page.goto('/pricing/success');
     await expect(page.getByRole('heading', { name: /Statut indisponible/i })).toBeVisible();

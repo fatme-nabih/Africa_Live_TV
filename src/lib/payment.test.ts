@@ -18,6 +18,23 @@ import test from 'node:test';
 // checkoutRequestSchema — PAY-003 / PAY-004
 // ---------------------------------------------------------------------------
 import { checkoutRequestSchema, checkoutStatusResponseSchema } from './payment-contracts';
+import { actionableCheckoutUrl, checkoutAction, safeCheckoutDestination } from './payment-attempt-policy';
+
+test('B01: every terminal status wins over its historical URL; uncertain statuses never release a key', () => {
+  for (const status of ['completed', 'failed', 'canceled', 'refunded'] as const) {
+    for (const url of [null, 'https://checkout.naboopay.com/old']) {
+      assert.equal(checkoutAction(status, url), 'finished');
+      assert.equal(actionableCheckoutUrl(status, url), null);
+    }
+  }
+  for (const status of ['creating', 'pending', 'reconciliation_required'] as const) {
+    assert.equal(checkoutAction(status, null), 'track');
+  }
+  assert.equal(checkoutAction('pending', 'https://checkout.naboopay.com/new'), 'checkout');
+  for (const url of ['javascript:alert(1)', 'https://user@checkout.naboopay.com/a', 'https://checkout.naboopay.com:444/a', 'https://naboopay.com.evil.test/a']) {
+    assert.equal(safeCheckoutDestination(url), null);
+  }
+});
 
 test('checkoutRequestSchema accepts a valid payload', () => {
   const result = checkoutRequestSchema.safeParse({

@@ -287,42 +287,42 @@ function normalizeText(text: string): string {
   return text
     .normalize('NFKD')
     .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
+    .toLowerCase()
+    .replace(/['’‘ʼ`\u2010-\u2015\u2212-]/g,' ')
+    .replace(/\s+/g,' ').trim();
 }
 
 export function detectCountryCode(text: string, defaultCountry: string | null = null): string | null {
   const normalized = normalizeText(text);
 
+  const matches: { code:string; words:number; length:number; index:number }[] = [];
   for (const [code, keywords] of Object.entries(COUNTRY_KEYWORDS)) {
     for (const keyword of keywords) {
       // Look for whole words or clear boundary matches
-      const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const alias = normalizeText(keyword);
+      const escaped = alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const regex = new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i');
-      if (regex.test(normalized)) {
-        return code;
-      }
+      const match = regex.exec(normalized);
+      if (match) matches.push({ code,words:alias.split(' ').length,length:alias.length,index:match.index });
     }
   }
 
-  return defaultCountry;
+  // Specific phrases, then longer aliases, then earliest mention, then ISO code.
+  matches.sort((a,b) => b.words-a.words || b.length-a.length || a.index-b.index || a.code.localeCompare(b.code));
+  return matches[0]?.code ?? defaultCountry;
 }
 
 export function decodeXmlEntities(text: string): string {
   return text
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/gi, '$1')
     .replace(/<[^>]*>/g, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;|&apos;/gi, "'")
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&#(\d+);/g, (_, dec) => {
-      const code = parseInt(dec, 10);
-      return Number.isFinite(code) && code > 0 && code < 0x10ffff ? String.fromCharCode(code) : '';
-    })
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => {
-      const code = parseInt(hex, 16);
-      return Number.isFinite(code) && code > 0 && code < 0x10ffff ? String.fromCharCode(code) : '';
+    .replace(/&(#(?:x[^;&]*|[^;&]*)|amp|quot|apos|lt|gt);/gi, (_, entity:string) => {
+      const named: Record<string,string> = { amp:'&',quot:'"',apos:"'",lt:'<',gt:'>' };
+      if (!entity.startsWith('#')) return named[entity.toLowerCase()];
+      const hex = /^#x[0-9a-f]+$/i.test(entity), decimal = /^#\d+$/.test(entity);
+      const code = hex ? parseInt(entity.slice(2),16) : decimal ? Number(entity.slice(1)) : NaN;
+      // Invalid XML numeric values, zero and isolated surrogates become U+FFFD.
+      return Number.isInteger(code) && code > 0 && code <= 0x10ffff && !(code >= 0xd800 && code <= 0xdfff) ? String.fromCodePoint(code) : '\uFFFD';
     })
     .replace(/\s+/g, ' ')
     .trim();
@@ -330,9 +330,36 @@ export function decodeXmlEntities(text: string): string {
 
 const parseDate = normalizeRadarDate;
 
-export function parseFeedXml(xml: string, feed: FeedConfig): RadarRssArticle[] {
+function xmlAttributes(tag: string) {
+  const result: Record<string,string> = {};
+  for (const match of tag.matchAll(/([\w:-]+)\s*=\s*(["'])([\s\S]*?)\2/g)) result[match[1].toLowerCase()] = decodeXmlEntities(match[3]);
+  return result;
+}
+function xmlBase(tag: string, parent: string|null) {
+  const declared = xmlAttributes(tag)['xml:base'];
+  if (!declared) return parent;
+  try { const value = new URL(declared,parent ?? undefined); return ['http:','https:'].includes(value.protocol) && !value.username && !value.password ? value.href : null; } catch { return null; }
+}
+function atomArticleLink(item: string, base: string|null) {
+  const links = [...item.matchAll(/<link\b[^>]*\/?\s*>/gi)].map(match => ({ tag:match[0],attrs:xmlAttributes(match[0]) })).filter(({ attrs }) => (!attrs.rel || attrs.rel.toLowerCase() === 'alternate') && (!attrs.type || ['text/html','application/xhtml+xml'].includes(attrs.type.toLowerCase())) && attrs.href);
+  links.sort((a,b) => Number(!a.attrs.type)-Number(!b.attrs.type));
+  for (const { tag,attrs } of links) {
+    try {
+      const url = new URL(attrs.href,xmlBase(tag,base) ?? undefined);
+      if (['http:','https:'].includes(url.protocol) && !url.username && !url.password) return url.href;
+    } catch { /* no usable document base: no invented URL */ }
+  }
+  return '';
+}
+function truncateTitle(value: string) {
+  let result = '';
+  for (const point of value) { if (result.length + point.length > 300) break; result += point; }
+  return result;
+}
+export function parseFeedXml(xml: string, feed: FeedConfig, documentUrl = feed.url): RadarRssArticle[] {
   const articles: RadarRssArticle[] = [];
   const isAtom = /<entry[\s\S]*?<\/entry>/i.test(xml);
+  const feedBase = xmlBase(xml.match(/<feed\b[^>]*>/i)?.[0] ?? '',documentUrl);
   const itemMatches = isAtom
     ? xml.match(/<entry[\s\S]*?<\/entry>/gi) ?? []
     : xml.match(/<item[\s\S]*?<\/item>/gi) ?? [];
@@ -341,23 +368,18 @@ export function parseFeedXml(xml: string, feed: FeedConfig): RadarRssArticle[] {
     // 1. Title
     const titleMatch = itemXml.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
     const rawTitle = titleMatch ? titleMatch[1] : '';
-    const title = decodeXmlEntities(rawTitle).slice(0, 300);
+    const title = truncateTitle(decodeXmlEntities(rawTitle));
     if (!title) continue;
 
     // 2. Link
     let rawLink = '';
     if (isAtom) {
-      const hrefMatch = itemXml.match(/<link[^>]*href=["']([^"']+)["'][^>]*\/?>/i);
-      rawLink = hrefMatch ? hrefMatch[1] : '';
-      if (!rawLink) {
-        const textLinkMatch = itemXml.match(/<link[^>]*>([\s\S]*?)<\/link>/i);
-        rawLink = textLinkMatch ? textLinkMatch[1] : '';
-      }
+      rawLink = atomArticleLink(itemXml,xmlBase(itemXml.match(/<entry\b[^>]*>/i)?.[0] ?? '',feedBase));
     } else {
       const linkMatch = itemXml.match(/<link[^>]*>([\s\S]*?)<\/link>/i);
       rawLink = linkMatch ? linkMatch[1] : '';
     }
-    const cleanLink = decodeXmlEntities(rawLink).trim();
+    const cleanLink = (isAtom ? rawLink : decodeXmlEntities(rawLink)).trim();
     let articleUrl: URL;
     try {
       articleUrl = new URL(cleanLink);
@@ -380,16 +402,18 @@ export function parseFeedXml(xml: string, feed: FeedConfig): RadarRssArticle[] {
 
     // 4. Category
     let category = feed.category;
+    let topicCategory: string|null = null;
     const catMatch = itemXml.match(/<category[^>]*>([\s\S]*?)<\/category>/i);
     if (catMatch) {
       const extractedCategory = decodeXmlEntities(catMatch[1]);
       if (extractedCategory && extractedCategory.length < 50) {
         category = extractedCategory;
+        topicCategory = extractedCategory;
       }
     }
 
     // 5. Geolocation / Country code
-    const inferredCountry = detectCountryCode(`${title} ${category}`);
+    const inferredCountry = detectCountryCode(`${title} ${topicCategory ?? ''}`);
     const countryCode = inferredCountry ?? feed.defaultCountry;
 
     // 6. ID
@@ -485,7 +509,7 @@ async function fetchSingleFeed(feed: FeedConfig): Promise<RadarRssArticle[]> {
 
     const xml = await readBoundedText(response, MAX_FEED_BYTES);
     if (!/<(?:rss|feed|rdf:RDF)[\s>]/i.test(xml)) throw new Error('RSS_INVALID_PAYLOAD');
-    return parseFeedXml(xml, feed);
+    return parseFeedXml(xml, feed, response.url || feed.url);
 }
 
 async function fetchAllFeeds(): Promise<RadarRssSnapshot> {

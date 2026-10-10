@@ -56,14 +56,14 @@ export function useRadarPlayer({
     if (code !== selectedCountry) selectCountry(code);
   }, [selectedCountry, selectCountry]);
 
-  const close = useCallback(() => setChannel(null), []);
+  const close = useCallback(() => { setWanted(null); setChannel(null); }, []);
   const dismissFailure = useCallback(() => setFailed(null), []);
 
   /** Fenêtre séparée (depuis la modale ou la liste des chaînes) : la liste sert au zapping, la chaîne rejoint « Reprendre ». */
   const popout = useCallback((target: Channel) => {
-    saveZapList(playlist, window.localStorage);
+    try { saveZapList(playlist, window.localStorage); } catch { /* optional device storage */ }
     recordRecentChannel(target);
-    launchPlayer({
+    const result = launchPlayer({
       channelId: target.id,
       userAgent: navigator.userAgent,
       platform: navigator.platform,
@@ -71,7 +71,8 @@ export function useRadarPlayer({
       openWindow: (url, windowTarget, features) => window.open(url, windowTarget, features),
       navigateCurrentTab: (url) => window.location.assign(url),
     });
-    setChannel(null);
+    if (result.mode !== 'blocked') setChannel(null);
+    return result;
   }, [playlist]);
 
   return { channel, open: setChannel, zap: setChannel, watchCountry, close, popout, failedCountry: failed, dismissFailure };

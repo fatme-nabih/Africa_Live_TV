@@ -17,7 +17,7 @@ async function fixtureTv(page: Page, options: { slowSN?: boolean; expired?: bool
       for (const id of body.add ?? []) favorites.add(id);
       for (const id of body.remove ?? []) favorites.delete(id);
     }
-    await route.fulfill({ json: { favorites: [...favorites] } });
+    await route.fulfill({ json: { favorites: [...favorites], owner: route.request().headers()['x-preference-owner'] } });
   });
   await page.route('**/api/channels', async route => {
     const body = route.request().postDataJSON(); requests.push(body);
@@ -132,7 +132,7 @@ for (const width of [1366, 390, 320]) test(`Navigation et filtres clavier à ${w
   await expect(page.getByRole('dialog', { name: 'Recherche universelle' })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await expect(page.locator('#catalogue').getByRole('button', { name: /^Regarder / }).first()).toBeVisible();
-  await page.screenshot({ path: `.local-logs/rw/screenshots/l3-tv-${width}.png`, fullPage: false });
+  await page.screenshot({ path: `.local-logs/bugs-2026-10-09/screenshots/tv-${width}.png`, fullPage: false });
 });
 
 test('Catalogue expiré simulé : consultation conservée et lecture interdite', async ({ page }) => {
@@ -153,17 +153,17 @@ test('COR-301 : GET tardif et deux clics conservent toutes les intentions, puis 
       if(failPatch){failPatch=false;await route.fulfill({status:500,json:{error:'fixture outage'}});return;}
       const body=route.request().postDataJSON();for(const id of body.add??[])canonical.add(id);for(const id of body.remove??[])canonical.delete(id);
     }
-    await route.fulfill({json:{favorites:[...canonical]}});
+    await route.fulfill({json:{favorites:[...canonical],owner:route.request().headers()['x-preference-owner']}});
   });
   await page.goto('/app?country=SN');
   const a=page.locator('#catalogue').getByRole('button',{name:'Ajouter Alpha 00 aux favoris',exact:true});
   const b=page.locator('#catalogue').getByRole('button',{name:'Ajouter Alpha 01 aux favoris',exact:true});
   await a.click();await b.click();releaseGet();
-  await expect(page.getByText(/Le choix reste conservé localement/)).toBeVisible();
-  expect(JSON.parse(await page.evaluate(()=>localStorage.getItem('al_favorites')??'[]'))).toEqual(expect.arrayContaining(['tv-0','tv-1']));
+  await expect(page.getByText(/Le choix reste conservé sur cet appareil/)).toBeVisible();
+  expect(Object.keys(JSON.parse(await page.evaluate(()=>localStorage.getItem('al_preferences_v2_local%3Aafrica-live-local-user')??'{}')).data.favoriteIntents)).toEqual(expect.arrayContaining(['tv-0','tv-1']));
   await page.evaluate(()=>window.dispatchEvent(new Event('online')));
   await expect.poll(()=>[...canonical].sort()).toEqual(['tv-0','tv-1']);
-  await expect.poll(()=>page.evaluate(()=>localStorage.getItem('al_favorites_pending'))).toBe('{}');
+  await expect.poll(()=>page.evaluate(()=>JSON.stringify(JSON.parse(localStorage.getItem('al_preferences_v2_local%3Aafrica-live-local-user') ?? '{}').data?.favoriteIntents))).toBe('{}');
   await page.reload();
   await expect(page.locator('#catalogue').getByRole('button',{name:'Retirer Alpha 00 des favoris',exact:true})).toBeVisible();
   await expect(page.locator('#catalogue').getByRole('button',{name:'Retirer Alpha 01 des favoris',exact:true})).toBeVisible();

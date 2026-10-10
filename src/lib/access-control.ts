@@ -7,8 +7,9 @@ import { isLocalDevMode, LOCAL_USER_ID } from './local-dev';
 import type { AccessDecision } from './access-policy';
 
 import { evaluateAccess } from './access-policy';
-import { ensureInternalUser } from './identity';
+import { ensureInternalUser, IdentityDeletedError } from './identity';
 import { getAdministratorAccess } from './admin-access';
+import { evaluateUserAccess } from './refund-trial-access';
 
 export async function getCurrentAccessDecision() {
   if (isLocalDevMode()) {
@@ -29,14 +30,19 @@ export async function getCurrentAccessDecision() {
     };
   }
 
-  const user = await ensureInternalUser(clerkUserId);
+  let user;
+  try { user = await ensureInternalUser(clerkUserId); }
+  catch (error) {
+    if (!(error instanceof IdentityDeletedError)) throw error;
+    return { user:null,clerkSessionId,subscriptions:[],decision:{ status:'blocked',hasAccess:false,expiresAt:null,reason:'identity_deleted' } satisfies AccessDecision };
+  }
   const userSubscriptions = await db
     .select()
     .from(subscriptions)
     .where(eq(subscriptions.userId, user.id))
     .orderBy(desc(subscriptions.createdAt));
 
-  const standardDecision = evaluateAccess(user, userSubscriptions);
+  const standardDecision = await evaluateUserAccess(user, userSubscriptions);
   if (standardDecision.hasAccess) {
     return {
       user,

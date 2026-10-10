@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { fixtureRadar } from './helpers/radar-fixture';
 import { fixtureCatalog } from './helpers/tv-fixture';
+import { countryListVersion } from '../src/lib/country-version';
 
 // P5 / UX-503 — Pays suivis (1 à 5) : le Radar et la TV s'ouvrent sur le pays principal.
 // UX-503b — synchronisés au compte : l'API est simulée ici (compte en mémoire) pour ne rien écrire dans la base entre les tests.
@@ -13,7 +14,7 @@ async function fakeAccount(page: Page, initial: string[] = []) {
       account.countries = (route.request().postDataJSON() as { countries: string[] }).countries;
       account.puts.push(account.countries);
     }
-    await route.fulfill({ json: { countries: account.countries } });
+    await route.fulfill({ json: { countries: account.countries, version: countryListVersion(account.countries), owner: route.request().headers()['x-preference-owner'] } });
   });
   return account;
 }
@@ -36,8 +37,8 @@ test.describe('Pays suivis (UX-503)', () => {
       await expect(button).toHaveAttribute('aria-pressed', 'true', { timeout: 500 });
     }).toPass({ timeout: 15_000 });
     await expect(button).toHaveText('Pays principal');
-    expect(await page.evaluate(() => localStorage.getItem('al_followed_countries'))).toBe('["CI"]');
     await expect.poll(() => account.countries).toEqual(['CI']);
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('al_preferences_v2_local%3Aafrica-live-local-user')!).data.countries)).toEqual(['CI']);
 
     await page.goto('/app/live');
     await expect(page).toHaveURL(/\/app\/live\?country=CI$/);
@@ -50,13 +51,11 @@ test.describe('Pays suivis (UX-503)', () => {
       await followButton(page, 'Côte d’Ivoire').click();
       await expect(followButton(page, 'Côte d’Ivoire')).toHaveAttribute('aria-pressed', 'false', { timeout: 500 });
     }).toPass({ timeout: 15_000 });
-    expect(await page.evaluate(() => localStorage.getItem('al_followed_countries'))).toBe('[]');
     await expect.poll(() => account.countries).toEqual([]);
   });
 
   test('au-delà de 5 pays, le bouton est désactivé et explique pourquoi', async ({ page }) => {
-    await fakeAccount(page);
-    await page.addInitScript(() => localStorage.setItem('al_followed_countries', JSON.stringify(['SN', 'CI', 'ML', 'GN', 'NG'])));
+    await fakeAccount(page,['SN', 'CI', 'ML', 'GN', 'NG']);
     await page.goto('/app/live?country=KE');
     const button = followButton(page, 'Kenya');
     await expect(button).toBeDisabled();
@@ -67,25 +66,29 @@ test.describe('Pays suivis (UX-503)', () => {
   test('un nouvel appareil reprend les pays suivis du compte', async ({ page }) => {
     const account = await fakeAccount(page, ['ML', 'SN']);
     await page.goto('/app/live?country=ML');
-    await expect.poll(() => page.evaluate(() => localStorage.getItem('al_followed_countries'))).toBe('["ML","SN"]');
+    await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('al_preferences_v2_local%3Aafrica-live-local-user') ?? '{}').data?.countries)).toEqual(['ML','SN']);
     await expect(followButton(page, 'Mali')).toHaveText('Pays principal');
     expect(account.puts).toEqual([]);
   });
 
-  test('le premier appareil envoie ses pays au compte, et le compte garde son ordre', async ({ page }) => {
+  test('les anciens choix sans propriétaire attendent un import explicite, puis le compte garde son ordre', async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem('al_followed_countries', JSON.stringify(['CI', 'SN'])));
     const account = await fakeAccount(page, ['SN']);
     await page.goto('/app/live?country=SN');
+    await expect(page.getByRole('button',{ name: 'Ajouter ces choix à mon compte' })).toBeVisible();
+    expect(account.puts).toEqual([]);
+    await page.getByRole('button',{ name: 'Ajouter ces choix à mon compte' }).click();
     await expect.poll(() => account.countries).toEqual(['SN', 'CI']);
-    await expect.poll(() => page.evaluate(() => localStorage.getItem('al_followed_countries'))).toBe('["SN","CI"]');
+    await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('al_preferences_v2_local%3Aafrica-live-local-user') ?? '{}').data?.countries)).toEqual(['SN','CI']);
   });
 
   test('API réelle : validation, ordre conservé et remise à zéro', async ({ page }) => {
     // Appels depuis la page (même origine, comme l'application) : la garde du mode local refuse une écriture sans Origin.
     await page.goto('/app/live');
     const call = (method: 'GET' | 'PUT', countries?: string[]) => page.evaluate(async ([verb, list]) => {
+      const snapshot = verb === 'PUT' ? await fetch('/api/followed-countries').then(response => response.json()) : null;
       const response = await fetch('/api/followed-countries', verb === 'PUT'
-        ? { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ countries: list }) }
+        ? { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ countries: list, owner: snapshot.owner, baseVersion: snapshot.version }) }
         : { cache: 'no-store' });
       return { status: response.status, body: response.ok ? await response.json() : null };
     }, [method, countries] as const);
@@ -93,13 +96,13 @@ test.describe('Pays suivis (UX-503)', () => {
     expect((await call('PUT', ['FR'])).status).toBe(400);
     expect((await call('PUT', ['SN', 'CI', 'ML', 'GN', 'NG', 'KE'])).status).toBe(400);
     try {
-      expect(await call('PUT', ['CI', 'SN'])).toEqual({ status: 200, body: { countries: ['CI', 'SN'] } });
-      expect(await call('GET')).toEqual({ status: 200, body: { countries: ['CI', 'SN'] } });
+      expect(await call('PUT', ['CI', 'SN'])).toMatchObject({ status: 200, body: { countries: ['CI', 'SN'] } });
+      expect(await call('GET')).toMatchObject({ status: 200, body: { countries: ['CI', 'SN'] } });
     } finally {
       expect((await call('PUT', [])).status).toBe(200);
-      await page.evaluate(() => localStorage.removeItem('al_followed_countries'));
+      await page.evaluate(() => localStorage.removeItem('al_preferences_v2_local%3Aafrica-live-local-user'));
     }
-    expect(await call('GET')).toEqual({ status: 200, body: { countries: [] } });
+    expect(await call('GET')).toMatchObject({ status: 200, body: { countries: [] } });
   });
 
   test('COR-303 : lecture initiale en panne, reprise et modification pendant un PUT lent',async({page})=>{
@@ -114,16 +117,16 @@ test.describe('Pays suivis (UX-503)', () => {
         if(puts.length===1)await gate;
         account=countries;active--;
       }
-      await route.fulfill({json:{countries:account}});
+      await route.fulfill({json:{countries:account,version:countryListVersion(account),owner:route.request().headers()['x-preference-owner']}});
     });
-    await page.goto('/app?country=SN');
+    await page.goto('/app/live?country=SN');
     await expect.poll(()=>gets).toBe(1);
-    const change=(codes:string[])=>page.evaluate(list=>{localStorage.setItem('al_followed_countries',JSON.stringify(list));window.dispatchEvent(new Event('al_followed_countries_change'));},codes);
-    await change(['SN']);await page.evaluate(()=>window.dispatchEvent(new Event('online')));
+    await followButton(page,'Sénégal').click();await page.evaluate(()=>window.dispatchEvent(new Event('online')));
     await expect.poll(()=>puts.length).toBe(1);
-    await change(['CI','SN']);release();
-    await expect.poll(()=>account).toEqual(['CI','SN']);
+    await page.evaluate(()=>history.pushState(null,'','/app/live?country=CI'));
+    await followButton(page,'Côte d’Ivoire').click();release();
+    await expect.poll(()=>account).toEqual(['SN','CI']);
     expect(maxActive).toBe(1);
-    expect(await page.evaluate(()=>localStorage.getItem('al_followed_countries'))).toBe('["CI","SN"]');
+    expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('al_preferences_v2_local%3Aafrica-live-local-user')!).data.countries)).toEqual(['SN','CI']);
   });
 });

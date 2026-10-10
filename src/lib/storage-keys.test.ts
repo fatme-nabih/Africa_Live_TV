@@ -25,14 +25,14 @@ test('les clés iptv_* sont migrées vers al_* et les favoris sont conservés', 
   assert.equal(storage.getItem(STORAGE_KEYS.favoritesPending), '{"chan-3":true}');
   assert.equal(storage.getItem(STORAGE_KEYS.favoritesMigrated), 'true');
   assert.equal(storage.getItem(STORAGE_KEYS.vlcNoticeDismissed), 'true');
-  assert.deepEqual([...storage.data.keys()].filter(key => key.startsWith('iptv_')), []);
+  assert.deepEqual([...storage.data.keys()].filter(key => key.startsWith('iptv_')), ['iptv_favorites','iptv_favorites_pending','iptv_favorites_server_migrated']);
 });
 
 test('une valeur al_* existante n’est jamais écrasée par l’ancienne', () => {
   const storage = fakeStorage({ iptv_favorites: '["old"]', al_favorites: '["new"]' });
   assert.equal(migrateLegacyStorage(storage), 0);
   assert.equal(storage.getItem(STORAGE_KEYS.favorites), '["new"]');
-  assert.equal(storage.getItem('iptv_favorites'), null);
+  assert.equal(storage.getItem('iptv_favorites'), '["old"]');
 });
 
 test('la migration est idempotente et ignore les autres clés', () => {
