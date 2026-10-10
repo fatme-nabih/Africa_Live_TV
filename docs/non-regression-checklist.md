@@ -1,5 +1,16 @@
 # Checklist de non-régression — lots local et Railway
 
+## Reprise des favoris de l’appareil — publiée sur staging le 10 octobre 2026
+
+[Publication, preuves et limites](publication-favoris-appareil-2026-10-10.md).
+
+- [x] Lecture du compte avant proposition ; seuls les choix manquants sont comptés, sans doublons ni suppression des anciennes clés.
+- [x] Confirmation après réponse serveur, attente visible, erreurs Radar et un seul message d’erreur sur TV, résultats partiels et reprise explicite.
+- [x] Report/rechargement, imports par lots, limite de cinq pays, stockage refusé, quotas, refus d’accès et séparation A/B couverts.
+- [x] CI finale reçue : 427 unités, 41 intégrations, 16 E2E build, 88 composants, 68 UI ; types/lint/build/audit réussis, Snyk Code indisponible.
+- [x] Railway `7c44e966` SUCCESS, 475/475 fichiers applicatifs identiques, 21/21 migrations sans ajout SQL ; sauvegarde restaurable disponible, santé 200 et 14/14 E2E distants.
+- [x] Catalogue/favoris/pays conservés par empreintes avant/après ; compte connecté chargé sans bandeau redondant ni erreur. Aucun import de favoris réels pendant la réception distante.
+
 ## B01–B20/A1 — réception locale et publication staging du 10 octobre 2026
 
 [Preuves individuelles, contrats et réserves](validation-correctifs-bugs-2026-10-09.md).

@@ -1,5 +1,7 @@
 # Reprise des choix de l’appareil — correctif reçu en local le 10 octobre 2026
 
+**Publié ensuite à la demande du propriétaire** : `f9ddb95` + `60c307d`, Railway `7c44e966` SUCCESS, CI finale SUCCESS. [Publication et réception](publication-favoris-appareil-2026-10-10.md). Les validations locales ci-dessous restent celles du passage initial ; la CI finale couvre aussi la suppression du message d’erreur en double sur TV.
+
 Le bandeau propose seulement les pays et favoris absents du compte, après lecture du serveur. L’import conserve ses intentions jusqu’à confirmation, annonce les ajouts réellement enregistrés et présente les choix restant à reprendre. Un échec ne disparaît plus silencieusement sur le Radar.
 
 ## Comportement livré
@@ -41,6 +43,6 @@ Preuves privées : `.local-logs/legacy-fix-2026-10-10/`, dont le runner ciblé c
 
 ## État de livraison
 
-Correction locale uniquement, non committée, non poussée et non déployée. Le staging conserve le dernier runtime publié décrit dans `contextellm.md`. Aucun favori réel du propriétaire n’a été importé ni supprimé pendant les essais. Aucun changement Railway/Clerk/OVHcloud/DNS, de plan, de droits, de paiement, de média ou du projet source IPTV.
+La réception initiale était locale, avant l’autorisation de publication ensuite exécutée et reçue dans le dossier lié ci-dessus. Aucun favori réel du propriétaire n’a été importé ni supprimé pendant les essais. Aucun changement Railway/Clerk/OVHcloud/DNS, de plan, de droits, de paiement, de média ou du projet source IPTV.
 
 Le serveur de développement du propriétaire sur localhost:3001 (PID 29736) a été conservé. Le banc indépendant de composants sur 3002 a été arrêté à la fin des essais. Les autres modifications préexistantes de la grille des pays, de son test et du Radar ont été conservées.

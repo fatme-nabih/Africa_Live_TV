@@ -1,5 +1,11 @@
 # Progression — préparation production
 
+## Reprise des favoris de l’appareil — publiée sur staging, 10 octobre 2026
+
+Publication expressément demandée et reçue : `f9ddb95` + `60c307d`, Railway `7c44e966` SUCCESS, 475/475 fichiers applicatifs identiques. Offre filtrée après lecture du compte, confirmation serveur, erreurs visibles, résultat partiel et reprise conservés ; un seul message d’erreur sur TV. [Dossier](publication-favoris-appareil-2026-10-10.md).
+
+CI [38089047128](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38089047128) SUCCESS : 427 unités, 41 intégrations isolées, 16 E2E build, 88 composants et 68 UI ; types/lint/build/audit réussis, Snyk Code indisponible. 21/21 migrations sans nouveau SQL, sauvegarde restaurable du jour revérifiée, santé 200 sur les deux domaines et 14/14 E2E distants. Catalogue/favoris/pays : empreintes conservées. Réception connectée en lecture, sans importer de favoris réels ; autres changements locaux de grille/Radar conservés hors livraison.
+
 ## B01–B20/A1 et hydratation Clerk — publiés sur staging, 10 octobre 2026
 
 **Publication explicitement demandée et reçue** : code `69d41ce`, test seul
