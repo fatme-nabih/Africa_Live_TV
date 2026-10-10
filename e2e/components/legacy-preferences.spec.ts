@@ -170,3 +170,12 @@ test('mobile and desktop: long country labels and partial results keep every act
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({path:'.local-logs/legacy-fix-2026-10-10/partial-desktop.png',fullPage:true});
 });
+test('TV reports a favorites error once while the shared import remains visibly pending',async({page}) => {
+  await seed(page,['valid']); const api = await account(page); api.control.failure = 503;
+  await page.goto('/app?kind=legacy&tv=1'); await add(page).click();
+  await expect(page.getByRole('alert')).toHaveCount(1);
+  await expect(page.getByRole('alert')).toContainText('Le choix reste conservé sur cet appareil');
+  await expect(summary(page)).toContainText('en attente');
+  api.control.failure = 0; await page.getByRole('button',{name:'Retry favorites'}).click();
+  await expect(summary(page)).toContainText('Ajout confirmé');
+});

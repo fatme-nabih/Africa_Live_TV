@@ -1,5 +1,6 @@
 'use client';
 import { useMemo, useSyncExternalStore } from 'react';
+import { usePathname } from 'next/navigation';
 import { usePreferences } from './usePreferences';
 import { importLegacyChoices, legacyChoices, preferenceStore, updatePreferences } from '@/lib/preference-store';
 import { formatCountryName } from '@/lib/format';
@@ -29,6 +30,7 @@ export function LegacyPreferencesRecovery() {
   return <button className="mt-3 text-sm underline" aria-controls="legacy-choices" onClick={() => updatePreferences(preferenceStore(owner),state => ({ ...state, legacyHandled: false, legacyImport: null }))}>Reprendre les choix de cet appareil</button>;
 }
 export default function FollowedCountriesSync() {
+  const pathname = usePathname();
   const { owner, snapshot, retry } = usePreferences('countries');
   const favoritesSync = usePreferences('favorites');
   const legacy = useLegacyChoices();
@@ -45,7 +47,7 @@ export default function FollowedCountriesSync() {
   const saved = imported ? addedLabel(imported.countries.length - imported.remainingCountries.length, imported.favorites.length - imported.remainingFavorites.length) : '';
   return <>
     {snapshot.errors.countries && <p role="status" className="px-4 py-2 text-sm text-text-muted">{snapshot.errors.countries} <button onClick={retry} className="underline">Réessayer</button></p>}
-    {snapshot.errors.favorites && <p role="alert" className="px-4 py-2 text-sm text-text-muted">{snapshot.errors.favorites} <button onClick={favoritesSync.retry} className="underline">Réessayer les favoris</button></p>}
+    {snapshot.errors.favorites && pathname !== '/app' && <p role="alert" className="px-4 py-2 text-sm text-text-muted">{snapshot.errors.favorites} <button onClick={favoritesSync.retry} className="underline">Réessayer les favoris</button></p>}
     {(offer || checking || imported) && <aside id="legacy-choices" aria-label="Choix de cet appareil" className="mx-4 mt-2 mb-[calc(4rem+env(safe-area-inset-bottom))] flex flex-wrap items-center gap-x-4 gap-y-2 rounded-control border border-line bg-surface-1 p-3 text-sm text-text md:mb-2">
       {checking && <p role="status">Vérification des choix déjà enregistrés dans votre compte…</p>}
       {offer && <>

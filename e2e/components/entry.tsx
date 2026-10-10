@@ -71,7 +71,8 @@ function TestCountries() {
 }
 function TestLegacyPreferences() {
   const { snapshot } = usePreferences();
-  return <main className="min-h-screen bg-black p-4 text-text"><Countries/><LegacyPreferencesRecovery/><pre hidden data-testid="legacy-state">{JSON.stringify(snapshot)}</pre></main>;
+  const television = new URLSearchParams(location.search).get('tv') === '1';
+  return <main className="min-h-screen bg-black p-4 text-text"><Countries/>{television && <TestFavorites/>}<LegacyPreferencesRecovery/><pre hidden data-testid="legacy-state">{JSON.stringify(snapshot)}</pre></main>;
 }
 function TestPreferences({ kind }: { kind: string }) {
   const [owner,setOwner] = React.useState<string|null>(new URLSearchParams(location.search).get('owner') === 'unknown' ? null : 'account:A');
