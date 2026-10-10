@@ -1,6 +1,6 @@
 # Checklist de non-régression — lots local et Railway
 
-## B01–B20/A1 — réception locale du 10 octobre 2026, non publiée
+## B01–B20/A1 — réception locale et publication staging du 10 octobre 2026
 
 [Preuves individuelles, contrats et réserves](validation-correctifs-bugs-2026-10-09.md).
 
@@ -17,7 +17,7 @@
 - [x] Sauvegarde locale restaurée avant migration additive 0020 ; 21 migrations locales, anciennes 20 intactes ; aucun backfill ou changement de droits réel.
 - [x] Fixtures/schémas nettoyés, huit empreintes métier conservées, `.env*` et IPTV intacts, port 3001 libéré ; aucun commit/push/déploiement/changement distant.
 - [ ] BUG-903 : Safari/HLS natif et iOS/Android physiques, vrais profils Clerk membre/admin/bloqué, paiement/remboursement et appareils multiples.
-- [ ] BUG-904 conditionnel : revue/autorisation, sauvegarde Railway, migration `db:migrate:deploy`, contrats anciens/rollback, santé/auth/webhooks staging.
+- [x] BUG-904 publié après autorisation : sauvegarde Railway restaurée, migration `db:migrate:deploy` (21/21), 467 fichiers identiques, santé/auth/E2E/CI réussis. [Dossier et réserves](publication-bugs-2026-10-10.md). Pas de réception nouvelle de webhook/profil/paiement réel complet.
 - [ ] Recontrôle ciblé des classifications historiques : 6 999 sources inventoriées sans sonde réelle ; runner avec sélection explicite requis avant demande autorisée.
 
 ## VLC iPhone / CNews — publié sur staging le 6 octobre 2026

@@ -1,13 +1,15 @@
 # Matrice des environnements — revue du 1er octobre 2026
 
-Complément BUG du 10 octobre : [réception locale](validation-correctifs-bugs-2026-10-09.md).
-Migration additive 0020 appliquée seulement à `africa_live_dev` après sauvegarde
-restaurée : 21 migrations locales ; le dernier relevé staging garde 20 migrations,
-aucun changement distant dans ce passage. `.env*` inchangées ; drapeaux MVP et
-anonymes uniquement dans leurs processus de test. Origine locale reçue :
+Complément BUG du 10 octobre : [réception locale](validation-correctifs-bugs-2026-10-09.md),
+[publication autorisée et reçue](publication-bugs-2026-10-10.md).
+Migration additive 0020 après sauvegarde restaurée : **21 migrations locales et
+21 sur Railway staging**, applicatif 69d41ce / Railway 4b76c516 SUCCESS. Rôle staging,
+modes MVP/lecture locale/VLC desktop désactivés, CI anonyme absent, mur TV conservé.
+`.env*` inchangées ; drapeaux MVP/anonymes uniquement dans leurs processus de test.
+Origine locale reçue :
 `http://localhost:3001` (garde Host/Next conservée). Checkout exige le protocole 2 ;
 préférences exigent propriétaire et pays versionnés. Client/serveur à publier
-ensemble, anciens onglets refusés 409 ; publication séparément autorisée.
+ensemble, anciens onglets refusés 409 ; recharger le client après livraison.
 
 Complément COR du 4 octobre : [état courant](etat-courant.md), [réception locale](correctifs-audit-validation-2026-10-04.md).
 Next 16.3.8 local et Railway staging, aucune migration ou variable distante supplémentaire. Drapeaux MVP temporairement définis uniquement dans

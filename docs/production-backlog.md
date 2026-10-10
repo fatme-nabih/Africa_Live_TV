@@ -1,5 +1,14 @@
 # Africa Live — Plan de préparation à la production
 
+## B01–B20/A1 et hydratation Clerk — publiés sur staging le 10 octobre 2026
+
+[Backlog BUG](backlog-correctifs-bugs-2026-10-09.md),
+[publication et réserves](publication-bugs-2026-10-10.md) : code 69d41ce,
+Railway 4b76c516 SUCCESS, sauvegarde restaurée avant 0020, 21 migrations,
+467 fichiers identiques, santé et 14 E2E distants ; CI 38058708112 réussie.
+38 tickets initiaux reçus sur 39 + BUG-905 reçu ; BUG-903 physique/profils reste
+ouvert. Staging demeure staging, pas d'activation de paiements ou recontrôle global.
+
 ## Plan des correctifs de l'audit — 4 octobre 2026
 
 Plan préparé à la demande du propriétaire : [plan détaillé en cinq lots](plan-correctifs-audit-2026-10-04.md),

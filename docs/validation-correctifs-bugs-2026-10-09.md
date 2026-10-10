@@ -3,7 +3,10 @@
 Les 21 défauts B01–B20/A1 sont corrigés et reçus par leurs tests locaux dédiés.
 Réception finale au 10 octobre 2026, Africa/Dakar : 37 tickets locaux vérifiés ;
 BUG-903 conserve les réserves d'appareils/profils et BUG-904 reste conditionnel.
-Le code et les nouveaux tests sont non committés, non publiés.
+Le code et les nouveaux tests ont ensuite été committés/publiés à la demande du
+propriétaire : [dossier de publication](publication-bugs-2026-10-10.md), applicatif
+69d41ce, Railway 4b76c516 SUCCESS, migration 0020 et CI reçues. Le présent journal
+conserve les modes et dates de la réception locale précédente.
 
 Mandat : plan B01–B20/A1, lots L0→L7 séquentiels. Référence `e4ff28f`.
 Aucun commit, push, déploiement, changement distant, paiement réel ni recontrôle
@@ -39,7 +42,7 @@ global autorisé. Source IPTV et fichiers `.env*` préservés.
 ## Réserves distinctes
 
 BUG-903 : appareils physiques et profils Clerk réels non reçus.
-BUG-904 : publication conditionnelle ; aucune action distante réalisée.
+BUG-904 : publication ensuite autorisée et reçue, avec sauvegarde/migration/CI.
 Les classifications et droits historiques ne sont pas réparés par ces tests.
 
 Complément postérieur à cette réception : **BUG-905 hydratation du bouton Clerk**,
@@ -341,7 +344,7 @@ plusieurs tickets reçoivent la même cause avec des contrats/consommateurs diff
 | BUG-901 | BUG-104, BUG-204, BUG-306, BUG-406, BUG-507, BUG-606 | Bilan courant nécessaire, succès d'audit insuffisants ; matrice finale, diff et hashes, nettoyage. | 404 unités, 40 intégrations, contrôles et E2E ci-dessous ; preuves dédiées aux 21 défauts, restauration et empreintes inchangées. |
 | BUG-902 | BUG-901 | Handoff/backlog reflétaient « aucune correction » ; dossier/tables/contrats/risques et état final. `docs/validation-*`, backlog, contextellm, progression, checklist, matrice environnements. | 37 statuts locaux reçus ; date finale 10 octobre, réserves BUG-903/904 et données historiques distinctes, aucune publication implicite. |
 | BUG-903 | BUG-901, BUG-902 | **À recevoir sur appareil/profil.** Moteur Safari/HLS natif, iOS/Android physiques, vrais profils Clerk et paiement/remboursement. | Edge/user-agent et mocks sont reçus ; aucune preuve physique nouvelle ni paiement réel. Ancienne réception CNews du 6 octobre reste limitée à ce parcours publié. |
-| BUG-904 | BUG-902, réserves BUG-903 | **Conditionnel — non autorisé.** Préparation documentaire de sauvegarde/migration/compatibilité/rollback/recontrôle. | Checklist ci-dessous prête ; aucun commit/push/déploiement ou changement distant exécuté. |
+| BUG-904 | BUG-902, réserves BUG-903 | **Publication ensuite autorisée et reçue.** Sauvegarde/migration/compatibilité/rollback/recontrôle documentés. | GitHub/Railway, migration 21, 467 fichiers, santé/14 E2E distants et CI reçus ; [dossier](publication-bugs-2026-10-10.md). |
 
 ## Bilan final des commandes et conservation
 
@@ -395,9 +398,10 @@ MVP doit utiliser `http://localhost:3001` : 127.0.0.1 déclenche le refus Host/N
 existant. Aucun commit/push/déploiement, appel de paiement réel, requalification
 globale, changement de tâche Windows, Railway, Clerk, OVHcloud ou DNS effectué.
 
-## BUG-904 — préparation conditionnelle de publication
+## BUG-904 — préparation initiale de publication (livraison ensuite reçue)
 
-La publication exige une nouvelle demande. Prévoir : revue du diff complet,
+Publication demandée et reçue le 10 octobre : [résultats](publication-bugs-2026-10-10.md).
+La préparation initiale ci-dessous a été appliquée : revue du diff complet,
 sauvegarde Railway restaurable, migration additive 0020 par `db:migrate:deploy`
 avant démarrage du nouveau code, journal 21/21 et contrôle de dérive. Publier
 client/serveur ensemble ; anciens onglets préférences sans propriétaire/version

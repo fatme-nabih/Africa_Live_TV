@@ -39,9 +39,52 @@ sauvegarde chiffrée/métadonnées/clé protégée conservés hors Git.
 
 ## Livraison et réception
 
-En cours : commit/push du code reçu, upload d'un snapshot Git sans fichiers privés,
-migration pré-déploiement, santé/auth/E2E distants et empreintes des sources.
-Preuves de passage privées : `.local-logs/publication-bugs-2026-10-10/`.
+- Code publié sur GitHub/main : [`69d41ce`](https://github.com/fatme-nabih/Africa_Live_TV/commit/69d41ce).
+  Snapshot de 602 fichiers Git, fichiers privés exclus ; 467 fichiers applicatifs.
+- Railway : **`4b76c516-b7ad-4646-a3b8-56e1d2576a0b` SUCCESS**. Pré-déploiement
+  et migration 0020 reçus : **21/21 migrations**, hashes identiques, rien en attente.
+  Rôle staging et tous les modes locaux désactivés revérifiés ; mur TV conservé.
+- **467/467 fichiers applicatifs identiques** par SHA-256 sur le runtime.
+- Santé **200** (processus/base) sur `staging.africatv.sn` et le domaine Railway ;
+  météo anonyme 401 et dashboard/mur/pays suivis 307 vers la connexion. **14/14 E2E
+  distants**, ≈36,6 s : auth/paiement simulé/worker réel et parcours publics,
+  sans achat réel ni session authentifiée de test.
+- Données : empreintes catalogue/favoris/pays/droits/transactions/retraits
+  inchangées, effectifs conservés. La table users a changé pendant la réception :
+  comparaison du dump restauré avec la base active, champ par champ via hashes,
+  **un profil avec seulement `clerk_synced_at`/`updated_at` changés** ; rôle,
+  statut, email, création et échéance d'essai identiques. Une révision fournisseur
+  est désormais renseignée par la synchronisation Clerk ; ce n'est pas un backfill
+  de la migration. Six comptes, 56 favoris, zéro achat/abonnement/retrait, aucune
+  trace terminale ajoutée par le passage. Seconde base de comparaison nettoyée.
+- Première CI [38057820630](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38057820630) :
+  unités/intégrations/build/E2E build/composants réussis ; UI : 67 réussis, un ignoré,
+  un échec dans l'ancien test catalogue. Il utilisait un manifeste introuvable
+  tout en exigeant des IDs vides à chaque requête : la fin de manifeste corrigée
+  déclenche désormais une vraie relance avec IDs de session/tentative.
+- Correctif de **test seulement** [`6059818`](https://github.com/fatme-nabih/Africa_Live_TV/commit/6059818) :
+  la fixture HLS valide existante est servie dans le catalogue et la fenêtre
+  séparée ; assertions de confidentialité/IDs conservées. Application identique
+  à 69d41ce ; aucun second déploiement Railway nécessaire.
+- CI relancée [38058708112](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38058708112) :
+  **SUCCESS** sur 6059818 : **404 unités, 40 intégrations isolées, 16 E2E de build
+  (10 ignorés), 53 composants, 68 UI (un ignoré)** ; fixture utilisateur/catalogue
+  supprimée par le runner. Types/lint/build/audit production réussis. Les cas
+  ignorés dépendent du mode de serveur/session et ne sont pas des succès ; le
+  worker de build et les refus anonymes sont reçus par les E2E distants dédiés.
+  Snyk Code reste indisponible (organisation non activée), audit des dépendances
+  production obligatoire réussi. Aucune activation de service ou changement de
+  plan pour lever cette réserve.
+
+**Publication reçue**, avec les réserves d'appareils/profils de BUG-903. Les
+commits ultérieurs de clôture ne changent que la documentation ; l'applicatif
+Railway est identique au code actuel de GitHub. Serveur local du propriétaire
+conservé sur 3001 et fichiers `.env*` intacts. Aucun changement de rôle staging,
+plan, DNS, Clerk, paiement activé ou tâche Windows.
+
+Preuves privées : `.local-logs/publication-bugs-2026-10-10/` : `preflight.json`,
+`runtime.json`, `health.json`, `remote-source.json`, `database-after.json`,
+`users-comparison.json`, journaux E2E/build/CI et résultat de sauvegarde.
 
 Les anciens clients checkout sans protocole 2 et préférences sans propriétaire
 ou version sont refusés 409 avant mutation ; recharger l'application pour recevoir

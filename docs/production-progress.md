@@ -1,6 +1,17 @@
 # Progression — préparation production
 
-## B01–B20/A1 — reçus localement, 10 octobre 2026
+## B01–B20/A1 et hydratation Clerk — publiés sur staging, 10 octobre 2026
+
+**Publication explicitement demandée et reçue** : code `69d41ce`, test seul
+`6059818`, Railway `4b76c516` SUCCESS ; 467/467 fichiers identiques, migration
+0020 appliquée après sauvegarde restaurable, 21/21 migrations. Santé 200 sur les
+deux domaines, refus anonymes conservés, 14/14 E2E distants. [Dossier](publication-bugs-2026-10-10.md).
+CI [38058708112](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38058708112)
+SUCCESS : 404 unités, 40 intégrations, 16 E2E build (10 ignorés), 53 composants,
+68 UI (un ignoré), fixtures nettoyées ; audit production 0, Snyk Code indisponible.
+Catalogue/favoris/droits conservés ; un profil synchronisé (seulement dates de
+traitement), rôles/statuts/essais identiques. Serveur local du propriétaire conservé.
+Les paragraphes suivants relatent la réception avant publication.
 
 Complément au cours de l'essai du propriétaire : **BUG-905, bouton Clerk en
 erreur d'hydratation, corrigé et reçu localement**. HTML initial identique puis

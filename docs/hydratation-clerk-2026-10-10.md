@@ -2,7 +2,8 @@
 
 Signalement et réception locale : 10 octobre 2026, Africa/Dakar. Complément aux
 21 défauts du plan du 9 octobre ; leur numérotation et leurs preuves restent
-distinctes. Code non committé, non publié.
+distinctes. Code ensuite publié à la demande du propriétaire : applicatif 69d41ce,
+Railway 4b76c516 SUCCESS ; [dossier et CI réussie](publication-bugs-2026-10-10.md).
 
 Le propriétaire a rencontré l'overlay « Hydration failed » sur
 `http://localhost:3001/app/live`. La trace de sa session locale pointe
