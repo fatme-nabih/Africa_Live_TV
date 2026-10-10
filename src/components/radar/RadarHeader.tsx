@@ -1,46 +1,31 @@
+import type { ReactNode } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { Button, cn } from '@/components/ui';
 import FollowCountryButton from '@/components/shell/FollowCountryButton';
-import type { CoverageLevel } from '@/lib/radar-workspace';
-
-const DOT: Record<CoverageLevel, string> = {
-  ok: 'bg-al-green',
-  loading: 'bg-text-muted',
-  degraded: 'bg-al-gold',
-  down: 'bg-al-red',
-};
 
 export default function RadarHeader({
   refreshing,
   onRefresh,
   unknownCountry,
-  coverage,
   country,
+  ticker,
 }: {
   refreshing: boolean;
   onRefresh: () => void;
   unknownCountry: boolean;
   /** Pays affiché : il peut être suivi (UX-503). */
   country: string | null;
-  coverage: { level: CoverageLevel; short: string };
+  /** Bandeau sous le titre, sur toute la largeur. */
+  ticker?: ReactNode;
 }) {
   return (
     <>
-      <section id="radar-haut" className="mb-3 flex scroll-mt-20 flex-wrap items-end justify-between gap-3 sm:mb-4">
-        <div>
+      <section id="radar-haut" className="mb-3 flex scroll-mt-20 flex-wrap items-center justify-between gap-x-6 gap-y-3 sm:mb-4">
+        <div className="shrink-0">
           <h1 className="font-display text-xl font-bold tracking-tight text-text sm:text-2xl">Radar Afrique</h1>
-          {/* Hauteur réservée sur mobile (le texte d'état s'allonge à l'arrivée des données : CLS) ; jamais ancre de défilement,
-              pour que la pastille « n nouvelles » ne fasse pas bouger la page (UX-308). */}
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-text-muted [overflow-anchor:none] max-sm:min-h-[3lh]">
-            <span>Dépêches, météo et télévisions par pays.</span>
-            <span className="ml-1 inline-flex items-center gap-1.5">
-              <span aria-hidden="true" className={cn('size-1.5 shrink-0 rounded-full', DOT[coverage.level])} />
-              {coverage.short}
-            </span>
-            <span aria-hidden="true">·</span>
-            <a href="#radar-sources" className="font-semibold text-al-gold underline underline-offset-2 hover:text-text">Sources et fraîcheur</a>
-          </p>
+          <p className="mt-0.5 text-xs text-text-muted sm:text-sm">L’actualité, la météo et les chaînes TV, pays par pays.</p>
         </div>
+        {ticker && <div className="order-last w-full min-w-0">{ticker}</div>}
         <div className="flex flex-wrap items-center gap-2">
         {country && <FollowCountryButton code={country} />}
         <Button

@@ -5,13 +5,12 @@ import BrandBackdrop from '@/components/brand/BrandBackdrop';
 import PageTransition from '@/components/shell/PageTransition';
 import { Button } from '@/components/ui';
 import FeaturedStories from '@/components/radar/FeaturedStories';
-import MarketsCard from '@/components/radar/MarketsCard';
+import LiveMarketTicker from '@/components/radar/LiveMarketTicker';
 import NewArrivalsPill from '@/components/radar/NewArrivalsPill';
 import NewsFeed from '@/components/radar/NewsFeed';
 import RadarFeedPanel, { type RadarPanelTab } from '@/components/radar/RadarFeedPanel';
 import RadarHeader from '@/components/radar/RadarHeader';
 import RadarMapCard from '@/components/radar/RadarMapCard';
-import RadarSourcesPanel from '@/components/radar/RadarSourcesPanel';
 import RadarTiles from '@/components/radar/RadarTiles';
 import WeatherCard from '@/components/radar/WeatherCard';
 import { scrollToSection } from '@/components/radar/scrollToSection';
@@ -27,9 +26,7 @@ import { useStoredToggle } from '@/components/radar/useStoredToggle';
 import { featuredKeys, pickFeatured } from '@/lib/radar-featured';
 import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
 import { canonicalArticleUrl } from '@/lib/radar-data';
-import { buildRadarSourceRows } from '@/lib/radar-sources';
 import { countSince, visitIsBeyondWindow } from '@/lib/radar-visit';
-import { coverage, type RadarSourceRow } from '@/lib/radar-workspace';
 import { STORAGE_KEYS } from '@/lib/storage-keys';
 import { weatherAlert } from '@/lib/weather-alert';
 
@@ -46,9 +43,7 @@ function RadarWorkspace() {
   const now = useNow();
   const visit = useRadarVisit(Boolean(data.rss));
   const [panelTab, setPanelTab] = useState<RadarPanelTab>('news');
-  const [tickerSources, setTickerSources] = useState<RadarSourceRow[]>([]);
   const [weatherOpen, setWeatherOpen] = useStoredToggle(STORAGE_KEYS.radarWeatherOpen, true);
-  const [marketsOpen, setMarketsOpen] = useStoredToggle(STORAGE_KEYS.radarMarketsOpen, false);
 
   const activeWeatherCode = selectedCountry ?? 'SN';
   const { weather, weatherError, weatherLoading, retryBlocked } = useLiveWeather(activeWeatherCode, data.refreshToken);
@@ -97,16 +92,6 @@ function RadarWorkspace() {
     scrollToSection('radar-haut');
   };
 
-  const sourceRows = buildRadarSourceRows({
-    rss: data.rss,
-    newsError: data.newsError,
-    weather,
-    weatherError,
-    weatherCode: activeWeatherCode,
-    channelsSummary: summary,
-    summaryError: data.summaryError,
-    tickerSources,
-  });
   const info = selectedCountry ? summary?.countries[selectedCountry] : null;
   const newCount = countSince(articles.countryArticles, visit.since);
 
@@ -116,7 +101,10 @@ function RadarWorkspace() {
       <BrandBackdrop variant="app" />
 
       <div className="mx-auto max-w-7xl w-full flex-1 px-3 pb-8 pt-3 sm:px-6 sm:pt-4 md:px-6">
-        <RadarHeader refreshing={data.refreshing} onRefresh={data.refresh} unknownCountry={unknownCountry} coverage={coverage(sourceRows, now)} country={selectedCountry} />
+        <RadarHeader refreshing={data.refreshing} onRefresh={data.refresh} unknownCountry={unknownCountry}
+          country={selectedCountry}
+          ticker={<LiveMarketTicker onSelectCountry={selectCountry} refreshToken={data.refreshToken} />}
+        />
 
         <RadarTiles
           countryName={activeCountry?.name ?? null}
@@ -152,7 +140,7 @@ function RadarWorkspace() {
           </div>
         )}
 
-        {/* Ordre mobile : à la une, fil, carte, météo ; bureau (xl) : à la une | carte, puis fil | météo, marchés, sources. */}
+        {/* Ordre mobile : à la une, fil, carte, météo ; bureau (xl) : à la une | carte, puis fil | météo. Le bandeau des marchés défile dans l'en-tête. */}
         <section className="grid grid-cols-1 gap-4 xl:grid-cols-12 xl:gap-5">
           <FeaturedStories
             className="xl:col-span-5 xl:col-start-1 xl:row-start-1"
@@ -224,20 +212,12 @@ function RadarWorkspace() {
               onSelectCountry={selectCountry}
               onRetry={data.refresh}
             />
-            <MarketsCard
-              open={marketsOpen}
-              onOpenChange={setMarketsOpen}
-              onSelectCountry={selectCountry}
-              onSourcesChange={setTickerSources}
-              refreshToken={data.refreshToken}
-            />
-            <RadarSourcesPanel sources={sourceRows} now={now} window={data.windowed.window} asOf={data.asOf} />
           </div>
         </section>
 
         <footer className="mt-7 flex flex-col gap-2 border-t border-line pt-4 text-xs leading-5 text-text-muted sm:flex-row sm:items-center sm:justify-between">
-          <span>Dépêches des rédactions africaines et internationales · actualisées régulièrement</span>
-          <span>Le service ne confirme pas les faits rapportés par les sources.</span>
+          <span>Les titres renvoient aux articles des rédactions africaines et internationales.</span>
+          <span>Africa Live ne confirme pas les faits rapportés.</span>
         </footer>
       </div>
 

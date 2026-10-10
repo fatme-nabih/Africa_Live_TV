@@ -25,11 +25,13 @@ for (const width of [1366, 390, 320]) test(`Radar : dates, identités, filtre et
   await expect(page.locator('.maplibregl-canvas')).toBeVisible();
   await expect(page.locator('.tactical-radar-marker').first()).toBeVisible();
   await expect.poll(() => workers.some(url => url.endsWith('/maplibre-gl-worker.mjs'))).toBe(true);
-  await page.getByText('Marchés et événements', { exact: true }).click();
-  await expect(page.getByRole('combobox', { name: 'Périmètre du bandeau' })).toHaveValue('Africa');
+  const scope = page.getByRole('group', { name: 'Périmètre du bandeau' });
+  await expect(scope.getByRole('button', { name: 'Afrique' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByText('Événement mondial', { exact: true })).toHaveCount(0);
-  await page.getByRole('combobox', { name: 'Périmètre du bandeau' }).selectOption('World');
-  await expect(page.getByRole('link', { name: 'Source : Événement mondial' })).toHaveCount(1);
+  await scope.getByRole('button', { name: 'Monde' }).click();
+  const tickerDetails = page.getByRole('region', { name: 'Bandeau des marchés et événements' }).locator('details');
+  await tickerDetails.locator('summary').click();
+  await expect(tickerDetails.getByRole('link', { name: 'Source : Événement mondial' })).toBeVisible();
   await expect(page.locator('[aria-hidden="true"][inert]')).toHaveCount(1);
   await selectCountry(page, 'SN');
   await expect(page.getByText('Économie Côte d’Ivoire', { exact: true })).toHaveCount(0);

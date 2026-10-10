@@ -1,4 +1,4 @@
-import { ChevronDown, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Compass, Droplets, Moon, Sun, Wind } from 'lucide-react';
+import { ChevronDown, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Droplets, Moon, Sun, Wind } from 'lucide-react';
 import { Button, cn } from '@/components/ui';
 import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
 import { QUICK_WEATHER_LOCATIONS } from '@/lib/weather-locations';
@@ -78,20 +78,15 @@ export default function WeatherCard({
             </div>
             <p className="mt-0.5 text-xs text-text-muted">
               {open
-                ? (weather ? `Observation · ${weather.current.source} · ${weather.current.transport === 'browser' ? 'navigateur' : 'serveur'}` : 'Observation au lieu sélectionné')
+                ? 'Conditions actuelles'
                 : weather ? `${weather.current.temperatureC} °C, ${weather.current.weatherDescription.toLowerCase()}` : 'Météo repliée'}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {open && (weather?.stale ? (
-            <span className="rounded-pill border border-line-gold bg-al-gold/10 px-2.5 py-0.5 text-xs font-semibold text-text">Relevé conservé · périmé</span>
-          ) : weather ? (
-            <span className="inline-flex items-center gap-1.5 rounded-pill border border-al-green/30 bg-al-green/10 px-2.5 py-0.5 text-xs font-semibold text-al-green">
-              <span className="live-dot" aria-hidden="true" />
-              {weather.availability[0].status === 'partial' ? 'Données partielles' : 'Relevé récent'}
-            </span>
-          ) : null)}
+          {open && weather?.stale && (
+            <span className="rounded-pill border border-line-gold bg-al-gold/10 px-2.5 py-0.5 text-xs font-semibold text-text">Pas tout à fait à jour</span>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -149,8 +144,7 @@ export default function WeatherCard({
         </div>
 
         <div className="p-4 sm:p-5">
-          {weatherError && weather && <p role="status" className="mb-3 text-xs text-text">{weatherError} · Relevé conservé jusqu’à expiration.</p>}
-          {weather?.current.timeAnomaly && <p className="mb-3 text-xs text-text">Horodatage amont légèrement futur.</p>}
+          {weatherError && weather && <p role="status" className="mb-3 text-xs text-text-muted">Mise à jour impossible pour l’instant : dernières conditions connues.</p>}
           {weatherError && !weather ? (
             <div className="rounded-control border border-line-gold bg-al-gold/[0.05] p-4 text-xs text-text/90">
               <p>{weatherError}</p>
@@ -177,37 +171,32 @@ export default function WeatherCard({
                     </div>
                     {/* La ville est déjà dans le titre : seuls le pays et la région la situent ici. */}
                     <p className="mt-0.5 text-xs text-text-muted">
-                      <span className="font-semibold text-text">{weather.current.weatherDescription}</span> · {weather.current.countryName} · {weather.current.region}
+                      <span className="font-semibold text-text">{weather.current.weatherDescription}</span> · {weather.current.countryName}
+                      {weather.current.observedAt && <> · {new Intl.DateTimeFormat('fr-FR', { timeZone: weather.current.timezone ?? 'UTC', hour: '2-digit', minute: '2-digit' }).format(new Date(weather.current.observedAt))}</>}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <Metric icon={<Wind className="h-3 w-3" />} label="Vent" value={weather.current.windSpeedKmh} unit="km/h" detail={`${weather.current.windDirectionCompass} (${weather.current.windDirectionDeg}°)`} />
+              <div className="grid grid-cols-3 gap-2">
+                <Metric icon={<Wind className="h-3 w-3" />} label="Vent" value={weather.current.windSpeedKmh} unit="km/h" detail={weather.current.windDirectionCompass} />
                 <Metric icon={<Droplets className="h-3 w-3" />} label="Humidité" value={weather.current.relativeHumidityPercent} unit="%" />
                 <Metric icon={<CloudRain className="h-3 w-3" />} label="Pluie" value={weather.current.precipitationMm} unit="mm" />
-                <Metric
-                  icon={<Compass className="h-3 w-3" />}
-                  label="Relevé"
-                  value={<span className="font-mono text-xs">{weather.current.observedAt ? new Intl.DateTimeFormat('fr-FR', { timeZone: weather.current.timezone ?? 'UTC', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(weather.current.observedAt)) : 'Date d’observation inconnue'}</span>}
-                  detail={weather.current.timezone ? 'Heure locale' : 'UTC · fuseau du lieu inconnu'}
-                />
               </div>
             </div>
           ) : null}
         </div>
 
-        <div className="border-t border-line bg-black/40 px-4 py-2.5 text-xs leading-4 text-text-muted sm:px-5">
+        <div className="border-t border-line px-4 py-2.5 text-xs leading-4 text-text-muted sm:px-5">
           <a
             href={weather?.current.source === 'wttr.in' ? 'https://wttr.in/' : 'https://open-meteo.com/'}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-semibold text-al-gold underline underline-offset-2 hover:text-text"
+            className="underline underline-offset-2 hover:text-text"
           >
-            {weather?.current.attribution ?? 'Fournisseurs météo'}
+            Météo : {weather?.current.source === 'wttr.in' ? 'wttr.in' : 'Open-Meteo'}
           </a>{' '}
-          · Relevé d’observation automatisé, sans valeur d’alerte officielle de protection civile.
+          · À titre indicatif, ce n’est pas une alerte officielle.
         </div>
       </div>
     </article>

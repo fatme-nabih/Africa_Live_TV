@@ -202,15 +202,13 @@ test.describe('Météo et marchés repliables (UX-307)', () => {
     await expect(page.getByRole('button', { name: 'Déplier la météo' })).toHaveAttribute('aria-expanded', 'false');
     await expect.poll(() => page.evaluate(() => localStorage.getItem('al_radar_weather_open'))).toBe('false');
 
-    await page.getByText('Marchés et événements', { exact: true }).click();
-    await expect(page.getByRole('combobox', { name: 'Périmètre du bandeau' })).toBeVisible();
-    // L'événement « toggle » d'un <details> arrive après le changement d'état : attente active.
-    await expect.poll(() => page.evaluate(() => localStorage.getItem('al_radar_markets_open'))).toBe('true');
+    // Le bandeau des marchés défile en haut, sans être replié.
+    await expect(page.getByRole('group', { name: 'Périmètre du bandeau' })).toBeVisible();
 
     await page.reload();
     await expect(page.getByRole('button', { name: 'Déplier la météo' })).toBeVisible();
     await expect(page.locator('#weather-country-select')).toBeHidden();
-    await expect(page.getByRole('combobox', { name: 'Périmètre du bandeau' })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Périmètre du bandeau' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Déplier la météo' }).click();
     await expect(page.locator('#weather-country-select')).toBeVisible();
@@ -441,7 +439,6 @@ for (const width of [320, 360, 768, 1366]) {
     await expect(stories(page).getByText('Un titre exceptionnellement long', { exact: false })).toBeVisible();
     if (width < 1280) await page.getByRole('button', { name: 'Afficher la carte', exact: true }).click();
     await expect(page.locator('.maplibregl-canvas')).toBeVisible();
-    await page.getByText('Marchés et événements', { exact: true }).click();
     const report = await page.evaluate(() => {
       const tiny = Array.from(document.querySelectorAll('body *')).filter(el => Array.from(el.childNodes).some(node => node.nodeType === 3 && node.textContent!.trim()) && parseFloat(getComputedStyle(el).fontSize) < 12 && !el.closest('.maplibregl-map, script, style')).map(el => (el.textContent ?? '').trim().slice(0, 30));
       return { overflow: document.documentElement.scrollWidth > window.innerWidth, tiny };

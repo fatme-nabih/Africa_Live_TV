@@ -16,7 +16,9 @@ export interface MarketCommodity {
   price: number;
   /** Prix de clôture précédente pour calcul de variation */
   previousClose: number | null;
-  /** Variation sur 24h en pourcentage (ex: +1.45 ou -0.80) */
+  /** Horodatage de la bougie de la séance précédente ; ce n'est pas son heure de clôture. */
+  previousCloseAt?: string | null;
+  /** Variation depuis la séance précédente ; nom historique conservé pour les consommateurs. */
   changePercent24h: number | null;
   /** Devise de cotation (ex: USD) */
   currency: string;

@@ -1,8 +1,11 @@
 import type { LiveMarketsSnapshot, MarketCommodity, MarketForex, MarketTickerAlert } from './live-markets-types';
 import { getDisasterEventsSnapshot } from './live-disasters';
-import { getRadarRss } from './rss-collector';
+import { detectCountryCode, getRadarRss } from './rss-collector';
 import { AFRICAN_COUNTRIES } from './live-osint';
 import { radarSource, temporalWindow, type RadarSourceState } from './radar-data';
+import { previousSessionClose } from './market-quotes';
+import { articleTopics } from './radar-topics';
+import type { RadarRssArticle } from './rss-collector-types';
 export { formatMarketPrice, formatVariation } from './market-format';
 
 export const PEGGED_EUR_XOF_RATE = 655.957;
@@ -46,12 +49,14 @@ async function readJson(url: string) {
 async function commodity(def: typeof definitions[number], now: number) {
   try {
     const payload = await readJson(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(def.symbol)}?interval=1d&range=5d`);
-    const meta = payload?.chart?.result?.[0]?.meta;
+    const result = payload?.chart?.result?.[0];
+    const meta = result?.meta;
     if (!Number.isFinite(meta?.regularMarketPrice) || meta.regularMarketPrice <= 0 || !Number.isFinite(meta?.regularMarketTime)) throw new Error('MARKET_INVALID_QUOTE');
     const updatedAt = new Date(meta.regularMarketTime * 1000).toISOString();
     if (Date.parse(updatedAt) > now) throw new Error('MARKET_FUTURE_QUOTE');
-    const previousClose = Number.isFinite(meta.chartPreviousClose) && meta.chartPreviousClose > 0 ? meta.chartPreviousClose : null;
-    const value: MarketCommodity = { ...def, price: meta.regularMarketPrice, previousClose,
+    const previous = previousSessionClose(result);
+    const previousClose = previous?.price ?? null;
+    const value: MarketCommodity = { ...def, price: meta.regularMarketPrice, previousClose, previousCloseAt: previous?.updatedAt ?? null,
       changePercent24h: previousClose ? (meta.regularMarketPrice - previousClose) / previousClose * 100 : null,
       currency: typeof meta.currency === 'string' ? meta.currency : 'USD', updatedAt };
     quotes.set(def.symbol, { value, at: now });
@@ -93,6 +98,13 @@ function countryCode(name: string | undefined) {
   return AFRICAN_COUNTRIES.find(c => [c.code, c.name, english.of(c.code)].some(candidate => candidate?.toLowerCase() === name.toLowerCase()))?.code;
 }
 
+export function marketArticleScope(article: Pick<RadarRssArticle, 'countryCode' | 'countryBasis' | 'editorialScope'>): 'Africa' | 'World' | 'unknown' {
+  if (article.countryBasis === 'inferred_topic' && article.countryCode) return 'Africa';
+  if (article.editorialScope === 'africa') return 'Africa';
+  if (article.editorialScope === 'international') return 'World';
+  return 'unknown';
+}
+
 async function tickerAlerts(now: number) {
   const alerts: MarketTickerAlert[] = [], availability: RadarSourceState[] = [];
   const settled = await Promise.allSettled([getDisasterEventsSnapshot(), getRadarRss()]);
@@ -102,7 +114,7 @@ async function tickerAlerts(now: number) {
     for (const feature of disasters.value.features) {
       const p = feature.properties;
       if (p.severity !== 'red' && p.severity !== 'orange' && (p.magnitude ?? 0) < 4.8) continue;
-      const code = countryCode(p.countryName);
+      const code = countryCode(p.countryName) ?? detectCountryCode(p.countryName ?? '') ?? detectCountryCode(p.title) ?? undefined;
       alerts.push({ id: `disaster-${p.source}-${p.id}`, type: 'disaster', title: p.title, severity: p.severity === 'red' ? 'critical' : 'warning',
         countryCode: code, scope: code ? 'Africa' : 'unknown', source: p.source, dateKind: 'event', url: p.sourceUrl, timestamp: p.eventDate });
     }
@@ -111,13 +123,21 @@ async function tickerAlerts(now: number) {
   if (rss.status === 'fulfilled') {
     availability.push(...rss.value.availability ?? []);
     for (const article of [...rss.value.articles, ...rss.value.undatedArticles ?? []]) {
-      if (!/économ|finance/i.test(article.category) && article.sourceName !== 'Agence Ecofin') continue;
+      if (!articleTopics(article).includes('economie') && article.sourceName !== 'Agence Ecofin') continue;
+      const scope = marketArticleScope(article);
       alerts.push({ id: `news-${article.id}`, type: 'news', title: article.title, severity: 'info', source: article.sourceName,
-        dateKind: 'publication', countryCode: article.countryCode ?? undefined, scope: article.countryCode ? 'Africa' : 'unknown', url: article.url, timestamp: article.publishedAt });
+        dateKind: 'publication', countryCode: scope === 'Africa' ? article.countryCode ?? undefined : undefined, scope, url: article.url, timestamp: article.publishedAt });
     }
   } else availability.push(radarSource('RSS', 'Afrique', now, TTL, 0, { status: 'unavailable' }));
   const windowed = temporalWindow(alerts, alert => alert.timestamp, now);
-  return { alerts: [...windowed.recent, ...windowed.undated].slice(0, 12), availability };
+  const perScope = new Map<string, number>();
+  const severity = { critical: 0, warning: 1, info: 2 };
+  const selected = [...windowed.recent, ...windowed.undated].sort((a, b) => severity[a.severity] - severity[b.severity]).filter(alert => {
+    const count = perScope.get(alert.scope ?? 'unknown') ?? 0;
+    perScope.set(alert.scope ?? 'unknown', count + 1);
+    return count < 12;
+  });
+  return { alerts: selected, availability };
 }
 
 export async function getLiveMarkets(options: { forceRefresh?: boolean } = {}): Promise<LiveMarketsSnapshot> {

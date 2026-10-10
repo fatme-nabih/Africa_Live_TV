@@ -12,6 +12,12 @@ import { useFollowedCountries, useWriteFollowedCountries } from '../../src/compo
 import { useRadarData } from '../../src/components/radar/useRadarData';
 import { useRadarPlayer } from '../../src/components/radar/useRadarPlayer';
 import { saveCheckoutAttempt } from '../../src/lib/checkout-attempt';
+import LiveMarketTicker from '../../src/components/radar/LiveMarketTicker';
+function TestTicker() {
+  const [token, setToken] = React.useState(0);
+  const [country, setCountry] = React.useState('');
+  return <main className="p-3"><button onClick={() => setToken(value => value + 1)}>Refresh ticker</button><button onClick={() => { document.documentElement.dataset.eco = document.documentElement.dataset.eco === 'true' ? 'false' : 'true'; }}>Toggle test eco</button><LiveMarketTicker refreshToken={token} onSelectCountry={setCountry}/><p data-testid="ticker-country">{country}</p></main>;
+}
 function TestPricing() {
   return <><button onClick={() => saveCheckoutAttempt('lumina_all_access_monthly',{ key:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',attemptId:'B' })}>Replace attempt</button><Pricing/></>;
 }
@@ -48,5 +54,5 @@ function TestPlayer() {
 
 const kind = new URLSearchParams(location.search).get('kind');
 createRoot(document.getElementById('root')!).render(
-  kind === 'pricing' ? <TestPricing /> : kind === 'success' ? <Success /> : kind === 'radar' ? <TestRadar /> : kind === 'countries' || kind === 'favorites' ? <TestPreferences kind={kind}/> : kind === 'dock' ? <PlayerDockProvider><DockActions /></PlayerDockProvider> : <TestPlayer />,
+  kind === 'ticker' ? <TestTicker /> : kind === 'pricing' ? <TestPricing /> : kind === 'success' ? <Success /> : kind === 'radar' ? <TestRadar /> : kind === 'countries' || kind === 'favorites' ? <TestPreferences kind={kind}/> : kind === 'dock' ? <PlayerDockProvider><DockActions /></PlayerDockProvider> : <TestPlayer />,
 );

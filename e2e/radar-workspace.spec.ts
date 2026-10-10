@@ -98,7 +98,7 @@ for (const [width, height] of [[390, 844], [320, 844], [844, 390], [683, 384]]) 
   }
   await selectCountry(page, 'GH');
   await expect(page.getByText('Aucune dépêche pour : Ghana', { exact: true })).toBeVisible();
-  await expect(page.getByText('Comment lire le radar', { exact: true })).toBeVisible();
+  await expect(page.getByText('Comment lire le radar', { exact: true })).toHaveCount(0);
   await selectCountry(page, 'SN');
   await expect(article).toBeVisible();
   await page.getByRole('button', { name: 'Afficher la carte', exact: true }).click();
@@ -171,41 +171,17 @@ test('Connexion lente : sélection du pays disponible avant la fin des dépêche
   await expect(page.locator('.maplibregl-canvas')).toHaveCount(0);
 });
 
-test('Fraîcheur expirée : table et couverture deviennent périmées selon leur cadence', async ({ page }) => {
-  await page.clock.install({ time: new Date('2026-09-30T12:00:00Z') });
-  await page.setViewportSize({ width: 390, height: 844 });
-  await fixtureRadar(page, { weatherOk: true, asOf: '2026-09-30T12:00:00Z' });
-  await page.goto('/app/live');
-  const panel = page.getByRole('region', { name: 'Sources et fraîcheur' });
-  await expect(panel.getByRole('status')).toHaveText(/Toutes les sources répondent/);
-  await panel.getByText('Détail par source', { exact: true }).click();
-  await page.clock.fastForward(6 * 60_000);
-  await expect(panel.getByRole('status')).toHaveText(/aux données anciennes ou partielles/);
-  await expect(panel.getByText('données anciennes', { exact: true }).first()).toBeVisible();
-  await expect(panel.getByRole('row').filter({ hasText: 'Catalogue TV' }).getByText('disponible', { exact: true })).toBeVisible();
-});
-
-test('Sources : panne totale, état non configuré/périmé, reprise et annonces stables', async ({ page }) => {
+test('Sources : panne totale sans diagnostic technique affiché, reprise après actualisation', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await fixtureRadar(page, { allFail: true });
   await page.goto('/app/live');
-  const panel = page.getByRole('region', { name: 'Sources et fraîcheur' });
-  await expect(panel.getByRole('status')).toHaveText('Aucune source ne répond pour le moment');
-  await panel.getByText('Détail par source', { exact: true }).click();
-  await expect(panel.getByRole('table')).toBeVisible();
-  await expect(panel.getByText('à la demande', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: /Radar Afrique/ })).toBeVisible();
+  await expect(page.getByText(/Sources et fraîcheur|Détail par source|momentanément muette|Aucune source ne répond/)).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Feux NASA|Séismes & GDACS/ })).toHaveCount(0);
   await fixtureRadar(page, { weatherOk: true });
   await page.getByRole('button', { name: 'Actualiser', exact: true }).click();
-  await expect(panel.getByRole('status')).toHaveText(/Toutes les sources répondent/);
-  await page.route('**/api/live/rss', route => route.fulfill({ json: { articles: [], sources: [], updatedAt: new Date().toISOString(), availability: [{ provider: 'RSS', scope: 'Afrique', status: 'not_configured', fetchedAt: '', lastSuccessAt: null, dataAt: null, cacheExpiresAt: null, count: 0 }] } }));
-  await page.getByRole('button', { name: 'Actualiser', exact: true }).click();
-  await expect(panel.getByText('pas activée', { exact: true })).toBeVisible();
-  await expect(panel.getByRole('status')).toHaveText(/momentanément muette/);
-  const text = await panel.getByRole('status').textContent();
-  await page.waitForTimeout(1100); expect(await panel.getByRole('status').textContent()).toBe(text);
+  await expect(page.getByRole('region', { name: 'Bandeau des marchés et événements' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.screenshot({ path: '.local-logs/rw/screenshots/l2-dashboard-mobile-sources.png', fullPage: false });
 });
 
 test('RW-009 : carte médias 2D/globe sans contrôles ni requêtes FIRMS/USGS, bandeau préservé', async ({ page }) => {
@@ -224,8 +200,9 @@ test('RW-009 : carte médias 2D/globe sans contrôles ni requêtes FIRMS/USGS, b
   await globe.click(); await expect(globe).toHaveAttribute('aria-pressed', 'true');
   await globe.click(); await expect(globe).toHaveAttribute('aria-pressed', 'false');
   await expect(page.getByText('Dépêche Sénégal récente', { exact: true })).toBeVisible();
-  await page.getByText('Marchés et événements', { exact: true }).click();
-  await expect(page.getByRole('link', { name: 'Source : Économie africaine du bandeau' })).toHaveCount(1);
+  const tickerDetails = page.getByRole('region', { name: 'Bandeau des marchés et événements' }).locator('details');
+  await tickerDetails.locator('summary').click();
+  await expect(tickerDetails.getByRole('link', { name: 'Source : Économie africaine du bandeau' })).toBeVisible();
   expect(layers).toEqual([]); expect(errors).toEqual([]);
 });
 

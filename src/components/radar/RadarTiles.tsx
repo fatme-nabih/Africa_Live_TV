@@ -101,7 +101,7 @@ export default function RadarTiles({
         shortLabel="Chaînes en direct"
         value={<span className={NUMBER}>{channels ? channels.count : '—'}</span>}
         srValue={channels ? undefined : 'en cours de chargement'}
-        sub={channels ? (channels.inBrowser > 0 ? `${channels.inBrowser} dans le navigateur` : countryName ?? undefined) : undefined}
+        sub={channels ? (channels.inBrowser > 0 ? `${channels.inBrowser} à regarder ici` : countryName ?? undefined) : undefined}
         srExtra={`Voir les chaînes (${scope})`}
         onClick={onOpenChannels}
       />

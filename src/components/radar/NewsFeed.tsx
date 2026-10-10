@@ -266,13 +266,10 @@ export default function NewsFeed({
 
       {listedUndated.length > 0 && (
         <section aria-label="Dépêches sans date" className="border-t border-line-gold">
-          <h2 className="p-3 text-xs text-text">Sans date précise · {listedUndated.length} titres, non comptés dans les dernières 24 h</h2>
+          <h2 className="p-3 text-xs text-text">Sans date précise</h2>
           <div className="divide-y divide-line">{listedUndated.map(row)}</div>
         </section>
       )}
-      <div className="border-t border-line px-4 py-3 text-xs leading-4 text-text-muted sm:px-5">
-        Les liens ouvrent les publications d’origine. Africa Live affiche les titres et métadonnées de veille, sans reprendre le contenu des articles.
-      </div>
     </>
   );
 }

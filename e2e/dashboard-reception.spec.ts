@@ -44,7 +44,8 @@ for (const width of [1366, 390]) test(`RW réception locale en panne simulée à
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto('/app/live?country=SN');
   await expect(page.getByRole('heading', { name: /Radar Afrique/ })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Sources et fraîcheur' }).getByRole('status')).toContainText(/source/i);
+  // Aucun diagnostic technique côté utilisateur, même en panne.
+  await expect(page.getByText(/Sources et fraîcheur|momentanément muette/)).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
   await page.screenshot({ path: `.local-logs/rw/screenshots/l4-dashboard-real-${width}.png` });

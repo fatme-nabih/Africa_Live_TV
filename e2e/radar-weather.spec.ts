@@ -27,13 +27,10 @@ test('RW-004/RW-005 : wttr.in partiel garde sa provenance et ses inconnues dans 
   await page.route('**/api/live/weather?*', route => route.fulfill({ json: snapshot }));
   await page.goto('/app/live?country=SN');
   await expect(widget(page).getByText('-2°C', { exact: true })).toBeVisible();
-  await expect(widget(page).getByText('Observation · wttr.in · serveur')).toBeVisible();
+  await expect(widget(page).getByRole('link', { name: 'Météo : wttr.in' })).toBeVisible();
   await expect(widget(page).getByText('Condition inconnue', { exact: true })).toBeVisible();
-  await expect(widget(page).getByText(/Date d’observation inconnue/)).toBeVisible();
-  const panel = page.getByRole('region', { name: 'Sources et fraîcheur' });
-  await panel.getByText('Détail par source', { exact: true }).click();
-  await expect(panel.getByRole('row').filter({ hasText: 'wttr.in' }).getByText('données partielles', { exact: true })).toBeVisible();
-  await expect(panel.getByRole('row').filter({ hasText: 'Open-Meteo' })).toHaveCount(0);
+  await expect(widget(page).getByText(/Observation ·|serveur|navigateur/)).toHaveCount(0);
+  await expect(widget(page).getByRole('link', { name: 'Météo : Open-Meteo' })).toHaveCount(0);
 });
 
 test('RW-003 navigateur : secours autorisé mais payload vide ne crée aucune mesure', async ({ page }) => {
@@ -92,10 +89,7 @@ test('RW-001/RW-005 : seul 503 autorisé → Open-Meteo navigateur et disponibil
   await page.route('https://api.open-meteo.com/**', route => { direct++; return route.fulfill({ json: upstream() }); });
   await page.goto('/app/live?country=SN');
   await expect(widget(page).getByText('29°C', { exact: true })).toBeVisible();
-  await expect(widget(page).getByText('Observation · Open-Meteo · navigateur')).toBeVisible();
-  const panel = page.getByRole('region', { name: 'Sources et fraîcheur' });
-  await panel.getByText('Détail par source', { exact: true }).click();
-  await expect(panel.getByRole('row').filter({ hasText: 'Open-Meteo' }).getByText('disponible', { exact: true })).toBeVisible();
+  await expect(widget(page).getByRole('link', { name: 'Météo : Open-Meteo' })).toBeVisible();
   expect(direct).toBe(1);
 });
 
@@ -142,10 +136,10 @@ test('RW-006 : erreur/finally SN tardifs, actualisation, panne et reprise ne rem
   await expect(widget(page).getByText('Abidjan', { exact: true }).last()).toBeVisible();
   await expect(widget(page).getByRole('button', { name: 'Réessayer', exact: true })).toHaveCount(0);
   failCI = true; await page.getByRole('button', { name: 'Actualiser', exact: true }).click();
-  await expect(widget(page).getByText(/Relevé conservé jusqu’à expiration/)).toBeVisible();
+  await expect(widget(page).getByText(/Mise à jour impossible pour l’instant/)).toBeVisible();
   await expect(widget(page).getByText('24°C')).toBeVisible();
   failCI = false; await page.getByRole('button', { name: 'Actualiser', exact: true }).click();
-  await expect(widget(page).getByText(/Relevé conservé jusqu’à expiration/)).toHaveCount(0);
+  await expect(widget(page).getByText(/Mise à jour impossible pour l’instant/)).toHaveCount(0);
   await page.goto('/app'); await expect(page.locator('#weather-country-select')).toHaveCount(0); const before = calls; await page.clock.fastForward(16 * 60_000); expect(calls).toBe(before);
 });
 
@@ -159,7 +153,7 @@ test('RW-006 : périodique sans chevauchement et arrêt du relevé à 60 min san
   pending = true; const initialCalls = calls;
   await page.clock.fastForward(15 * 60_000); await expect.poll(() => calls).toBe(initialCalls + 1);
   await page.clock.fastForward(20_001);
-  await expect(widget(page).getByText(/Relevé conservé/).first()).toBeVisible();
+  await expect(widget(page).getByText(/Mise à jour impossible pour l’instant|Pas tout à fait à jour/).first()).toBeVisible();
   await page.clock.fastForward(45 * 60_000);
   await expect(widget(page).getByText('24°C')).toHaveCount(0);
   await expect(widget(page).getByRole('button', { name: 'Dakar SN', exact: true })).toBeVisible();

@@ -31,17 +31,17 @@ test('formatMarketPrice formats prices with currency and unit', () => {
 
 test('formatVariation classifies positive, negative and neutral changes', () => {
   const pos = formatVariation(2.456);
-  assert.equal(pos.text, '+2.46 %');
+  assert.equal(pos.text, '+2,46 %');
   assert.equal(pos.isPositive, true);
   assert.equal(pos.isNeutral, false);
 
   const neg = formatVariation(-1.2);
-  assert.equal(neg.text, '-1.20 %');
+  assert.equal(neg.text, '-1,20 %');
   assert.equal(neg.isPositive, false);
   assert.equal(neg.isNeutral, false);
 
   const neutral = formatVariation(0);
-  assert.equal(neutral.text, '0.00 %');
+  assert.equal(neutral.text, '0,00 %');
   assert.equal(neutral.isNeutral, true);
 
   const nullVal = formatVariation(null);

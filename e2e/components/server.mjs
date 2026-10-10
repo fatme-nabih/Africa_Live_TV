@@ -2,6 +2,9 @@
 import http from 'node:http';
 import path from 'node:path';
 import { build } from 'esbuild';
+import { readFile } from 'node:fs/promises';
+import postcss from 'postcss';
+import tailwindcss from '@tailwindcss/postcss';
 
 const absolute = p => path.resolve(p).replaceAll('\\', '/');
 const output = await build({
@@ -26,13 +29,22 @@ const output = await build({
     }));
   }}],
 });
-const server = http.createServer((request, response) => {
+let tickerCss;
+const server = http.createServer(async (request, response) => {
+  if (request.url === '/ticker.css') {
+    tickerCss ??= readFile('src/app/globals.css', 'utf8').then(css => postcss([tailwindcss()]).process(css, { from: absolute('src/app/globals.css') }));
+    const stylesheet = await tickerCss;
+    response.setHeader('Content-Type', 'text/css');
+    response.end(stylesheet.css);
+    return;
+  }
   if (request.url === '/components.js') {
     response.setHeader('Content-Type', 'application/javascript');
     response.end(output.outputFiles[0].text);
   } else {
     response.setHeader('Content-Type', 'text/html');
-    response.end('<!doctype html><div id="root"></div><script src="/components.js"></script>');
+    const styles = new URL(request.url, 'http://localhost').searchParams.get('kind') === 'ticker' ? '<link rel="stylesheet" href="/ticker.css">' : '';
+    response.end('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1">' + styles + '<div id="root"></div><script src="/components.js"></script>');
   }
 });
-server.listen(3001, '127.0.0.1');
+server.listen(Number(process.env.COMPONENT_TEST_PORT ?? 3001), '127.0.0.1');

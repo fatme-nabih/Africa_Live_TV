@@ -303,18 +303,46 @@ html[data-eco='true'] .radar-pulse {
     transform: translateX(0);
   }
   100% {
-    transform: translateX(-50%);
+    transform: translateX(calc(-1 * var(--ticker-distance, 0px)));
   }
 }
 
 .animate-ticker-scroll {
   display: flex;
   width: max-content;
-  animation: ticker-scroll 55s linear infinite;
+  animation-name: none;
+  animation-duration: var(--ticker-duration, 55s);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
 }
 
-.animate-ticker-scroll:hover {
+.animate-ticker-scroll[data-paused='true'],
+.ticker-marquee:hover .animate-ticker-scroll,
+.ticker-marquee:focus-within .animate-ticker-scroll,
+.market-ticker:has(details[open]) .animate-ticker-scroll {
   animation-play-state: paused;
+}
+
+.ticker-group {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 2.5rem;
+  padding-right: 2.5rem;
+  min-width: var(--ticker-viewport, 0px);
+  white-space: nowrap;
+}
+
+.ticker-marquee { display: none; }
+.ticker-pause { display: none; }
+.ticker-reader { display: block; }
+
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  html:not([data-eco='true']) .animate-ticker-scroll { animation-name: ticker-scroll; }
+  html:not([data-eco='true']) .ticker-marquee { display: block; }
+  html:not([data-eco='true']) .ticker-pause { display: inline-flex; }
+  html:not([data-eco='true']) .ticker-reader { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
