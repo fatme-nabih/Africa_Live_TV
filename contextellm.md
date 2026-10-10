@@ -1,17 +1,18 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 10 octobre 2026 (publication du bandeau autorisée et en préparation ; correctifs B01–B20/A1 et BUG-905 déjà publiés sur GitHub/Railway staging), fuseau Africa/Dakar. Lire d'abord les points du 10 octobre ci-dessous. Les sections précédentes du 6 octobre et plus anciennes restent historiques.
+Dernière mise à jour : 10 octobre 2026 (bandeau publié et reçu sur GitHub/Railway staging ; correctifs B01–B20/A1 et BUG-905 déjà publiés), fuseau Africa/Dakar. Lire d'abord les points du 10 octobre ci-dessous. Les sections précédentes du 6 octobre et plus anciennes restent historiques.
 
-## Bandeau du Radar — 10 octobre 2026 (publication autorisée)
+## Bandeau du Radar — 10 octobre 2026 (runtime staging actuel)
 
-- Le propriétaire a demandé commit, push et déploiement Railway staging. [Dossier de livraison](docs/publication-bandeau-2026-10-10.md). Préparation reçue : 413 unités réussies, types/lint/audit/migrations verts ; runtime staging et 21 migrations revérifiés, sauvegarde restaurable disponible. Les modifications locales de `FollowedCountriesSync` et de son test restent hors de cette publication.
+- **Publié et reçu à la demande du propriétaire** : code `5f71306`, CI [38065633584](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38065633584) SUCCESS, Railway **`ae5706ce-8c9b-4a91-a028-80080c17b3d7` SUCCESS**. [Dossier de livraison](docs/publication-bandeau-2026-10-10.md). 413 unités, 40 intégrations, 16 E2E build, 62 composants et 68 UI réussis ; 14/14 E2E distants, santé 200 sur les deux domaines, accès anonymes protégés. Snyk Code indisponible, audit production vert.
+- **469/469 fichiers applicatifs SHA-256 identiques** au commit sur le runtime ; rôle staging, modes locaux désactivés et 21 migrations revérifiés, aucun ajout SQL. Sauvegarde restaurable existante disponible, chiffrement/déchiffrement et hashes revérifiés. Le commit de clôture ne change que les docs : aucun second déploiement nécessaire. `FollowedCountriesSync` et son test restent modifiés localement, hors de cette publication. Serveur du propriétaire actif sur 3001, PID observé 26208, conservé.
 
 - **Corrections demandées et reçues en local**, dans l’arbre volontairement sale : [dossier de réception](docs/bandeau-correctifs-2026-10-10.md). Bandeau pleine largeur, pause/reprise effective, boucle mesurée à vitesse constante, lecteur manuel sur mobile/Éco/mouvement réduit, liste stable avec liens/pays/sources/dates. Les copies défilantes sont décoratives.
 - Variations contre une séance précédente datée, sans la référence de graphique cinq jours ; champ historique `changePercent24h` conservé/documenté. Afrique/Monde distingués, pays du sujet séparé du pays du média, quotas de dépêches par périmètre et sévérité. Actualisation manuelle forcée, délai client 15 s, générations de réponses, polling limité aux pages visibles et validation des données.
 - **32/32 tests unitaires ciblés, 9/9 composants Edge avec le vrai CSS, TypeScript/lint/build verts**, réception manuelle dans l’onglet connecté sur 3001. Banc isolé sur 3002 arrêté ; serveur utilisateur 3001 conservé. `.local-logs/ticker-fixes/` contient captures et sauvegarde des fichiers initiaux.
 - La réception locale initiale précédait la demande de publication désormais reçue. Aucun changement de migration, de configuration Railway/Clerk/OVHcloud/DNS, `.env*`, catalogue, droits ou IPTV dans la livraison du bandeau. Le runtime staging antérieur est décrit dans la section historique suivante.
 
-## Publication des correctifs — 10 octobre 2026 (runtime staging actuel)
+## Publication des correctifs — 10 octobre 2026 (runtime staging précédent)
 
 - **Publié à la demande du propriétaire** : applicatif `69d41ce`, test catalogue `6059818`, Railway **`4b76c516-b7ad-4646-a3b8-56e1d2576a0b` SUCCESS** ; [dossier et limites](docs/publication-bugs-2026-10-10.md). Code déployé identique à GitHub ; seul le test puis la documentation ont changé après l'upload. GitHub/main à jour, aucune nouvelle livraison Railway nécessaire pour ces changements seuls.
 - **Migration 0020 appliquée sur staging après sauvegarde restaurable**, 21/21 migrations, aucun hash différent. Sauvegarde privée `backups/railway/railway-before-bugs-0020-2026-10-10T13-56-23-053Z` (AES-GCM + clé DPAPI), restauration et empreintes reçues, bases temporaires/dumps en clair nettoyés. 467/467 fichiers applicatifs SHA-256 identiques sur le runtime.
