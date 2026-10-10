@@ -54,7 +54,9 @@ function createPreferenceSync(store: PreferenceStore, operation: PreferenceOpera
   }
   const accept = (body: Record<string,unknown>) => {
     const list = canonical(body,store.owner,operation);
-    updatePreferences(store,state => operation === 'favorites' ? { ...state, favorites: list } : { ...state, countries: list, countryVersion: body.version as string });
+    updatePreferences(store,state => operation === 'favorites'
+      ? { ...state, favorites: list, loaded: { ...state.loaded, favorites: true }, rejectedFavorites: state.rejectedFavorites.filter(id => !list.includes(id)) }
+      : { ...state, countries: list, countryVersion: body.version as string, loaded: { ...state.loaded, countries: true } });
   };
   async function synchronize() {
     if (stopped || busy || store.blocked.has(operation)) return;
@@ -73,7 +75,14 @@ function createPreferenceSync(store: PreferenceStore, operation: PreferenceOpera
             const sent = Object.fromEntries([...add,...remove].map(id => [id,store.snapshot.favoriteIntents[id]]));
             const reply = await request('PATCH',{ owner: store.owner, add, remove });
             const list = canonical(reply.body,store.owner,operation);
-            updatePreferences(store,state => ({ ...state, favorites: list, favoriteIntents: acknowledgeFavoriteIntents(state.favoriteIntents,sent) }));
+            updatePreferences(store,state => ({ ...state, favorites: list,
+              favoriteIntents: acknowledgeFavoriteIntents(state.favoriteIntents,sent),
+              // A 200 response does not prove every requested addition was saved.
+              // Preserve any unaccepted choice separately, without retrying it forever.
+              rejectedFavorites: [...new Set([...state.rejectedFavorites,
+                ...add.filter(id => !list.includes(id) && state.favoriteIntents[id]?.revision === sent[id].revision),
+              ])].filter(id => !list.includes(id) && !remove.includes(id)),
+            }));
           } else {
             const sent = { ...store.snapshot.countryIntents }, primary = store.snapshot.primary;
             const countries = displayCountries(store.snapshot);

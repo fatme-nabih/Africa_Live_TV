@@ -5,7 +5,8 @@ import Success from '../../src/app/(clerk)/pricing/success/SuccessClient';
 import Player from '../../src/components/Player';
 import { PlayerDockProvider, usePlayerDock } from '../../src/components/player/PlayerDock';
 import type { Channel } from '../../src/types/channel';
-import Countries from '../../src/components/shell/FollowedCountriesSync';
+import Countries, { LegacyPreferencesRecovery } from '../../src/components/shell/FollowedCountriesSync';
+import { usePreferences } from '../../src/components/shell/usePreferences';
 import { useFavorites } from '../../src/components/tv/useFavorites';
 import { PreferenceOwnerProvider } from '../../src/components/shell/PreferenceOwnerContext';
 import { useFollowedCountries, useWriteFollowedCountries } from '../../src/components/tv/hooks';
@@ -68,9 +69,13 @@ function TestCountries() {
   const countries = useFollowedCountries(), write = useWriteFollowedCountries();
   return <><Countries/><button onClick={() => write([...new Set([...countries,'SN'])])}>Add SN</button><button onClick={() => write(countries.filter(code => code !== 'SN'))}>Remove SN</button><pre data-testid="countries-state">{JSON.stringify(countries)}</pre></>;
 }
+function TestLegacyPreferences() {
+  const { snapshot } = usePreferences();
+  return <main className="min-h-screen bg-black p-4 text-text"><Countries/><LegacyPreferencesRecovery/><pre hidden data-testid="legacy-state">{JSON.stringify(snapshot)}</pre></main>;
+}
 function TestPreferences({ kind }: { kind: string }) {
   const [owner,setOwner] = React.useState<string|null>(new URLSearchParams(location.search).get('owner') === 'unknown' ? null : 'account:A');
-  return <><button onClick={() => setOwner('account:A')}>Account A</button><button onClick={() => setOwner('account:B')}>Account B</button><button onClick={() => setOwner(null)}>Sign out</button><PreferenceOwnerProvider owner={owner}>{kind === 'countries' ? <TestCountries/> : <TestFavorites/>}</PreferenceOwnerProvider></>;
+  return <><button onClick={() => setOwner('account:A')}>Account A</button><button onClick={() => setOwner('account:B')}>Account B</button><button onClick={() => setOwner(null)}>Sign out</button><PreferenceOwnerProvider owner={owner}>{kind === 'legacy' ? <TestLegacyPreferences/> : kind === 'countries' ? <TestCountries/> : <TestFavorites/>}</PreferenceOwnerProvider></>;
 }
 
 const channel: Channel = { id: 'fixture-channel', name: 'Fixture', logoUrl: null, groupTitle: 'News', countryCode: 'SN', playbackMode: 'BROWSER', availabilityStatus: 'READY' };
@@ -85,5 +90,5 @@ function TestPlayer() {
 
 const kind = new URLSearchParams(location.search).get('kind');
 createRoot(document.getElementById('root')!).render(
-  kind === 'ticker' ? <TestTicker /> : kind === 'country-grid' ? <TestCountryGrid /> : kind === 'share' ? <TestShare /> : kind === 'pricing' ? <TestPricing /> : kind === 'success' ? <Success /> : kind === 'radar' ? <TestRadar /> : kind === 'countries' || kind === 'favorites' ? <TestPreferences kind={kind}/> : kind === 'dock' ? <PlayerDockProvider><DockActions /></PlayerDockProvider> : <TestPlayer />,
+  kind === 'ticker' ? <TestTicker /> : kind === 'country-grid' ? <TestCountryGrid /> : kind === 'share' ? <TestShare /> : kind === 'pricing' ? <TestPricing /> : kind === 'success' ? <Success /> : kind === 'radar' ? <TestRadar /> : kind === 'countries' || kind === 'favorites' || kind === 'legacy' ? <TestPreferences kind={kind}/> : kind === 'dock' ? <PlayerDockProvider><DockActions /></PlayerDockProvider> : <TestPlayer />,
 );

@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
-import { EMPTY_PREFERENCES, preferenceStore, reloadPreferences, type PreferenceOperation } from '@/lib/preference-store';
+import { EMPTY_PREFERENCES, preferenceStore, reloadPreferences, retryRejectedFavorites, type PreferenceOperation } from '@/lib/preference-store';
 import { startPreferenceSync } from '@/lib/preference-sync-client';
 import { usePreferenceOwner } from './PreferenceOwnerContext';
 export function usePreferences(operation?: PreferenceOperation) {
@@ -20,6 +20,10 @@ export function usePreferences(operation?: PreferenceOperation) {
     const task = startPreferenceSync(store,operation); running.current = task;
     return () => { task.stop(); if (running.current === task) running.current = null; };
   },[store,operation]);
-  const retry = useCallback(() => running.current?.retry(),[]);
+  const retry = useCallback(() => {
+    if (store && operation && store.blocked.has(operation)) return;
+    if (store && operation === 'favorites') retryRejectedFavorites(store);
+    running.current?.retry();
+  },[store,operation]);
   return { owner, snapshot, retry };
 }

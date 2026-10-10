@@ -2,6 +2,13 @@
 
 Dernière mise à jour : 10 octobre 2026 (recherche et régions de la grille publiées ; grille des pays, drapeaux et menu de partage publiés et reçus sur GitHub/Railway staging ; libellé VLC, bandeau et correctifs B01–B20/A1/BUG-905 déjà publiés), fuseau Africa/Dakar. Lire d'abord les points du 10 octobre ci-dessous. Les sections précédentes du 6 octobre et plus anciennes restent historiques.
 
+## Reprise des favoris de l’appareil — 10 octobre 2026 (local, non publié)
+
+- **Correction demandée et reçue en local** après vérification du bandeau « 24 favoris » : [dossier](docs/favoris-appareil-correctif-2026-10-10.md). Offre filtrée après lecture du compte, attente visible jusqu’aux réponses serveur, erreurs des favoris sur le Radar, résultat partiel explicite, report/reprise et suivi par propriétaire. Anciennes clés conservées, aucun favori réel importé pendant les essais.
+- Aucun changement SQL/API, migration, auth/droits ou configuration distante. Client compatible avec l’API existante ; les ajouts absents de la réponse canonique sont conservés pour une tentative explicite. La limite de cinq pays est présentée au lieu d’une omission silencieuse. Stockage refusé et sessions expirées ne produisent pas de faux succès.
+- **426 unités générales réussies / 41 intégrations ignorées**, 8/8 unités ciblées finales, 16/16 composants préférences existants et 13/13 nouveaux scénarios, 3/3 intégrations isolées ciblées, types/lint/build verts. Mobile/bureau inspectés, catalogue public/témoin de quota préservés. Banc 3002 arrêté, serveur du propriétaire 3001 PID 29736 conservé. Preuves privées `.local-logs/legacy-fix-2026-10-10/`.
+- **Non committé, non poussé, non déployé.** Les changements préexistants de grille/Radar/tests et de présentation du bandeau sont conservés. Le runtime staging actuel reste celui de la section suivante ; ne pas présenter ce correctif local comme publié.
+
 ## Recherche et régions de la grille — 10 octobre 2026 (runtime staging actuel)
 
 - **Publié à la demande du propriétaire** : `7ad55d0`, CI [38079655538](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38079655538) SUCCESS, Railway **`474301eb-a3ae-41e7-ac47-6e4abed9e85d` SUCCESS** par CLI (pas de déploiement automatique). [Dossier](docs/publication-recherche-regions-2026-10-10.md). Première tentative `66386c93` FAILED sans build (erreur réseau du CLI pendant l’envoi), une seule relance.

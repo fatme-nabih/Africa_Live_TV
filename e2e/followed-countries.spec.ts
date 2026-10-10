@@ -75,9 +75,9 @@ test.describe('Pays suivis (UX-503)', () => {
     await page.addInitScript(() => localStorage.setItem('al_followed_countries', JSON.stringify(['CI', 'SN'])));
     const account = await fakeAccount(page, ['SN']);
     await page.goto('/app/live?country=SN');
-    await expect(page.getByRole('button',{ name: 'Ajouter ces choix à mon compte' })).toBeVisible();
+    await expect(page.getByText(/^Vous avez 1 pays suivi \(Côte d.Ivoire\) enregistré sur cet appareil à ajouter à votre compte\.$/)).toBeVisible();
     expect(account.puts).toEqual([]);
-    await page.getByRole('button',{ name: 'Ajouter ces choix à mon compte' }).click();
+    await page.getByRole('button',{ name: 'Ajouter à mon compte' }).click();
     await expect.poll(() => account.countries).toEqual(['SN', 'CI']);
     await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('al_preferences_v2_local%3Aafrica-live-local-user') ?? '{}').data?.countries)).toEqual(['SN','CI']);
   });
