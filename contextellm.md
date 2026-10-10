@@ -1,8 +1,16 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 10 octobre 2026 (bandeau publié et reçu sur GitHub/Railway staging ; correctifs B01–B20/A1 et BUG-905 déjà publiés), fuseau Africa/Dakar. Lire d'abord les points du 10 octobre ci-dessous. Les sections précédentes du 6 octobre et plus anciennes restent historiques.
+Dernière mise à jour : 10 octobre 2026 (libellé VLC publié et reçu sur GitHub/Railway staging ; bandeau et correctifs B01–B20/A1/BUG-905 déjà publiés), fuseau Africa/Dakar. Lire d'abord les points du 10 octobre ci-dessous. Les sections précédentes du 6 octobre et plus anciennes restent historiques.
 
-## Bandeau du Radar — 10 octobre 2026 (runtime staging actuel)
+## Libellé VLC — 10 octobre 2026 (runtime staging actuel)
+
+- À la demande du propriétaire, une seule phrase de `src/components/tv/HelpLine.tsx` a été remplacée par **« Certaines chaînes s’ouvrent avec VLC. »**. Commit [`97192c1`](https://github.com/fatme-nabih/Africa_Live_TV/commit/97192c13cbdf8552a6e9313f1ab0640dd428dd3d) poussé sur main ; les modifications locales de `FollowedCountriesSync` et de son test restent hors du commit et sont conservées.
+- CI [38066908724](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38066908724) **SUCCESS** : types/lint/build/audit production réussis, 413 unités, 40 intégrations isolées, 16 E2E build, 62 composants et 68 UI réussis ; cas ignorés selon le mode de serveur distincts des succès, fixture CI nettoyée. Snyk Code reste indisponible pour l’organisation.
+- Railway **`e2673429-8f84-42c3-9bf8-052c38417444` SUCCESS**, upload unique d’un snapshot de 608 fichiers Git ; **469/469 fichiers applicatifs SHA-256 identiques** au commit sur le runtime. Le nouveau libellé est présent dans les scripts clients construits, l’ancien est absent. Santé **200** sur les domaines staging et Railway ; accès anonymes protégés, rôle staging et modes locaux désactivés revérifiés.
+- **21/21 migrations identiques**, aucune en attente ; aucun ajout SQL ni changement de configuration, DNS, Clerk, plan ou droits. Sauvegarde chiffrée restaurable du même jour toujours disponible, chiffrement/déchiffrement et hashes revérifiés sans dump en clair. Preuves privées : `.local-logs/publication-vlc-label-2026-10-10/`.
+- Le commit de clôture ne change que ce contexte, aucun second déploiement nécessaire. Port local 3001 observé libre pendant cette publication ; aucune commande de ce passage n’a arrêté ou redémarré le serveur local. La mention de serveur actif dans la réception précédente reste historique.
+
+## Bandeau du Radar — 10 octobre 2026 (runtime staging précédent)
 
 - **Publié et reçu à la demande du propriétaire** : code `5f71306`, CI [38065633584](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38065633584) SUCCESS, Railway **`ae5706ce-8c9b-4a91-a028-80080c17b3d7` SUCCESS**. [Dossier de livraison](docs/publication-bandeau-2026-10-10.md). 413 unités, 40 intégrations, 16 E2E build, 62 composants et 68 UI réussis ; 14/14 E2E distants, santé 200 sur les deux domaines, accès anonymes protégés. Snyk Code indisponible, audit production vert.
 - **469/469 fichiers applicatifs SHA-256 identiques** au commit sur le runtime ; rôle staging, modes locaux désactivés et 21 migrations revérifiés, aucun ajout SQL. Sauvegarde restaurable existante disponible, chiffrement/déchiffrement et hashes revérifiés. Le commit de clôture ne change que les docs : aucun second déploiement nécessaire. `FollowedCountriesSync` et son test restent modifiés localement, hors de cette publication. Serveur du propriétaire actif sur 3001, PID observé 26208, conservé.
