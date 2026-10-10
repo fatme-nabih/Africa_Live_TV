@@ -1,13 +1,19 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 10 octobre 2026 (grille des pays, drapeaux et menu de partage publiés et reçus sur GitHub/Railway staging ; libellé VLC, bandeau et correctifs B01–B20/A1/BUG-905 déjà publiés), fuseau Africa/Dakar. Lire d'abord les points du 10 octobre ci-dessous. Les sections précédentes du 6 octobre et plus anciennes restent historiques.
+Dernière mise à jour : 10 octobre 2026 (recherche et régions de la grille publiées ; grille des pays, drapeaux et menu de partage publiés et reçus sur GitHub/Railway staging ; libellé VLC, bandeau et correctifs B01–B20/A1/BUG-905 déjà publiés), fuseau Africa/Dakar. Lire d'abord les points du 10 octobre ci-dessous. Les sections précédentes du 6 octobre et plus anciennes restent historiques.
 
-## Grille des pays, drapeaux et menu de partage — 10 octobre 2026 (runtime staging actuel)
+## Recherche et régions de la grille — 10 octobre 2026 (runtime staging actuel)
+
+- **Publié à la demande du propriétaire** : `7ad55d0`, CI [38079655538](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38079655538) SUCCESS, Railway **`474301eb-a3ae-41e7-ac47-6e4abed9e85d` SUCCESS** par CLI (pas de déploiement automatique). [Dossier](docs/publication-recherche-regions-2026-10-10.md). Première tentative `66386c93` FAILED sans build (erreur réseau du CLI pendant l’envoi), une seule relance.
+- Recherche sans accents/codes/noms d’usage, Entrée ouvre le premier pays, pastilles Ouest/Centre/Est/Nord/Australe, cas vide. 474/474 fichiers identiques, 21/21 migrations, santé 200, 14/14 E2E distants. `FollowedCountriesSync` et son test toujours hors commit.
+- Prochains lots proposés, non commencés : mise en page bureau (point 5), aperçu Facebook des chaînes.
+
+## Grille des pays, drapeaux et menu de partage — 10 octobre 2026 (runtime staging précédent)
 
 - **Publié à la demande du propriétaire** : `b3b1e51` + correctif `933b496`, CI [38071428071](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38071428071) SUCCESS, Railway **`93abbc27-bab7-45ca-a136-174b1760bfb9` SUCCESS**. [Dossier](docs/publication-pays-partage-2026-10-10.md). Le premier passage CI a révélé une fermeture immédiate du menu dans les rangées TV qui défilent ; corrigée et couverte avant tout déploiement.
 - Grille Radar : lecture navigateur en avant, « Avec VLC », pluriel, noms courts, chevron, « Vos pays » en tête, drapeaux SVG (`country-flag-icons` MIT, module séparé ~8 Ko compressé). Menu de partage : WhatsApp, Facebook, partage natif (Instagram/TikTok…), copie du lien.
 - **474/474 fichiers applicatifs identiques** sur le runtime, 21/21 migrations, santé 200 sur les deux domaines, 14/14 E2E distants. Aucun changement SQL, DNS, Clerk, plan ou configuration Railway. `FollowedCountriesSync` et son test restent modifiés localement, hors commits. `.claude/launch.json` local non committé.
-- Prochains lots proposés, non commencés : recherche + filtre par région dans la grille (point 3), mise en page bureau (point 5), aperçu Facebook des chaînes.
+- Point 3 (recherche + régions) publié ensuite, voir la section précédente.
 
 ## Libellé VLC — 10 octobre 2026 (runtime staging précédent)
 
