@@ -1,9 +1,16 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 11 octobre 2026 (fil unique Afrique + Monde avec drapeaux et planète publié sur staging après le bandeau deux lignes et « Regards sur le monde » ; les sections du 10 octobre restent valables pour le reste), fuseau Africa/Dakar. Lire d'abord les points du 11 octobre ci-dessous.
+Dernière mise à jour : 11 octobre 2026 (nouveau logo publié sur staging après le fil unique Afrique + Monde avec drapeaux et planète publié sur staging après le bandeau deux lignes et « Regards sur le monde » ; les sections du 10 octobre restent valables pour le reste), fuseau Africa/Dakar. Lire d'abord les points du 11 octobre ci-dessous.
 
 
-## Fil unique Afrique + Monde, drapeaux et planète — 11 octobre 2026 (runtime staging actuel)
+## Nouveau logo — 11 octobre 2026 (runtime staging actuel)
+
+- **Publication demandée et reçue** : `ae4908c`, CI [38138572694](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38138572694) SUCCESS au premier passage, Railway **`c96187b6-dab4-494c-a5a5-883679e2e212` SUCCESS** par CLI. [Dossier](docs/publication-logo-2026-10-11.md).
+- Référence unique : `public/africa-live-logo.png` (1254 px, sans couronne). Déclinaisons régénérées : logo WebP 640, fond 480 (q55), icônes PWA 192/512, Apple 180, `src/app/icon.png`, favicons (`.ico` 16/32/48 en **RGBA**, sinon Turbopack répond 500 partout), `og-image.png` 1200 × 630. Anciens logos inutilisés supprimés. Cache du service worker `al-offline-v2`.
+- 34/34 contrôles d’images servies (identiques au commit, anciens logos en 404), 484/484 fichiers identiques, 21/21 migrations sans SQL, santé 200, 14/14 E2E distants. Aucun changement de configuration.
+- **Toujours hors commit, conservés** : grille des pays à hauteur bornée, météo collante, banc `many=1`, `.claude/`.
+
+## Fil unique Afrique + Monde, drapeaux et planète — 11 octobre 2026 (runtime staging précédent)
 
 - **Publication demandée et reçue** : `dc369b0`, CI [38136502980](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38136502980) SUCCESS au premier passage, Railway **`d522dd4b-3049-4a76-a59c-c6ef5008e3c5` SUCCESS** par CLI. [Dossier](docs/publication-fil-unique-2026-10-11.md).
 - Sélecteur « Périmètre du fil » supprimé ; `marketTickerItems(snapshot)` sans périmètre. Dépêche africaine : `CountryFlag` (bouton « Voir le pays : … ») ; internationale : icône `Earth` (titre/libellé « Monde ») ; badge « Touche l’Afrique » conservé.
@@ -12,7 +19,7 @@ Dernière mise à jour : 11 octobre 2026 (fil unique Afrique + Monde avec drapea
 - **Toujours hors commit, conservés** : grille des pays à hauteur bornée, météo collante, banc `many=1`, `.claude/`.
 - **Réception locale** : la connexion Clerk n’aboutit pas dans le navigateur intégré (page blanche `accounts.dev`) ; captures faites en mode MVP (`.local-logs/premium/local-user.cjs add`, puis `cleanup-local-user.cjs`).
 
-## Bandeau, carte des produits et « Regards sur le monde » — 11 octobre 2026 (runtime staging précédent)
+## Bandeau, carte des produits et « Regards sur le monde » — 11 octobre 2026
 
 - **Publication demandée et reçue** : `47eb841` puis `42e5be7`, CI [38102171188](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38102171188) SUCCESS, Railway **`b0d948f5-047c-4eb5-a657-b28215e1aae9` SUCCESS** par CLI. [Dossier](docs/publication-bandeau-regards-monde-2026-10-11.md). Première CI échouée (libellé « Périmètre du fil » non suivi dans `radar-reliability`/`radar-live`), corrigée avant tout déploiement.
 - Bandeau : deux lignes défilantes (fil, panier de 8 produits en cotation d’origine + USD/EUR en FCFA), une pause commune ; mobile/Éco/mouvement réduit sans animation. Mini-courbes neutres. Clic produit → pays sur la carte (`src/lib/market-geography.ts`, liste indicative).

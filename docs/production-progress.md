@@ -1,5 +1,11 @@
 # Progression — préparation production
 
+## Nouveau logo — publié sur staging, 11 octobre 2026
+
+Publication expressément demandée et reçue : `ae4908c`, Railway `c96187b6` SUCCESS, 484/484 fichiers applicatifs identiques. Nouvelle image de référence `public/africa-live-logo.png` (sans couronne) déclinée en logo d’interface, fond de marque, icônes PWA/Apple, favicons et image de partage ; anciens logos inutilisés supprimés ; cache du service worker `al-offline-v2`. [Dossier](publication-logo-2026-10-11.md).
+
+CI [38138572694](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38138572694) SUCCESS au premier passage : 437 unités, 41 intégrations isolées, 16 E2E build, 100 composants et 68 UI ; Snyk Code indisponible. 34/34 contrôles d’images servies sur les deux domaines, santé 200, 14/14 E2E distants, 21/21 migrations sans nouveau SQL. Grille bornée, météo collante, banc `many=1` et `.claude/` conservés hors livraison.
+
 ## Fil unique Afrique + Monde, drapeaux et planète — publié sur staging, 11 octobre 2026
 
 Publication expressément demandée et reçue : `dc369b0`, Railway `d522dd4b` SUCCESS, 484/484 fichiers applicatifs identiques. Sélecteur « Afrique / Monde » supprimé : un seul fil chronologique ; drapeau du pays devant une dépêche africaine (toujours bouton vers le pays), planète « Monde » devant une dépêche internationale. Correctif mobile : les libellés `.sr-only` du panier élargissaient la page à 2 033 px (`.marquee` en `position: relative`, test ajouté). Test `radar-live` aligné sur le bouton de menu « Partager ». [Dossier](publication-fil-unique-2026-10-11.md).
