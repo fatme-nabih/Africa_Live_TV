@@ -1,5 +1,11 @@
 # Progression — préparation production
 
+## Bouton pause du bandeau supprimé — publié sur staging, 11 octobre 2026
+
+Publication expressément demandée et reçue : `c52818a`, Railway `9ac3d8de` SUCCESS, 484/484 fichiers applicatifs identiques. Bouton pause/reprise retiré du bandeau du Radar ; défilement, arrêt au survol/focus et dans les détails, navigation mobile, sources, actualisation et sélection des produits sur la carte conservés. [Dossier](publication-pause-bandeau-2026-10-11.md).
+
+CI [38141775034](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38141775034) SUCCESS au premier passage : 437 unités, 41 intégrations isolées, 16 E2E build, 102 composants et 68 UI ; Snyk Code indisponible. Code client construit et réception Edge connectée vérifiés (absence du bouton, mouvement des deux lignes, arrêt/reprise avec les détails), santé 200 sur les deux domaines, 14/14 E2E distants, 21/21 migrations sans nouveau SQL. Aucun changement de configuration distante ; `.claude/` conservé hors commit.
+
 ## Grille des pays bornée et météo collante — publiées sur staging, 11 octobre 2026
 
 Publication expressément demandée et reçue : `2d6ac38`, Railway `60a3d3e9` SUCCESS, 484/484 fichiers applicatifs identiques. Sur ordinateur, la grille des pays et la liste d’un pays défilent dans leur panneau à la hauteur du fil (515 px), recherche et régions visibles ; pas de défilement imbriqué sur téléphone ; la météo accompagne le défilement. [Dossier](publication-grille-meteo-2026-10-11.md).

@@ -1,14 +1,16 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 11 octobre 2026 (bouton pause du bandeau supprimé et vérifié en local ; runtime staging toujours à la grille des pays bornée et météo collante publiées après le nouveau logo, lui-même publié après le fil unique Afrique + Monde avec drapeaux et planète publié après le bandeau deux lignes et « Regards sur le monde » ; les sections du 10 octobre restent valables pour le reste), fuseau Africa/Dakar. Lire d'abord les points du 11 octobre ci-dessous.
+Dernière mise à jour : 11 octobre 2026 (suppression du bouton pause publiée et reçue sur Railway staging après la grille des pays bornée et la météo collante ; les sections précédentes restent historiques pour leurs publications), fuseau Africa/Dakar. Lire d'abord les points du 11 octobre ci-dessous.
 
-## Suppression du bouton pause du bandeau — 11 octobre 2026 (local, non publié)
+## Suppression du bouton pause du bandeau — 11 octobre 2026 (runtime staging actuel)
 
 - À la demande du propriétaire, bouton pause/reprise retiré de `LiveMarketTicker.tsx`, avec son état et ses icônes devenus inutiles. Défilement, arrêt au survol/focus et à l'ouverture de « Voir tout », navigation mobile, modes Éco/mouvement réduit, sources, actualisation et sélection sur la carte conservés.
-- **15/15 tests composants du bandeau réussis** dans Edge sur le banc isolé 3002 ; TypeScript et ESLint ciblé réussis. Banc arrêté par Playwright ; serveur utilisateur 3001 conservé. Aucun changement d'API, SQL, auth, configuration distante ou IPTV ; aucun commit/push/déploiement. `.claude/` préservé.
+- **Publication demandée et reçue** : `c52818a`, CI [38141775034](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38141775034) SUCCESS au premier passage ; Railway **`9ac3d8de-0357-4e68-a13f-9aa4110ce40c` SUCCESS**. [Dossier](docs/publication-pause-bandeau-2026-10-11.md).
+- **484/484 fichiers applicatifs identiques**, 21/21 migrations sans SQL en attente, santé 200 sur les deux domaines, 14/14 E2E distants. Réception réelle dans Edge connecté : bouton absent, deux lignes en mouvement, détails ouverts → arrêt, fermeture → reprise. Capture privée `.local-logs/publication-pause-2026-10-11/radar-staging.jpg`.
+- Réception locale avant publication : **15/15 composants du bandeau**, TypeScript et ESLint ciblé réussis sur le banc isolé 3002. Aucun changement d'API, SQL, auth, configuration distante ou IPTV ; `.claude/` préservé. Le commit documentaire de clôture ne nécessite aucun nouveau déploiement.
 
 
-## Grille des pays bornée et météo collante — 11 octobre 2026 (runtime staging actuel)
+## Grille des pays bornée et météo collante — 11 octobre 2026 (runtime staging précédent)
 
 - **Publication demandée et reçue** : `2d6ac38`, CI [38139802519](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38139802519) SUCCESS au premier passage, Railway **`60a3d3e9-8491-4ae8-bfcd-84fba4194627` SUCCESS** par CLI. [Dossier](docs/publication-grille-meteo-2026-10-11.md).
 - Ordinateur (`xl`) : grille et liste d’un pays défilent dans le panneau (`max-h-[515px]`, hauteur du fil), recherche et régions visibles ; téléphone sans défilement imbriqué ; colonne météo `xl:sticky xl:top-20`. Tests composants « ordinateur… » / « téléphone… » (banc `many=1`).

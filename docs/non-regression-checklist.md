@@ -1,5 +1,14 @@
 # Checklist de non-régression — lots local et Railway
 
+## Bouton pause du bandeau supprimé — publié sur staging le 11 octobre 2026
+
+[Publication et preuves](publication-pause-bandeau-2026-10-11.md).
+
+- [x] Bouton pause/reprise absent sur ordinateur et mobile ; défilement, survol/focus, détails, sources, navigation mobile, modes Éco/mouvement réduit et carte conservés (15/15 composants ciblés).
+- [x] CI : 437 unités, 41 intégrations, 16 E2E build, 102 composants, 68 UI ; Snyk Code indisponible.
+- [x] Railway `9ac3d8de` SUCCESS, 484/484 fichiers identiques, 21/21 migrations sans SQL en attente, santé 200 sur les deux domaines, protections anonymes et 14/14 E2E distants.
+- [x] Edge connecté : bouton absent, les deux lignes défilent, les détails les arrêtent et leur fermeture relance le mouvement.
+
 ## Fil unique Afrique + Monde, drapeaux et planète — publié sur staging le 11 octobre 2026
 
 [Publication, preuves et limites](publication-fil-unique-2026-10-11.md).
