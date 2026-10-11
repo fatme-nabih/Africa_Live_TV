@@ -1,14 +1,22 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 11 octobre 2026 (nouveau logo publié sur staging après le fil unique Afrique + Monde avec drapeaux et planète publié sur staging après le bandeau deux lignes et « Regards sur le monde » ; les sections du 10 octobre restent valables pour le reste), fuseau Africa/Dakar. Lire d'abord les points du 11 octobre ci-dessous.
+Dernière mise à jour : 11 octobre 2026 (grille des pays bornée et météo collante publiées sur staging après le nouveau logo, lui-même publié après le fil unique Afrique + Monde avec drapeaux et planète publié sur staging après le bandeau deux lignes et « Regards sur le monde » ; les sections du 10 octobre restent valables pour le reste), fuseau Africa/Dakar. Lire d'abord les points du 11 octobre ci-dessous.
 
 
-## Nouveau logo — 11 octobre 2026 (runtime staging actuel)
+## Grille des pays bornée et météo collante — 11 octobre 2026 (runtime staging actuel)
+
+- **Publication demandée et reçue** : `2d6ac38`, CI [38139802519](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38139802519) SUCCESS au premier passage, Railway **`60a3d3e9-8491-4ae8-bfcd-84fba4194627` SUCCESS** par CLI. [Dossier](docs/publication-grille-meteo-2026-10-11.md).
+- Ordinateur (`xl`) : grille et liste d’un pays défilent dans le panneau (`max-h-[515px]`, hauteur du fil), recherche et régions visibles ; téléphone sans défilement imbriqué ; colonne météo `xl:sticky xl:top-20`. Tests composants « ordinateur… » / « téléphone… » (banc `many=1`).
+- 484/484 fichiers identiques, CSS construit vérifié, 21/21 migrations sans SQL, santé 200, 14/14 E2E distants. Aucun changement de configuration.
+- Publication d’un commit applicatif suivi d’un commit de documentation : les scripts `.local-logs/publication-grille-meteo-2026-10-11/` ciblent le dernier commit hors `docs/` et `contextellm.md` (`git log -1 -- . ':!contextellm.md' ':!docs'`). Passer l’id du run à `ci-proof.cjs`.
+- Seul `.claude/` reste hors commit.
+
+## Nouveau logo — 11 octobre 2026 (runtime staging précédent)
 
 - **Publication demandée et reçue** : `ae4908c`, CI [38138572694](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38138572694) SUCCESS au premier passage, Railway **`c96187b6-dab4-494c-a5a5-883679e2e212` SUCCESS** par CLI. [Dossier](docs/publication-logo-2026-10-11.md).
 - Référence unique : `public/africa-live-logo.png` (1254 px, sans couronne). Déclinaisons régénérées : logo WebP 640, fond 480 (q55), icônes PWA 192/512, Apple 180, `src/app/icon.png`, favicons (`.ico` 16/32/48 en **RGBA**, sinon Turbopack répond 500 partout), `og-image.png` 1200 × 630. Anciens logos inutilisés supprimés. Cache du service worker `al-offline-v2`.
 - 34/34 contrôles d’images servies (identiques au commit, anciens logos en 404), 484/484 fichiers identiques, 21/21 migrations sans SQL, santé 200, 14/14 E2E distants. Aucun changement de configuration.
-- **Grille des pays bornée + météo collante : commitées et poussées sur GitHub, pas encore sur Railway** : [`2d6ac38`](https://github.com/fatme-nabih/Africa_Live_TV/commit/2d6ac38f8c694325b5711b9394a28d0e3e755892), CI [38139802519](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38139802519) SUCCESS. Sur ordinateur (`xl`), la grille et la liste d’un pays défilent dans le panneau (`max-h-[515px]`, hauteur du fil), recherche et régions restent visibles ; pas de défilement imbriqué sur téléphone ; colonne météo `xl:sticky xl:top-20`. Tests composants « ordinateur… » et « téléphone… » (banc `many=1`). Staging tourne toujours sur `c96187b6` (logo) : publier sur Railway seulement sur demande. Seul `.claude/` reste hors commit.
+
 
 ## Fil unique Afrique + Monde, drapeaux et planète — 11 octobre 2026 (runtime staging précédent)
 

@@ -1,5 +1,11 @@
 # Progression — préparation production
 
+## Grille des pays bornée et météo collante — publiées sur staging, 11 octobre 2026
+
+Publication expressément demandée et reçue : `2d6ac38`, Railway `60a3d3e9` SUCCESS, 484/484 fichiers applicatifs identiques. Sur ordinateur, la grille des pays et la liste d’un pays défilent dans leur panneau à la hauteur du fil (515 px), recherche et régions visibles ; pas de défilement imbriqué sur téléphone ; la météo accompagne le défilement. [Dossier](publication-grille-meteo-2026-10-11.md).
+
+CI [38139802519](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38139802519) SUCCESS au premier passage : 437 unités, 41 intégrations isolées, 16 E2E build, 102 composants et 68 UI ; Snyk Code indisponible. CSS construit vérifié sur le runtime, santé 200 sur les deux domaines, 14/14 E2E distants, 21/21 migrations sans nouveau SQL.
+
 ## Nouveau logo — publié sur staging, 11 octobre 2026
 
 Publication expressément demandée et reçue : `ae4908c`, Railway `c96187b6` SUCCESS, 484/484 fichiers applicatifs identiques. Nouvelle image de référence `public/africa-live-logo.png` (sans couronne) déclinée en logo d’interface, fond de marque, icônes PWA/Apple, favicons et image de partage ; anciens logos inutilisés supprimés ; cache du service worker `al-offline-v2`. [Dossier](publication-logo-2026-10-11.md).
