@@ -1,5 +1,6 @@
 export function formatMarketPrice(price: number, currency: string, unit: string): string {
-  return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: price >= 100 ? 2 : 4, minimumFractionDigits: 2 }).format(price) + ` ${currency} / ${unit.replace('$/', '')}`;
+  // USX : cotation en cents US (blé, coton, café), conservée telle que publiée.
+  return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: price >= 100 ? 2 : 4, minimumFractionDigits: 2 }).format(price) + ` ${currency === 'USX' ? 'cents US' : currency} / ${unit.replace(/^[$¢]\//, '')}`;
 }
 const variationFormatter = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 export function formatVariation(value: number | null): { text: string; isPositive: boolean; isNeutral: boolean } {

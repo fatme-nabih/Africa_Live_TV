@@ -6,6 +6,7 @@ import { Radar } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
 import type { LiveChannelsSummarySnapshot } from '@/lib/live-channels-types';
+import { commodityFocusLabel, type CommodityFocus } from '@/lib/market-geography';
 
 const TacticalVectorMap = dynamic(
   () => import('@/components/radar/TacticalVectorMap'),
@@ -27,6 +28,8 @@ export default function RadarMapCard({
   selectedCountry,
   onSelectCountry,
   onSelectCountryForChannels,
+  commodityFocus = null,
+  onClearCommodity,
 }: {
   className?: string;
   countryCounts: Map<string, number>;
@@ -34,6 +37,8 @@ export default function RadarMapCard({
   selectedCountry: string | null;
   onSelectCountry: (code: string | null) => void;
   onSelectCountryForChannels: (code: string) => void;
+  commodityFocus?: CommodityFocus | null;
+  onClearCommodity?: () => void;
 }) {
   // Sur petit écran la carte se charge à la demande : le fil et le choix du pays n'en dépendent pas.
   const [mapRequested, setMapRequested] = useState(false);
@@ -60,6 +65,24 @@ export default function RadarMapCard({
       </div>
 
       <div className="flex flex-1 flex-col p-2 sm:p-3">
+        {/* Produit choisi dans le panier du bandeau : la liste reste lisible sans la carte (mobile, lecteur d'écran). */}
+        <div id="radar-commodity" role="status" aria-live="polite">
+          {commodityFocus && (
+            <div className="mb-2 flex flex-wrap items-center gap-2 rounded-control border border-al-green/40 bg-al-green/10 px-3 py-2 text-xs">
+              <p className="font-semibold text-text">{commodityFocusLabel(commodityFocus)}<span className="font-normal text-text-muted"> · liste indicative</span></p>
+              <ul aria-label={commodityFocusLabel(commodityFocus)} className="flex flex-wrap gap-1">
+                {commodityFocus.codes.map(code => (
+                  <li key={code}>
+                    <button type="button" onClick={() => onSelectCountry(code)} className="min-h-8 rounded-pill border border-line bg-black/30 px-2.5 text-text hover:border-al-green">
+                      {AFRICAN_COUNTRIES.find(country => country.code === code)?.name ?? code}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {onClearCommodity && <button type="button" onClick={onClearCommodity} className="ml-auto min-h-8 px-2 font-semibold text-al-green hover:text-text">Effacer</button>}
+            </div>
+          )}
+        </div>
         {!desktopMap && (
           <Button
             variant="secondary"
@@ -83,6 +106,7 @@ export default function RadarMapCard({
               selectedCountry={selectedCountry}
               onSelectCountry={onSelectCountry}
               onSelectCountryForChannels={onSelectCountryForChannels}
+              commodityFocus={commodityFocus}
             />
           ) : (
             <p className="p-3 text-xs text-text-muted xl:hidden">Carte à la demande, pour économiser vos données. Le choix du pays et les dépêches fonctionnent sans elle.</p>

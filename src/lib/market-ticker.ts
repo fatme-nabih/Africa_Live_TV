@@ -30,7 +30,11 @@ export function parseMarketsSnapshot(raw: unknown, now = Date.now()): LiveMarket
     if (!at) continue;
     const previousCloseAt = date(quote.previousCloseAt, now);
     const previousClose = positive(quote.previousClose) ? quote.previousClose : null;
-    commodities.push({ symbol: quote.symbol, name: quote.name, label: quote.label, price: quote.price, currency: quote.currency, unit: quote.unit, source: quote.source,
+    const history = Array.isArray(quote.history) ? quote.history.slice(-10).flatMap(rawPoint => {
+      const point = record(rawPoint); const at = point && date(point.at, now);
+      return point && at && positive(point.price) ? [{ at, price: point.price }] : [];
+    }) : [];
+    commodities.push({ symbol: quote.symbol, name: quote.name, label: quote.label, price: quote.price, currency: quote.currency, unit: quote.unit, source: quote.source, history,
       updatedAt: at, previousClose, previousCloseAt, changePercent24h: previousClose !== null && previousCloseAt && Date.parse(previousCloseAt) < Date.parse(at)
         ? (quote.price - previousClose) / previousClose * 100 : null });
   }

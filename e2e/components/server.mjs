@@ -10,6 +10,8 @@ const absolute = p => path.resolve(p).replaceAll('\\', '/');
 const output = await build({
   entryPoints: ['e2e/components/entry.tsx'], bundle: true, write: false,
   format: 'iife', platform: 'browser', jsx: 'automatic', logLevel: 'silent',
+  // CSS importé depuis un module (carte MapLibre) : ignoré ici, la feuille de l'application est servie à part.
+  loader: { '.css': 'empty' },
   define: {
     'process.env.NODE_ENV': '"production"',
     'process.env.NEXT_PUBLIC_LOCAL_PLAYBACK': '"false"',
@@ -43,7 +45,7 @@ const server = http.createServer(async (request, response) => {
     response.end(output.outputFiles[0].text);
   } else {
     response.setHeader('Content-Type', 'text/html');
-    const styles = new URL(request.url, 'http://localhost').searchParams.get('kind')?.match(/^(ticker|country-grid|share|legacy)$/) ? '<link rel="stylesheet" href="/ticker.css">' : '';
+    const styles = new URL(request.url, 'http://localhost').searchParams.get('kind')?.match(/^(ticker|world|country-grid|share|legacy)$/) ? '<link rel="stylesheet" href="/ticker.css">' : '';
     response.end('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1">' + styles + '<div id="root"></div><script src="/components.js"></script>');
   }
 });

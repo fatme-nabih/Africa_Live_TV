@@ -14,6 +14,7 @@ import { activityTier } from '@/lib/radar-activity';
 import type { RadarCountry } from '@/lib/live-osint-types';
 import { AFRICAN_COUNTRIES } from '@/lib/live-osint';
 import type { LiveChannelsSummarySnapshot } from '@/lib/live-channels-types';
+import { commodityFocusLabel, type CommodityFocus } from '@/lib/market-geography';
 import type { RadarSourceRow } from '@/lib/radar-workspace';
 import { Compass, Globe2, RotateCcw } from 'lucide-react';
 import { countLabel } from '@/lib/format';
@@ -103,14 +104,17 @@ function token(name: string, fallback: string): string {
 function darkStyle(): StyleSpecification {
   const gold = token('--color-al-gold', '#d4a72c');
   const border = token('--color-line-gold', gold);
+  const green = token('--color-al-green', '#12b54a');
   return {
     version: 8,
     sources: { countries: { type: 'geojson', data: COUNTRIES_URL, attribution: 'Natural Earth' } },
     layers: [
       { id: 'ocean', type: 'background', paint: { 'background-color': token('--color-ink', '#000000') } },
       { id: 'land', type: 'fill', source: 'countries', paint: { 'fill-color': token('--color-surface-2', '#141416') } },
+      { id: 'land-commodity', type: 'fill', source: 'countries', filter: ['in', ['get', 'code'], ['literal', []]], paint: { 'fill-color': green, 'fill-opacity': 0.3 } },
       { id: 'land-selected', type: 'fill', source: 'countries', filter: ['==', ['get', 'code'], ''], paint: { 'fill-color': gold, 'fill-opacity': 0.24 } },
       { id: 'borders', type: 'line', source: 'countries', paint: { 'line-color': border, 'line-width': ['interpolate', ['linear'], ['zoom'], 2, 0.6, 6, 1.4] } },
+      { id: 'borders-commodity', type: 'line', source: 'countries', filter: ['in', ['get', 'code'], ['literal', []]], paint: { 'line-color': green, 'line-width': 1.5 } },
       { id: 'borders-selected', type: 'line', source: 'countries', filter: ['==', ['get', 'code'], ''], paint: { 'line-color': gold, 'line-width': 2 } },
     ],
   };
@@ -128,6 +132,13 @@ function highlightCountry(map: MapLibreMap, code: string | null) {
   }
 }
 
+/** Pays producteurs ou importateurs du produit choisi dans le panier du bandeau (fond sombre uniquement). */
+function highlightCommodity(map: MapLibreMap, codes: string[]) {
+  for (const id of ['land-commodity', 'borders-commodity']) {
+    if (map.getLayer(id)) map.setFilter(id, ['in', ['get', 'code'], ['literal', codes]]);
+  }
+}
+
 export interface TacticalVectorMapProps {
   countries: RadarCountry[];
   /** Dépêches des dernières 24 h par pays : règle la taille et la pulsation du repère. */
@@ -137,6 +148,7 @@ export interface TacticalVectorMapProps {
   onSelectCountry: (countryCode: string | null) => void;
   onSelectCountryForChannels?: (countryCode: string) => void;
   onSourcesChange?: (sources: RadarSourceRow[]) => void;
+  commodityFocus?: CommodityFocus | null;
 }
 
 export default function TacticalVectorMap({
@@ -147,12 +159,14 @@ export default function TacticalVectorMap({
   onSelectCountry,
   onSelectCountryForChannels,
   onSourcesChange,
+  commodityFocus = null,
 }: TacticalVectorMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markersRef = useRef<Map<string, Marker>>(new Map());
   // Le dernier pays choisi et le dernier gestionnaire : les écouteurs de la carte ne sont posés qu'une fois.
   const selectedRef = useRef(selectedCountry);
+  const commodityCodesRef = useRef<string[]>(commodityFocus?.codes ?? []);
   const onSelectRef = useRef(onSelectCountry);
   const [isSupported] = useState(() => isWebGLSupported());
   const [isLoaded, setIsLoaded] = useState(false);
@@ -258,6 +272,7 @@ export default function TacticalVectorMap({
 
         map.on('style.load', () => {
           highlightCountry(map, selectedRef.current);
+          highlightCommodity(map, commodityCodesRef.current);
           setIsLoaded(true);
         });
 
@@ -291,6 +306,11 @@ export default function TacticalVectorMap({
     onSelectRef.current = onSelectCountry;
     if (mapRef.current && isLoaded) highlightCountry(mapRef.current, selectedCountry);
   }, [selectedCountry, onSelectCountry, isLoaded]);
+
+  useEffect(() => {
+    commodityCodesRef.current = commodityFocus?.codes ?? [];
+    if (mapRef.current && isLoaded) highlightCommodity(mapRef.current, commodityCodesRef.current);
+  }, [commodityFocus, isLoaded]);
 
   // Sync Markers
   useEffect(() => {
@@ -574,6 +594,12 @@ export default function TacticalVectorMap({
             <span className="h-2.5 w-2.5 rounded-full border border-dashed border-al-gold" />
             Chaînes TV référencées
           </span>
+          {commodityFocus && (
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm border border-al-green bg-al-green/30" />
+              {commodityFocusLabel(commodityFocus)}{basemapMode === 'satellite' && ' (fond Sombre)'}
+            </span>
+          )}
           {isGlobeMode && (
             <span className="inline-flex items-center gap-1.5 text-al-green">
               Globe 3D : clic droit + glisser pour incliner

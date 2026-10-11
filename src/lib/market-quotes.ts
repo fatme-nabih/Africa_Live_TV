@@ -1,3 +1,18 @@
+/** Clôtures datées des dernières séances (mini-courbe), sans valeur inventée pour une séance manquante. */
+export function recentCloses(result: unknown, limit = 5): { at: string; price: number }[] {
+  if (!result || typeof result !== 'object') return [];
+  const chart = result as { meta?: { regularMarketTime?: number }; timestamp?: unknown[]; indicators?: { quote?: { close?: unknown[] }[] } };
+  const timestamps = chart.timestamp, closes = chart.indicators?.quote?.[0]?.close, time = chart.meta?.regularMarketTime;
+  if (!Array.isArray(timestamps) || !Array.isArray(closes) || timestamps.length !== closes.length || typeof time !== 'number') return [];
+  const points: { at: string; price: number }[] = [];
+  timestamps.forEach((stamp, index) => {
+    const price = closes[index];
+    if (typeof stamp === 'number' && Number.isFinite(stamp) && stamp <= time && typeof price === 'number' && Number.isFinite(price) && price > 0)
+      points.push({ at: new Date(stamp * 1000).toISOString(), price });
+  });
+  return points.slice(-limit);
+}
+
 /** Find the close of the session preceding the quoted session, never the chart's range baseline. */
 export function previousSessionClose(result: unknown): { price: number; updatedAt: string } | null {
   if (!result || typeof result !== 'object') return null;

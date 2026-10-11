@@ -492,7 +492,8 @@ async function readBoundedText(response: Response, maxBytes: number): Promise<st
   return result;
 }
 
-async function fetchSingleFeed(feed: FeedConfig): Promise<RadarRssArticle[]> {
+/** Lecture bornée d'un flux (taille, délai, format) ; partagée avec « Regards sur le monde ». */
+export async function fetchSingleFeed(feed: FeedConfig): Promise<RadarRssArticle[]> {
     const response = await fetch(feed.url, {
       cache: 'no-store',
       redirect: 'follow',

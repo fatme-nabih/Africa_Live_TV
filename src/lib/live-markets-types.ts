@@ -28,6 +28,8 @@ export interface MarketCommodity {
   updatedAt: string;
   /** Source de cotation (ex: Marchés Internationaux / ICE / Yahoo Finance) */
   source: string;
+  /** Clôtures des dernières séances (au plus 5), dans la devise de cotation, pour la mini-courbe. */
+  history?: { at: string; price: number }[];
 }
 
 export interface MarketForex {

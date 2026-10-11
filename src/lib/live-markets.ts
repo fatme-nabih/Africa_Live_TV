@@ -3,7 +3,7 @@ import { getDisasterEventsSnapshot } from './live-disasters';
 import { detectCountryCode, getRadarRss } from './rss-collector';
 import { AFRICAN_COUNTRIES } from './live-osint';
 import { radarSource, temporalWindow, type RadarSourceState } from './radar-data';
-import { previousSessionClose } from './market-quotes';
+import { previousSessionClose, recentCloses } from './market-quotes';
 import { articleTopics } from './radar-topics';
 import type { RadarRssArticle } from './rss-collector-types';
 export { formatMarketPrice, formatVariation } from './market-format';
@@ -24,6 +24,11 @@ const definitions = [
   { symbol: 'CC=F', name: 'Cacao', label: 'Cacao · marché mondial', unit: '$/tonne', source: 'Yahoo Finance / ICE US' },
   { symbol: 'BZ=F', name: 'Pétrole Brent', label: 'Pétrole Brent · marché mondial', unit: '$/baril', source: 'Yahoo Finance / ICE Europe' },
   { symbol: 'GC=F', name: 'Or', label: 'Or · marché mondial', unit: '$/oz', source: 'Yahoo Finance / COMEX' },
+  { symbol: 'ZR=F', name: 'Riz', label: 'Riz paddy · marché mondial', unit: '$/cwt', source: 'Yahoo Finance / CBOT' },
+  { symbol: 'ZW=F', name: 'Blé', label: 'Blé tendre · marché mondial', unit: '¢/boisseau', source: 'Yahoo Finance / CBOT' },
+  { symbol: 'CT=F', name: 'Coton', label: 'Coton · marché mondial', unit: '¢/lb', source: 'Yahoo Finance / ICE US' },
+  { symbol: 'KC=F', name: 'Café', label: 'Café arabica · marché mondial', unit: '¢/lb', source: 'Yahoo Finance / ICE US' },
+  { symbol: 'HG=F', name: 'Cuivre', label: 'Cuivre · marché mondial', unit: '$/lb', source: 'Yahoo Finance / COMEX' },
 ];
 
 async function readJson(url: string) {
@@ -56,15 +61,16 @@ async function commodity(def: typeof definitions[number], now: number) {
     if (Date.parse(updatedAt) > now) throw new Error('MARKET_FUTURE_QUOTE');
     const previous = previousSessionClose(result);
     const previousClose = previous?.price ?? null;
+    // Devise de cotation conservée telle quelle (USX = cents US pour certains contrats agricoles).
     const value: MarketCommodity = { ...def, price: meta.regularMarketPrice, previousClose, previousCloseAt: previous?.updatedAt ?? null,
       changePercent24h: previousClose ? (meta.regularMarketPrice - previousClose) / previousClose * 100 : null,
-      currency: typeof meta.currency === 'string' ? meta.currency : 'USD', updatedAt };
+      currency: typeof meta.currency === 'string' ? meta.currency : 'USD', updatedAt, history: recentCloses(result) };
     quotes.set(def.symbol, { value, at: now });
-    return { value, source: radarSource(def.source, 'Monde · dernière séance', now, TTL, 1, { dataAt: updatedAt }) };
+    return { value, source: radarSource(`${def.name} · ${def.source}`, 'Monde · dernière séance', now, TTL, 1, { dataAt: updatedAt }) };
   } catch {
     const cached = quotes.get(def.symbol);
     const usable = cached && now - cached.at <= MAX_STALE;
-    return { value: usable ? cached.value : null, source: radarSource(def.source, 'Monde · dernière séance', now, TTL, usable ? 1 : 0,
+    return { value: usable ? cached.value : null, source: radarSource(`${def.name} · ${def.source}`, 'Monde · dernière séance', now, TTL, usable ? 1 : 0,
       { status: usable ? 'stale' : 'unavailable', lastSuccessAt: cached ? new Date(cached.at).toISOString() : null, dataAt: cached?.value.updatedAt }) };
   }
 }

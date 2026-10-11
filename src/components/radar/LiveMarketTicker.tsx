@@ -1,9 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react';
 import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, ExternalLink, Pause, Play } from 'lucide-react';
 import { cn } from '@/components/ui';
 import { formatForexRate, formatMarketPrice, formatVariation } from '@/lib/market-format';
+import { basketCommodities, basketName, indicativeUsdXof } from '@/lib/market-basket';
+import { commodityFocus, type CommodityFocus } from '@/lib/market-geography';
+import { africanMentions } from '@/lib/world-desk-data';
 import { marketTickerItems, type MarketScope, type MarketTickerItem } from '@/lib/market-ticker';
 import { formatRadarDate, radarStatusLabel } from '@/lib/radar-data';
 import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
@@ -23,6 +26,7 @@ function ItemContent({ item, interactive = false, onSelectCountry }: { item: Mar
       {interactive && alert.url
         ? <a href={alert.url} target="_blank" rel="noopener noreferrer" aria-label={'Source : ' + alert.title} className="min-w-0 font-medium text-text hover:text-al-gold">{alert.title}<ExternalLink aria-hidden="true" className="ml-1 inline size-3" /></a>
         : <span className="font-medium text-text">{alert.title}</span>}
+      {alert.scope === 'World' && africanMentions(alert.title).touchesAfrica && <span className="shrink-0 rounded-pill border border-al-green/40 bg-al-green/10 px-1.5 text-xs text-al-green">Touche l’Afrique</span>}
     </>;
   }
   if (item.kind === 'forex') {
@@ -30,15 +34,29 @@ function ItemContent({ item, interactive = false, onSelectCountry }: { item: Mar
     return <><span className="font-semibold text-text">1 {rate.base} = {formatForexRate(rate.rate)} {rate.quote}</span><span className="text-xs text-text-muted">{rate.isPegged ? 'Parité fixe' : 'Taux indicatif'}</span></>;
   }
   const quote = item.value;
-  const variation = formatVariation(quote.changePercent24h);
   return <>
     <span className="font-semibold text-text-muted">{quote.name}</span>
     <span className="font-semibold tabular-nums text-text">{formatMarketPrice(quote.price, quote.currency, quote.unit)}</span>
-    <span title="Variation depuis la séance précédente" className={cn('inline-flex items-center gap-0.5 font-semibold tabular-nums', variation.isNeutral ? 'text-text-muted' : variation.isPositive ? 'text-al-green' : 'text-al-red-soft')}>
+    <Variation value={quote.changePercent24h} />
+  </>;
+}
+
+function Variation({ value }: { value: number | null }) {
+  const variation = formatVariation(value);
+  return <span title="Variation depuis la séance précédente" className={cn('inline-flex items-center gap-0.5 font-semibold tabular-nums', variation.isNeutral ? 'text-text-muted' : variation.isPositive ? 'text-al-green' : 'text-al-red-soft')}>
       {!variation.isNeutral && (variation.isPositive ? <ArrowUpRight aria-hidden="true" className="size-3" /> : <ArrowDownRight aria-hidden="true" className="size-3" />)}
       {variation.text}
-    </span>
-  </>;
+    </span>;
+}
+
+/** Mini-courbe des dernières séances : forme seule, couleur neutre (la variation colorée compare à la séance précédente, pas à la semaine). */
+function Sparkline({ points }: { points: { price: number }[] }) {
+  if (points.length < 2) return null;
+  const prices = points.map(point => point.price), min = Math.min(...prices), span = Math.max(...prices) - min || 1;
+  const path = prices.map((price, i) => `${(i / (prices.length - 1) * 30 + 1).toFixed(1)},${(11 - (price - min) / span * 10).toFixed(1)}`).join(' ');
+  return <svg aria-hidden="true" data-testid="sparkline" viewBox="0 0 32 12" className="h-3 w-8 shrink-0 text-text-muted">
+    <polyline points={path} fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>;
 }
 
 function ItemMetadata({ item }: { item: MarketTickerItem }) {
@@ -47,70 +65,152 @@ function ItemMetadata({ item }: { item: MarketTickerItem }) {
   return <>{item.value.source} · dernière cotation {formatRadarDate(item.value.updatedAt)}{item.value.previousCloseAt && ' · séance de référence ' + formatRadarDate(item.value.previousCloseAt).split(' ')[0]}</>;
 }
 
-/** A decorative desktop marquee with a fully interactive static reader and source list. */
-export default function LiveMarketTicker({ onSelectCountry, refreshToken = 0, className = '' }: { onSelectCountry?: (code: string) => void; refreshToken?: number; className?: string }) {
-  const { data, loading, error } = useLiveMarkets(refreshToken);
-  const [paused, setPaused] = useState(false);
-  const [scope, setScope] = useState<MarketScope>('Africa');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const group = useRef<HTMLDivElement>(null);
+const ROTATE_MS = 7000;
+const calmQuery = '(prefers-reduced-motion: reduce)';
+const lineQuery = '(min-width: 768px) and (prefers-reduced-motion: no-preference)';
+function subscribeMotion(callback: () => void) {
+  const medias = [window.matchMedia(calmQuery), window.matchMedia(lineQuery)];
+  const observer = new MutationObserver(callback);
+  medias.forEach(media => media.addEventListener('change', callback));
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-eco'] });
+  return () => { medias.forEach(media => media.removeEventListener('change', callback)); observer.disconnect(); };
+}
+const eco = () => document.documentElement.dataset.eco === 'true';
+/** Mouvement réduit ou mode Éco : rien ne bouge de lui-même. */
+const useCalm = () => useSyncExternalStore(subscribeMotion, () => window.matchMedia(calmQuery).matches || eco(), () => false);
+/** Ordinateur sans restriction de mouvement : les deux lignes défilent (même condition que la feuille de style). */
+const useScrollingLines = () => useSyncExternalStore(subscribeMotion, () => window.matchMedia(lineQuery).matches && !eco(), () => false);
+const chip = 'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-pill border border-line px-2 py-0.5';
+
+/**
+ * Ligne défilante à vitesse constante : le groupe réel (liste accessible, interactive) et sa copie inerte pour la boucle.
+ * Pause au survol, au focus, par le bouton du bandeau ou quand « Voir tout » est ouvert. Sur mobile, en mouvement réduit
+ * ou en mode Éco, la feuille de style arrête l'animation : la ligne se fait glisser au doigt et la copie disparaît.
+ */
+function Marquee({ label, paused, render, className = '' }: { label: string; paused: boolean; render: (interactive: boolean) => ReactNode; className?: string }) {
+  const group = useRef<HTMLUListElement>(null);
   const [distance, setDistance] = useState(0);
   const [viewportWidth, setViewportWidth] = useState(0);
-  const items = useMemo(() => marketTickerItems(data, scope), [data, scope]);
-  const foundIndex = items.findIndex(item => item.id === selectedId);
-  const index = foundIndex < 0 ? 0 : foundIndex;
-  const current = items[index];
-  const sources = data?.availability ?? [];
-  const retained = Boolean(data) && (error || sources.some(source => source.status === 'stale'));
-  const partial = sources.some(source => ['unavailable', 'partial', 'not_configured'].includes(source.status));
-
   useEffect(() => {
-    const element = group.current;
-    if (!element) return;
-    const viewport = element.parentElement!.parentElement!;
+    const element = group.current, viewport = element?.parentElement?.parentElement;
+    if (!element || !viewport) return;
     const measure = () => { setDistance(element.getBoundingClientRect().width); setViewportWidth(viewport.getBoundingClientRect().width); };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     observer.observe(viewport);
     return () => observer.disconnect();
-  }, [items]);
+  }, []);
+  return <div className={cn('marquee', className)}>
+    <div className="animate-marquee" data-paused={paused || distance === 0}
+      style={{ '--ticker-distance': distance + 'px', '--ticker-viewport': viewportWidth + 'px', '--ticker-duration': Math.max(distance / 40, 1) + 's' } as CSSProperties}>
+      <ul ref={group} aria-label={label} className="marquee-group">{render(true)}</ul>
+      <div className="marquee-group marquee-clone" aria-hidden="true" inert>{render(false)}</div>
+    </div>
+  </div>;
+}
 
-  const move = (direction: number) => { if (items.length) setSelectedId(items[(index + direction + items.length) % items.length].id); };
-  const style = { '--ticker-distance': distance + 'px', '--ticker-viewport': viewportWidth + 'px', '--ticker-duration': Math.max(distance / 40, 1) + 's' } as CSSProperties;
+/** Deux lignes défilantes : les dépêches (le fil), puis le panier des cours mondiaux et du franc CFA. */
+export default function LiveMarketTicker({ onSelectCountry, onSelectCommodity, activeCommodity = null, refreshToken = 0, className = '' }: {
+  onSelectCountry?: (code: string) => void; onSelectCommodity?: (focus: CommodityFocus | null) => void; activeCommodity?: string | null; refreshToken?: number; className?: string;
+}) {
+  const { data, loading, error } = useLiveMarkets(refreshToken);
+  const calm = useCalm();
+  const scrolling = useScrollingLines();
+  const [paused, setPaused] = useState(false);
+  const [held, setHeld] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [announce, setAnnounce] = useState(false);
+  const [scope, setScope] = useState<MarketScope>('Africa');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const items = useMemo(() => marketTickerItems(data, scope), [data, scope]);
+  const headlines = useMemo(() => items.filter(item => item.kind === 'alert'), [items]);
+  const basket = useMemo(() => basketCommodities(data), [data]);
+  const usdXof = indicativeUsdXof(data);
+  const euroPeg = data?.forex.find(rate => rate.base === 'EUR' && rate.quote === 'XOF');
+  const foundIndex = headlines.findIndex(item => item.id === selectedId);
+  const index = foundIndex < 0 ? 0 : foundIndex;
+  const current = headlines[index];
+  const sources = data?.availability ?? [];
+  const retained = Boolean(data) && (error || sources.some(source => source.status === 'stale'));
+  const partial = sources.some(source => ['unavailable', 'partial', 'not_configured'].includes(source.status));
+  const stopped = paused || detailsOpen;
+  // Le lecteur une-dépêche-à-la-fois ne tourne que là où il est affiché (mobile), jamais en mouvement réduit ou Éco.
+  const rotating = !calm && !scrolling && !stopped && headlines.length > 1;
+
+  useEffect(() => {
+    if (!rotating || held) return;
+    const timer = window.setInterval(() => {
+      if (document.hidden) return;
+      setAnnounce(false);
+      setSelectedId(id => headlines[(Math.max(headlines.findIndex(item => item.id === id), 0) + 1) % headlines.length].id);
+    }, ROTATE_MS);
+    return () => window.clearInterval(timer);
+  }, [rotating, held, headlines]);
+
+  const headlineItems = (interactive: boolean) => headlines.map(item => {
+    const content = <>
+      <ItemContent item={item} interactive={interactive} onSelectCountry={onSelectCountry} />
+      {item.kind === 'alert' && <span className="text-xs text-text-muted">{item.value.source ?? 'Dépêche'}{item.value.timestamp && ' · ' + formatRadarDate(item.value.timestamp)}</span>}
+    </>;
+    return interactive ? <li key={item.id} className="inline-flex shrink-0 items-center gap-2">{content}</li> : <span key={item.id} className="inline-flex shrink-0 items-center gap-2">{content}</span>;
+  });
+
+  const basketChips = (interactive: boolean) => <>
+    {basket.map(quote => {
+      const focus = interactive && onSelectCommodity ? commodityFocus(quote) : null, active = activeCommodity === quote.symbol;
+      const content = <>
+        <span className="text-text-muted">{basketName(quote)}</span>
+        <span className="font-semibold tabular-nums text-text">{formatMarketPrice(quote.price, quote.currency, quote.unit)}</span>
+        <Sparkline points={quote.history ?? []} />
+        {quote.changePercent24h !== null && <Variation value={quote.changePercent24h} />}
+      </>;
+      const style = cn(chip, active ? 'border-al-gold bg-al-gold/15' : 'bg-black/30');
+      const Item = interactive ? 'li' : 'span';
+      return <Item key={quote.symbol} className="shrink-0">{focus
+        ? <button type="button" aria-pressed={active} title={quote.label + ' · ' + quote.source + ' · voir les principaux ' + focus.role + ' sur la carte'}
+            onClick={() => onSelectCommodity!(active ? null : focus)} className={cn(style, 'transition-colors hover:border-line-gold')}>
+            {content}<span className="sr-only">, voir les principaux {focus.role} sur la carte</span>
+          </button>
+        : <span title={quote.label + ' · ' + quote.source} className={style}>{content}</span>}</Item>;
+    })}
+    {[usdXof !== null && <><span className="font-semibold tabular-nums text-text">1 USD = {formatForexRate(usdXof)} FCFA</span><span className="text-xs text-text-muted">indicatif</span></>,
+      euroPeg && <><span className="font-semibold tabular-nums text-text">1 EUR = {formatForexRate(euroPeg.rate)} FCFA</span><span className="text-xs text-text-muted">fixe</span></>]
+      .map((content, i) => content && (interactive ? <li key={i} className={chip}>{content}</li> : <span key={i} className={chip}>{content}</span>))}
+  </>;
+
+  const move = (direction: number) => { setAnnounce(true); setSelectedId(headlines[(index + direction + headlines.length) % headlines.length].id); };
+  const status = data ? null : loading ? 'Chargement des informations…' : error ? 'Les informations sont momentanément indisponibles.' : null;
 
   return <section aria-label="Bandeau des marchés et événements" className={cn('market-ticker rounded-control border border-line bg-surface-1/80 text-[13px]', className)}>
-    <div className="flex flex-wrap items-center gap-2 px-2 py-1.5">
-      <div role="group" aria-label="Périmètre du bandeau" className="flex shrink-0 rounded-pill bg-black/50 p-0.5">
+    <div className="flex flex-wrap items-center gap-2 px-2 py-1.5" onMouseEnter={() => setHeld(true)} onMouseLeave={() => setHeld(false)}
+      onFocus={() => setHeld(true)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setHeld(false); }}>
+      <div role="group" aria-label="Périmètre du fil" className="flex shrink-0 rounded-pill bg-black/50 p-0.5">
         {([['Africa', 'Afrique'], ['World', 'Monde']] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={scope === value} onClick={() => { setScope(value); setSelectedId(null); }} className={cn('min-h-9 rounded-pill px-3 font-semibold transition-colors', scope === value ? 'bg-al-gold text-black' : 'text-text-muted hover:text-text')}>{label}</button>)}
       </div>
-      {current ? <>
-        <div className="ticker-marquee min-w-0 flex-1 overflow-hidden" aria-hidden="true">
-          <div className="animate-ticker-scroll" data-paused={paused || distance === 0} style={style}>
-            <div ref={group} className="ticker-group">{items.map(item => <div key={item.id} className="inline-flex shrink-0 items-center gap-2"><ItemContent item={item} /></div>)}</div>
-            <div className="ticker-group" aria-hidden="true" inert>{items.map(item => <div key={item.id} className="inline-flex shrink-0 items-center gap-2"><ItemContent item={item} /></div>)}</div>
-          </div>
-        </div>
-        <button type="button" aria-label={paused ? 'Reprendre le défilement' : 'Mettre en pause'} aria-pressed={paused} onClick={() => setPaused(value => !value)} className="ticker-pause inline-flex size-9 shrink-0 items-center justify-center rounded-full text-text-muted hover:bg-white/10 hover:text-text">{paused ? <Play aria-hidden="true" className="size-4" /> : <Pause aria-hidden="true" className="size-4" />}</button>
+      {status ? <p role="status" className="min-w-0 flex-1 px-2 py-2 text-text-muted">{status}</p> : current ? <>
+        <Marquee key={scope} label="Le fil : dépêches économiques" paused={stopped} render={headlineItems} className="ticker-wire min-w-0 flex-1" />
+        {!calm && <button type="button" aria-label={paused ? 'Reprendre le bandeau' : 'Mettre le bandeau en pause'} aria-pressed={paused} onClick={() => setPaused(value => !value)} className="ml-auto inline-flex size-9 shrink-0 items-center justify-center rounded-full text-text-muted hover:bg-white/10 hover:text-text">{paused ? <Play aria-hidden="true" className="size-4" /> : <Pause aria-hidden="true" className="size-4" />}</button>}
         <div className="ticker-reader w-full min-w-0">
-          <div className="flex items-start gap-2 px-1 py-2" aria-live="polite" aria-atomic="true">
-            <div className="flex min-w-0 flex-1 flex-wrap items-start gap-x-2 gap-y-1 [overflow-wrap:anywhere]"><ItemContent item={current} interactive onSelectCountry={onSelectCountry} /></div>
-          </div>
-          <div className="flex items-center justify-between gap-2 px-1">
-            <p className="min-w-0 text-xs text-text-muted">{current.kind === 'commodity' ? 'Marché mondial · dernière séance' : current.kind === 'alert' ? current.value.source ?? 'Dépêche' : current.value.label}</p>
-            <div className="flex shrink-0 items-center gap-1" role="group" aria-label="Parcourir le bandeau">
-              <button type="button" aria-label="Information précédente" disabled={items.length < 2} onClick={() => move(-1)} className="inline-flex size-11 items-center justify-center rounded-full text-text-muted hover:bg-white/10 disabled:opacity-40"><ChevronLeft aria-hidden="true" className="size-4" /></button>
-              <span className="text-xs tabular-nums text-text-muted" aria-label={'Information ' + (index + 1) + ' sur ' + items.length}>{index + 1}/{items.length}</span>
-              <button type="button" aria-label="Information suivante" disabled={items.length < 2} onClick={() => move(1)} className="inline-flex size-11 items-center justify-center rounded-full text-text-muted hover:bg-white/10 disabled:opacity-40"><ChevronRight aria-hidden="true" className="size-4" /></button>
+          <div key={current.id} className="ticker-headline px-1 py-1" aria-live={announce ? 'polite' : 'off'} aria-atomic="true">
+            <div className="flex min-w-0 flex-wrap items-start gap-x-2 gap-y-0.5 [overflow-wrap:anywhere]">
+              <ItemContent item={current} interactive onSelectCountry={onSelectCountry} />
+              {current.kind === 'alert' && <span className="text-xs text-text-muted">{current.value.source ?? 'Dépêche'}{current.value.timestamp && ' · ' + formatRadarDate(current.value.timestamp)}</span>}
             </div>
           </div>
+          <div className="flex items-center justify-end gap-1" role="group" aria-label="Parcourir le fil">
+            <button type="button" aria-label="Dépêche précédente" disabled={headlines.length < 2} onClick={() => move(-1)} className="inline-flex size-9 items-center justify-center rounded-full text-text-muted hover:bg-white/10 disabled:opacity-40"><ChevronLeft aria-hidden="true" className="size-4" /></button>
+            <span className="text-xs tabular-nums text-text-muted" aria-label={'Dépêche ' + (index + 1) + ' sur ' + headlines.length}>{index + 1}/{headlines.length}</span>
+            <button type="button" aria-label="Dépêche suivante" disabled={headlines.length < 2} onClick={() => move(1)} className="inline-flex size-9 items-center justify-center rounded-full text-text-muted hover:bg-white/10 disabled:opacity-40"><ChevronRight aria-hidden="true" className="size-4" /></button>
+          </div>
         </div>
-      </> : <p role="status" className="min-w-0 flex-1 px-2 py-2 text-text-muted">{loading ? 'Chargement des informations…' : error ? 'Les informations sont momentanément indisponibles.' : 'Aucune information pour ce périmètre.'}</p>}
+      </> : <p className="min-w-0 flex-1 px-2 py-2 text-text-muted">Aucune dépêche économique récente pour ce périmètre.</p>}
     </div>
-    <details className="ticker-details border-t border-line px-3 py-1.5">
+    {basket.length > 0 && <Marquee label="Le panier : cours mondiaux et franc CFA" paused={stopped} render={basketChips} className="border-t border-line px-2 py-1.5" />}
+    <details className="ticker-details border-t border-line px-3 py-1.5" onToggle={event => setDetailsOpen(event.currentTarget.open)}>
       <summary className="cursor-pointer text-xs text-text-muted hover:text-text">Voir tout, sources et dates{retained ? ' · Données conservées' : partial ? ' · Certaines sources indisponibles' : loading && data ? ' · Actualisation…' : ''}</summary>
       <div className="mt-2 space-y-3 pb-2">
-        <p className="text-xs text-text-muted">{scope === 'Africa' ? 'Dépêches africaines, devises CFA et marchés mondiaux utiles à l’Afrique.' : 'Dépêches internationales et marchés mondiaux. Les localisations inconnues sont signalées.'} Les variations comparent la cotation à la séance précédente.</p>
+        <p className="text-xs text-text-muted">{scope === 'Africa' ? 'Dépêches économiques africaines, devises CFA et marchés mondiaux utiles à l’Afrique.' : 'Dépêches économiques internationales et marchés mondiaux. Les localisations inconnues sont signalées.'} Les cours sont affichés dans leur devise de cotation d’origine ; ce ne sont pas des prix de détail. Les variations comparent la cotation à la séance précédente.</p>
         {data && <p role="status" className="text-xs text-text-muted">Collecte : {formatRadarDate(data.updatedAt)}.{retained && ' Une source est en panne : les dernières données disponibles sont conservées.'}{partial && ' Certaines sources ne sont pas disponibles.'}</p>}
         <ul className="space-y-2">{items.map(item => <li key={item.id} className="rounded-control border border-line p-2">
           <div className="flex flex-wrap items-start gap-2 [overflow-wrap:anywhere]"><ItemContent item={item} interactive onSelectCountry={onSelectCountry} /></div>

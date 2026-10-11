@@ -148,11 +148,11 @@ test('markets preserve real session dates, partial/stale quotes and never invent
     return emptyRss();
   });
   try {
-    const first = await getLiveMarkets(); assert.equal(first.commodities.length, 3);
+    const first = await getLiveMarkets(); assert.equal(first.commodities.length, 8);
     assert.equal(first.commodities[0].updatedAt, new Date(NOW - 3600_000).toISOString());
     const before = calls; await getLiveMarkets(); assert.equal(calls, before);
     fail = true; now += 16 * 60_000;
-    const stale = await getLiveMarkets(); assert.equal(stale.commodities.length, 3);
+    const stale = await getLiveMarkets(); assert.equal(stale.commodities.length, 8);
     assert.equal(stale.availability?.[0].status, 'stale');
     assert.equal(stale.availability?.[0].lastSuccessAt, first.updatedAt);
     now += 7 * 60 * 60_000;

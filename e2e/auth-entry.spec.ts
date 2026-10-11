@@ -38,7 +38,7 @@ test('anonymous visitors cannot access app, account, admin or protected APIs', a
   }
   for (const path of ['/api/favorites', '/api/followed-countries', '/api/channels',
     '/api/live/news', '/api/live/rss', '/api/live/weather', '/api/live/events',
-    '/api/live/firms', '/api/live/markets', '/api/live/briefing', '/api/live/channels']) {
+    '/api/live/firms', '/api/live/markets', '/api/live/briefing', '/api/live/channels', '/api/live/world']) {
     const response = await page.request.get(path, { maxRedirects: 0 });
     expect([401, 403, 404, 307]).toContain(response.status());
     const body = await response.text();

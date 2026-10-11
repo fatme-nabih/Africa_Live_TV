@@ -14,13 +14,28 @@ import { useRadarData } from '../../src/components/radar/useRadarData';
 import { useRadarPlayer } from '../../src/components/radar/useRadarPlayer';
 import { saveCheckoutAttempt } from '../../src/lib/checkout-attempt';
 import LiveMarketTicker from '../../src/components/radar/LiveMarketTicker';
+import RadarMapCard from '../../src/components/radar/RadarMapCard';
+import WorldDesk from '../../src/components/radar/WorldDesk';
+import type { CommodityFocus } from '../../src/lib/market-geography';
 import CountryChannels from '../../src/components/radar/CountryChannels';
 import { ShareArticleLink } from '../../src/components/tv/ChannelTile';
 import type { LiveChannelsSummarySnapshot } from '../../src/lib/live-channels-types';
+function TestWorld() {
+  const [token, setToken] = React.useState(0);
+  const [country, setCountry] = React.useState('');
+  // `far=1` : la rubrique commence loin sous l'écran, pour vérifier qu'elle ne charge rien avant d'en approcher.
+  const far = new URLSearchParams(location.search).get('far') === '1';
+  return <main className="bg-black p-3 text-text"><button onClick={() => setToken(value => value + 1)}>Refresh world</button><p data-testid="world-country">{country}</p>
+    {far && <div data-testid="spacer" style={{ height: 4000 }} />}<WorldDesk refreshToken={token} onSelectCountry={setCountry} /></main>;
+}
 function TestTicker() {
   const [token, setToken] = React.useState(0);
   const [country, setCountry] = React.useState('');
-  return <main className="p-3"><button onClick={() => setToken(value => value + 1)}>Refresh ticker</button><button onClick={() => { document.documentElement.dataset.eco = document.documentElement.dataset.eco === 'true' ? 'false' : 'true'; }}>Toggle test eco</button><LiveMarketTicker refreshToken={token} onSelectCountry={setCountry}/><p data-testid="ticker-country">{country}</p></main>;
+  const [commodity, setCommodity] = React.useState<CommodityFocus | null>(null);
+  // `map=1` : la carte du Radar à côté du bandeau (panneau texte du produit choisi ; la carte WebGL reste à la demande sous 1280 px).
+  const withMap = new URLSearchParams(location.search).get('map') === '1';
+  return <main className="p-3"><button onClick={() => setToken(value => value + 1)}>Refresh ticker</button><button onClick={() => { document.documentElement.dataset.eco = document.documentElement.dataset.eco === 'true' ? 'false' : 'true'; }}>Toggle test eco</button><LiveMarketTicker refreshToken={token} onSelectCountry={setCountry} onSelectCommodity={withMap ? setCommodity : undefined} activeCommodity={commodity?.symbol ?? null}/><p data-testid="ticker-country">{country}</p>
+    {withMap && <RadarMapCard countryCounts={new Map()} channelsSummary={null} selectedCountry={country || null} onSelectCountry={code => setCountry(code ?? '')} onSelectCountryForChannels={setCountry} commodityFocus={commodity} onClearCommodity={() => setCommodity(null)} />}</main>;
 }
 const gridSummary: LiveChannelsSummarySnapshot = { updatedAt: '2026-10-10T12:00:00Z', totalChannels: 103, totalDirectWeb: 52, countries: Object.fromEntries(
   ([['NG',50,25],['SN',19,6],['CI',25,14],['CD',21,4],['SO',7,0],['ML',1,1]] as const).map(([code,channelCount,directWebCount]) => [code,{ countryCode:code,channelCount,directWebCount }])) };
@@ -91,5 +106,5 @@ function TestPlayer() {
 
 const kind = new URLSearchParams(location.search).get('kind');
 createRoot(document.getElementById('root')!).render(
-  kind === 'ticker' ? <TestTicker /> : kind === 'country-grid' ? <TestCountryGrid /> : kind === 'share' ? <TestShare /> : kind === 'pricing' ? <TestPricing /> : kind === 'success' ? <Success /> : kind === 'radar' ? <TestRadar /> : kind === 'countries' || kind === 'favorites' || kind === 'legacy' ? <TestPreferences kind={kind}/> : kind === 'dock' ? <PlayerDockProvider><DockActions /></PlayerDockProvider> : <TestPlayer />,
+  kind === 'ticker' ? <TestTicker /> : kind === 'world' ? <TestWorld /> : kind === 'country-grid' ? <TestCountryGrid /> : kind === 'share' ? <TestShare /> : kind === 'pricing' ? <TestPricing /> : kind === 'success' ? <Success /> : kind === 'radar' ? <TestRadar /> : kind === 'countries' || kind === 'favorites' || kind === 'legacy' ? <TestPreferences kind={kind}/> : kind === 'dock' ? <PlayerDockProvider><DockActions /></PlayerDockProvider> : <TestPlayer />,
 );

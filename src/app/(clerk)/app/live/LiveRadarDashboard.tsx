@@ -11,6 +11,8 @@ import NewsFeed from '@/components/radar/NewsFeed';
 import RadarFeedPanel, { type RadarPanelTab } from '@/components/radar/RadarFeedPanel';
 import RadarHeader from '@/components/radar/RadarHeader';
 import RadarMapCard from '@/components/radar/RadarMapCard';
+import WorldDesk from '@/components/radar/WorldDesk';
+import type { CommodityFocus } from '@/lib/market-geography';
 import RadarTiles from '@/components/radar/RadarTiles';
 import WeatherCard from '@/components/radar/WeatherCard';
 import { scrollToSection } from '@/components/radar/scrollToSection';
@@ -45,6 +47,20 @@ function RadarWorkspace() {
   const now = useNow();
   const visit = useRadarVisit(Boolean(data.rss));
   const [panelTab, setPanelTab] = useState<RadarPanelTab>('news');
+  const [commodity, setCommodity] = useState<CommodityFocus | null>(null);
+  // Un produit du panier allume ses pays sur la carte ; si la carte est hors de l'écran (mobile), on l'amène sans voler le focus.
+  const focusCommodity = useCallback((focus: CommodityFocus | null) => {
+    setCommodity(focus);
+    if (!focus) return;
+    requestAnimationFrame(() => {
+      const target = document.getElementById('radar-commodity');
+      if (!target) return;
+      const box = target.getBoundingClientRect();
+      if (box.top >= 0 && box.bottom <= window.innerHeight) return;
+      const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.dataset.eco === 'true';
+      target.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'center' });
+    });
+  }, []);
   const [weatherOpen, setWeatherOpen] = useStoredToggle(STORAGE_KEYS.radarWeatherOpen, true);
 
   const activeWeatherCode = selectedCountry ?? 'SN';
@@ -105,7 +121,7 @@ function RadarWorkspace() {
       <div className="mx-auto max-w-7xl w-full flex-1 px-3 pb-8 pt-3 sm:px-6 sm:pt-4 md:px-6">
         <RadarHeader refreshing={data.refreshing} onRefresh={data.refresh} unknownCountry={unknownCountry}
           country={selectedCountry}
-          ticker={<LiveMarketTicker onSelectCountry={selectCountry} refreshToken={data.refreshToken} />}
+          ticker={<LiveMarketTicker onSelectCountry={selectCountry} onSelectCommodity={focusCommodity} activeCommodity={commodity?.symbol ?? null} refreshToken={data.refreshToken} />}
         />
 
         <RadarTiles
@@ -202,6 +218,8 @@ function RadarWorkspace() {
               selectCountry(code);
               showChannels();
             }}
+            commodityFocus={commodity}
+            onClearCommodity={() => setCommodity(null)}
           />
           <div className="flex flex-col gap-4 xl:col-span-5 xl:col-start-8 xl:row-start-2 xl:self-start">
             <WeatherCard
@@ -217,6 +235,8 @@ function RadarWorkspace() {
             />
           </div>
         </section>
+
+        <WorldDesk className="mt-5" refreshToken={data.refreshToken} onSelectCountry={selectCountry} />
 
         <footer className="mt-7 flex flex-col gap-2 border-t border-line pt-4 text-xs leading-5 text-text-muted sm:flex-row sm:items-center sm:justify-between">
           <span>Les titres renvoient aux articles des rédactions africaines et internationales.</span>
