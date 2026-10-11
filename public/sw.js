@@ -4,7 +4,7 @@
  * Aucune vidéo, aucune réponse d'API, aucune image distante n'est jamais stockée : seules les navigations
  * sont interceptées, réseau d'abord ; sans connexion, l'écran hors-ligne s'affiche.
  */
-const CACHE = 'al-offline-v1';
+const CACHE = 'al-offline-v2';
 const OFFLINE_URL = '/offline.html';
 const PRECACHE = [OFFLINE_URL, '/africa-live-logo.webp', '/africa-live-icon-192.png'];
 
