@@ -1,9 +1,18 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 11 octobre 2026 (bandeau sur deux lignes, carte des produits et rubrique « Regards sur le monde » publiés et reçus sur GitHub/Railway staging ; les sections du 10 octobre restent valables pour le reste), fuseau Africa/Dakar. Lire d'abord les points du 11 octobre ci-dessous.
+Dernière mise à jour : 11 octobre 2026 (fil unique Afrique + Monde avec drapeaux et planète publié sur staging après le bandeau deux lignes et « Regards sur le monde » ; les sections du 10 octobre restent valables pour le reste), fuseau Africa/Dakar. Lire d'abord les points du 11 octobre ci-dessous.
 
 
-## Bandeau, carte des produits et « Regards sur le monde » — 11 octobre 2026 (runtime staging actuel)
+## Fil unique Afrique + Monde, drapeaux et planète — 11 octobre 2026 (runtime staging actuel)
+
+- **Publication demandée et reçue** : `dc369b0`, CI [38136502980](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38136502980) SUCCESS au premier passage, Railway **`d522dd4b-3049-4a76-a59c-c6ef5008e3c5` SUCCESS** par CLI. [Dossier](docs/publication-fil-unique-2026-10-11.md).
+- Sélecteur « Périmètre du fil » supprimé ; `marketTickerItems(snapshot)` sans périmètre. Dépêche africaine : `CountryFlag` (bouton « Voir le pays : … ») ; internationale : icône `Earth` (titre/libellé « Monde ») ; badge « Touche l’Afrique » conservé.
+- `.marquee` en `position: relative` : sans cela, sur mobile, les `.sr-only` du panier sortent de la ligne et élargissent la page (2 033 px). Test composant « a full basket with the map stays inside its own line on mobile ».
+- `radar-live` vérifie le bouton de menu « Partager » (plus un lien). 484/484 fichiers identiques, 21/21 migrations sans SQL, santé 200, 14/14 E2E distants, inventaire identique. Aucun changement de configuration.
+- **Toujours hors commit, conservés** : grille des pays à hauteur bornée, météo collante, banc `many=1`, `.claude/`.
+- **Réception locale** : la connexion Clerk n’aboutit pas dans le navigateur intégré (page blanche `accounts.dev`) ; captures faites en mode MVP (`.local-logs/premium/local-user.cjs add`, puis `cleanup-local-user.cjs`).
+
+## Bandeau, carte des produits et « Regards sur le monde » — 11 octobre 2026 (runtime staging précédent)
 
 - **Publication demandée et reçue** : `47eb841` puis `42e5be7`, CI [38102171188](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38102171188) SUCCESS, Railway **`b0d948f5-047c-4eb5-a657-b28215e1aae9` SUCCESS** par CLI. [Dossier](docs/publication-bandeau-regards-monde-2026-10-11.md). Première CI échouée (libellé « Périmètre du fil » non suivi dans `radar-reliability`/`radar-live`), corrigée avant tout déploiement.
 - Bandeau : deux lignes défilantes (fil, panier de 8 produits en cotation d’origine + USD/EUR en FCFA), une pause commune ; mobile/Éco/mouvement réduit sans animation. Mini-courbes neutres. Clic produit → pays sur la carte (`src/lib/market-geography.ts`, liste indicative).

@@ -1,5 +1,11 @@
 # Progression — préparation production
 
+## Fil unique Afrique + Monde, drapeaux et planète — publié sur staging, 11 octobre 2026
+
+Publication expressément demandée et reçue : `dc369b0`, Railway `d522dd4b` SUCCESS, 484/484 fichiers applicatifs identiques. Sélecteur « Afrique / Monde » supprimé : un seul fil chronologique ; drapeau du pays devant une dépêche africaine (toujours bouton vers le pays), planète « Monde » devant une dépêche internationale. Correctif mobile : les libellés `.sr-only` du panier élargissaient la page à 2 033 px (`.marquee` en `position: relative`, test ajouté). Test `radar-live` aligné sur le bouton de menu « Partager ». [Dossier](publication-fil-unique-2026-10-11.md).
+
+CI [38136502980](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38136502980) SUCCESS au premier passage : 437 unités, 41 intégrations isolées, 16 E2E build, 100 composants et 68 UI ; types/lint/build/audit réussis, Snyk Code indisponible. 21/21 migrations sans nouveau SQL, sauvegarde revérifiée, santé 200 sur les deux domaines, 14/14 E2E distants, inventaire identique avant/après. Captures réelles `/app/live` (mode MVP) `docs/screenshots/bandeau-fil-unique-radar-*.png`. Grille bornée, météo collante, banc `many=1` et `.claude/` conservés hors livraison.
+
 ## Bandeau sur deux lignes, carte des produits et « Regards sur le monde » — publiés sur staging, 11 octobre 2026
 
 Publication expressément demandée et reçue : `47eb841` + `42e5be7`, Railway `b0d948f5` SUCCESS, 484/484 fichiers applicatifs identiques. Bandeau en deux lignes défilantes (fil, panier en cotation d’origine avec USD/EUR en FCFA), mini-courbes, produits allumant leurs pays sur la carte, rubrique internationale séparée du fil africain (15 flux, route `/api/live/world`). [Dossier](publication-bandeau-regards-monde-2026-10-11.md).

@@ -1,5 +1,15 @@
 # Checklist de non-régression — lots local et Railway
 
+## Fil unique Afrique + Monde, drapeaux et planète — publié sur staging le 11 octobre 2026
+
+[Publication, preuves et limites](publication-fil-unique-2026-10-11.md).
+
+- [x] Plus de sélecteur « Afrique / Monde » : un seul fil chronologique (africaines, internationales, à localiser), pas de doublon d’URL canonique.
+- [x] Drapeau du pays devant une dépêche africaine, toujours bouton « Voir le pays : … » ; planète « Monde » devant une dépêche internationale ; badge « Touche l’Afrique » conservé.
+- [x] Mobile 320–390 px : le panier complet avec carte ne déborde pas de la page (libellés `.sr-only` contenus dans la ligne).
+- [x] CI : 437 unités, 41 intégrations, 16 E2E build, 100 composants, 68 UI ; Snyk Code indisponible.
+- [x] Railway `d522dd4b` SUCCESS, 484/484 fichiers identiques, 21/21 migrations, santé 200, 14/14 E2E distants, inventaire identique.
+
 ## Bandeau, carte des produits et « Regards sur le monde » — publiés sur staging le 11 octobre 2026
 
 [Publication, preuves et limites](publication-bandeau-regards-monde-2026-10-11.md).
