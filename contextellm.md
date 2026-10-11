@@ -1,6 +1,17 @@
 # Africa Live — contexte de reprise de session
 
-Dernière mise à jour : 10 octobre 2026 (reprise des favoris de l’appareil publiée et reçue sur GitHub/Railway staging ; recherche, régions, grille des pays, drapeaux, partage, libellé VLC, bandeau et correctifs B01–B20/A1/BUG-905 déjà publiés), fuseau Africa/Dakar. Lire d'abord les points du 10 octobre ci-dessous. Les sections précédentes du 6 octobre et plus anciennes restent historiques.
+Dernière mise à jour : 11 octobre 2026 (bandeau sur deux lignes, carte des produits et rubrique « Regards sur le monde » publiés et reçus sur GitHub/Railway staging ; les sections du 10 octobre restent valables pour le reste), fuseau Africa/Dakar. Lire d'abord les points du 11 octobre ci-dessous.
+
+
+## Bandeau, carte des produits et « Regards sur le monde » — 11 octobre 2026 (runtime staging actuel)
+
+- **Publication demandée et reçue** : `47eb841` puis `42e5be7`, CI [38102171188](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38102171188) SUCCESS, Railway **`b0d948f5-047c-4eb5-a657-b28215e1aae9` SUCCESS** par CLI. [Dossier](docs/publication-bandeau-regards-monde-2026-10-11.md). Première CI échouée (libellé « Périmètre du fil » non suivi dans `radar-reliability`/`radar-live`), corrigée avant tout déploiement.
+- Bandeau : deux lignes défilantes (fil, panier de 8 produits en cotation d’origine + USD/EUR en FCFA), une pause commune ; mobile/Éco/mouvement réduit sans animation. Mini-courbes neutres. Clic produit → pays sur la carte (`src/lib/market-geography.ts`, liste indicative).
+- « Regards sur le monde » : collecteur séparé `src/lib/world-desk.ts` (15 flux vérifiés le 11/10), données partagées `src/lib/world-desk-data.ts`, route `/api/live/world`, composant `WorldDesk.tsx` sous la grille du Radar. Badge « Touche l’Afrique ».
+- 484/484 fichiers identiques, 21/21 migrations sans SQL, santé 200, 14/14 E2E distants, inventaire identique (14 505 chaînes, 15 646 sources, 56 favoris). Aucun changement de configuration Railway/Clerk/DNS/plan.
+- **Toujours hors commit, conservés** : grille des pays à hauteur bornée, météo collante, banc `many=1`, `.claude/`.
+- **Piège** : `payment.spec.ts` et `player.spec.ts` visent `127.0.0.1:3001` en dur ; ne jamais lancer la suite complète des composants sur un autre port pendant que le serveur du propriétaire tourne. Le serveur 3001 s’est arrêté deux fois pendant cette session (cause non établie).
+- Pistes non commencées : regroupement d’une même actualité couverte par plusieurs médias ; médias non français pour la rubrique internationale ; vérification chiffrée des listes producteurs/importateurs.
 
 ## Reprise des favoris de l’appareil — 10 octobre 2026 (runtime staging actuel)
 

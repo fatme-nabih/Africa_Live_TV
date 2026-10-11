@@ -1,5 +1,16 @@
 # Checklist de non-régression — lots local et Railway
 
+## Bandeau, carte des produits et « Regards sur le monde » — publiés sur staging le 11 octobre 2026
+
+[Publication, preuves et limites](publication-bandeau-regards-monde-2026-10-11.md).
+
+- [x] Deux lignes défilantes sur ordinateur, pause commune (bouton, survol, focus, « Voir tout ») ; mobile, mouvement réduit et Éco sans animation, fil navigable et panier à glisser.
+- [x] Cotations d’origine (cents US conservés), dollar et euro en FCFA ; variation contre la séance précédente, mini-courbe neutre sur cinq séances sans valeur inventée.
+- [x] Produit du panier → pays producteurs/importateurs sur la carte et encadré texte accessible sans carte.
+- [x] Rubrique internationale séparée du fil africain, chargée à l’approche, titres seuls ; pannes partielles signalées et dernières dépêches conservées ; détection stricte des pays africains.
+- [x] CI finale : 437 unités, 41 intégrations, 16 E2E build, 99 composants, 68 UI ; Snyk Code indisponible.
+- [x] Railway `b0d948f5` SUCCESS, 484/484 fichiers identiques, 21/21 migrations, santé 200, `/api/live/world` refusé aux anonymes, 14/14 E2E distants, inventaire identique.
+
 ## Reprise des favoris de l’appareil — publiée sur staging le 10 octobre 2026
 
 [Publication, preuves et limites](publication-favoris-appareil-2026-10-10.md).

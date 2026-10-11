@@ -1,5 +1,11 @@
 # Progression — préparation production
 
+## Bandeau sur deux lignes, carte des produits et « Regards sur le monde » — publiés sur staging, 11 octobre 2026
+
+Publication expressément demandée et reçue : `47eb841` + `42e5be7`, Railway `b0d948f5` SUCCESS, 484/484 fichiers applicatifs identiques. Bandeau en deux lignes défilantes (fil, panier en cotation d’origine avec USD/EUR en FCFA), mini-courbes, produits allumant leurs pays sur la carte, rubrique internationale séparée du fil africain (15 flux, route `/api/live/world`). [Dossier](publication-bandeau-regards-monde-2026-10-11.md).
+
+CI [38102171188](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38102171188) SUCCESS : 437 unités, 41 intégrations isolées, 16 E2E build, 99 composants et 68 UI ; types/lint/build/audit réussis, Snyk Code indisponible. Première CI échouée sur un libellé renommé non suivi dans `radar-reliability`, corrigée avant tout déploiement. 21/21 migrations sans nouveau SQL, sauvegarde revérifiée, santé 200, nouvelle route refusée aux anonymes, 14/14 E2E distants, inventaire identique avant/après.
+
 ## Reprise des favoris de l’appareil — publiée sur staging, 10 octobre 2026
 
 Publication expressément demandée et reçue : `f9ddb95` + `60c307d`, Railway `7c44e966` SUCCESS, 475/475 fichiers applicatifs identiques. Offre filtrée après lecture du compte, confirmation serveur, erreurs visibles, résultat partiel et reprise conservés ; un seul message d’erreur sur TV. [Dossier](publication-favoris-appareil-2026-10-10.md).
