@@ -53,11 +53,11 @@ test('Africa keeps pan-African news without a country; a national-media country 
   assert.ok(articleTopics({ title: 'Budget', category: 'Economie' }).includes('economie'));
 });
 
-test('scope filters separate news and CFA rates, keep strategic commodities, and deduplicate canonical URLs', () => {
+test('one wire mixes African and international news with every quote and rate, and deduplicates canonical URLs', () => {
   const raw = snapshot(); raw.alerts.push({ ...raw.alerts[0], id: 'duplicate', url: 'https://example.test/africa?utm_source=other' });
   const parsed = parseMarketsSnapshot(raw, now)!;
-  assert.deepEqual(marketTickerItems(parsed, 'Africa').map(item => item.id), ['alert:https://example.test/africa', 'quote:CC=F', 'forex:EUR / XOF']);
-  assert.deepEqual(marketTickerItems(parsed, 'World').map(item => item.id), ['alert:https://example.test/world', 'quote:CC=F', 'forex:USD / EUR']);
+  assert.deepEqual(marketTickerItems(parsed).map(item => item.id),
+    ['alert:https://example.test/africa', 'alert:https://example.test/world', 'quote:CC=F', 'forex:EUR / XOF', 'forex:USD / EUR']);
 });
 
 test('invalid numeric rows and unsafe URLs are removed before formatting while valid entries survive', () => {

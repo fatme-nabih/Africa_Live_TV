@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react';
-import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, ExternalLink, Pause, Play } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, Earth, ExternalLink, Pause, Play } from 'lucide-react';
 import { cn } from '@/components/ui';
+import CountryFlag from '@/components/radar/CountryFlag';
 import { formatForexRate, formatMarketPrice, formatVariation } from '@/lib/market-format';
 import { basketCommodities, basketName, indicativeUsdXof } from '@/lib/market-basket';
 import { commodityFocus, type CommodityFocus } from '@/lib/market-geography';
 import { africanMentions } from '@/lib/world-desk-data';
-import { marketTickerItems, type MarketScope, type MarketTickerItem } from '@/lib/market-ticker';
+import { marketTickerItems, type MarketTickerItem } from '@/lib/market-ticker';
 import { formatRadarDate, radarStatusLabel } from '@/lib/radar-data';
 import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
 import { useLiveMarkets } from './useLiveMarkets';
@@ -20,9 +21,10 @@ function ItemContent({ item, interactive = false, onSelectCountry }: { item: Mar
     const alert = item.value;
     return <>
       <span aria-hidden="true" className={cn('mt-1.5 size-1.5 shrink-0 rounded-full', severityClass[alert.severity])} />
-      {alert.countryCode && (interactive && onSelectCountry
-        ? <button type="button" aria-label={'Voir le pays : ' + countryName(alert.countryCode)} onClick={() => onSelectCountry(alert.countryCode!)} className="shrink-0 rounded-md bg-white/10 px-2 py-1 text-xs font-semibold text-text-muted hover:text-text">{alert.countryCode}</button>
-        : <span className="shrink-0 rounded-md bg-white/10 px-1.5 text-xs font-semibold text-text-muted">{alert.countryCode}</span>)}
+      {alert.countryCode ? (interactive && onSelectCountry
+        ? <button type="button" aria-label={'Voir le pays : ' + countryName(alert.countryCode)} title={countryName(alert.countryCode)} onClick={() => onSelectCountry(alert.countryCode!)} className="-my-1 inline-flex shrink-0 rounded-md p-1 hover:bg-white/10"><CountryFlag code={alert.countryCode} /></button>
+        : <span title={countryName(alert.countryCode)} className="inline-flex shrink-0"><CountryFlag code={alert.countryCode} /><span className="sr-only">{countryName(alert.countryCode)}</span></span>)
+        : alert.scope === 'World' && <span title="Monde" className="inline-flex h-4 w-6 shrink-0 items-center justify-center rounded-[3px] bg-surface-2 text-sky-300 ring-1 ring-white/15"><Earth aria-hidden="true" className="size-3.5" /><span className="sr-only">Monde</span></span>}
       {interactive && alert.url
         ? <a href={alert.url} target="_blank" rel="noopener noreferrer" aria-label={'Source : ' + alert.title} className="min-w-0 font-medium text-text hover:text-al-gold">{alert.title}<ExternalLink aria-hidden="true" className="ml-1 inline size-3" /></a>
         : <span className="font-medium text-text">{alert.title}</span>}
@@ -121,9 +123,8 @@ export default function LiveMarketTicker({ onSelectCountry, onSelectCommodity, a
   const [held, setHeld] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [announce, setAnnounce] = useState(false);
-  const [scope, setScope] = useState<MarketScope>('Africa');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const items = useMemo(() => marketTickerItems(data, scope), [data, scope]);
+  const items = useMemo(() => marketTickerItems(data), [data]);
   const headlines = useMemo(() => items.filter(item => item.kind === 'alert'), [items]);
   const basket = useMemo(() => basketCommodities(data), [data]);
   const usdXof = indicativeUsdXof(data);
@@ -185,11 +186,8 @@ export default function LiveMarketTicker({ onSelectCountry, onSelectCommodity, a
   return <section aria-label="Bandeau des marchés et événements" className={cn('market-ticker rounded-control border border-line bg-surface-1/80 text-[13px]', className)}>
     <div className="flex flex-wrap items-center gap-2 px-2 py-1.5" onMouseEnter={() => setHeld(true)} onMouseLeave={() => setHeld(false)}
       onFocus={() => setHeld(true)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setHeld(false); }}>
-      <div role="group" aria-label="Périmètre du fil" className="flex shrink-0 rounded-pill bg-black/50 p-0.5">
-        {([['Africa', 'Afrique'], ['World', 'Monde']] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={scope === value} onClick={() => { setScope(value); setSelectedId(null); }} className={cn('min-h-9 rounded-pill px-3 font-semibold transition-colors', scope === value ? 'bg-al-gold text-black' : 'text-text-muted hover:text-text')}>{label}</button>)}
-      </div>
       {status ? <p role="status" className="min-w-0 flex-1 px-2 py-2 text-text-muted">{status}</p> : current ? <>
-        <Marquee key={scope} label="Le fil : dépêches économiques" paused={stopped} render={headlineItems} className="ticker-wire min-w-0 flex-1" />
+        <Marquee label="Le fil : dépêches économiques" paused={stopped} render={headlineItems} className="ticker-wire min-w-0 flex-1" />
         {!calm && <button type="button" aria-label={paused ? 'Reprendre le bandeau' : 'Mettre le bandeau en pause'} aria-pressed={paused} onClick={() => setPaused(value => !value)} className="ml-auto inline-flex size-9 shrink-0 items-center justify-center rounded-full text-text-muted hover:bg-white/10 hover:text-text">{paused ? <Play aria-hidden="true" className="size-4" /> : <Pause aria-hidden="true" className="size-4" />}</button>}
         <div className="ticker-reader w-full min-w-0">
           <div key={current.id} className="ticker-headline px-1 py-1" aria-live={announce ? 'polite' : 'off'} aria-atomic="true">
@@ -204,13 +202,13 @@ export default function LiveMarketTicker({ onSelectCountry, onSelectCommodity, a
             <button type="button" aria-label="Dépêche suivante" disabled={headlines.length < 2} onClick={() => move(1)} className="inline-flex size-9 items-center justify-center rounded-full text-text-muted hover:bg-white/10 disabled:opacity-40"><ChevronRight aria-hidden="true" className="size-4" /></button>
           </div>
         </div>
-      </> : <p className="min-w-0 flex-1 px-2 py-2 text-text-muted">Aucune dépêche économique récente pour ce périmètre.</p>}
+      </> : <p className="min-w-0 flex-1 px-2 py-2 text-text-muted">Aucune dépêche économique récente.</p>}
     </div>
     {basket.length > 0 && <Marquee label="Le panier : cours mondiaux et franc CFA" paused={stopped} render={basketChips} className="border-t border-line px-2 py-1.5" />}
     <details className="ticker-details border-t border-line px-3 py-1.5" onToggle={event => setDetailsOpen(event.currentTarget.open)}>
       <summary className="cursor-pointer text-xs text-text-muted hover:text-text">Voir tout, sources et dates{retained ? ' · Données conservées' : partial ? ' · Certaines sources indisponibles' : loading && data ? ' · Actualisation…' : ''}</summary>
       <div className="mt-2 space-y-3 pb-2">
-        <p className="text-xs text-text-muted">{scope === 'Africa' ? 'Dépêches économiques africaines, devises CFA et marchés mondiaux utiles à l’Afrique.' : 'Dépêches économiques internationales et marchés mondiaux. Les localisations inconnues sont signalées.'} Les cours sont affichés dans leur devise de cotation d’origine ; ce ne sont pas des prix de détail. Les variations comparent la cotation à la séance précédente.</p>
+        <p className="text-xs text-text-muted">Dépêches économiques africaines (drapeau du pays) et internationales (planète), devises CFA et marchés mondiaux utiles à l’Afrique. Les localisations inconnues sont signalées. Les cours sont affichés dans leur devise de cotation d’origine ; ce ne sont pas des prix de détail. Les variations comparent la cotation à la séance précédente.</p>
         {data && <p role="status" className="text-xs text-text-muted">Collecte : {formatRadarDate(data.updatedAt)}.{retained && ' Une source est en panne : les dernières données disponibles sont conservées.'}{partial && ' Certaines sources ne sont pas disponibles.'}</p>}
         <ul className="space-y-2">{items.map(item => <li key={item.id} className="rounded-control border border-line p-2">
           <div className="flex flex-wrap items-start gap-2 [overflow-wrap:anywhere]"><ItemContent item={item} interactive onSelectCountry={onSelectCountry} /></div>

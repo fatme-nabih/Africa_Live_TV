@@ -25,10 +25,8 @@ for (const width of [1366, 390, 320]) test(`Radar : dates, identités, filtre et
   await expect(page.locator('.maplibregl-canvas')).toBeVisible();
   await expect(page.locator('.tactical-radar-marker').first()).toBeVisible();
   await expect.poll(() => workers.some(url => url.endsWith('/maplibre-gl-worker.mjs'))).toBe(true);
-  const scope = page.getByRole('group', { name: 'Périmètre du fil' });
-  await expect(scope.getByRole('button', { name: 'Afrique' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByText('Événement mondial', { exact: true })).toHaveCount(0);
-  await scope.getByRole('button', { name: 'Monde' }).click();
+  // Afrique et Monde partagent un seul fil : plus de sélecteur de périmètre.
+  await expect(page.getByRole('group', { name: 'Périmètre du fil' })).toHaveCount(0);
   const tickerDetails = page.getByRole('region', { name: 'Bandeau des marchés et événements' }).locator('details');
   await tickerDetails.locator('summary').click();
   await expect(tickerDetails.getByRole('link', { name: 'Source : Événement mondial' })).toBeVisible();

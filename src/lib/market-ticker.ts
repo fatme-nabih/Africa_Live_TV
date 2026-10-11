@@ -2,7 +2,6 @@ import type { LiveMarketsSnapshot, MarketCommodity, MarketForex, MarketTickerAle
 import { canonicalArticleUrl, normalizeRadarDate, temporalWindow, type RadarSourceState, type RadarSourceStatus } from './radar-data';
 import { AFRICAN_COUNTRIES } from './radar-countries';
 
-export type MarketScope = 'Africa' | 'World';
 export type MarketTickerItem =
   | { id: string; kind: 'alert'; value: MarketTickerAlert }
   | { id: string; kind: 'commodity'; value: MarketCommodity }
@@ -69,20 +68,13 @@ export function parseMarketsSnapshot(raw: unknown, now = Date.now()): LiveMarket
   return { commodities, forex, alerts: [...windowed.recent, ...windowed.undated], updatedAt, availability, disclaimer: text(body.disclaimer) ? body.disclaimer : '' };
 }
 
-/** Monde shows international/unknown alerts; strategic global commodities also contextualise Africa. */
-export function marketTickerItems(snapshot: LiveMarketsSnapshot | null, scope: MarketScope): MarketTickerItem[] {
+/** Un seul fil : dépêches africaines, internationales et à localiser (ordre du snapshot), puis cours et taux, sans doublon d'URL canonique. */
+export function marketTickerItems(snapshot: LiveMarketsSnapshot | null): MarketTickerItem[] {
   if (!snapshot) return [];
   const items: MarketTickerItem[] = [], seen = new Set<string>();
   const add = (item: MarketTickerItem) => { if (!seen.has(item.id)) { seen.add(item.id); items.push(item); } };
-  for (const alert of snapshot.alerts) {
-    if (scope === 'Africa' ? alert.scope !== 'Africa' : alert.scope === 'Africa') continue;
-    add({ id: `alert:${canonicalArticleUrl(alert.url ?? '') || alert.id}`, kind: 'alert', value: alert });
-  }
+  for (const alert of snapshot.alerts) add({ id: `alert:${canonicalArticleUrl(alert.url ?? '') || alert.id}`, kind: 'alert', value: alert });
   for (const quote of snapshot.commodities) add({ id: `quote:${quote.symbol}`, kind: 'commodity', value: quote });
-  for (const rate of snapshot.forex) {
-    const cfa = ['XOF', 'XAF'].includes(rate.quote) || ['XOF', 'XAF'].includes(rate.base);
-    if (scope === 'Africa' ? !cfa : cfa) continue;
-    add({ id: `forex:${rate.pair}`, kind: 'forex', value: rate });
-  }
+  for (const rate of snapshot.forex) add({ id: `forex:${rate.pair}`, kind: 'forex', value: rate });
   return items;
 }

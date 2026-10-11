@@ -29,7 +29,13 @@ test('desktop: the wire and the basket scroll on two lines; pause and hover free
   await page.goto('/?kind=ticker');
   await expect(tracks(page)).toHaveCount(2); await expect(band(page).locator('.ticker-reader')).toBeHidden();
   for (const i of [0, 1]) { const first = await transform(tracks(page).nth(i)); await expect.poll(() => transform(tracks(page).nth(i))).not.toBe(first); }
-  await expect(band(page).getByRole('list', { name: 'Le fil : dépêches économiques' }).getByRole('link', { name: /^Source : Économie africaine/ })).toHaveCount(1);
+  // Un seul fil sans sélecteur : Afrique (drapeau du pays) et Monde (planète) défilent ensemble.
+  await expect(band(page).getByRole('group', { name: 'Périmètre du fil' })).toHaveCount(0);
+  const wire = band(page).getByRole('list', { name: 'Le fil : dépêches économiques' });
+  await expect(wire.getByRole('link', { name: /^Source : Économie africaine/ })).toHaveCount(1);
+  await expect(wire.getByRole('link', { name: 'Source : Économie internationale' })).toHaveCount(1);
+  await expect(wire.getByRole('button', { name: 'Voir le pays : Sénégal' }).locator('svg[data-flag="SN"]')).toHaveCount(1);
+  await expect(wire.getByTitle('Monde', { exact: true })).toHaveCount(1);
   await expect(band(page).locator('.marquee-clone').first()).toHaveAttribute('aria-hidden', 'true');
   await expect(band(page).locator('.marquee-clone').locator('a,button')).toHaveCount(0);
   await band(page).getByRole('button', { name: 'Mettre le bandeau en pause' }).click(); await page.mouse.move(0, 0);
@@ -72,8 +78,8 @@ test('mobile: one headline at a time, rotates, stops on pause and steps manually
   await band(page).getByRole('button', { name: 'Mettre le bandeau en pause' }).click(); await page.mouse.move(0, 0);
   await page.clock.fastForward(15_000); await expect(headline(page)).toContainText('Budget sénégalais adopté');
   await band(page).getByRole('button', { name: 'Dépêche suivante' }).click();
-  await expect(headline(page)).toContainText('Économie africaine'); await expect(headline(page)).toHaveAttribute('aria-live', 'polite');
-  await expect(band(page)).toContainText('1/2');
+  await expect(headline(page)).toContainText('Économie internationale'); await expect(headline(page)).toHaveAttribute('aria-live', 'polite');
+  await expect(headline(page).getByTitle('Monde', { exact: true })).toBeVisible(); await expect(band(page)).toContainText('3/3');
   await expect.poll(() => tracks(page).nth(1).evaluate(el => getComputedStyle(el).animationName)).toBe('none');
 });
 
@@ -96,8 +102,8 @@ for (const mode of ['reduced', 'eco']) test(`${mode}: nothing moves by itself an
   await expect(band(page).locator('.marquee-clone').last()).toBeHidden();
   await page.clock.fastForward(30_000); await expect(headline(page)).toContainText('Économie africaine');
   await band(page).getByRole('button', { name: 'Dépêche suivante' }).click(); await expect(headline(page)).toContainText('Budget sénégalais adopté');
-  await band(page).getByRole('button', { name: 'Monde', exact: true }).click();
-  await expect(headline(page).getByRole('link', { name: 'Source : Économie internationale' })).toBeVisible(); await expect(band(page)).not.toContainText('Budget sénégalais');
+  await band(page).getByRole('button', { name: 'Dépêche suivante' }).click();
+  await expect(headline(page).getByRole('link', { name: 'Source : Économie internationale' })).toBeVisible(); await expect(band(page)).toContainText('3/3');
 });
 
 test('manual refresh forces the endpoint; a late old response cannot erase the current success', async ({ page }) => {
@@ -143,6 +149,14 @@ test('a basket product lights up its producing countries on the map card, and a 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
+test('a full basket with the map stays inside its own line on mobile: screen-reader labels never widen the page', async ({ page }) => {
+  const raw = snapshot(); raw.commodities = ['ZR=F', 'ZW=F', 'BZ=F', 'GC=F', 'CC=F', 'CT=F', 'KC=F', 'HG=F'].map(symbol => ({ ...raw.commodities[0], symbol }));
+  await page.route('**/api/live/markets*', route => route.fulfill({ json: raw }));
+  await page.setViewportSize({ width: 320, height: 844 }); await page.goto('/?kind=ticker&map=1');
+  await expect(basket(page).getByRole('button')).toHaveCount(8);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
 test('without the map the basket chips stay plain text', async ({ page }) => {
   await page.goto('/?kind=ticker'); await expect(basket(page)).toContainText('Cacao');
   await expect(basket(page).getByRole('button')).toHaveCount(0);
@@ -152,7 +166,7 @@ test('an international dispatch that names an African country carries the « Tou
   const raw = snapshot(); raw.alerts.push({ ...raw.alerts[2], id: 'world-africa', title: 'Le FMI relève ses prévisions pour le Sénégal', url: 'https://example.test/world-africa' });
   await page.route('**/api/live/markets*', route => route.fulfill({ json: raw }));
   await page.setViewportSize({ width: 390, height: 844 }); await page.goto('/?kind=ticker');
-  await band(page).getByRole('button', { name: 'Monde', exact: true }).click();
+  const next = band(page).getByRole('button', { name: 'Dépêche suivante' }); await next.click(); await next.click();
   await expect(headline(page)).toContainText('Économie internationale'); await expect(headline(page)).not.toContainText('Touche l’Afrique');
   await band(page).getByRole('button', { name: 'Dépêche suivante' }).click();
   await expect(headline(page)).toContainText('Sénégal'); await expect(headline(page)).toContainText('Touche l’Afrique');

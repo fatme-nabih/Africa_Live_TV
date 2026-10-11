@@ -203,12 +203,12 @@ test.describe('Météo et marchés repliables (UX-307)', () => {
     await expect.poll(() => page.evaluate(() => localStorage.getItem('al_radar_weather_open'))).toBe('false');
 
     // Le bandeau des marchés défile en haut, sans être replié.
-    await expect(page.getByRole('group', { name: 'Périmètre du fil' })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Bandeau des marchés et événements' })).toBeVisible();
 
     await page.reload();
     await expect(page.getByRole('button', { name: 'Déplier la météo' })).toBeVisible();
     await expect(page.locator('#weather-country-select')).toBeHidden();
-    await expect(page.getByRole('group', { name: 'Périmètre du fil' })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Bandeau des marchés et événements' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Déplier la météo' }).click();
     await expect(page.locator('#weather-country-select')).toBeVisible();
@@ -318,7 +318,9 @@ test.describe('Regarder une chaîne du pays (UX-306, R1)', () => {
     await expect(feed.getByText('Titre r1')).toBeVisible();
     await expect(feed.getByRole('button', { name: /direct|Regarder/i })).toHaveCount(0);
     await expect(stories(page).getByRole('button', { name: /direct|Regarder/i })).toHaveCount(0);
-    await expect(page.getByRole('link', { name: /Partager « Titre r1 »/ })).toBeVisible();
+    // Le partage est un bouton qui ouvre un menu (WhatsApp, copier…) depuis b3b1e51, plus un lien direct.
+    const share = page.getByRole('button', { name: /Partager « Titre r1 »/ });
+    await expect(share).toBeVisible(); await expect(share).toHaveAttribute('aria-haspopup', 'menu');
   });
 
   test('depuis la liste des chaînes du pays', async ({ page }) => {
