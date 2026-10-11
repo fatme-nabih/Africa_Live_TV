@@ -25,14 +25,19 @@ for (const width of [1366, 390, 320]) test(`Radar : dates, identités, filtre et
   await expect(page.locator('.maplibregl-canvas')).toBeVisible();
   await expect(page.locator('.tactical-radar-marker').first()).toBeVisible();
   await expect.poll(() => workers.some(url => url.endsWith('/maplibre-gl-worker.mjs'))).toBe(true);
-  const scope = page.getByRole('group', { name: 'Périmètre du bandeau' });
+  const scope = page.getByRole('group', { name: 'Périmètre du fil' });
   await expect(scope.getByRole('button', { name: 'Afrique' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByText('Événement mondial', { exact: true })).toHaveCount(0);
   await scope.getByRole('button', { name: 'Monde' }).click();
   const tickerDetails = page.getByRole('region', { name: 'Bandeau des marchés et événements' }).locator('details');
   await tickerDetails.locator('summary').click();
   await expect(tickerDetails.getByRole('link', { name: 'Source : Événement mondial' })).toBeVisible();
-  await expect(page.locator('[aria-hidden="true"][inert]')).toHaveCount(1);
+  // Seules les copies de boucle du bandeau sont inertes : une par ligne défilante (le fil, le panier).
+  const ticker = page.getByRole('region', { name: 'Bandeau des marchés et événements' });
+  const loopCopies = await ticker.locator('.marquee-clone[aria-hidden="true"][inert]').count();
+  expect(loopCopies).toBe(await ticker.locator('.marquee').count());
+  expect(loopCopies).toBeGreaterThan(0);
+  await expect(page.locator('[aria-hidden="true"][inert]')).toHaveCount(loopCopies);
   await selectCountry(page, 'SN');
   await expect(page.getByText('Économie Côte d’Ivoire', { exact: true })).toHaveCount(0);
   await expect(page.getByText('Dépêche Sénégal récente', { exact: true })).toBeVisible();

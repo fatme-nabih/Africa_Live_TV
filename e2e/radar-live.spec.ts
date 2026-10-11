@@ -203,12 +203,12 @@ test.describe('Météo et marchés repliables (UX-307)', () => {
     await expect.poll(() => page.evaluate(() => localStorage.getItem('al_radar_weather_open'))).toBe('false');
 
     // Le bandeau des marchés défile en haut, sans être replié.
-    await expect(page.getByRole('group', { name: 'Périmètre du bandeau' })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Périmètre du fil' })).toBeVisible();
 
     await page.reload();
     await expect(page.getByRole('button', { name: 'Déplier la météo' })).toBeVisible();
     await expect(page.locator('#weather-country-select')).toBeHidden();
-    await expect(page.getByRole('group', { name: 'Périmètre du bandeau' })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Périmètre du fil' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Déplier la météo' }).click();
     await expect(page.locator('#weather-country-select')).toBeVisible();
