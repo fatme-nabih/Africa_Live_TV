@@ -25,9 +25,10 @@ const tracks = (page: Page) => band(page).locator('.animate-marquee');
 const transform = (track: Locator) => track.evaluate(el => getComputedStyle(el).transform);
 const playState = (track: Locator) => track.evaluate(el => getComputedStyle(el).animationPlayState);
 
-test('desktop: the wire and the basket scroll on two lines; pause and hover freeze them; loop copies are inert', async ({ page }) => {
+test('desktop: both lines scroll without a pause button; hover, focus and details freeze them; loop copies are inert', async ({ page }) => {
   await page.goto('/?kind=ticker');
   await expect(tracks(page)).toHaveCount(2); await expect(band(page).locator('.ticker-reader')).toBeHidden();
+  await expect(band(page).getByRole('button', { name: /Mettre le bandeau en pause|Reprendre le bandeau/ })).toHaveCount(0);
   for (const i of [0, 1]) { const first = await transform(tracks(page).nth(i)); await expect.poll(() => transform(tracks(page).nth(i))).not.toBe(first); }
   // Un seul fil sans sélecteur : Afrique (drapeau du pays) et Monde (planète) défilent ensemble.
   await expect(band(page).getByRole('group', { name: 'Périmètre du fil' })).toHaveCount(0);
@@ -38,10 +39,10 @@ test('desktop: the wire and the basket scroll on two lines; pause and hover free
   await expect(wire.getByTitle('Monde', { exact: true })).toHaveCount(1);
   await expect(band(page).locator('.marquee-clone').first()).toHaveAttribute('aria-hidden', 'true');
   await expect(band(page).locator('.marquee-clone').locator('a,button')).toHaveCount(0);
-  await band(page).getByRole('button', { name: 'Mettre le bandeau en pause' }).click(); await page.mouse.move(0, 0);
+  await band(page).locator('summary').click(); await page.mouse.move(0, 0);
   for (const i of [0, 1]) await expect.poll(() => playState(tracks(page).nth(i))).toBe('paused');
   const frozen = await transform(tracks(page).nth(1)); await page.waitForTimeout(150); expect(await transform(tracks(page).nth(1))).toBe(frozen);
-  await band(page).getByRole('button', { name: 'Reprendre le bandeau' }).click(); await page.mouse.move(0, 0);
+  await band(page).locator('summary').click(); await page.mouse.move(0, 0);
   await expect.poll(() => transform(tracks(page).nth(1))).not.toBe(frozen);
   await band(page).locator('.marquee').last().hover({ force: true }); await expect.poll(() => playState(tracks(page).nth(1))).toBe('paused');
   const loop = await tracks(page).nth(1).evaluate(el => {
@@ -50,6 +51,10 @@ test('desktop: the wire and the basket scroll on two lines; pause and hover free
   });
   expect(loop.width).toBeGreaterThanOrEqual(loop.viewport - 20); expect(Math.abs(loop.width - loop.offset)).toBeLessThan(0.1);
   expect(Math.abs(loop.duration - loop.width / 40)).toBeLessThan(0.1);
+  await page.mouse.move(0, 0); await wire.getByRole('button', { name: 'Voir le pays : Sénégal' }).focus();
+  await expect.poll(() => playState(tracks(page).first())).toBe('paused');
+  await page.getByRole('button', { name: 'Refresh ticker' }).focus(); await page.mouse.move(0, 0);
+  for (const i of [0, 1]) await expect.poll(() => playState(tracks(page).nth(i))).toBe('running');
 });
 
 test('the basket keeps original quotation currencies next to the dollar and the euro in FCFA', async ({ page }) => {
@@ -69,14 +74,23 @@ test('without a dollar rate only the fixed euro parity is shown', async ({ page 
   await expect(basket(page)).toContainText('1 EUR = 655,957 FCFA'); await expect(basket(page)).not.toContainText('1 USD');
 });
 
-test('mobile: one headline at a time, rotates, stops on pause and steps manually; the basket does not animate', async ({ page }) => {
+test('mobile: one headline rotates without a pause button, stops during interaction and details, and steps manually', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 }); await page.clock.install(); await page.goto('/?kind=ticker');
   await expect(band(page).locator('.ticker-wire')).toBeHidden();
   await expect(headline(page).getByRole('link', { name: /^Source : Économie africaine/ })).toBeVisible();
   await expect(headline(page)).toHaveAttribute('aria-live', 'off');
+  await expect(band(page).getByRole('button', { name: /Mettre le bandeau en pause|Reprendre le bandeau/ })).toHaveCount(0);
   await page.clock.fastForward(7_100); await expect(headline(page)).toContainText('Budget sénégalais adopté');
-  await band(page).getByRole('button', { name: 'Mettre le bandeau en pause' }).click(); await page.mouse.move(0, 0);
+  await headline(page).hover();
   await page.clock.fastForward(15_000); await expect(headline(page)).toContainText('Budget sénégalais adopté');
+  await page.mouse.move(0, 0); await page.clock.fastForward(7_100);
+  await expect(headline(page)).toContainText('Économie internationale');
+  await band(page).locator('summary').click(); await page.mouse.move(0, 0);
+  await page.clock.fastForward(15_000); await expect(headline(page)).toContainText('Économie internationale');
+  await band(page).locator('summary').click(); await page.mouse.move(0, 0);
+  await page.clock.fastForward(7_100); await expect(headline(page)).toContainText('Économie africaine');
+  await band(page).getByRole('button', { name: 'Dépêche suivante' }).click();
+  await expect(headline(page)).toContainText('Budget sénégalais adopté');
   await band(page).getByRole('button', { name: 'Dépêche suivante' }).click();
   await expect(headline(page)).toContainText('Économie internationale'); await expect(headline(page)).toHaveAttribute('aria-live', 'polite');
   await expect(headline(page).getByTitle('Monde', { exact: true })).toBeVisible(); await expect(band(page)).toContainText('3/3');

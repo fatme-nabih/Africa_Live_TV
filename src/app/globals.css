@@ -307,7 +307,7 @@ html[data-eco='true'] .radar-pulse {
 }
 
 /* Propriétés détaillées, jamais le raccourci « animation » : il remettrait la pause à zéro.
-   Bandeau sur deux lignes défilantes (le fil, le panier), à vitesse constante, pause au survol, au focus et par le bouton.
+   Bandeau sur deux lignes défilantes (le fil, le panier), à vitesse constante, pause au survol, au focus et à l'ouverture des détails.
    Sur mobile, en mouvement réduit ou en mode Éco : le fil se lit une dépêche à la fois, le panier se fait glisser au doigt. */
 @keyframes marquee-scroll {
   from { transform: translateX(0); }

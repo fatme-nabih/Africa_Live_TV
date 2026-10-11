@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react';
-import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, Earth, ExternalLink, Pause, Play } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, Earth, ExternalLink } from 'lucide-react';
 import { cn } from '@/components/ui';
 import CountryFlag from '@/components/radar/CountryFlag';
 import { formatForexRate, formatMarketPrice, formatVariation } from '@/lib/market-format';
@@ -86,7 +86,7 @@ const chip = 'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounde
 
 /**
  * Ligne défilante à vitesse constante : le groupe réel (liste accessible, interactive) et sa copie inerte pour la boucle.
- * Pause au survol, au focus, par le bouton du bandeau ou quand « Voir tout » est ouvert. Sur mobile, en mouvement réduit
+ * Pause au survol, au focus ou quand « Voir tout » est ouvert. Sur mobile, en mouvement réduit
  * ou en mode Éco, la feuille de style arrête l'animation : la ligne se fait glisser au doigt et la copie disparaît.
  */
 function Marquee({ label, paused, render, className = '' }: { label: string; paused: boolean; render: (interactive: boolean) => ReactNode; className?: string }) {
@@ -119,7 +119,6 @@ export default function LiveMarketTicker({ onSelectCountry, onSelectCommodity, a
   const { data, loading, error } = useLiveMarkets(refreshToken);
   const calm = useCalm();
   const scrolling = useScrollingLines();
-  const [paused, setPaused] = useState(false);
   const [held, setHeld] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [announce, setAnnounce] = useState(false);
@@ -135,9 +134,8 @@ export default function LiveMarketTicker({ onSelectCountry, onSelectCommodity, a
   const sources = data?.availability ?? [];
   const retained = Boolean(data) && (error || sources.some(source => source.status === 'stale'));
   const partial = sources.some(source => ['unavailable', 'partial', 'not_configured'].includes(source.status));
-  const stopped = paused || detailsOpen;
   // Le lecteur une-dépêche-à-la-fois ne tourne que là où il est affiché (mobile), jamais en mouvement réduit ou Éco.
-  const rotating = !calm && !scrolling && !stopped && headlines.length > 1;
+  const rotating = !calm && !scrolling && !detailsOpen && headlines.length > 1;
 
   useEffect(() => {
     if (!rotating || held) return;
@@ -187,8 +185,7 @@ export default function LiveMarketTicker({ onSelectCountry, onSelectCommodity, a
     <div className="flex flex-wrap items-center gap-2 px-2 py-1.5" onMouseEnter={() => setHeld(true)} onMouseLeave={() => setHeld(false)}
       onFocus={() => setHeld(true)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setHeld(false); }}>
       {status ? <p role="status" className="min-w-0 flex-1 px-2 py-2 text-text-muted">{status}</p> : current ? <>
-        <Marquee label="Le fil : dépêches économiques" paused={stopped} render={headlineItems} className="ticker-wire min-w-0 flex-1" />
-        {!calm && <button type="button" aria-label={paused ? 'Reprendre le bandeau' : 'Mettre le bandeau en pause'} aria-pressed={paused} onClick={() => setPaused(value => !value)} className="ml-auto inline-flex size-9 shrink-0 items-center justify-center rounded-full text-text-muted hover:bg-white/10 hover:text-text">{paused ? <Play aria-hidden="true" className="size-4" /> : <Pause aria-hidden="true" className="size-4" />}</button>}
+        <Marquee label="Le fil : dépêches économiques" paused={detailsOpen} render={headlineItems} className="ticker-wire min-w-0 flex-1" />
         <div className="ticker-reader w-full min-w-0">
           <div key={current.id} className="ticker-headline px-1 py-1" aria-live={announce ? 'polite' : 'off'} aria-atomic="true">
             <div className="flex min-w-0 flex-wrap items-start gap-x-2 gap-y-0.5 [overflow-wrap:anywhere]">
@@ -204,7 +201,7 @@ export default function LiveMarketTicker({ onSelectCountry, onSelectCommodity, a
         </div>
       </> : <p className="min-w-0 flex-1 px-2 py-2 text-text-muted">Aucune dépêche économique récente.</p>}
     </div>
-    {basket.length > 0 && <Marquee label="Le panier : cours mondiaux et franc CFA" paused={stopped} render={basketChips} className="border-t border-line px-2 py-1.5" />}
+    {basket.length > 0 && <Marquee label="Le panier : cours mondiaux et franc CFA" paused={detailsOpen} render={basketChips} className="border-t border-line px-2 py-1.5" />}
     <details className="ticker-details border-t border-line px-3 py-1.5" onToggle={event => setDetailsOpen(event.currentTarget.open)}>
       <summary className="cursor-pointer text-xs text-text-muted hover:text-text">Voir tout, sources et dates{retained ? ' · Données conservées' : partial ? ' · Certaines sources indisponibles' : loading && data ? ' · Actualisation…' : ''}</summary>
       <div className="mt-2 space-y-3 pb-2">
