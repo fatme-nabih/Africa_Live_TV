@@ -9,6 +9,9 @@ import type { LiveChannelsSummarySnapshot } from '@/lib/live-channels-types';
 import type { RadarCountry } from '@/lib/live-osint-types';
 import type { Channel } from '@/types/channel';
 
+/** Zone qui défile : sur ordinateur, même hauteur maximale que le fil des dépêches (pas de page interminable). */
+const SCROLL_AREA = 'flex-1 divide-y divide-line overflow-y-auto xl:max-h-[515px]';
+
 export default function CountryChannels({
   selectedCountry,
   activeCountry,
@@ -38,7 +41,7 @@ export default function CountryChannels({
 }) {
   if (selectedCountry && activeCountry) {
     return (
-      <div className="flex-1 divide-y divide-line overflow-y-auto">
+      <div className="flex flex-1 flex-col">
         <div className="flex items-center justify-between border-b border-line-gold bg-al-gold/[0.04] px-4 py-2 text-xs">
           <span className="text-text">
             Chaînes du catalogue : <strong>{activeCountry.name}</strong> ({countryChannels.length})
@@ -48,6 +51,8 @@ export default function CountryChannels({
           </button>
         </div>
 
+        {/* Ordinateur : même hauteur que le fil des dépêches, la liste défile dans le panneau. */}
+        <div className={SCROLL_AREA}>
         {error ? (
           <div className="p-4">
             <ErrorState title="Chaînes injoignables" description={error} onRetry={onRetry} />
@@ -116,6 +121,7 @@ export default function CountryChannels({
             );
           })
         )}
+        </div>
       </div>
     );
   }
@@ -170,7 +176,7 @@ function CountryGrid({
   };
 
   return (
-    <div className="flex-1 divide-y divide-line overflow-y-auto">
+    <div className="flex flex-1 flex-col">
       <div className="space-y-3 border-b border-line bg-black/20 px-4 py-3 sm:px-5">
         <div>
           <div className="text-xs font-bold text-text">Télévisions d’Afrique référencées</div>
@@ -222,6 +228,8 @@ function CountryGrid({
         <p role="status" className="sr-only">{filtering ? `${shown} pays affiché${shown > 1 ? 's' : ''}` : ''}</p>
       </div>
 
+      {/* Recherche et régions restent visibles ; sur ordinateur, seules les cartes défilent. */}
+      <div className={SCROLL_AREA}>
       {shown === 0 && (
         <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
           <p className="text-sm text-text">Aucun pays ne correspond{query.trim() ? ` à « ${query.trim()} »` : ''}.</p>
@@ -242,6 +250,7 @@ function CountryGrid({
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{others.map(country => card(country, false))}</div>
         </section>
       )}
+      </div>
     </div>
   );
 }

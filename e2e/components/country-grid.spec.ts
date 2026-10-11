@@ -87,3 +87,25 @@ test('les pastilles de région filtrent, se combinent à la recherche et le cas 
   await regions.getByRole('button', { name: /^Afrique de l’Ouest/ }).click();
   await expect(regions.getByRole('button', { name: 'Toutes' })).toHaveAttribute('aria-pressed', 'true');
 });
+
+test('ordinateur : la grille complète défile dans le panneau, la recherche reste visible', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 900 });
+  await page.goto('/?kind=country-grid&many=1&followed=SN');
+  const cards = page.locator('main button[aria-label*=" : "]');
+  await expect(cards).toHaveCount(55);
+  const area = page.locator('main div.overflow-y-auto').first();
+  const box = (await area.boundingBox())!;
+  expect(box.height).toBeLessThanOrEqual(515);
+  expect(await area.evaluate(element => element.scrollHeight > element.clientHeight)).toBe(true);
+  await area.evaluate(element => { element.scrollTop = element.scrollHeight; });
+  await expect(page.getByRole('searchbox', { name: 'Rechercher un pays' })).toBeInViewport();
+  await expect(cards.last()).toBeInViewport();
+  await page.screenshot({ path: test.info().outputPath('country-grid-desktop-full.png') });
+});
+
+test('téléphone : pas de défilement imbriqué, la page défile normalement', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto('/?kind=country-grid&many=1');
+  const area = page.locator('main div.overflow-y-auto').first();
+  expect(await area.evaluate(element => element.scrollHeight <= element.clientHeight + 1)).toBe(true);
+});

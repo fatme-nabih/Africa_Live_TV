@@ -221,7 +221,8 @@ function RadarWorkspace() {
             commodityFocus={commodity}
             onClearCommodity={() => setCommodity(null)}
           />
-          <div className="flex flex-col gap-4 xl:col-span-5 xl:col-start-8 xl:row-start-2 xl:self-start">
+          {/* Ordinateur : la météo accompagne le défilement au lieu de laisser un vide sous elle. */}
+          <div className="flex flex-col gap-4 xl:sticky xl:top-20 xl:col-span-5 xl:col-start-8 xl:row-start-2 xl:self-start">
             <WeatherCard
               weather={weather}
               weatherError={weatherError}

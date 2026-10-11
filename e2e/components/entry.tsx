@@ -18,6 +18,7 @@ import RadarMapCard from '../../src/components/radar/RadarMapCard';
 import WorldDesk from '../../src/components/radar/WorldDesk';
 import type { CommodityFocus } from '../../src/lib/market-geography';
 import CountryChannels from '../../src/components/radar/CountryChannels';
+import { AFRICAN_COUNTRIES } from '../../src/lib/radar-countries';
 import { ShareArticleLink } from '../../src/components/tv/ChannelTile';
 import type { LiveChannelsSummarySnapshot } from '../../src/lib/live-channels-types';
 function TestWorld() {
@@ -39,10 +40,13 @@ function TestTicker() {
 }
 const gridSummary: LiveChannelsSummarySnapshot = { updatedAt: '2026-10-10T12:00:00Z', totalChannels: 103, totalDirectWeb: 52, countries: Object.fromEntries(
   ([['NG',50,25],['SN',19,6],['CI',25,14],['CD',21,4],['SO',7,0],['ML',1,1]] as const).map(([code,channelCount,directWebCount]) => [code,{ countryCode:code,channelCount,directWebCount }])) };
+// `many=1` : tout le catalogue africain, pour vérifier la hauteur bornée de la grille sur ordinateur.
+const fullSummary: LiveChannelsSummarySnapshot = { ...gridSummary, countries: Object.fromEntries(AFRICAN_COUNTRIES.map((country, index) => [country.code, { countryCode: country.code, channelCount: 60 - index, directWebCount: index % 3 }])) };
 function TestCountryGrid() {
+  const summary = new URLSearchParams(location.search).get('many') ? fullSummary : gridSummary;
   const followed = (new URLSearchParams(location.search).get('followed') ?? '').split(',').filter(Boolean);
   const [chosen,setChosen] = React.useState<string|null>(null);
-  return <main className="max-w-3xl bg-black p-3 text-text"><CountryChannels selectedCountry={null} activeCountry={null} countryChannels={[]} loading={false} error={null} channelsSummary={gridSummary} activePlayChannelId={null} followedCountries={followed} onSelectCountry={setChosen} onPlayChannel={() => {}} onOpenPopout={() => {}} onRetry={() => {}}/><p data-testid="grid-choice">{chosen}</p></main>;
+  return <main className="max-w-3xl bg-black p-3 text-text"><CountryChannels selectedCountry={null} activeCountry={null} countryChannels={[]} loading={false} error={null} channelsSummary={summary} activePlayChannelId={null} followedCountries={followed} onSelectCountry={setChosen} onPlayChannel={() => {}} onOpenPopout={() => {}} onRetry={() => {}}/><p data-testid="grid-choice">{chosen}</p></main>;
 }
 function TestShare() {
   const [cardClicks,setCardClicks] = React.useState(0);
