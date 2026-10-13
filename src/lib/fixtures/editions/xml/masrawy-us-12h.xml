@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>Masrawy</title>
+<link>https://feed.fixture.test/</link>
+<description>Flux synthétique Africa Live (EDI-002) : titres inventés, format de date réel.</description>
+<item>
+<title>عنوان تجريبي بصيغة أمريكية</title>
+<link>https://feed.fixture.test/masrawy/1</link>
+<pubDate>10/11/2026 9:18:17 PM</pubDate>
+</item>
+<item>
+<title>عنوان تجريبي صباحي</title>
+<link>https://feed.fixture.test/masrawy/2</link>
+<pubDate>10/11/2026 12:05:00 AM</pubDate>
+</item>
+<item>
+<title>عنوان تجريبي بعد تغيير الساعة</title>
+<link>https://feed.fixture.test/masrawy/3</link>
+<pubDate>11/2/2026 8:05:00 AM</pubDate>
+</item>
+</channel>
+</rss>

@@ -1,3 +1,9 @@
+import type { Edition } from './editions';
+import { foreignCountryMentions } from './country-detector';
+import { EXTRA_ALIASES } from './country-lexicon/fr';
+import { textWords, phraseAt } from './text-normalize';
+import { REGION_KEYWORDS as FOREIGN_REGION_KEYWORDS } from './world-region-lexicon';
+import { fr } from '@/i18n/fr';
 import { AFRICAN_COUNTRIES } from './radar-countries';
 import { canonicalArticleUrl, normalizeRadarDate, temporalWindow, type RadarSourceState, type RadarSourceStatus } from './radar-data';
 
@@ -6,12 +12,13 @@ import { canonicalArticleUrl, normalizeRadarDate, temporalWindow, type RadarSour
  * Module partagé (serveur et navigateur) : régions, déduction de la région d'un titre, pays africains cités, validation du relevé.
  */
 export type WorldRegion = 'europe' | 'ameriques' | 'moyen-orient' | 'asie-pacifique';
-export const WORLD_REGIONS: { id: WorldRegion; label: string; city: string; timeZone: string }[] = [
-  { id: 'europe', label: 'Europe', city: 'Paris', timeZone: 'Europe/Paris' },
-  { id: 'ameriques', label: 'Amériques', city: 'New York', timeZone: 'America/New_York' },
-  { id: 'moyen-orient', label: 'Moyen-Orient', city: 'Riyad', timeZone: 'Asia/Riyadh' },
-  { id: 'asie-pacifique', label: 'Asie-Pacifique', city: 'Pékin', timeZone: 'Asia/Shanghai' },
-];
+/** Ordre et fuseaux ; libellés et villes en français (le composant lit ceux de son édition dans le dictionnaire). */
+export const WORLD_REGIONS: { id: WorldRegion; label: string; city: string; timeZone: string }[] = ([
+  ['europe', 'Europe/Paris'],
+  ['ameriques', 'America/New_York'],
+  ['moyen-orient', 'Asia/Riyadh'],
+  ['asie-pacifique', 'Asia/Shanghai'],
+] as const).map(([id, timeZone]) => ({ id, label: fr.world.regions[id], city: fr.world.cities[id], timeZone }));
 const REGION_IDS = new Set<string>(WORLD_REGIONS.map(region => region.id));
 
 export type WorldArticle = {
@@ -61,7 +68,12 @@ function matches(normalized: string, alias: string) {
 }
 
 /** Région majoritaire citée par le titre ; aucune (null) en cas d'égalité ou d'absence d'indice. */
-export function inferWorldRegion(title: string): WorldRegion | null {
+export function inferWorldRegion(title: string, edition: Edition = 'fr'): WorldRegion | null {
+  if (edition !== 'fr') {
+    const words = textWords(title, edition);
+    const scores = WORLD_REGIONS.map(({ id }) => ({ id, score: FOREIGN_REGION_KEYWORDS[edition][id].filter(alias => phraseAt(words, textWords(alias, edition), edition) >= 0).length })).sort((a, b) => b.score - a.score);
+    return scores[0].score > 0 && scores[0].score > scores[1].score ? scores[0].id : null;
+  }
   const normalized = normalizeTitle(title);
   const scores = WORLD_REGIONS.map(({ id }) => ({ id, score: REGION_KEYWORDS[id].filter(alias => matches(normalized, alias)).length }));
   scores.sort((a, b) => b.score - a.score);
@@ -70,11 +82,6 @@ export function inferWorldRegion(title: string): WorldRegion | null {
 
 // Noms officiels de la liste Africa Live, plus quelques usages courants. Les noms ambigus hors contexte africain
 // (« Maurice » prénom, « Victoria », « Congo » sans précision) ne désignent pas un pays à eux seuls.
-const EXTRA_ALIASES: [string, string][] = [
-  ['rdc', 'CD'], ['rd congo', 'CD'], ['congo kinshasa', 'CD'], ['kinshasa', 'CD'], ['congo brazzaville', 'CG'], ['brazzaville', 'CG'],
-  ['centrafrique', 'CF'], ['ile maurice', 'MU'], ['sao tome', 'ST'], ['cote d ivoire', 'CI'], ['ivoirien', 'CI'], ['ivoirienne', 'CI'], ['senegalais', 'SN'], ['dakar', 'SN'],
-  ['malien', 'ML'], ['burkinabe', 'BF'], ['nigerien', 'NE'], ['nigerian', 'NG'], ['marocain', 'MA'], ['algerien', 'DZ'], ['tunisien', 'TN'], ['egyptien', 'EG'], ['sud africain', 'ZA'], ['sud africaine', 'ZA'], ['sud africains', 'ZA'],
-];
 const AMBIGUOUS_NAMES = new Set(['MU']);
 const COUNTRY_ALIASES: [string, string][] = [
   ...AFRICAN_COUNTRIES.filter(country => !AMBIGUOUS_NAMES.has(country.code)).map(country => [normalizeTitle(country.name), country.code] as [string, string]),
@@ -83,7 +90,12 @@ const COUNTRY_ALIASES: [string, string][] = [
 const CONTINENT_WORDS = ['afrique', 'africain', 'africaine', 'africains', 'africaines', 'union africaine', 'sahel', 'congo'];
 
 /** Pays africains nommés (le plus long nom l'emporte : « Guinée-Bissau » n'est pas aussi « Guinée »). */
-export function africanMentions(title: string): { countries: string[]; touchesAfrica: boolean } {
+export function africanMentions(title: string, edition: Edition = 'fr'): { countries: string[]; touchesAfrica: boolean } {
+  if (edition !== 'fr') {
+    const countries = foreignCountryMentions(title, edition), words = textWords(title, edition);
+    const continent = edition === 'en' ? ['Africa', 'African', 'Africans', 'African Union', 'Sahel', 'Congo'] : ['أفريقيا', 'إفريقيا', 'الأفريقي', 'الأفريقية', 'الأفارقة', 'الأفريقيين', 'الاتحاد الأفريقي', 'الساحل', 'الكونغو'];
+    return { countries, touchesAfrica: countries.length > 0 || continent.some(alias => phraseAt(words, textWords(alias, edition), edition) >= 0) };
+  }
   let rest = ' ' + normalizeTitle(title) + ' ';
   const countries: string[] = [];
   for (const [alias, code] of COUNTRY_ALIASES) {

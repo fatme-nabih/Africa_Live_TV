@@ -1,4 +1,5 @@
 'use client';
+import { useI18n } from '@/i18n/client';
 
 import { useEffect, useRef, useState } from 'react';
 import { catalogRequestSchema, catalogResponseSchema, readApiResponse, type CatalogRequest } from '@/lib/api-contracts';
@@ -43,10 +44,11 @@ function CatalogRail({
   favoritesKey,
   ...rest
 }: RowProps & { id: TvRowId; followedCountry: string; favoritesKey?: string }) {
+  const { t, edition } = useI18n();
   const sentinel = useRef<HTMLDivElement>(null);
   const [near, setNear] = useState(false);
   const [state, setState] = useState<{ key: string; channels: Channel[]; done: boolean }>({ key: '', channels: [], done: false });
-  const cacheKey = tvRowCacheKey(id, followedCountry);
+  const cacheKey = tvRowCacheKey(id, followedCountry, edition);
   const requestKey = `${cacheKey}|${favoritesKey ?? ''}`;
 
   useEffect(() => {
@@ -75,7 +77,7 @@ function CatalogRail({
       queueMicrotask(() => { if (!controller.signal.aborted) setState({ key: requestKey, channels: cached, done: true }); });
       return () => controller.abort();
     }
-    fetchRow(tvRowRequest(id, followedCountry), controller.signal)
+    fetchRow({ ...tvRowRequest(id, followedCountry), ...(edition !== 'fr' ? { edition } : {}) }, controller.signal)
       .then(channels => {
         if (controller.signal.aborted) return;
         if (useCache) writeTvRowCache(window.sessionStorage, cacheKey, channels);
@@ -85,7 +87,7 @@ function CatalogRail({
         if (!controller.signal.aborted) setState({ key: requestKey, channels: [], done: true });
       });
     return () => controller.abort();
-  }, [near, id, followedCountry, cacheKey, requestKey]);
+  }, [near, id, followedCountry, cacheKey, requestKey, edition]);
 
   const current = state.key === requestKey ? state : { channels: [] as Channel[], done: false };
   const hidden = current.done && current.channels.length === 0;
@@ -93,7 +95,7 @@ function CatalogRail({
     <div ref={sentinel} data-tv-row={id}>
       {!hidden && (
         <ChannelRail
-          title={tvRowTitle(id, formatCountryName(followedCountry, followedCountry))}
+          title={tvRowTitle(id, formatCountryName(followedCountry, followedCountry, edition), t.tv.rows)}
           channels={current.channels}
           loading={!current.done}
           {...rest}
@@ -105,23 +107,23 @@ function CatalogRail({
 
 /** Accueil de la TV : Reprendre · Favoris · pays en direct · Info · Sport · Musique. */
 export default function TvRows(props: RowProps) {
+  const { t } = useI18n();
   const recents = useRecentChannels();
   const followedCountry = useFollowedCountry();
   return (
     <div className="flex flex-col gap-8" data-testid="tv-rows">
       {recents.length > 0 && (
         <ChannelRail
-          title="Reprendre"
+          title={t.tv.copy["Reprendre"]}
           channels={recents}
           action={
             <button
               type="button"
               onClick={clearRecentChannels}
-              aria-label="Effacer l’historique Reprendre"
+              aria-label={t.tv.copy["Effacer l’historique Reprendre"]}
               className="inline-flex min-h-9 items-center rounded-control px-3 text-xs font-semibold text-text-muted transition-colors hover:text-text"
             >
-              Effacer
-            </button>
+              {t.tv.copy["Effacer"]}</button>
           }
           {...props}
         />

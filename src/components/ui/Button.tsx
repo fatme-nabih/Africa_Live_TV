@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { editionLinkPrefetch } from '@/lib/edition-routing';
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'react';
 import { cn } from './cn';
 
@@ -83,7 +84,7 @@ export function ButtonLink({
     );
   }
   return (
-    <Link href={href} className={classes} {...props}>
+    <Link href={href} prefetch={editionLinkPrefetch(href)} className={classes} {...props}>
       {icon}
       {children}
     </Link>

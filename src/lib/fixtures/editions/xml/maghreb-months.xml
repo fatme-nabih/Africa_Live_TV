@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>Mois maghrébins</title>
+<link>https://feed.fixture.test/</link>
+<description>Flux synthétique Africa Live (EDI-002) : titres inventés, format de date réel.</description>
+<item>
+<title>عنوان تجريبي في جانفي</title>
+<link>https://feed.fixture.test/mois-maghr-bins/1</link>
+<pubDate>الإثنين، 05 جانفي 2026 10:00 ص</pubDate>
+</item>
+<item>
+<title>عنوان تجريبي في فيفري</title>
+<link>https://feed.fixture.test/mois-maghr-bins/2</link>
+<pubDate>الإثنين، 02 فيفري 2026 03:30 م</pubDate>
+</item>
+<item>
+<title>عنوان تجريبي في أفريل</title>
+<link>https://feed.fixture.test/mois-maghr-bins/3</link>
+<pubDate>الأربعاء، 01 أفريل 2026 09:00 ص</pubDate>
+</item>
+<item>
+<title>عنوان تجريبي في ماي</title>
+<link>https://feed.fixture.test/mois-maghr-bins/4</link>
+<pubDate>الجمعة، 01 ماي 2026 09:00 ص</pubDate>
+</item>
+<item>
+<title>عنوان تجريبي في جوان</title>
+<link>https://feed.fixture.test/mois-maghr-bins/5</link>
+<pubDate>الإثنين، 01 جوان 2026 09:00 ص</pubDate>
+</item>
+<item>
+<title>عنوان تجريبي في جويلية</title>
+<link>https://feed.fixture.test/mois-maghr-bins/6</link>
+<pubDate>الأربعاء، 01 جويلية 2026 09:00 ص</pubDate>
+</item>
+<item>
+<title>عنوان تجريبي في أوت</title>
+<link>https://feed.fixture.test/mois-maghr-bins/7</link>
+<pubDate>السبت، 01 أوت 2026 09:00 ص</pubDate>
+</item>
+</channel>
+</rss>

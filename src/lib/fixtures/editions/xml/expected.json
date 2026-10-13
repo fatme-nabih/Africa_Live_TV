@@ -1,0 +1,217 @@
+{
+  "referenceNow": "2026-10-11T18:00:00.000Z",
+  "files": {
+    "youm7-arabic-long.xml": {
+      "feed": "Youm7",
+      "dateFormat": "arabic-long",
+      "timeZone": "Africa/Cairo",
+      "items": [
+        {
+          "raw": "الأحد، 11 أكتوبر 2026 08:50 م",
+          "local": "2026-10-11T20:50:00",
+          "utc": "2026-10-11T17:50:00.000Z"
+        },
+        {
+          "raw": "الأحد، 11 أكتوبر 2026 12:15 ص",
+          "local": "2026-10-11T00:15:00",
+          "utc": "2026-10-10T21:15:00.000Z"
+        },
+        {
+          "raw": "الأحد، 11 أكتوبر 2026 12:30 م",
+          "local": "2026-10-11T12:30:00",
+          "utc": "2026-10-11T09:30:00.000Z"
+        },
+        {
+          "raw": "الجمعة، 30 أكتوبر 2026 09:05 ص",
+          "local": "2026-10-30T09:05:00",
+          "utc": "2026-10-30T07:05:00.000Z"
+        },
+        {
+          "raw": "الإثنين، 05 يناير 2026 07:00 م",
+          "local": "2026-01-05T19:00:00",
+          "utc": "2026-01-05T17:00:00.000Z"
+        }
+      ]
+    },
+    "masrawy-us-12h.xml": {
+      "feed": "Masrawy",
+      "dateFormat": "us-12h",
+      "timeZone": "Africa/Cairo",
+      "items": [
+        {
+          "raw": "10/11/2026 9:18:17 PM",
+          "local": "2026-10-11T21:18:17",
+          "utc": "2026-10-11T18:18:17.000Z"
+        },
+        {
+          "raw": "10/11/2026 12:05:00 AM",
+          "local": "2026-10-11T00:05:00",
+          "utc": "2026-10-10T21:05:00.000Z"
+        },
+        {
+          "raw": "11/2/2026 8:05:00 AM",
+          "local": "2026-11-02T08:05:00",
+          "utc": "2026-11-02T06:05:00.000Z"
+        }
+      ]
+    },
+    "elbilad-hm-pipe-dmy.xml": {
+      "feed": "El Bilad",
+      "dateFormat": "hm-pipe-dmy",
+      "timeZone": "Africa/Algiers",
+      "items": [
+        {
+          "raw": "17:24 | 11-10-2026",
+          "local": "2026-10-11T17:24:00",
+          "utc": "2026-10-11T16:24:00.000Z"
+        },
+        {
+          "raw": "00:05 | 01-11-2026",
+          "local": "2026-11-01T00:05:00",
+          "utc": "2026-10-31T23:05:00.000Z"
+        }
+      ]
+    },
+    "wall-clock-labelled-utc.xml": {
+      "feed": "Heure locale étiquetée UTC",
+      "dateFormat": "rfc",
+      "note": "chaque article porte le fuseau réel de sa rédaction (wallClockTimeZone)",
+      "items": [
+        {
+          "raw": "Sun, 11 Oct 2026 19:16:09 +0000",
+          "local": "2026-10-11T19:16:09",
+          "wallClockTimeZone": "Africa/Lagos",
+          "utc": "2026-10-11T18:16:09.000Z"
+        },
+        {
+          "raw": "Sun, 11 Oct 2026 20:32:06 GMT",
+          "local": "2026-10-11T20:32:06",
+          "wallClockTimeZone": "Africa/Johannesburg",
+          "utc": "2026-10-11T18:32:06.000Z"
+        },
+        {
+          "raw": "Sun, 11 Oct 2026 21:30:22 GMT",
+          "local": "2026-10-11T21:30:22",
+          "wallClockTimeZone": "Africa/Cairo",
+          "utc": "2026-10-11T18:30:22.000Z"
+        },
+        {
+          "raw": "Sun, 11 Oct 2026 19:25:28 GMT",
+          "local": "2026-10-11T19:25:28",
+          "wallClockTimeZone": "Europe/London",
+          "utc": "2026-10-11T18:25:28.000Z"
+        },
+        {
+          "raw": "Mon, 26 Oct 2026 10:00:00 GMT",
+          "local": "2026-10-26T10:00:00",
+          "wallClockTimeZone": "Europe/London",
+          "utc": "2026-10-26T10:00:00.000Z"
+        }
+      ]
+    },
+    "levantine-months.xml": {
+      "feed": "Mois levantins",
+      "dateFormat": "arabic-long",
+      "timeZone": "Africa/Cairo",
+      "note": "aucun flux retenu ne les utilise encore ; le fuseau sert seulement au test",
+      "items": [
+        {
+          "raw": "الأحد، 11 تشرين الأول 2026 08:50 م",
+          "local": "2026-10-11T20:50:00",
+          "utc": "2026-10-11T17:50:00.000Z"
+        },
+        {
+          "raw": "الإثنين، 05 كانون الثاني 2026 10:00 ص",
+          "local": "2026-01-05T10:00:00",
+          "utc": "2026-01-05T08:00:00.000Z"
+        },
+        {
+          "raw": "السبت، 01 آب 2026 01:00 م",
+          "local": "2026-08-01T13:00:00",
+          "utc": "2026-08-01T10:00:00.000Z"
+        }
+      ]
+    },
+    "maghreb-months.xml": {
+      "feed": "Mois maghrébins",
+      "dateFormat": "arabic-long",
+      "timeZone": "Africa/Algiers",
+      "note": "mois en usage en Algérie et en Tunisie",
+      "items": [
+        {
+          "raw": "الإثنين، 05 جانفي 2026 10:00 ص",
+          "local": "2026-01-05T10:00:00",
+          "utc": "2026-01-05T09:00:00.000Z"
+        },
+        {
+          "raw": "الإثنين، 02 فيفري 2026 03:30 م",
+          "local": "2026-02-02T15:30:00",
+          "utc": "2026-02-02T14:30:00.000Z"
+        },
+        {
+          "raw": "الأربعاء، 01 أفريل 2026 09:00 ص",
+          "local": "2026-04-01T09:00:00",
+          "utc": "2026-04-01T08:00:00.000Z"
+        },
+        {
+          "raw": "الجمعة، 01 ماي 2026 09:00 ص",
+          "local": "2026-05-01T09:00:00",
+          "utc": "2026-05-01T08:00:00.000Z"
+        },
+        {
+          "raw": "الإثنين، 01 جوان 2026 09:00 ص",
+          "local": "2026-06-01T09:00:00",
+          "utc": "2026-06-01T08:00:00.000Z"
+        },
+        {
+          "raw": "الأربعاء، 01 جويلية 2026 09:00 ص",
+          "local": "2026-07-01T09:00:00",
+          "utc": "2026-07-01T08:00:00.000Z"
+        },
+        {
+          "raw": "السبت، 01 أوت 2026 09:00 ص",
+          "local": "2026-08-01T09:00:00",
+          "utc": "2026-08-01T08:00:00.000Z"
+        }
+      ]
+    },
+    "clock-lead.xml": {
+      "feed": "Avance d horloge",
+      "dateFormat": "rfc",
+      "note": "relevé à 2026-10-11T18:00:00Z : +2 h ramené à l heure de collecte, +5 h laissé futur",
+      "items": [
+        {
+          "raw": "Sun, 11 Oct 2026 20:00:00 +0000",
+          "utc": "2026-10-11T20:00:00.000Z",
+          "leadHours": 2
+        },
+        {
+          "raw": "Sun, 11 Oct 2026 23:00:00 +0000",
+          "utc": "2026-10-11T23:00:00.000Z",
+          "leadHours": 5
+        },
+        {
+          "raw": "Sun, 11 Oct 2026 17:00:00 +0000",
+          "utc": "2026-10-11T17:00:00.000Z",
+          "leadHours": 0
+        }
+      ]
+    },
+    "windows-1256.xml": {
+      "encoding": "windows-1256",
+      "declared": "prolog",
+      "titles": [
+        "عنوان تجريبي بترميز ويندوز للعربية",
+        "خبر تجريبي ثان عن الاقتصاد"
+      ]
+    },
+    "windows-1256-no-prolog.xml": {
+      "encoding": "windows-1256",
+      "declared": "en-tête HTTP seulement (Content-Type: text/xml; charset=windows-1256)",
+      "titles": [
+        "عنوان تجريبي بترميز ويندوز للعربية",
+        "خبر تجريبي ثان عن الاقتصاد"
+      ]
+    }
+  }
+}

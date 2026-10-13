@@ -28,7 +28,7 @@ export function Chip({
         aria-pressed={onRemove ? undefined : selected}
         className={cn(
           'inline-flex min-h-11 items-center gap-1.5 rounded-pill border px-3.5 text-xs font-semibold transition-colors duration-200 sm:min-h-9',
-          onRemove ? 'border-transparent pr-2 text-text' : surface,
+          onRemove ? 'border-transparent pe-2 text-text' : surface,
           className,
         )}
         {...props}
@@ -41,7 +41,7 @@ export function Chip({
           type="button"
           aria-label={removeLabel}
           onClick={onRemove}
-          className="mr-1 inline-flex size-11 items-center justify-center rounded-pill text-text-muted hover:text-text sm:size-9"
+          className="me-1 inline-flex size-11 items-center justify-center rounded-pill text-text-muted hover:text-text sm:size-9"
         >
           <X size={14} aria-hidden="true" />
         </button>

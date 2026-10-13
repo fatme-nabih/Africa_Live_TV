@@ -1,21 +1,24 @@
 'use client';
+import { useEdition } from '@/i18n/client';
+import { editionStorageKey } from '@/lib/edition-client';
+import type { Edition } from '@/lib/editions';
 
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { parseVisit } from '@/lib/radar-visit';
 import { STORAGE_KEYS } from '@/lib/storage-keys';
 
 // Dernière visite figée pour toute la durée de la page : « nouvelles depuis votre visite » ne bouge pas pendant la lecture.
-let pageVisit: number | null | undefined;
+const pageVisits = new Map<Edition, number | null>();
 
-function readVisit(): number | null {
-  if (pageVisit === undefined) {
+function readVisit(edition: Edition): number | null {
+  if (!pageVisits.has(edition)) {
     try {
-      pageVisit = parseVisit(window.localStorage.getItem(STORAGE_KEYS.radarVisit), Date.now());
+      pageVisits.set(edition, parseVisit(window.localStorage.getItem(editionStorageKey(STORAGE_KEYS.radarVisit, edition)), Date.now()));
     } catch {
-      pageVisit = null;
+      pageVisits.set(edition, null);
     }
   }
-  return pageVisit;
+  return pageVisits.get(edition) ?? null;
 }
 
 const subscribeNothing = () => () => {};
@@ -26,7 +29,8 @@ const subscribeNothing = () => () => {};
  * (une page fermée avant la fin du chargement ne fait pas oublier ce que l'utilisateur n'a pas vu).
  */
 export function useRadarVisit(armed: boolean): { ready: boolean; since: number | null } {
-  const since = useSyncExternalStore<number | null | undefined>(subscribeNothing, readVisit, () => undefined);
+  const edition = useEdition();
+  const since = useSyncExternalStore<number | null | undefined>(subscribeNothing, () => readVisit(edition), () => undefined);
   const armedRef = useRef(armed);
 
   useEffect(() => {
@@ -37,7 +41,7 @@ export function useRadarVisit(armed: boolean): { ready: boolean; since: number |
     const save = () => {
       if (!armedRef.current) return;
       try {
-        window.localStorage.setItem(STORAGE_KEYS.radarVisit, String(Date.now()));
+        window.localStorage.setItem(editionStorageKey(STORAGE_KEYS.radarVisit, edition), String(Date.now()));
       } catch {
         // Stockage indisponible : pas de repère de visite.
       }
@@ -50,11 +54,11 @@ export function useRadarVisit(armed: boolean): { ready: boolean; since: number |
     return () => {
       save();
       // La prochaine arrivée sur le Radar relira la visite que l'on vient d'enregistrer.
-      pageVisit = undefined;
+      pageVisits.delete(edition);
       window.removeEventListener('pagehide', save);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, []);
+  }, [edition]);
 
   return since === undefined ? { ready: false, since: null } : { ready: true, since };
 }

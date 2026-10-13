@@ -1,3 +1,4 @@
+import { apiEdition } from '@/lib/api-edition';
 import { NextResponse } from 'next/server';
 
 import { withApiErrorHandler } from '@/lib/api-errors';
@@ -15,9 +16,10 @@ export const GET = withApiErrorHandler(async (request: Request) => {
   if (!authorization.ok) return authorization.response;
 
   const url = new URL(request.url);
+  const edition = apiEdition(url);
   const forceRefresh = url.searchParams.get('refresh') === 'true';
 
-  const snapshot = await getWorldDesk({ forceRefresh });
+  const snapshot = await getWorldDesk({ forceRefresh, edition });
 
   return NextResponse.json(snapshot, {
     status: 200,

@@ -32,15 +32,8 @@ export type RadarRssSnapshot = {
   availability?: import('./radar-data').RadarSourceState[];
   undatedArticles?: RadarRssArticle[];
   window?: ReturnType<typeof import('./radar-data').temporalWindow>['window'];
+  /** Pont entre éditions (EDI-601) : présent seulement si une autre édition active a un cache encore valide. */
+  bridge?: import('./edition-bridge').EditionBridgeEntry[];
 };
 
-export type FeedConfig = {
-  id: string;
-  name: string;
-  domain: string;
-  url: string;
-  defaultCountry: string | null;
-  editorialScope: 'africa' | 'international';
-  category: string;
-  enabled: boolean;
-};
+export type { FeedConfig } from './feeds/types';

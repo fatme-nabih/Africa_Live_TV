@@ -1,6 +1,7 @@
 import { Radar, Search, ShieldCheck, Tv, UserRound, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import type { NavItem, NavItemId } from '@/lib/shell-nav';
+import { useI18n } from '@/i18n/client';
 
 const ICONS: Record<NavItemId | 'search', LucideIcon> = {
   radar: Radar,
@@ -23,12 +24,13 @@ export default function NavLinks({
   /** Présent uniquement pour la barre basse : insère l'entrée « Recherche » avant « Compte ». */
   onSearch?: () => void;
 }) {
+  const { t } = useI18n();
   const entries: Array<NavItem | 'search'> = [...items];
   if (onSearch) entries.splice(Math.min(2, entries.length), 0, 'search');
 
   return (
     <nav
-      aria-label="Navigation principale"
+      aria-label={t.shell.nav.label}
       className={variant === 'header' ? 'hidden items-center gap-1 md:flex' : 'md:hidden'}
     >
       <ul className={variant === 'header' ? 'flex items-center gap-1' : 'flex'}>
@@ -39,7 +41,7 @@ export default function NavLinks({
               <li key="search" className="flex-1">
                 <button type="button" onClick={onSearch} className={tabClass(false)}>
                   <Icon size={20} aria-hidden="true" />
-                  <span>Recherche</span>
+                  <span>{t.shell.nav.search}</span>
                 </button>
               </li>
             );

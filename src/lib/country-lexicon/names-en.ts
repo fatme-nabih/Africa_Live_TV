@@ -1,0 +1,168 @@
+/** Généré par generate-country-lexicon.ts avec Node 22 ICU ; ne pas éditer à la main. */
+export const COUNTRY_NAMES = {
+  "DZ": [
+    "Algeria"
+  ],
+  "AO": [
+    "Angola"
+  ],
+  "BJ": [
+    "Benin"
+  ],
+  "BW": [
+    "Botswana"
+  ],
+  "BF": [
+    "Burkina Faso"
+  ],
+  "BI": [
+    "Burundi"
+  ],
+  "CV": [
+    "Cape Verde"
+  ],
+  "CM": [
+    "Cameroon"
+  ],
+  "CF": [
+    "Central African Republic"
+  ],
+  "TD": [
+    "Chad"
+  ],
+  "KM": [
+    "Comoros"
+  ],
+  "CG": [
+    "Congo - Brazzaville"
+  ],
+  "CD": [
+    "Congo - Kinshasa"
+  ],
+  "CI": [
+    "Côte d’Ivoire"
+  ],
+  "DJ": [
+    "Djibouti"
+  ],
+  "EG": [
+    "Egypt"
+  ],
+  "GQ": [
+    "Equatorial Guinea"
+  ],
+  "ER": [
+    "Eritrea"
+  ],
+  "SZ": [
+    "Eswatini"
+  ],
+  "ET": [
+    "Ethiopia"
+  ],
+  "GA": [
+    "Gabon"
+  ],
+  "GM": [
+    "Gambia"
+  ],
+  "GH": [
+    "Ghana"
+  ],
+  "GN": [
+    "Guinea"
+  ],
+  "GW": [
+    "Guinea-Bissau"
+  ],
+  "KE": [
+    "Kenya"
+  ],
+  "LS": [
+    "Lesotho"
+  ],
+  "LR": [
+    "Liberia"
+  ],
+  "LY": [
+    "Libya"
+  ],
+  "MG": [
+    "Madagascar"
+  ],
+  "MW": [
+    "Malawi"
+  ],
+  "ML": [
+    "Mali"
+  ],
+  "MR": [
+    "Mauritania"
+  ],
+  "MU": [
+    "Mauritius"
+  ],
+  "MA": [
+    "Morocco"
+  ],
+  "MZ": [
+    "Mozambique"
+  ],
+  "NA": [
+    "Namibia"
+  ],
+  "NE": [
+    "Niger"
+  ],
+  "NG": [
+    "Nigeria"
+  ],
+  "RW": [
+    "Rwanda"
+  ],
+  "ST": [
+    "São Tomé & Príncipe"
+  ],
+  "SN": [
+    "Senegal"
+  ],
+  "SC": [
+    "Seychelles"
+  ],
+  "SL": [
+    "Sierra Leone"
+  ],
+  "SO": [
+    "Somalia"
+  ],
+  "ZA": [
+    "South Africa"
+  ],
+  "SS": [
+    "South Sudan"
+  ],
+  "SD": [
+    "Sudan"
+  ],
+  "TZ": [
+    "Tanzania"
+  ],
+  "TG": [
+    "Togo"
+  ],
+  "TN": [
+    "Tunisia"
+  ],
+  "UG": [
+    "Uganda"
+  ],
+  "ZM": [
+    "Zambia"
+  ],
+  "ZW": [
+    "Zimbabwe"
+  ],
+  "EH": [
+    "Western Sahara"
+  ]
+} as const;

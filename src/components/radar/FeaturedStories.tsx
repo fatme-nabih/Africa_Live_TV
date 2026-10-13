@@ -1,4 +1,5 @@
 'use client';
+import { countryName as localizedCountryName } from '@/lib/country-names';
 
 import { useState } from 'react';
 import { ExternalLink } from 'lucide-react';
@@ -6,11 +7,13 @@ import { Badge, cn, Skeleton } from '@/components/ui';
 import { ShareArticleLink } from '@/components/tv/ChannelTile';
 import { useEcoMode } from '@/components/tv/hooks';
 import { fallbackTone } from '@/lib/channel-fallback';
-import { editorialKind, EDITORIAL_LABELS } from '@/lib/radar-editorial';
+import { editorialKind } from '@/lib/radar-editorial';
 import { isNewSince } from '@/lib/radar-visit';
 import { formatAgo } from '@/lib/relative-time';
 import { formatRadarDate } from '@/lib/radar-data';
 import type { RadarArticle, RadarCountry } from '@/lib/live-osint-types';
+import { useI18n } from '@/i18n/client';
+import { format } from '@/i18n/message';
 
 /**
  * Illustration de l'éditeur. Elle est chargée directement par le navigateur depuis l'adresse publiée dans le flux :
@@ -44,13 +47,15 @@ function StoryArt({ article, className }: { article: RadarArticle; className: st
 }
 
 function StoryMeta({ article, now, since }: { article: RadarArticle; now: number; since: number | null }) {
-  const ago = formatAgo(article.indexedAt, now);
+  const { t, edition } = useI18n();
+  const ago = formatAgo(article.indexedAt, now, t.time.ago);
+  const date = formatRadarDate(article.indexedAt, edition, t.time);
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-muted">
-      <span className="font-semibold text-text">{article.sourceName ?? article.domain}</span>
+      <span className="font-semibold text-text"><bdi>{article.sourceName ?? article.domain}</bdi></span>
       <span aria-hidden="true">·</span>
-      <time dateTime={article.indexedAt} title={formatRadarDate(article.indexedAt)}>{ago || formatRadarDate(article.indexedAt)}</time>
-      {isNewSince(article, since) && <Badge variant="live" className="py-0">Nouveau</Badge>}
+      <time dateTime={article.indexedAt} title={date}>{ago || date}</time>
+      {isNewSince(article, since) && <Badge variant="live" className="py-0">{t.radar.row.new}</Badge>}
     </div>
   );
 }
@@ -74,18 +79,20 @@ export default function FeaturedStories({
   now: number;
   since: number | null;
 }) {
+  const { t, edition } = useI18n();
+  const labels = t.radar.featured;
   if (stories.length === 0) {
     return (
       <section aria-labelledby="radar-une" className={className}>
-        <h2 id="radar-une" className="mb-2.5 font-display text-lg font-bold text-text sm:text-xl">À la une</h2>
+        <h2 id="radar-une" className="mb-2.5 font-display text-lg font-bold text-text sm:text-xl">{labels.title}</h2>
         {loading ? (
-          <div role="status" aria-label="Chargement des dépêches à la une" className="space-y-3">
+          <div role="status" aria-label={labels.loading} className="space-y-3">
             <Skeleton className="h-64 rounded-card" />
             <Skeleton className="h-24 rounded-card" />
           </div>
         ) : (
           <p className="rounded-card border border-line bg-surface-1 p-5 text-sm text-text-muted">
-            Pas de dépêche récente pour {countryName ?? 'cette vue'}. Essayez une autre rubrique ou un autre pays.
+            {format(labels.empty, { scope: countryName ?? labels.thisView })}
           </p>
         )}
       </section>
@@ -96,8 +103,8 @@ export default function FeaturedStories({
   return (
     <section aria-labelledby="radar-une" className={className}>
       <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="radar-une" className="font-display text-lg font-bold text-text sm:text-xl">À la une</h2>
-        <p className="text-xs text-text-muted">{countryName ?? 'Toute l’Afrique'} · les plus récentes</p>
+        <h2 id="radar-une" className="font-display text-lg font-bold text-text sm:text-xl">{labels.title}</h2>
+        <p className="text-xs text-text-muted">{format(labels.latest, { scope: countryName ?? labels.allAfrica })}</p>
       </div>
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-5 xl:grid-cols-1">
         <article className="relative flex flex-col overflow-hidden rounded-card border border-line-gold bg-surface-1 lg:col-span-3 xl:col-span-1">
@@ -109,14 +116,14 @@ export default function FeaturedStories({
                 href={lead.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-al-gold focus-visible:after:rounded-card"
+                className="[unicode-bidi:plaintext] after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-al-gold focus-visible:after:rounded-card"
               >
                 {lead.title}
-                <ExternalLink aria-hidden="true" className="ml-1.5 inline h-3.5 w-3.5 text-text-muted" />
+                <ExternalLink aria-hidden="true" className="rtl:-scale-x-100 ms-1.5 inline h-3.5 w-3.5 text-text-muted" />
               </a>
             </h3>
             <p className="text-xs text-text-muted">
-              {EDITORIAL_LABELS[editorialKind(lead)]}{leadCountry ? ` · ${leadCountry.name}` : ''}
+              {t.radar.editorial[editorialKind(lead)]}{leadCountry ? ` · ${localizedCountryName(leadCountry.code, edition)}` : ''}
             </p>
             <div className="relative z-10 mt-auto flex flex-wrap items-center gap-2 pt-1">
               <ShareArticleLink title={lead.title} sourceName={lead.sourceName ?? undefined} url={lead.url} />
@@ -138,15 +145,15 @@ export default function FeaturedStories({
                       href={story.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-al-gold focus-visible:after:rounded-card"
+                      className="[unicode-bidi:plaintext] after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-al-gold focus-visible:after:rounded-card"
                     >
                       {story.title}
-                      <ExternalLink aria-hidden="true" className="ml-1.5 inline h-3 w-3 text-text-muted" />
+                      <ExternalLink aria-hidden="true" className="rtl:-scale-x-100 ms-1.5 inline h-3 w-3 text-text-muted" />
                     </a>
                   </h3>
                   <div className="relative z-10 mt-auto flex flex-wrap items-center gap-1 pt-0.5">
-                    <span className="text-xs text-text-muted">{country?.name ?? EDITORIAL_LABELS[editorialKind(story)]}</span>
-                    <span className="ml-auto flex items-center gap-1">
+                    <span className="text-xs text-text-muted">{country ? localizedCountryName(country.code, edition) : t.radar.editorial[editorialKind(story)]}</span>
+                    <span className="ms-auto flex items-center gap-1">
                       <ShareArticleLink title={story.title} sourceName={story.sourceName ?? undefined} url={story.url} />
                     </span>
                   </div>

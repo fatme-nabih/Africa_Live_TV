@@ -1,0 +1,1566 @@
+{
+  "rss": {
+    "articles": [
+      {
+        "id": "aps-eb1fb7fd4e75be0a211b4eaa3d24d489a30a7bd2db7f8a9e08aaeabc80468e16",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Faps.sn%2Ffeed%2F",
+        "domain": "aps.sn",
+        "sourceName": "APS (Sénégal)",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "aip-11bf16f93fb120ef42c3d1dce56342701034e5bc69d53cd0f569a02955f6be8a",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.aip.ci%2Ffeed%2F",
+        "domain": "aip.ci",
+        "sourceName": "AIP (Côte d’Ivoire)",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "malijet-4e32588a4bf823e1a097afa9f13aea6c150642a742b02888aa1302797e28c85e",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fmalijet.com%2Frss.xml",
+        "domain": "malijet.com",
+        "sourceName": "MaliJet (Mali)",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "lefaso-4469f634267950f995669700e6061d8e21604d7bdbdeb96c18b94321ea04c918",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Flefaso.net%2Fspip.php%3Fpage%3Dbackend",
+        "domain": "lefaso.net",
+        "sourceName": "LeFaso.net (Burkina Faso)",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "actu_cm-442487d161c7764b54c74ccca0f3f27d942c4a9a5f5ff73a599cc67a3153b615",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Factucameroun.com%2Ffeed%2F",
+        "domain": "actucameroun.com",
+        "sourceName": "Actu Cameroun",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "guineenews-7cffd8e5edafd6fd1bd819517fa96b36031ed429dff962bfe402cc3ae9a23d7e",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fguineenews.org%2Ffeed%2F",
+        "domain": "guineenews.org",
+        "sourceName": "Guinéenews (Guinée)",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "okapi-ed80d7bfbda9ff45c55f1923f49c2ad6e5af6b4a418d941fa92655cd6e280cdd",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.radiookapi.net%2Frss.xml",
+        "domain": "radiookapi.net",
+        "sourceName": "Radio Okapi (RDC)",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "hespress-0cd02a9921a7ecb1c6a2eb83f0bb78f84310d3585702aad689e746afb13d644d",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Ffr.hespress.com%2Ffeed",
+        "domain": "fr.hespress.com",
+        "sourceName": "Hespress FR (Maroc)",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "tsa-48a3cf69f4c64b00096b7449659948a98302ac82cfbc756bcd1900257301de59",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Ftsa-algerie.com%2Ffeed%2F",
+        "domain": "tsa-algerie.com",
+        "sourceName": "TSA (Algérie)",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "gabonreview-2abd080162dc9468c9d4fb0afb33714daa510f56533d4836fc4e9546c42f68cd",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fgabonreview.com%2Ffeed%2F",
+        "domain": "gabonreview.com",
+        "sourceName": "Gabon Review",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "24haubenin-24632491d288fa8134166f2934ff25fd2e5744eb4556a1b4d465c5c9f3d75d9d",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2F24haubenin.info%2F%3Fpage%3Dbackend",
+        "domain": "24haubenin.info",
+        "sourceName": "24 Heures au Bénin",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "ecofin-bdb2d379538fddb260cab56889ec4f41bd80472c23bf3d43ea95a281ef810fe8",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.agenceecofin.com%2Ffeed",
+        "domain": "agenceecofin.com",
+        "sourceName": "Agence Ecofin",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "financialafrik-a297437dc51f44ef0c43b342a0dd0c4f1f568a703fd085e22e15cf0e95281624",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.financialafrik.com%2Ffeed%2F",
+        "domain": "financialafrik.com",
+        "sourceName": "Financial Afrik",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "ja-6867d448d205f37dd8612658f5ce31336314d40bab04857f38cec4a3dfb1f9a6",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.jeuneafrique.com%2Ffeed%2F",
+        "domain": "jeuneafrique.com",
+        "sourceName": "Jeune Afrique",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "africanews-db858a35b4a7bfe4baf1d4baa5db1c311396c6fe090be9832cf07da146204b46",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Ffr.africanews.com%2Ffeed%2F",
+        "domain": "fr.africanews.com",
+        "sourceName": "Africanews (FR)",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "f24_monde-3f1bcf1bbf3cabd66c79f5898c65d359593c2b2c53bba7ce2233e3fa7ed4bd9d",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.france24.com%2Ffr%2Frss",
+        "domain": "france24.com",
+        "sourceName": "France 24 Monde",
+        "editorialScope": "international",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "f24_afrique-ee9e4093b129cc19a5a88e8afa37d2a29fad1022b4fc49040a116c95d85ec2fb",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.france24.com%2Ffr%2Fafrique%2Frss",
+        "domain": "france24.com",
+        "sourceName": "France 24 Afrique",
+        "editorialScope": "international",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "rfi_monde-ea41789af52fea68bd18c6c84e95fe0811915e3533ddb646aca4bdd15cf4244b",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.rfi.fr%2Ffr%2Fmonde%2Frss",
+        "domain": "rfi.fr",
+        "sourceName": "RFI Monde",
+        "editorialScope": "international",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "rfi-6d75973bbfc2921d3f32901c3df3510cf6edbc5c6f298e04c6662c2f30f0fe7e",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.rfi.fr%2Ffr%2Fafrique%2Frss",
+        "domain": "rfi.fr",
+        "sourceName": "RFI Afrique",
+        "editorialScope": "international",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "bbc-95895877ecc8aa1b7bb30d9614632d6a08d17c06b53b227855d042324ce774af",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Ffeeds.bbci.co.uk%2Fafrique%2Frss.xml",
+        "domain": "bbc.com",
+        "sourceName": "BBC Afrique",
+        "editorialScope": "international",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      },
+      {
+        "id": "lemonde_afrique-18a72c4a8e2cb3d69df138307055d49564c2211024f8426cf1d679101eb20b3d",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.lemonde.fr%2Fafrique%2Frss_full.xml",
+        "domain": "lemonde.fr",
+        "sourceName": "Le Monde Afrique",
+        "editorialScope": "international",
+        "sourceType": "rss",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "updatedAt": null,
+        "countryCode": "SN",
+        "countryBasis": "inferred_topic",
+        "category": "Politique"
+      }
+    ],
+    "sources": [
+      {
+        "id": "aps",
+        "name": "APS (Sénégal)",
+        "domain": "aps.sn",
+        "count": 2,
+        "availability": {
+          "provider": "APS (Sénégal)",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "aip",
+        "name": "AIP (Côte d’Ivoire)",
+        "domain": "aip.ci",
+        "count": 2,
+        "availability": {
+          "provider": "AIP (Côte d’Ivoire)",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "malijet",
+        "name": "MaliJet (Mali)",
+        "domain": "malijet.com",
+        "count": 2,
+        "availability": {
+          "provider": "MaliJet (Mali)",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "lefaso",
+        "name": "LeFaso.net (Burkina Faso)",
+        "domain": "lefaso.net",
+        "count": 2,
+        "availability": {
+          "provider": "LeFaso.net (Burkina Faso)",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "actu_cm",
+        "name": "Actu Cameroun",
+        "domain": "actucameroun.com",
+        "count": 2,
+        "availability": {
+          "provider": "Actu Cameroun",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "guineenews",
+        "name": "Guinéenews (Guinée)",
+        "domain": "guineenews.org",
+        "count": 2,
+        "availability": {
+          "provider": "Guinéenews (Guinée)",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "okapi",
+        "name": "Radio Okapi (RDC)",
+        "domain": "radiookapi.net",
+        "count": 2,
+        "availability": {
+          "provider": "Radio Okapi (RDC)",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "hespress",
+        "name": "Hespress FR (Maroc)",
+        "domain": "fr.hespress.com",
+        "count": 2,
+        "availability": {
+          "provider": "Hespress FR (Maroc)",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "tsa",
+        "name": "TSA (Algérie)",
+        "domain": "tsa-algerie.com",
+        "count": 2,
+        "availability": {
+          "provider": "TSA (Algérie)",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "gabonreview",
+        "name": "Gabon Review",
+        "domain": "gabonreview.com",
+        "count": 2,
+        "availability": {
+          "provider": "Gabon Review",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "24haubenin",
+        "name": "24 Heures au Bénin",
+        "domain": "24haubenin.info",
+        "count": 2,
+        "availability": {
+          "provider": "24 Heures au Bénin",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "ecofin",
+        "name": "Agence Ecofin",
+        "domain": "agenceecofin.com",
+        "count": 2,
+        "availability": {
+          "provider": "Agence Ecofin",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "financialafrik",
+        "name": "Financial Afrik",
+        "domain": "financialafrik.com",
+        "count": 2,
+        "availability": {
+          "provider": "Financial Afrik",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "ja",
+        "name": "Jeune Afrique",
+        "domain": "jeuneafrique.com",
+        "count": 2,
+        "availability": {
+          "provider": "Jeune Afrique",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "africanews",
+        "name": "Africanews (FR)",
+        "domain": "fr.africanews.com",
+        "count": 2,
+        "availability": {
+          "provider": "Africanews (FR)",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "f24_monde",
+        "name": "France 24 Monde",
+        "domain": "france24.com",
+        "count": 2,
+        "availability": {
+          "provider": "France 24 Monde",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "f24_afrique",
+        "name": "France 24 Afrique",
+        "domain": "france24.com",
+        "count": 2,
+        "availability": {
+          "provider": "France 24 Afrique",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "rfi_monde",
+        "name": "RFI Monde",
+        "domain": "rfi.fr",
+        "count": 2,
+        "availability": {
+          "provider": "RFI Monde",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "rfi",
+        "name": "RFI Afrique",
+        "domain": "rfi.fr",
+        "count": 2,
+        "availability": {
+          "provider": "RFI Afrique",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "bbc",
+        "name": "BBC Afrique",
+        "domain": "bbc.com",
+        "count": 2,
+        "availability": {
+          "provider": "BBC Afrique",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      },
+      {
+        "id": "lemonde_afrique",
+        "name": "Le Monde Afrique",
+        "domain": "lemonde.fr",
+        "count": 2,
+        "availability": {
+          "provider": "Le Monde Afrique",
+          "scope": "Afrique · dépêches",
+          "status": "available",
+          "fetchedAt": "2026-10-11T18:00:00.000Z",
+          "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+          "dataAt": "2026-10-11T17:00:00.000Z",
+          "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+          "count": 2,
+          "limit": 150
+        }
+      }
+    ],
+    "updatedAt": "2026-10-11T18:00:00.000Z",
+    "stale": false,
+    "partial": false,
+    "availability": [
+      {
+        "provider": "APS (Sénégal)",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "AIP (Côte d’Ivoire)",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "MaliJet (Mali)",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "LeFaso.net (Burkina Faso)",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "Actu Cameroun",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "Guinéenews (Guinée)",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "Radio Okapi (RDC)",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "Hespress FR (Maroc)",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "TSA (Algérie)",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "Gabon Review",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "24 Heures au Bénin",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "Agence Ecofin",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "Financial Afrik",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "Jeune Afrique",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "Africanews (FR)",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "France 24 Monde",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "France 24 Afrique",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "RFI Monde",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "RFI Afrique",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "BBC Afrique",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      },
+      {
+        "provider": "Le Monde Afrique",
+        "scope": "Afrique · dépêches",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:05:00.000Z",
+        "count": 2,
+        "limit": 150
+      }
+    ],
+    "undatedArticles": [
+      {
+        "id": "aps-e833ace007f8ae2e5ea28e182b6d61aa91f912a71af0e3318e07f060053ddfd2",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Faps.sn%2Ffeed%2F",
+        "domain": "aps.sn",
+        "sourceName": "APS (Sénégal)",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "Sénégal & National"
+      },
+      {
+        "id": "aip-70aaa04a0494592a07a87aa7bd999efd1b11e096fc0ab1cad0c5dd325a5eb434",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Fwww.aip.ci%2Ffeed%2F",
+        "domain": "aip.ci",
+        "sourceName": "AIP (Côte d’Ivoire)",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "Côte d’Ivoire & National"
+      },
+      {
+        "id": "malijet-220fe5508cfe9fb123c36f7e64ac1d8e77833cb97dbe3d74e39a223867c6eb59",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Fmalijet.com%2Frss.xml",
+        "domain": "malijet.com",
+        "sourceName": "MaliJet (Mali)",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "Mali & National"
+      },
+      {
+        "id": "lefaso-18941f6b5e65f5997273567fc95af7d08b84df67caf3dcf8fa9eb417c6944c1e",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Flefaso.net%2Fspip.php%3Fpage%3Dbackend",
+        "domain": "lefaso.net",
+        "sourceName": "LeFaso.net (Burkina Faso)",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "Burkina Faso & National"
+      },
+      {
+        "id": "actu_cm-36968f8a330fec0f19a549d2e6ef1cb9f5fd077f58a8f19454d5e0b70773ff22",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Factucameroun.com%2Ffeed%2F",
+        "domain": "actucameroun.com",
+        "sourceName": "Actu Cameroun",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "Cameroun & National"
+      },
+      {
+        "id": "guineenews-e145d165653d3da089a12b5461efb884ac710a9c0bc99bf66c09a8a708cf89fa",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Fguineenews.org%2Ffeed%2F",
+        "domain": "guineenews.org",
+        "sourceName": "Guinéenews (Guinée)",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "Guinée & National"
+      },
+      {
+        "id": "okapi-257cb6fe043eb96c9c312a8cd81073e809c8e869ed5bc3c02c1dfb7f2492225b",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Fwww.radiookapi.net%2Frss.xml",
+        "domain": "radiookapi.net",
+        "sourceName": "Radio Okapi (RDC)",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "RDC & National"
+      },
+      {
+        "id": "hespress-b4f4e30e463f2c3ec5bb5f71cddfc4a54d03a02b3798e9fcd2f556f0aa3913a5",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Ffr.hespress.com%2Ffeed",
+        "domain": "fr.hespress.com",
+        "sourceName": "Hespress FR (Maroc)",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "Maroc & National"
+      },
+      {
+        "id": "tsa-c1dfb54fda1aac78c475a87275e1e8d61810516190216768eaaa63d0bd422f75",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Ftsa-algerie.com%2Ffeed%2F",
+        "domain": "tsa-algerie.com",
+        "sourceName": "TSA (Algérie)",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "Algérie & National"
+      },
+      {
+        "id": "gabonreview-5770cee9b54dd780347ccecdba96ede64a9b7e6db0a677c50993a663faee71b1",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Fgabonreview.com%2Ffeed%2F",
+        "domain": "gabonreview.com",
+        "sourceName": "Gabon Review",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "Gabon & National"
+      },
+      {
+        "id": "24haubenin-c4c885e9069ea31a5ae6a718653f2b19022f6b56a6de4117d6e44092d8910bbf",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2F24haubenin.info%2F%3Fpage%3Dbackend",
+        "domain": "24haubenin.info",
+        "sourceName": "24 Heures au Bénin",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "Bénin & National"
+      },
+      {
+        "id": "ecofin-174e98c148e91ba2fe6c4b28983815f15357868eefcc332f522d6c50d7d0bede",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Fwww.agenceecofin.com%2Ffeed",
+        "domain": "agenceecofin.com",
+        "sourceName": "Agence Ecofin",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "Économie & Finance"
+      },
+      {
+        "id": "financialafrik-6e436bfb381e9d35955fd86c1ba02325e31e0285d601d714c94da16c736b6fa5",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Fwww.financialafrik.com%2Ffeed%2F",
+        "domain": "financialafrik.com",
+        "sourceName": "Financial Afrik",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "Économie & Finance"
+      },
+      {
+        "id": "ja-ed1970ab1dbd59c827a7dd157ec745cf399a562f13696dd4830493d39599f3fc",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Fwww.jeuneafrique.com%2Ffeed%2F",
+        "domain": "jeuneafrique.com",
+        "sourceName": "Jeune Afrique",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "Analyses & Géopolitique"
+      },
+      {
+        "id": "africanews-d96253730e30c3eaea30c0b71d22aa96bea894bdf8626d26e93e1408d7d37c96",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Ffr.africanews.com%2Ffeed%2F",
+        "domain": "fr.africanews.com",
+        "sourceName": "Africanews (FR)",
+        "editorialScope": "africa",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "Actualité Panafricaine"
+      },
+      {
+        "id": "f24_monde-c4969551a5f106323033fdbb762de9a2859af0797203679072ea4b2f6d682d5e",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Fwww.france24.com%2Ffr%2Frss",
+        "domain": "france24.com",
+        "sourceName": "France 24 Monde",
+        "editorialScope": "international",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "International"
+      },
+      {
+        "id": "f24_afrique-2c453dea0e9ae297ae3c2aa1ffa702474412befd2152d673d7aa5bba7cdcd59d",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Fwww.france24.com%2Ffr%2Fafrique%2Frss",
+        "domain": "france24.com",
+        "sourceName": "France 24 Afrique",
+        "editorialScope": "international",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "International"
+      },
+      {
+        "id": "rfi_monde-4f41578f90a545049cf20d56dac44209777984c31774e9d2185dbc95dc820739",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Fwww.rfi.fr%2Ffr%2Fmonde%2Frss",
+        "domain": "rfi.fr",
+        "sourceName": "RFI Monde",
+        "editorialScope": "international",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "International"
+      },
+      {
+        "id": "rfi-4867dc2ecf7dd9edbbea5b001c6af74566fabb6f0a74ba4dbd915cc846303703",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Fwww.rfi.fr%2Ffr%2Fafrique%2Frss",
+        "domain": "rfi.fr",
+        "sourceName": "RFI Afrique",
+        "editorialScope": "international",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "International"
+      },
+      {
+        "id": "bbc-4fe0d9186d731dcd354d2272ff2e25112ee74d59a30ecf0f527ae092f467ca79",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Ffeeds.bbci.co.uk%2Fafrique%2Frss.xml",
+        "domain": "bbc.com",
+        "sourceName": "BBC Afrique",
+        "editorialScope": "international",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "International"
+      },
+      {
+        "id": "lemonde_afrique-319a358a6dd101effa342613c9890e60c956e3dd371e3a1d40072f5d20dcdbf2",
+        "title": "Bamako",
+        "url": "https://example.org/undated/https%3A%2F%2Fwww.lemonde.fr%2Fafrique%2Frss_full.xml",
+        "domain": "lemonde.fr",
+        "sourceName": "Le Monde Afrique",
+        "editorialScope": "international",
+        "sourceType": "rss",
+        "publishedAt": null,
+        "updatedAt": null,
+        "countryCode": "ML",
+        "countryBasis": "inferred_topic",
+        "category": "International"
+      }
+    ],
+    "window": {
+      "asOf": "2026-10-11T18:00:00.000Z",
+      "from": "2026-10-10T18:00:00.000Z",
+      "durationHours": 24,
+      "unknown": 21,
+      "future": 0,
+      "old": 0
+    }
+  },
+  "world": {
+    "articles": [
+      {
+        "id": "f24-europe-19d2ecb0d39e7dfc62e2f940dd88237233fed0bd0af776d6486ffbad78aa440a",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.france24.com%2Ffr%2Feurope%2Frss",
+        "sourceName": "France 24",
+        "origin": "France",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "region": "europe",
+        "regionBasis": "source",
+        "africanCountries": [
+          "SN"
+        ],
+        "touchesAfrica": true
+      },
+      {
+        "id": "f24-ameriques-f95a522354bdc1bb2c95361f49364263c94b98e3226706ec469750a2dd1ee033",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.france24.com%2Ffr%2Fam%25C3%25A9riques%2Frss",
+        "sourceName": "France 24",
+        "origin": "France",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "region": "ameriques",
+        "regionBasis": "source",
+        "africanCountries": [
+          "SN"
+        ],
+        "touchesAfrica": true
+      },
+      {
+        "id": "f24-moyen-orient-afb00c55300e92c8ccbe6c07abcbb03a4b3a0acc3b40d10cc795f42724bd3e07",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.france24.com%2Ffr%2Fmoyen-orient%2Frss",
+        "sourceName": "France 24",
+        "origin": "France",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "region": "moyen-orient",
+        "regionBasis": "source",
+        "africanCountries": [
+          "SN"
+        ],
+        "touchesAfrica": true
+      },
+      {
+        "id": "f24-asie-f9cfef7331a3d7bea26c195f178c3c08d654c9568333ce3d45b8a972d2524cf1",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.france24.com%2Ffr%2Fasie-pacifique%2Frss",
+        "sourceName": "France 24",
+        "origin": "France",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "region": "asie-pacifique",
+        "regionBasis": "source",
+        "africanCountries": [
+          "SN"
+        ],
+        "touchesAfrica": true
+      },
+      {
+        "id": "rfi-europe-98f0883c1a174c7f60166da4c6c3f6c2d94130d3ef6a3877ec28c487124051db",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.rfi.fr%2Ffr%2Feurope%2Frss",
+        "sourceName": "RFI",
+        "origin": "France",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "region": "europe",
+        "regionBasis": "source",
+        "africanCountries": [
+          "SN"
+        ],
+        "touchesAfrica": true
+      },
+      {
+        "id": "rfi-ameriques-9fea26eea6318a7fcb80674db7e7e24aec3826991fe33318bde06b69b75369d7",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.rfi.fr%2Ffr%2Fam%25C3%25A9riques%2Frss",
+        "sourceName": "RFI",
+        "origin": "France",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "region": "ameriques",
+        "regionBasis": "source",
+        "africanCountries": [
+          "SN"
+        ],
+        "touchesAfrica": true
+      },
+      {
+        "id": "rfi-moyen-orient-7c3facc25b51043bdf12761c50b79eaaa2912eea3f9e54400f4b7fec80386602",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.rfi.fr%2Ffr%2Fmoyen-orient%2Frss",
+        "sourceName": "RFI",
+        "origin": "France",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "region": "moyen-orient",
+        "regionBasis": "source",
+        "africanCountries": [
+          "SN"
+        ],
+        "touchesAfrica": true
+      },
+      {
+        "id": "rfi-asie-9302043059bdd33c794490ee0584acdc56585c448bc6dfe2f62cb2ad70bb47c8",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.rfi.fr%2Ffr%2Fasie-pacifique%2Frss",
+        "sourceName": "RFI",
+        "origin": "France",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "region": "asie-pacifique",
+        "regionBasis": "source",
+        "africanCountries": [
+          "SN"
+        ],
+        "touchesAfrica": true
+      },
+      {
+        "id": "lemonde-europe-a77ac3afcb93376893413d1de20eb9b9e2bc779d63e9d72ea8108ac2083533e5",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.lemonde.fr%2Feurope%2Frss_full.xml",
+        "sourceName": "Le Monde",
+        "origin": "France",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "region": "europe",
+        "regionBasis": "source",
+        "africanCountries": [
+          "SN"
+        ],
+        "touchesAfrica": true
+      },
+      {
+        "id": "lemonde-ameriques-2e0746e605803de61028b8260d6895bafdbf4599e1a87e792b58222637cf3a61",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.lemonde.fr%2Fameriques%2Frss_full.xml",
+        "sourceName": "Le Monde",
+        "origin": "France",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "region": "ameriques",
+        "regionBasis": "source",
+        "africanCountries": [
+          "SN"
+        ],
+        "touchesAfrica": true
+      },
+      {
+        "id": "lemonde-proche-orient-ffcba5c7eee0485d2a33561e4d1852e2a0ac31bc508ea614c79e71d03c811075",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.lemonde.fr%2Fproche-orient%2Frss_full.xml",
+        "sourceName": "Le Monde",
+        "origin": "France",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "region": "moyen-orient",
+        "regionBasis": "source",
+        "africanCountries": [
+          "SN"
+        ],
+        "touchesAfrica": true
+      },
+      {
+        "id": "lemonde-asie-1628d4ff1c5b60658d073dd6937a0789cdbbc40e60db696abc85d13a04900e51",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.lemonde.fr%2Fasie-pacifique%2Frss_full.xml",
+        "sourceName": "Le Monde",
+        "origin": "France",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "region": "asie-pacifique",
+        "regionBasis": "source",
+        "africanCountries": [
+          "SN"
+        ],
+        "touchesAfrica": true
+      },
+      {
+        "id": "radio-canada-3430cb1b2d48d4d87593160e855c4e438cbb87ef555ebb7b7ed79d3a414cf198",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fici.radio-canada.ca%2Frss%2F96",
+        "sourceName": "Radio-Canada",
+        "origin": "Canada",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "region": "europe",
+        "regionBasis": "inferred",
+        "africanCountries": [
+          "SN"
+        ],
+        "touchesAfrica": true
+      },
+      {
+        "id": "euronews-df7a895f3e3fd72c0ed3e06888fc9c8ba25634eccb41b0cdc0f7c08ee89eb15c",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Ffr.euronews.com%2Frss%3Flevel%3Dtheme%26name%3Dnews",
+        "sourceName": "Euronews",
+        "origin": "Europe",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "region": "europe",
+        "regionBasis": "inferred",
+        "africanCountries": [
+          "SN"
+        ],
+        "touchesAfrica": true
+      },
+      {
+        "id": "courrier-international-89de26dcf6740860e4346daea8470bfe41418da88af7cfbcc77f843d1c6b6dc5",
+        "title": "Dakar Paris : politique",
+        "url": "https://example.org/https%3A%2F%2Fwww.courrierinternational.com%2Ffeed%2Fall%2Frss.xml",
+        "sourceName": "Courrier international",
+        "origin": "Presse mondiale traduite",
+        "publishedAt": "2026-10-11T17:00:00.000Z",
+        "region": "europe",
+        "regionBasis": "inferred",
+        "africanCountries": [
+          "SN"
+        ],
+        "touchesAfrica": true
+      }
+    ],
+    "updatedAt": "2026-10-11T18:00:00.000Z",
+    "availability": [
+      {
+        "provider": "France 24",
+        "scope": "Monde · europe",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:10:00.000Z",
+        "count": 2
+      },
+      {
+        "provider": "France 24",
+        "scope": "Monde · ameriques",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:10:00.000Z",
+        "count": 2
+      },
+      {
+        "provider": "France 24",
+        "scope": "Monde · moyen-orient",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:10:00.000Z",
+        "count": 2
+      },
+      {
+        "provider": "France 24",
+        "scope": "Monde · asie-pacifique",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:10:00.000Z",
+        "count": 2
+      },
+      {
+        "provider": "RFI",
+        "scope": "Monde · europe",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:10:00.000Z",
+        "count": 2
+      },
+      {
+        "provider": "RFI",
+        "scope": "Monde · ameriques",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:10:00.000Z",
+        "count": 2
+      },
+      {
+        "provider": "RFI",
+        "scope": "Monde · moyen-orient",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:10:00.000Z",
+        "count": 2
+      },
+      {
+        "provider": "RFI",
+        "scope": "Monde · asie-pacifique",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:10:00.000Z",
+        "count": 2
+      },
+      {
+        "provider": "Le Monde",
+        "scope": "Monde · europe",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:10:00.000Z",
+        "count": 2
+      },
+      {
+        "provider": "Le Monde",
+        "scope": "Monde · ameriques",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:10:00.000Z",
+        "count": 2
+      },
+      {
+        "provider": "Le Monde",
+        "scope": "Monde · moyen-orient",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:10:00.000Z",
+        "count": 2
+      },
+      {
+        "provider": "Le Monde",
+        "scope": "Monde · asie-pacifique",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:10:00.000Z",
+        "count": 2
+      },
+      {
+        "provider": "Radio-Canada",
+        "scope": "Monde · généraliste",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:10:00.000Z",
+        "count": 1
+      },
+      {
+        "provider": "Euronews",
+        "scope": "Monde · généraliste",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:10:00.000Z",
+        "count": 1
+      },
+      {
+        "provider": "Courrier international",
+        "scope": "Monde · généraliste",
+        "status": "available",
+        "fetchedAt": "2026-10-11T18:00:00.000Z",
+        "lastSuccessAt": "2026-10-11T18:00:00.000Z",
+        "dataAt": "2026-10-11T17:00:00.000Z",
+        "cacheExpiresAt": "2026-10-11T18:10:00.000Z",
+        "count": 1
+      }
+    ]
+  }
+}

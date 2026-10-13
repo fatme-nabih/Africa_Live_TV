@@ -74,6 +74,7 @@ export function catalogCursorContext(input: {
   language: string;
   status: string;
   favoritesOnly: boolean;
+  preferredLanguage?: string;
 }) {
   return createHmac('sha256', cursorSecret())
     .update(
@@ -88,6 +89,7 @@ export function catalogCursorContext(input: {
         input.language.toLowerCase(),
         input.status,
         input.favoritesOnly,
+        ...(input.preferredLanguage ? [input.preferredLanguage] : []),
       ]),
     )
     .digest('hex');

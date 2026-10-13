@@ -1,4 +1,5 @@
 'use client';
+import { withoutEditionPrefix } from '@/lib/edition-routing';
 
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Suspense, useMemo, type ReactNode } from 'react';
@@ -9,6 +10,7 @@ import FollowedCountriesSync from './FollowedCountriesSync';
 import NavLinks from './NavLinks';
 import { useOpenSearch } from './useOpenSearch';
 import AccountPreferences, { type PreferenceIdentity } from './AccountPreferences';
+import { useI18n } from '@/i18n/client';
 
 /**
  * Coquille unique des pages connectées (Radar, TV, Compte, Admin) et de la page Tarifs :
@@ -26,14 +28,15 @@ export default function AppShell({
   children: ReactNode;
   preferenceIdentity?: PreferenceIdentity;
 }) {
+  const { t } = useI18n();
   if (preferenceIdentity) return <AccountPreferences identity={preferenceIdentity}><AppShell admin={admin} mode={mode}>{children}</AppShell></AccountPreferences>;
   return (
     <div className="flex min-h-screen flex-col">
       <a
         href="#contenu"
-        className="sr-only z-[100] rounded-control bg-al-yellow px-4 py-2 font-bold text-black focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+        className="sr-only z-[100] rounded-control bg-al-yellow px-4 py-2 font-bold text-black focus:not-sr-only focus:fixed focus:start-4 focus:top-4"
       >
-        Aller au contenu
+        {t.shell.skipToContent}
       </a>
       <Suspense fallback={<div className="h-[calc(0.125rem+3.5rem)] border-b border-line md:h-[calc(0.125rem+4rem)]" aria-hidden="true" />}>
         <AppHeader admin={admin} mode={mode} />
@@ -65,9 +68,10 @@ export default function AppShell({
 
 /** Barre basse mobile : Radar · TV · Recherche · Compte (Admin ajouté seulement pour un administrateur). */
 function MobileTabBar({ admin }: { admin: boolean }) {
-  const pathname = usePathname();
+  const { t } = useI18n();
+  const pathname = withoutEditionPrefix(usePathname());
   const country = countryFromSearch(useSearchParams().get('country'));
-  const items = useMemo(() => buildNavItems({ pathname, country, admin }), [pathname, country, admin]);
+  const items = useMemo(() => buildNavItems({ pathname, country, admin, labels: t.shell.nav }), [pathname, country, admin, t]);
   const onSearch = useOpenSearch(pathname, country);
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-black/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">

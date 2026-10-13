@@ -1,4 +1,6 @@
 'use client';
+import { useEdition } from '@/i18n/client';
+import { EDITIONS } from '@/lib/editions';
 import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { catalogFilterUrl, catalogFiltersFromUrl, catalogPreset, EMPTY_CATALOG_FILTERS } from '@/lib/catalog-filter-state';
@@ -6,6 +8,7 @@ import type { ChannelFilters } from '@/types/channel';
 import type { CategoryPreset } from './CategoryTabs';
 
 export function useCatalogFilters() {
+  const edition = useEdition();
   const params = useSearchParams();
   const serialized = params.toString();
   const { filters, favoritesOnly } = useMemo(() => catalogFiltersFromUrl(new URLSearchParams(serialized)), [serialized]);
@@ -17,9 +20,9 @@ export function useCatalogFilters() {
     if (preset.id === 'all') update(EMPTY_CATALOG_FILTERS, false);
     else if (preset.id === 'favorites') update(filters, !favoritesOnly);
     else if (preset.id === 'africa') update({ ...filters, country: '', region: 'africa' }, false);
-    else if (preset.id === 'senegal') update({ ...filters, country: 'SN', region: '' }, false);
+    else if (preset.id === 'senegal') update({ ...filters, country: EDITIONS[edition].defaultCountry, region: '' }, false);
     else update({ ...filters, group: preset.group ?? '' }, false);
-  }, [filters, favoritesOnly, update]);
-  return { filters, favoritesOnly, update, selectPreset, activePresetId: catalogPreset(filters, favoritesOnly),
+  }, [filters, favoritesOnly, update, edition]);
+  return { filters, favoritesOnly, update, selectPreset, activePresetId: catalogPreset(filters, favoritesOnly, EDITIONS[edition].defaultCountry),
     reset: () => update(EMPTY_CATALOG_FILTERS, false), setFavoritesOnly: (value: boolean) => update(filters, value) };
 }

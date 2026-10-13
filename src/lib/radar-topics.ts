@@ -1,3 +1,7 @@
+import type { Edition } from './editions';
+import { textWords, wordMatches, arabicWordForms } from './text-normalize';
+import { foreignArticleTopics } from './radar-topic-lexicon';
+import { fr } from '@/i18n/fr';
 import type { RadarArticle } from './live-osint-types';
 
 /**
@@ -7,17 +11,13 @@ import type { RadarArticle } from './live-osint-types';
  */
 export type RadarTopic = 'politique' | 'economie' | 'securite' | 'societe' | 'sport' | 'culture';
 
-export const RADAR_TOPICS: { id: RadarTopic; label: string }[] = [
-  { id: 'politique', label: 'Politique' },
-  { id: 'economie', label: 'Économie' },
-  { id: 'securite', label: 'Sécurité' },
-  { id: 'societe', label: 'Société' },
-  { id: 'sport', label: 'Sport' },
-  { id: 'culture', label: 'Culture' },
-];
+/** Ordre d'affichage ; libellés français (le composant lit ceux de son édition dans le dictionnaire). */
+export const RADAR_TOPICS: { id: RadarTopic; label: string }[] = (['politique', 'economie', 'securite', 'societe', 'sport', 'culture'] as const)
+  .map(id => ({ id, label: fr.radar.topics[id] }));
 
 /** Minuscules, sans accents ni ponctuation, entouré d'espaces : les motifs s'écrivent ` mot ` sans souci de bord de chaîne. */
-export function normalizeSearchText(text: string): string {
+export function normalizeSearchText(text: string, edition: Edition = 'fr'): string {
+  if (edition === 'ar') return ` ${textWords(text, edition).join(' ')} `;
   return ` ${text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim()} `;
 }
 
@@ -43,7 +43,8 @@ const TITLE_TOPICS: [RegExp, RadarTopic][] = [
 ];
 
 /** Rubriques d'une dépêche, dans l'ordre de RADAR_TOPICS ; tableau vide si rien de sûr. */
-export function articleTopics(article: Pick<RadarArticle, 'title' | 'category'>): RadarTopic[] {
+export function articleTopics(article: Pick<RadarArticle, 'title' | 'category'>, edition: Edition = 'fr'): RadarTopic[] {
+  if (edition !== 'fr') return foreignArticleTopics(article.title, article.category ?? '', edition);
   const found = new Set<RadarTopic>();
   const category = normalizeSearchText(article.category ?? '');
   for (const [pattern, topic] of CATEGORY_TOPICS) if (pattern.test(category)) found.add(topic);
@@ -59,9 +60,14 @@ export function matchesRadarQuery(
   article: Pick<RadarArticle, 'title' | 'sourceName' | 'domain' | 'category'>,
   query: string,
   countryName?: string,
+  edition: Edition = 'fr',
 ): boolean {
-  const words = normalizeSearchText(query).trim().split(' ').filter(Boolean);
+  const words = normalizeSearchText(query, edition).trim().split(' ').filter(Boolean);
   if (words.length === 0) return true;
-  const haystack = normalizeSearchText([article.title, article.sourceName ?? article.domain, article.category ?? '', countryName ?? ''].join(' '));
+  const haystack = normalizeSearchText([article.title, article.sourceName ?? article.domain, article.category ?? '', countryName ?? ''].join(' '), edition);
+  if (edition === 'ar') {
+    const available = haystack.trim().split(' ');
+    return words.every(word => arabicWordForms(word).some(form => available.some(candidate => wordMatches(candidate, form, edition))));
+  }
   return words.every(word => haystack.includes(word));
 }

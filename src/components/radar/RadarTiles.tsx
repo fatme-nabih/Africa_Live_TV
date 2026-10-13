@@ -2,6 +2,8 @@ import type { CSSProperties, ReactNode } from 'react';
 import { CloudSun, Newspaper, ShieldCheck, TriangleAlert, Tv } from 'lucide-react';
 import { cn } from '@/components/ui';
 import type { WeatherAlert } from '@/lib/weather-alert';
+import { useI18n } from '@/i18n/client';
+import { format } from '@/i18n/message';
 
 /**
  * Tuile cliquable. Son nom accessible est son texte visible (libellé, valeur, sous-texte), dans cet ordre, complété par du
@@ -37,7 +39,7 @@ function Tile({
       type="button"
       onClick={onClick}
       className={cn(
-        'group flex min-w-0 flex-col items-start gap-1 rounded-card border bg-surface-1 p-2.5 text-left transition-colors duration-200 hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold sm:p-3.5',
+        'group flex min-w-0 flex-col items-start gap-1 rounded-card border bg-surface-1 p-2.5 text-start transition-colors duration-200 hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold sm:p-3.5',
         tone === 'alert' ? 'border-al-red/50' : 'border-line hover:border-line-gold',
       )}
     >
@@ -78,53 +80,55 @@ export default function RadarTiles({
   onOpenChannels: () => void;
   onOpenWeather: () => void;
 }) {
-  const scope = countryName ?? 'toute l’Afrique';
+  const { t } = useI18n();
+  const labels = t.radar.tiles;
+  const scope = countryName ?? labels.allAfrica;
   const newsValue = !news.ready ? '—' : news.count ?? news.total;
-  const newsLabel = news.count === null ? 'Dépêches des dernières 24 h' : 'Nouvelles depuis votre visite';
-  const newsSub = !news.ready ? undefined : news.count === null ? 'Bienvenue sur le Radar' : news.sinceLabel ?? undefined;
-  const channelsLabel = countryName ? 'Chaînes en direct du pays' : 'Chaînes en direct d’Afrique';
+  const newsLabel = news.count === null ? labels.news24h : labels.newsSince;
+  const newsSub = !news.ready ? undefined : news.count === null ? labels.welcome : news.sinceLabel ?? undefined;
+  const channelsLabel = countryName ? labels.channelsCountry : labels.channelsAfrica;
   return (
-    <section aria-label="Repères du moment" className="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
+    <section aria-label={labels.region} className="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
       <Tile
         icon={<Newspaper className="h-4 w-4" />}
         label={newsLabel}
-        shortLabel={news.count === null ? 'Dépêches 24 h' : 'Nouvelles'}
+        shortLabel={news.count === null ? labels.news24hShort : labels.newsShort}
         value={<span className={NUMBER}>{newsValue}</span>}
-        srValue={news.ready ? undefined : 'chargement'}
+        srValue={news.ready ? undefined : labels.loading}
         sub={newsSub}
-        srExtra={`Voir le fil des dépêches (${scope})`}
+        srExtra={format(labels.openNews, { scope })}
         onClick={onOpenNews}
       />
       <Tile
         icon={<Tv className="h-4 w-4" />}
         label={channelsLabel}
-        shortLabel="Chaînes en direct"
+        shortLabel={labels.channelsShort}
         value={<span className={NUMBER}>{channels ? channels.count : '—'}</span>}
-        srValue={channels ? undefined : 'en cours de chargement'}
-        sub={channels ? (channels.inBrowser > 0 ? `${channels.inBrowser} à regarder ici` : countryName ?? undefined) : undefined}
-        srExtra={`Voir les chaînes (${scope})`}
+        srValue={channels ? undefined : labels.loadingLong}
+        sub={channels ? (channels.inBrowser > 0 ? format(labels.watchHere, { count: channels.inBrowser }) : countryName ?? undefined) : undefined}
+        srExtra={format(labels.openChannels, { scope })}
         onClick={onOpenChannels}
       />
       {weather.state === 'ok' && weather.alert ? (
         <Tile
           tone="alert"
           icon={<TriangleAlert className="h-4 w-4" />}
-          label="Alerte météo"
-          shortLabel="Alerte météo"
+          label={labels.weatherAlert}
+          shortLabel={labels.weatherAlert}
           value={<span className="break-words text-base font-bold leading-tight sm:text-lg">{weather.alert.label}</span>}
           sub={`${weather.place} · ${weather.alert.detail}`}
-          srExtra="Observation automatisée, pas une alerte officielle. Voir la météo"
+          srExtra={labels.alertDisclaimer}
           onClick={onOpenWeather}
         />
       ) : (
         <Tile
           icon={weather.state === 'ok' ? <ShieldCheck className="h-4 w-4" /> : <CloudSun className="h-4 w-4" />}
-          label="Alerte météo"
-          shortLabel="Alerte météo"
-          value={<span className="break-words text-base font-bold leading-tight sm:text-lg">{weather.state === 'ok' ? 'Rien à signaler' : weather.state === 'error' ? 'Pas de relevé' : '—'}</span>}
-          srValue={weather.state === 'loading' ? 'chargement' : undefined}
+          label={labels.weatherAlert}
+          shortLabel={labels.weatherAlert}
+          value={<span className="break-words text-base font-bold leading-tight sm:text-lg">{weather.state === 'ok' ? labels.nothing : weather.state === 'error' ? labels.noReading : '—'}</span>}
+          srValue={weather.state === 'loading' ? labels.loading : undefined}
           sub={weather.state === 'ok' ? `${weather.place} · ${weather.summary}` : weather.place}
-          srExtra={`${weather.state === 'error' ? 'Météo indisponible. ' : ''}Voir la météo`}
+          srExtra={`${weather.state === 'error' ? labels.weatherUnavailable : ''}${labels.openWeather}`}
           onClick={onOpenWeather}
         />
       )}

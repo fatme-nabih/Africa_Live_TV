@@ -22,21 +22,26 @@ function loadComponent(entry: string, boundaries: Record<string, unknown>) {
   return testModule.exports.default;
 }
 
-test('Clerk fallback after sign-in/sign-up is dashboard; explicit deep-link redirections remain SDK-owned', () => {
+test('Clerk fallback after sign-in/sign-up is dashboard; explicit deep-link redirections remain SDK-owned', async () => {
   // UX-603 : ClerkProvider vit dans le layout du groupe (clerk) (app, compte, admin, tarifs, connexion), plus dans le layout racine.
-  const Layout = loadComponent('src/app/(clerk)/layout.tsx', {
+  const Layout = loadComponent('src/app/[edition]/(clerk)/layout.tsx', {
+    '@/i18n/edition': { getEdition: async () => 'fr' },
+    '@/i18n/server': { clientMessages: () => undefined },
+    '@/i18n/client': { I18nProvider: 'i18n-provider' },
+    '@/lib/editions': { enabledEditions: () => ['fr'] },
     '@/lib/local-dev': { isLocalDevMode: () => false }, '@clerk/nextjs': { ClerkProvider: 'clerk-provider' },
-  }) as (props: { children: string }) => React.ReactElement<Record<string, unknown>>;
-  const provider = Layout({ children: 'app' });
+  }) as (props: { children: string }) => Promise<React.ReactElement<Record<string, unknown>>>;
+  const provider = await Layout({ children: 'app' });
   assert.equal(provider.type, 'clerk-provider');
-  assert.equal(provider.props.children, 'app');
+  const messages = provider.props.children as React.ReactElement<{ children: string; edition: string }>;
+  assert.equal(messages.type, 'i18n-provider'); assert.equal(messages.props.children, 'app'); assert.equal(messages.props.edition, 'fr');
   assert.equal(provider.props.signInFallbackRedirectUrl, '/app/live');
   assert.equal(provider.props.signUpFallbackRedirectUrl, '/app/live');
   assert.equal(provider.props.signInForceRedirectUrl, undefined);
   assert.equal(provider.props.signUpForceRedirectUrl, undefined);
 });
 test('completed checkout renders dashboard destination without submitting a payment', () => {
-  const Success = loadComponent('src/app/(clerk)/pricing/success/SuccessClient.tsx', {
+  const Success = loadComponent('src/app/[edition]/(clerk)/pricing/success/SuccessClient.tsx', {
     react: { ...React, useReducer: () => [{ tag: 'done', status: 'completed' }, () => {}], useEffect: () => {} },
     'next/link': { __esModule: true, default: 'a' },
     'next/navigation': { useSearchParams: () => new URLSearchParams('order_id=synthetic') },

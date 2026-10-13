@@ -1,5 +1,28 @@
 import { test, expect } from '@playwright/test';
 test.beforeEach(async ({ page }) => { await page.route('**/api/favorites', route => route.fulfill({ json: { favorites: [], owner: route.request().headers()['x-preference-owner'] ?? 'account:A' } })); });
+
+test('EDI-303: English sync failures retain the shared French store and pending choice through retry', async ({ page }) => {
+  let fail = true;
+  const favorites = new Set<string>();
+  await page.route('**/api/favorites', route => {
+    if (route.request().method() === 'PATCH') {
+      if (fail) return route.fulfill({ status: 503, json: { error: 'fixture outage' } });
+      route.request().postDataJSON().add.forEach((id: string) => favorites.add(id));
+    }
+    return route.fulfill({ json: { owner: 'account:A', favorites: [...favorites] } });
+  });
+  await page.goto('/?kind=favorites&count=1&edition=en');
+  await page.getByRole('button', { name: 'Add favorites' }).click();
+  await expect(page.getByRole('alert')).toHaveText('Synchronisation failed. Retry. Your choice is kept on this device.');
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('al_preferences_v2_account%3AA')!).data);
+  expect(stored.errors.favorites).toBe('La synchronisation a échoué. Réessayez. Le choix reste conservé sur cet appareil.');
+  expect(Object.keys(stored.favoriteIntents)).toEqual(['fixture-0']);
+  fail = false;
+  await page.getByRole('button', { name: 'Retry favorites' }).click();
+  await expect.poll(() => favorites.size).toBe(1);
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  await expect(page.getByTestId('favorites-state')).toHaveText('["fixture-0"]');
+});
 test('B08: unavailable Storage never raises a global error or prevents the API read', async ({ page }) => {
   const errors: string[] = []; let reads = 0;
   page.on('pageerror', error => errors.push(error.message));

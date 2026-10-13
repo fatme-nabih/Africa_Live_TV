@@ -1,10 +1,12 @@
 'use client';
+import { useI18n } from '@/i18n/client';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { Skeleton } from '@/components/ui';
 import type { Channel } from '@/types/channel';
 import ChannelTile from './ChannelTile';
+import { isRtl } from '@/lib/direction';
 
 /**
  * Rangée de chaînes défilable (tactile, molette, boutons, clavier). Une seule tuile est dans l'ordre de tabulation
@@ -29,6 +31,7 @@ export default function ChannelRail({
   onToggleFavorite: (id: string) => void;
   action?: ReactNode;
 }) {
+  const { t } = useI18n();
   const headingId = useId();
   const scroller = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
@@ -42,9 +45,11 @@ export default function ChannelRail({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    // En droite → gauche, la chaîne suivante est à gauche : la flèche gauche avance.
+    const rtl = isRtl(scroller.current);
     const keys: Record<string, (index: number) => number> = {
-      ArrowRight: index => Math.min(index + 1, channels.length - 1),
-      ArrowLeft: index => Math.max(index - 1, 0),
+      [rtl ? 'ArrowLeft' : 'ArrowRight']: index => Math.min(index + 1, channels.length - 1),
+      [rtl ? 'ArrowRight' : 'ArrowLeft']: index => Math.max(index - 1, 0),
       Home: () => 0,
       End: () => channels.length - 1,
     };
@@ -66,7 +71,7 @@ export default function ChannelRail({
             <button
               type="button"
               onClick={() => scrollBy(-1)}
-              aria-label="Faire défiler vers la gauche"
+              aria-label={t.tv.copy["Faire défiler vers la gauche"]}
               className="inline-flex size-9 items-center justify-center rounded-pill border border-line bg-surface-2 text-text-muted transition-colors hover:border-line-gold hover:text-text"
             >
               <ChevronLeft className="size-4" aria-hidden="true" />
@@ -74,7 +79,7 @@ export default function ChannelRail({
             <button
               type="button"
               onClick={() => scrollBy(1)}
-              aria-label="Faire défiler vers la droite"
+              aria-label={t.tv.copy["Faire défiler vers la droite"]}
               className="inline-flex size-9 items-center justify-center rounded-pill border border-line bg-surface-2 text-text-muted transition-colors hover:border-line-gold hover:text-text"
             >
               <ChevronRight className="size-4" aria-hidden="true" />

@@ -29,6 +29,17 @@ test('local mode accepts its dedicated DB without requiring Clerk credentials', 
   assert.throws(() => validateServerEnvironment({ ...local, NEXT_PUBLIC_LOCAL_DEV_MODE: 'false' }), EnvironmentValidationError);
 });
 
+test('EDI-101: startup validation and CLI share the edition defaults and readiness gate', () => {
+  const local = { NODE_ENV: 'development', DEPLOYMENT_ENV: 'local', LOCAL_DEV_MODE: 'true', NEXT_PUBLIC_LOCAL_DEV_MODE: 'true',
+    DATABASE_URL: 'postgres://localhost/africa_live_dev', NEXT_PUBLIC_APP_URL: 'http://localhost:3001' };
+  assert.deepEqual(validateServerEnvironment(local).editions, { editions: ['fr'], unknown: [], notReady: [] });
+  assert.deepEqual(validateServerEnvironment({ ...local, EDITIONS: 'en,ar,fr,unknown' }).editions,
+    { editions: ['fr', 'en', 'ar'], unknown: ['unknown'], notReady: [] });
+  assert.deepEqual(validateServerEnvironment({ ...validProduction(), EDITIONS: 'fr,en' }).editions,
+    { editions: ['fr', 'en'], unknown: [], notReady: [] });
+  assert.throws(() => validateServerEnvironment({ ...validProduction(), LOCAL_DEV_MODE: 'true', EDITIONS: 'fr,en' }), EnvironmentValidationError);
+});
+
 test('a local production build remains local without weakening deployed validation', () => {
   const localBuild = {
     NODE_ENV: 'production', DEPLOYMENT_ENV: 'local',

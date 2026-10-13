@@ -1,3 +1,7 @@
+import { getDictionary } from '@/i18n/dictionary';
+import { format } from '@/i18n/message';
+import { countryName } from './country-names';
+import type { Edition } from './editions';
 /**
  * Africa Live — Moteur de Synthèse Flash Briefing IA Panafricain (RAD-502)
  *
@@ -49,11 +53,15 @@ export function clearBriefingCache(): void {
  */
 export async function getLiveBriefing(options: {
   countryCode?: string | null;
+  edition?: Edition;
   forceRefresh?: boolean;
 } = {}, providers:BriefingProviders=defaultProviders): Promise<LiveBriefingSnapshot> {
+  const edition = options.edition ?? 'fr';
+  const dictionary = getDictionary(edition);
+  const texts = dictionary.briefing.engine;
   const targetCode = options.countryCode ? options.countryCode.toUpperCase() : null;
   const scope = targetCode ? 'country' : 'continent';
-  const cacheKey = targetCode ?? 'continent';
+  const cacheKey = edition + '|' + (targetCode ?? 'continent');
 
   const now = providers.now();
   const cached = briefingCache.get(cacheKey);
@@ -63,15 +71,15 @@ export async function getLiveBriefing(options: {
 
   // Collecte concurrente des 4 sources vivantes du cockpit
   const [rssData, disastersData, marketsData, channelsData] = await Promise.all([
-    providers.rss().catch(() => ({ articles: [], sources: [], updatedAt: new Date(now).toISOString(), stale: true })),
+    providers.rss({ edition }).catch(() => ({ articles: [], sources: [], updatedAt: new Date(now).toISOString(), stale: true })),
     providers.disasters().catch(() => ({ type: 'FeatureCollection' as const, metadata: { source: '', attribution: '', totalEvents: 0, earthquakesCount: 0, gdacsAlertsCount: 0, generatedAt: '' }, features: [] })),
-    providers.markets().catch(() => ({ commodities: [], forex: [], alerts: [], updatedAt: new Date(now).toISOString(), disclaimer: '' })),
+    providers.markets({ edition }).catch(() => ({ commodities: [], forex: [], alerts: [], updatedAt: new Date(now).toISOString(), disclaimer: '' })),
     providers.channels().catch((): LiveChannelsSummarySnapshot => ({ updatedAt: new Date(now).toISOString(), totalChannels: 0, totalDirectWeb: 0, countries: {} })),
   ]);
 
   // Filtrage selon le périmètre (pays ou continent)
   const countryObj = targetCode ? AFRICAN_COUNTRIES.find((c) => c.code === targetCode) : null;
-  const targetName = countryObj ? countryObj.name : 'Continent Africain';
+  const targetName = countryObj ? (edition === 'fr' ? countryObj.name : countryName(countryObj.code, edition)) : texts.message1;
 
   const relevantArticles = targetCode
     ? rssData.articles.filter((a) => a.countryCode === targetCode || a.title.toLowerCase().includes(targetName.toLowerCase()))
@@ -111,28 +119,28 @@ export async function getLiveBriefing(options: {
 
   let geoSummary = '';
   if (topArticles.length > 0) {
-    geoSummary = `L'actualité des dernières 12 heures est rythmée par ${topArticles.length} dépêches majeures issues des rédactions vérifiées. Les sujets dominants portent sur la gouvernance, les initiatives régionales et l'actualité politique et sociale.`;
+    geoSummary = format(texts.message2, {v0: topArticles.length});
   } else {
-    geoSummary = `Aucun incident politique ou dépêche critique spécifique n'a été signalé au cours des dernières 12 heures sur la zone observée. Situation médiatique sous surveillance nominale.`;
+    geoSummary = texts.message3;
   }
 
   // 2. Pilier Économie & Matières Premières
   const ecoHighlights: string[] = [];
   marketsData.commodities.forEach((c) => {
     const varText = c.changePercent24h !== null ? ` (${c.changePercent24h > 0 ? '+' : ''}${c.changePercent24h} %)` : '';
-    ecoHighlights.push(`${c.name} : ${c.price} ${c.currency} / ${c.unit.replace('$/', '')}${varText}`);
+    ecoHighlights.push(`${edition === 'fr' ? c.name : (dictionary.markets.products as Record<string, string>)[c.symbol] ?? c.name} : ${c.price} ${c.currency} / ${c.unit.replace('$/', '')}${varText}`);
   });
 
   const eurXof = marketsData.forex.find((f) => f.pair === 'EUR / XOF');
   const usdXof = marketsData.forex.find((f) => f.pair === 'USD / XOF');
   if (eurXof && usdXof) {
-    ecoHighlights.push(`Devises : 1 € = ${eurXof.rate.toFixed(2)} FCFA (Fixe BCEAO) · 1 $ = ${usdXof.rate.toFixed(2)} FCFA`);
+    ecoHighlights.push(format(texts.message4, {v0: eurXof.rate.toFixed(2), v1: usdXof.rate.toFixed(2)}));
   }
 
-  const ecoArticles = relevantArticles.filter((a) => a.category === 'Économie');
-  let ecoSummary = `Sur le plan économique, les cours des matières premières stratégiques (Cacao, Pétrole Brent, Or) affichent une dynamique sous observation. Les parités monétaires en zone Franc CFA demeurent stables.`;
+  const ecoArticles = relevantArticles.filter((a) => edition === 'fr' ? a.category === 'Économie' : ['economy', 'business', 'finance'].includes(a.category.toLowerCase()));
+  let ecoSummary = texts.message5;
   if (ecoArticles.length > 0) {
-    ecoSummary += ` Les rédactions économiques soulignent notamment : "${ecoArticles[0].title}".`;
+    ecoSummary += format(texts.message6, {v0: ecoArticles[0].title});
   }
 
   // 3. Pilier Risques, Météo & Catastrophes (GDACS & USGS)
@@ -150,74 +158,72 @@ export async function getLiveBriefing(options: {
 
   relevantDisasters.slice(0, 3).forEach((f) => {
     const p = f.properties;
-    const kind = p.eventType === 'earthquake' ? `Séisme M${p.magnitude?.toFixed(1) ?? '?'}` : `Alerte ${p.eventType.toUpperCase()}`;
+    const kind = p.eventType === 'earthquake' ? format(texts.message7, {v0: p.magnitude?.toFixed(1) ?? '?'}) : format(texts.message8, {v0: p.eventType.toUpperCase()});
     hazardHighlights.push(`${kind} : ${p.title}`);
   });
 
   let hazardSummary = '';
   if (hazardStatus === 'critical') {
-    hazardSummary = `Alerte de niveau critique : ${criticalDisasters.length} événement(s) majeur(s) identifié(s) nécessitant une vigilance renforcée (séisme important ou alerte cyclonique/inondation GDACS).`;
+    hazardSummary = format(texts.message9, {v0: criticalDisasters.length});
   } else if (hazardStatus === 'vigilance') {
-    hazardSummary = `Situation en vigilance modérée : détection d'activités géologiques ou climatiques significatives dans la zone de veille (vallée du Rift ou frange littorale).`;
+    hazardSummary = texts.message10;
   } else {
-    hazardSummary = `Aucune alerte géologique ou catastrophe naturelle d'envergure critique n'est signalée sur le périmètre au cours des dernières 12 heures. Activité sismique résiduelle sous les seuils d'alerte.`;
+    hazardSummary = texts.message11;
   }
 
   // 4. Pilier Présence Médias & TV de Terrain
   const mediaHighlights: string[] = [];
   if (targetCode && countryObj) {
-    mediaHighlights.push(`${relevantChannels} chaîne(s) de télévision nationale(s) et régionale(s) recensée(s) pour ${countryObj.name}`);
-    mediaHighlights.push('Accès direct flux HLS dans le navigateur et déclenchement 1-clic VLC PC/mobile');
+    mediaHighlights.push(format(texts.message26, {v0: relevantChannels, v1: targetName}));
+    mediaHighlights.push(texts.message12);
   } else {
-    mediaHighlights.push(`${channelsData.totalChannels} flux TV panafricains disponibles en direct`);
-    mediaHighlights.push(`${channelsData.totalDirectWeb} chaînes directement lisibles dans le navigateur web`);
+    mediaHighlights.push(format(texts.message32, { v0: channelsData.totalChannels }));
+    mediaHighlights.push(format(texts.message27, {v0: channelsData.totalDirectWeb}));
   }
 
   const totalCountriesCovered = channelsData.countries ? Object.keys(channelsData.countries).length : 54;
   const mediaSummary = targetCode
-    ? `Africa Live assure un relais d'observation de terrain sur ${targetName} avec ${relevantChannels} chaîne(s) télévisée(s) locale(s) accessible(s) en lecture immédiate.`
-    : `Le catalogue d'Africa Live couvre ${totalCountriesCovered} pays africains avec ${channelsData.totalChannels} chaînes en flux direct amont, permettant de basculer instantanément de la veille satellitaire à l'image du terrain.`;
+    ? format(texts.message13, {v0: targetName, v1: relevantChannels})
+    : format(texts.message28, {v0: totalCountriesCovered, v1: channelsData.totalChannels});
 
   // Assemblage des 4 sections
   const sections: BriefingSection[] = [
     {
       id: 'geopolitics',
-      title: 'Politique & Société',
+      title: texts.message14,
       summary: geoSummary,
-      highlights: geoHighlights.length > 0 ? geoHighlights : ['Veille active nominale sur les agences de presse'],
+      highlights: geoHighlights.length > 0 ? geoHighlights : [texts.message15],
       status: topArticles.length > 2 ? 'vigilance' : 'normal',
     },
     {
       id: 'economy',
-      title: 'Économie & Matières Premières',
+      title: texts.message16,
       summary: ecoSummary,
       highlights: ecoHighlights,
       status: 'normal',
     },
     {
       id: 'hazards',
-      title: 'Environnement & Catastrophes',
+      title: texts.message29,
       summary: hazardSummary,
-      highlights: hazardHighlights.length > 0 ? hazardHighlights : ['Zéro séisme majeur ou alerte cyclonique active'],
+      highlights: hazardHighlights.length > 0 ? hazardHighlights : [texts.message17],
       status: hazardStatus,
     },
     {
       id: 'media',
-      title: 'Médias de Terrain & Télévisions',
+      title: texts.message18,
       summary: mediaSummary,
       highlights: mediaHighlights,
       status: 'normal',
     },
   ];
 
-  // Résumé exécutif
-  const headline = targetCode
-    ? `Point de situation 12h : ${targetName}`
-    : 'Flash Briefing Panafricain — Synthèse de situation des 12 dernières heures';
-
+  // Résumé exécutif : mêmes métriques et branches, textes selon l'édition.
+  const headline = targetCode ? format(texts.message19, { v0: targetName }) : texts.message20;
+  const monitoring = hazardStatus === 'critical' ? texts.message30 : hazardStatus === 'vigilance' ? texts.message22 : texts.message31;
   const executiveSummary = targetCode
-    ? `Au cours des dernières 12 heures, ${targetName} présente un niveau de veille ${hazardStatus === 'critical' ? 'critique' : hazardStatus === 'vigilance' ? 'renforcé' : 'nominal'}. ${relevantArticles.length} dépêche(s) ont été recensées dans les flux d'actualité. ${relevantChannels} chaîne(s) TV locale(s) permettent de suivre les développements en direct.`
-    : `Sur l'ensemble du continent africain, la situation globale des 12 dernières heures est caractérisée par une activité médiatique soutenue (${rssData.articles.length} dépêches analysées sur ${uniqueCountries.size} pays). Le suivi environnemental signale ${relevantDisasters.length} alerte(s) ou événement(s) sous observation. Les marchés de matières premières et parités monétaires clés restent stables.`;
+    ? format(texts.message21, { v0: targetName, v1: monitoring, v2: relevantArticles.length, v3: relevantChannels })
+    : format(texts.message23, { v0: rssData.articles.length, v1: uniqueCountries.size, v2: relevantDisasters.length });
 
   const snapshot: LiveBriefingSnapshot = {
     id: `briefing-${scope}-${targetCode ?? 'africa'}-${Math.floor(now / (10 * 60_000))}`,
@@ -225,13 +231,13 @@ export async function getLiveBriefing(options: {
     targetCountryCode: targetCode ?? undefined,
     targetName,
     generatedAt: new Date(now).toISOString(),
-    periodCovered: 'Dernières 12 heures',
+    periodCovered: texts.message24,
     headline,
     executiveSummary,
     sections,
     metrics,
     engineUsed: 'heuristic-nlp',
-    disclaimer: 'Synthèse d’intelligence en sources ouvertes (OSINT) produite automatiquement à partir de dépêches officielles vérifiées, données géophysiques USGS/GDACS et cours de marchés.',
+    disclaimer: texts.message25,
   };
 
   briefingCache.set(cacheKey, {

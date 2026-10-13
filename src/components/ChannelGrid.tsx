@@ -1,4 +1,6 @@
 'use client';
+import { useI18n } from '@/i18n/client';
+import { format } from '@/i18n/message';
 
 import React from 'react';
 import { Play, RefreshCw, Star } from 'lucide-react';
@@ -23,10 +25,11 @@ interface ChannelGridProps {
 }
 
 function LoadingSkeleton({ viewMode, compact = false }: { viewMode: 'grid' | 'list'; compact?: boolean }) {
+  const { t } = useI18n();
   return (
     <div
       role="status"
-      aria-label="Chargement des chaînes"
+      aria-label={t.tv.copy["Chargement des chaînes"]}
       className={viewMode === 'grid'
         ? `grid grid-cols-2 gap-3 sm:gap-4 ${compact ? '' : 'md:grid-cols-3 xl:grid-cols-4'}`
         : 'flex flex-col gap-2'}
@@ -48,12 +51,13 @@ function LoadingSkeleton({ viewMode, compact = false }: { viewMode: 'grid' | 'li
           </div>
         )
       ))}
-      <span className="sr-only">Chargement du catalogue…</span>
+      <span className="sr-only">{t.tv.copy["Chargement du catalogue…"]}</span>
     </div>
   );
 }
 
 function LoadMoreButton({ loading, label, onLoadMore }: { loading: boolean; label: string; onLoadMore: () => void }) {
+  const { t } = useI18n();
   return (
     <button
       type="button"
@@ -63,7 +67,7 @@ function LoadMoreButton({ loading, label, onLoadMore }: { loading: boolean; labe
       className="inline-flex min-h-11 items-center gap-2 rounded-control border border-line-gold bg-surface-2 px-5 text-sm font-semibold text-text transition-colors hover:bg-surface-3 disabled:cursor-wait disabled:opacity-50"
     >
       {loading && <RefreshCw className="size-3.5 animate-spin text-al-gold" aria-hidden="true" />}
-      <span>{loading ? 'Chargement…' : label}</span>
+      <span>{loading ? t.tv.copy["Chargement…"] : label}</span>
     </button>
   );
 }
@@ -80,6 +84,7 @@ export default function ChannelGrid({
   favorites,
   toggleFavorite,
 }: ChannelGridProps) {
+  const { t, edition } = useI18n();
   const labels = React.useMemo(() => uniqueChannelLabels(channels), [channels]);
   if (channels.length === 0 && loading) return <LoadingSkeleton viewMode={viewMode} compact={compact} />;
 
@@ -89,13 +94,13 @@ export default function ChannelGrid({
         <div className="rounded-card border border-dashed border-line bg-surface-1">
           <EmptyState
             illustration="acacia"
-            title="Aucune chaîne disponible sur cette page"
-            description="Modifiez vos filtres ou chargez la suite du catalogue."
+            title={t.tv.copy["Aucune chaîne disponible sur cette page"]}
+            description={t.tv.copy["Modifiez vos filtres ou chargez la suite du catalogue."]}
           />
         </div>
         {hasMore && (
           <div className="flex justify-center">
-            <LoadMoreButton loading={loading} label="Charger la suite du catalogue" onLoadMore={onLoadMore} />
+            <LoadMoreButton loading={loading} label={t.tv.copy["Charger la suite du catalogue"]} onLoadMore={onLoadMore} />
           </div>
         )}
       </div>
@@ -137,7 +142,7 @@ export default function ChannelGrid({
               <button
                 type="button"
                 onClick={() => onSelectChannel(channel)}
-                aria-label={`Regarder ${labels.get(channel.id) ?? channel.name}`}
+                aria-label={format(t.tv.copy["Regarder {v0}"], {v0: labels.get(channel.id) ?? channel.name})}
                 aria-current={isSelected ? 'true' : undefined}
                 className="absolute inset-0 z-0 rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold"
               />
@@ -145,14 +150,15 @@ export default function ChannelGrid({
                 <ChannelArt channel={channel} />
               </div>
               <div className="pointer-events-none relative z-[1] min-w-0 flex-1">
-                <h3 className="truncate text-sm font-bold text-text">{channel.name}</h3>
+                <h3 className="truncate text-sm font-bold text-text"><bdi>{channel.name}</bdi></h3>
                 <p className="mt-0.5 flex items-center gap-2 truncate text-xs text-text-muted">
-                  <span>{formatCountryName(channel.countryCode, 'International')}</span>
+                  <span>{formatCountryName(channel.countryCode, t.tv.copy["International"], edition)}</span>
                   <span aria-hidden="true">·</span>
-                  <span className="truncate">{categoryLabels(channel.groupTitle)}</span>
+                  <span className="truncate">{categoryLabels(channel.groupTitle, edition, t.tv.categories)}</span>
                 </p>
               </div>
               <span className="pointer-events-none relative z-[1] hidden size-9 items-center justify-center rounded-pill border border-line-gold bg-al-gold/10 text-al-gold transition-colors group-hover:bg-al-yellow group-hover:text-black md:flex">
+                {/* ml-0.5 physique : recentrage optique du triangle « lecture », qui pointe à droite dans toutes les éditions. */}
                 <Play className="ml-0.5 size-3 fill-current" aria-hidden="true" />
               </span>
               <ShareChannelLink
@@ -163,7 +169,7 @@ export default function ChannelGrid({
               <button
                 type="button"
                 onClick={(event) => { event.stopPropagation(); toggleFavorite(channel.id); }}
-                aria-label={`${isFavorite ? 'Retirer' : 'Ajouter'} ${labels.get(channel.id) ?? channel.name} ${isFavorite ? 'des' : 'aux'} favoris`}
+                aria-label={format(t.tv.copy["{v0} {v1} {v2} favoris"], {v0: isFavorite ? t.tv.copy["Retirer"] : t.tv.copy["Ajouter"], v1: labels.get(channel.id) ?? channel.name, v2: isFavorite ? t.tv.copy["des"] : t.tv.copy["aux"]})}
                 aria-pressed={isFavorite}
                 className={`relative z-10 inline-flex size-9 shrink-0 items-center justify-center rounded-pill transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold ${
                   isFavorite ? 'border border-line-gold bg-al-gold/15 text-al-gold' : 'text-text-muted hover:bg-white/10 hover:text-text'
@@ -178,11 +184,11 @@ export default function ChannelGrid({
 
       {hasMore && (
         <div className="flex justify-center pt-2">
-          <LoadMoreButton loading={loading} label="Charger plus de chaînes" onLoadMore={onLoadMore} />
+          <LoadMoreButton loading={loading} label={t.tv.copy["Charger plus de chaînes"]} onLoadMore={onLoadMore} />
         </div>
       )}
       <p className="sr-only" aria-live="polite">
-        {loading ? 'Chargement du catalogue.' : `${channels.length} chaînes affichées.`}
+        {loading ? t.tv.copy["Chargement du catalogue."] : format(t.tv.copy["{v0} chaînes affichées."], {v0: channels.length})}
       </p>
     </div>
   );

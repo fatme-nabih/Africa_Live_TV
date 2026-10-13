@@ -1,6 +1,17 @@
 import { ServiceUnavailableError } from '@/lib/api-errors';
 import { createHash } from 'node:crypto';
-import { canonicalArticleUrl, normalizeRadarDate, radarSource, temporalWindow, type RadarSourceState } from './radar-data';
+import { canonicalArticleUrl, radarSource, temporalWindow, type RadarSourceState } from './radar-data';
+import type { Edition } from './editions';
+import { countryCountsFromArticles, type EditionBridgeEntry } from './edition-bridge';
+import { AFRICA_FEEDS } from './feeds';
+import { AFRICA_FR } from './feeds/africa-fr';
+import { settleFeeds } from './feed-concurrency';
+import { parseFeedDate, clampFeedClockLead } from './feed-dates';
+import { readBoundedText } from './feed-text';
+import { feedMessages } from '@/i18n/feed-messages';
+import { africanMentions } from './world-desk-data';
+import { detectCountryCode } from './country-detector';
+export { detectCountryCode } from './country-detector';
 import { extractImageUrl } from './rss-image';
 import type {
   FeedConfig,
@@ -9,309 +20,7 @@ import type {
   RssSourceMetric,
 } from '@/lib/rss-collector-types';
 
-export const RSS_FEEDS: FeedConfig[] = [
-  // --- Agences et rédactions nationales africaines ---
-  {
-    id: 'aps',
-    editorialScope: 'africa',
-    name: 'APS (Sénégal)',
-    domain: 'aps.sn',
-    url: 'https://aps.sn/feed/',
-    defaultCountry: 'SN',
-    category: 'Sénégal & National',
-    enabled: true,
-  },
-  {
-    id: 'aip',
-    editorialScope: 'africa',
-    name: 'AIP (Côte d’Ivoire)',
-    domain: 'aip.ci',
-    url: 'https://www.aip.ci/feed/',
-    defaultCountry: 'CI',
-    category: 'Côte d’Ivoire & National',
-    enabled: true,
-  },
-  {
-    id: 'malijet',
-    editorialScope: 'africa',
-    name: 'MaliJet (Mali)',
-    domain: 'malijet.com',
-    url: 'https://malijet.com/rss.xml',
-    defaultCountry: 'ML',
-    category: 'Mali & National',
-    enabled: true,
-  },
-  {
-    id: 'lefaso',
-    editorialScope: 'africa',
-    name: 'LeFaso.net (Burkina Faso)',
-    domain: 'lefaso.net',
-    url: 'https://lefaso.net/spip.php?page=backend',
-    defaultCountry: 'BF',
-    category: 'Burkina Faso & National',
-    enabled: true,
-  },
-  {
-    id: 'actu_cm',
-    editorialScope: 'africa',
-    name: 'Actu Cameroun',
-    domain: 'actucameroun.com',
-    url: 'https://actucameroun.com/feed/',
-    defaultCountry: 'CM',
-    category: 'Cameroun & National',
-    enabled: true,
-  },
-  {
-    id: 'guineenews',
-    editorialScope: 'africa',
-    name: 'Guinéenews (Guinée)',
-    domain: 'guineenews.org',
-    url: 'https://guineenews.org/feed/',
-    defaultCountry: 'GN',
-    category: 'Guinée & National',
-    enabled: true,
-  },
-  {
-    id: 'okapi',
-    editorialScope: 'africa',
-    name: 'Radio Okapi (RDC)',
-    domain: 'radiookapi.net',
-    url: 'https://www.radiookapi.net/rss.xml',
-    defaultCountry: 'CD',
-    category: 'RDC & National',
-    enabled: true,
-  },
-  {
-    id: 'hespress',
-    editorialScope: 'africa',
-    name: 'Hespress FR (Maroc)',
-    domain: 'fr.hespress.com',
-    url: 'https://fr.hespress.com/feed',
-    defaultCountry: 'MA',
-    category: 'Maroc & National',
-    enabled: true,
-  },
-  {
-    id: 'tsa',
-    editorialScope: 'africa',
-    name: 'TSA (Algérie)',
-    domain: 'tsa-algerie.com',
-    url: 'https://tsa-algerie.com/feed/',
-    defaultCountry: 'DZ',
-    category: 'Algérie & National',
-    enabled: true,
-  },
-  {
-    id: 'gabonreview',
-    editorialScope: 'africa',
-    name: 'Gabon Review',
-    domain: 'gabonreview.com',
-    url: 'https://gabonreview.com/feed/',
-    defaultCountry: 'GA',
-    category: 'Gabon & National',
-    enabled: true,
-  },
-  {
-    id: '24haubenin',
-    editorialScope: 'africa',
-    name: '24 Heures au Bénin',
-    domain: '24haubenin.info',
-    url: 'https://24haubenin.info/?page=backend',
-    defaultCountry: 'BJ',
-    category: 'Bénin & National',
-    enabled: true,
-  },
-
-  // --- Économie, Analyses & Panafricain ---
-  {
-    id: 'ecofin',
-    editorialScope: 'africa',
-    name: 'Agence Ecofin',
-    domain: 'agenceecofin.com',
-    url: 'https://www.agenceecofin.com/feed',
-    defaultCountry: null,
-    category: 'Économie & Finance',
-    enabled: true,
-  },
-  {
-    id: 'financialafrik',
-    editorialScope: 'africa',
-    name: 'Financial Afrik',
-    domain: 'financialafrik.com',
-    url: 'https://www.financialafrik.com/feed/',
-    defaultCountry: null,
-    category: 'Économie & Finance',
-    enabled: true,
-  },
-  {
-    id: 'ja',
-    editorialScope: 'africa',
-    name: 'Jeune Afrique',
-    domain: 'jeuneafrique.com',
-    url: 'https://www.jeuneafrique.com/feed/',
-    defaultCountry: null,
-    category: 'Analyses & Géopolitique',
-    enabled: true,
-  },
-  {
-    id: 'africanews',
-    editorialScope: 'africa',
-    name: 'Africanews (FR)',
-    domain: 'fr.africanews.com',
-    url: 'https://fr.africanews.com/feed/',
-    defaultCountry: null,
-    category: 'Actualité Panafricaine',
-    enabled: true,
-  },
-
-  // --- Rubrique Internationale ---
-  {
-    id: 'f24_monde',
-    editorialScope: 'international',
-    name: 'France 24 Monde',
-    domain: 'france24.com',
-    url: 'https://www.france24.com/fr/rss',
-    defaultCountry: null,
-    category: 'International',
-    enabled: true,
-  },
-  {
-    id: 'f24_afrique',
-    editorialScope: 'international',
-    name: 'France 24 Afrique',
-    domain: 'france24.com',
-    url: 'https://www.france24.com/fr/afrique/rss',
-    defaultCountry: null,
-    category: 'International',
-    enabled: true,
-  },
-  {
-    id: 'rfi_monde',
-    editorialScope: 'international',
-    name: 'RFI Monde',
-    domain: 'rfi.fr',
-    url: 'https://www.rfi.fr/fr/monde/rss',
-    defaultCountry: null,
-    category: 'International',
-    enabled: true,
-  },
-  {
-    id: 'rfi',
-    editorialScope: 'international',
-    name: 'RFI Afrique',
-    domain: 'rfi.fr',
-    url: 'https://www.rfi.fr/fr/afrique/rss',
-    defaultCountry: null,
-    category: 'International',
-    enabled: true,
-  },
-  {
-    id: 'bbc',
-    editorialScope: 'international',
-    name: 'BBC Afrique',
-    domain: 'bbc.com',
-    url: 'https://feeds.bbci.co.uk/afrique/rss.xml',
-    defaultCountry: null,
-    category: 'International',
-    enabled: true,
-  },
-  {
-    id: 'lemonde_afrique',
-    editorialScope: 'international',
-    name: 'Le Monde Afrique',
-    domain: 'lemonde.fr',
-    url: 'https://www.lemonde.fr/afrique/rss_full.xml',
-    defaultCountry: null,
-    category: 'International',
-    enabled: true,
-  },
-];
-
-const COUNTRY_KEYWORDS: Record<string, string[]> = {
-  SN: ['senegal', 'dakar', 'matam', 'saint-louis', 'thies', 'ziguinchor', 'touba', 'kaolack', 'diourbel', 'mbour', 'kedougou', 'fatick', 'kolda', 'senegalais', 'pastef', 'diomaye', 'sonko'],
-  CI: ['cote d\'ivoire', 'cote d ivoire', 'abidjan', 'yamoussoukro', 'san pedro', 'bouake', 'ivoirien', 'ivoirienne', 'ouattara'],
-  ML: ['mali', 'bamako', 'sikasso', 'mopti', 'tombouctou', 'gao', 'kidal', 'malien', 'malienne', 'assimi goita', 'goita'],
-  GN: ['guinee', 'conakry', 'kankan', 'kindia', 'guineen', 'guineenne', 'doumbouya'],
-  BF: ['burkina', 'ouagadougou', 'bobo-dioulasso', 'burkinabe', 'ibrahim traore', 'traore'],
-  NE: ['niger', 'niamey', 'zinder', 'maradi', 'agadez', 'nigerien', 'nigerienne', 'tiani'],
-  CM: ['cameroun', 'cameroon', 'yaounde', 'douala', 'garoua', 'camerounais', 'biya'],
-  CD: ['rdc', 'rd congo', 'congo-kinshasa', 'kinshasa', 'lubumbashi', 'goma', 'kivu', 'congolais', 'tshisekedi'],
-  CG: ['brazzaville', 'congo-brazzaville', 'sassou'],
-  GA: ['gabon', 'libreville', 'port-gentil', 'gabonais', 'oligui nguema'],
-  TD: ['tchad', 'chad', 'n\'djamena', 'ndjamena', 'tchadien', 'deby'],
-  MA: ['maroc', 'morocco', 'rabat', 'casablanca', 'marrakech', 'tanger', 'fes', 'marocain', 'mohammed vi'],
-  DZ: ['algerie', 'algeria', 'alger', 'oran', 'constantine', 'algerien', 'tebboune'],
-  TN: ['tunisie', 'tunisia', 'tunis', 'sfax', 'sousse', 'tunisien', 'saied'],
-  EG: ['egypte', 'egypt', 'le caire', 'cairo', 'alexandrie', 'egyptien', 'sissi'],
-  NG: ['nigeria', 'lagos', 'abuja', 'kano', 'ibadan', 'nigerian', 'tinubu'],
-  GH: ['ghana', 'accra', 'kumasi', 'ghaneen', 'akufo-addo'],
-  KE: ['kenya', 'nairobi', 'mombasa', 'kisumu', 'kenyan', 'ruto'],
-  ET: ['ethiopie', 'ethiopia', 'addis-abeba', 'addis ababa', 'ethiopien', 'abiy'],
-  ZA: ['afrique du sud', 'south africa', 'pretoria', 'johannesburg', 'le cap', 'cape town', 'durban', 'sud-africain', 'ramaphosa'],
-  RW: ['rwanda', 'kigali', 'rwandais', 'kagame'],
-  BJ: ['benin', 'cotonou', 'porto-novo', 'beninois', 'talon'],
-  TG: ['togo', 'lome', 'togolais', 'gnassingbe'],
-  MR: ['mauritanie', 'mauritania', 'nouakchott', 'mauritanien', 'ghazouani'],
-  MG: ['madagascar', 'antananarivo', 'malgache', 'rajoelina'],
-  AO: ['angola', 'luanda', 'angolais', 'lourenco'],
-  MZ: ['mozambique', 'maputo', 'mozambicain'],
-  ZW: ['zimbabwe', 'harare', 'bulawayo'],
-  ZM: ['zambie', 'zambia', 'lusaka'],
-  UG: ['ouganda', 'uganda', 'kampala', 'museveni'],
-  SD: ['soudan', 'sudan', 'khartoum', 'burhan'],
-  SS: ['soudan du sud', 'south sudan', 'juba', 'kiir'],
-  CF: ['centrafrique', 'bangui', 'centrafricain', 'touadera'],
-  SL: ['sierra leone', 'freetown'],
-  LR: ['liberia', 'monrovia'],
-  GM: ['gambie', 'gambia', 'banjul', 'barrow'],
-  GW: ['guinee-bissau', 'bissau', 'embalo'],
-  CV: ['cap-vert', 'cabo verde', 'praia'],
-  KM: ['comores', 'comoros', 'moroni', 'azali'],
-  DJ: ['djibouti', 'guelleh'],
-  SO: ['somalie', 'somalia', 'mogadiscio', 'mogadishu'],
-  MU: ['maurice', 'mauritius', 'port-louis'],
-  SC: ['seychelles', 'victoria'],
-  BI: ['burundi', 'bujumbura', 'gitega'],
-  BW: ['botswana', 'gaborone'],
-  NA: ['namibie', 'namibia', 'windhoek'],
-  LS: ['lesotho', 'maseru'],
-  SZ: ['eswatini', 'swaziland', 'mbabane'],
-  MW: ['malawi', 'lilongwe'],
-  GQ: ['guinee equatoriale', 'malabo', 'obiang'],
-  ST: ['sao tome'],
-  ER: ['erythree', 'asmara'],
-  EH: ['sahara occidental', 'western sahara', 'laayoune', 'polisario'],
-};
-
-function normalizeText(text: string): string {
-  return text
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/['’‘ʼ`\u2010-\u2015\u2212-]/g,' ')
-    .replace(/\s+/g,' ').trim();
-}
-
-export function detectCountryCode(text: string, defaultCountry: string | null = null): string | null {
-  const normalized = normalizeText(text);
-
-  const matches: { code:string; words:number; length:number; index:number }[] = [];
-  for (const [code, keywords] of Object.entries(COUNTRY_KEYWORDS)) {
-    for (const keyword of keywords) {
-      // Look for whole words or clear boundary matches
-      const alias = normalizeText(keyword);
-      const escaped = alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i');
-      const match = regex.exec(normalized);
-      if (match) matches.push({ code,words:alias.split(' ').length,length:alias.length,index:match.index });
-    }
-  }
-
-  // Specific phrases, then longer aliases, then earliest mention, then ISO code.
-  matches.sort((a,b) => b.words-a.words || b.length-a.length || a.index-b.index || a.code.localeCompare(b.code));
-  return matches[0]?.code ?? defaultCountry;
-}
-
+export const RSS_FEEDS = AFRICA_FR;
 export function decodeXmlEntities(text: string): string {
   return text
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/gi, '$1')
@@ -328,7 +37,6 @@ export function decodeXmlEntities(text: string): string {
     .trim();
 }
 
-const parseDate = normalizeRadarDate;
 
 function xmlAttributes(tag: string) {
   const result: Record<string,string> = {};
@@ -356,7 +64,7 @@ function truncateTitle(value: string) {
   for (const point of value) { if (result.length + point.length > 300) break; result += point; }
   return result;
 }
-export function parseFeedXml(xml: string, feed: FeedConfig, documentUrl = feed.url): RadarRssArticle[] {
+export function parseFeedXml(xml: string, feed: FeedConfig, documentUrl = feed.url, collectedAt?: number): RadarRssArticle[] {
   const articles: RadarRssArticle[] = [];
   const isAtom = /<entry[\s\S]*?<\/entry>/i.test(xml);
   const feedBase = xmlBase(xml.match(/<feed\b[^>]*>/i)?.[0] ?? '',documentUrl);
@@ -398,7 +106,8 @@ export function parseFeedXml(xml: string, feed: FeedConfig, documentUrl = feed.u
     if (pubDateMatch) {
       dateStr = decodeXmlEntities(pubDateMatch[2]);
     }
-    const publishedAt = parseDate(dateStr);
+    const parsedDate = parseFeedDate(dateStr, feed);
+    const publishedAt = collectedAt === undefined ? parsedDate : clampFeedClockLead(parsedDate, collectedAt);
 
     // 4. Category
     let category = feed.category;
@@ -413,12 +122,13 @@ export function parseFeedXml(xml: string, feed: FeedConfig, documentUrl = feed.u
     }
 
     // 5. Geolocation / Country code
-    const inferredCountry = detectCountryCode(`${title} ${topicCategory ?? ''}`);
+    const inferredCountry = detectCountryCode(`${title} ${topicCategory ?? ''}`, null, feed.edition);
     const countryCode = inferredCountry ?? feed.defaultCountry;
 
     // 6. ID
     const id = `${feed.id}-${createHash('sha256').update(finalUrl).digest('hex')}`;
     const updatedMatch = itemXml.match(/<updated[^>]*>([\s\S]*?)<\/updated>/i);
+    const parsedUpdate = parseFeedDate(updatedMatch ? decodeXmlEntities(updatedMatch[1]) : null, feed);
     const imageUrl = extractImageUrl(itemXml, finalUrl);
 
     articles.push({
@@ -430,7 +140,7 @@ export function parseFeedXml(xml: string, feed: FeedConfig, documentUrl = feed.u
       editorialScope: feed.editorialScope,
       sourceType: 'rss',
       publishedAt,
-      updatedAt: normalizeRadarDate(updatedMatch ? decodeXmlEntities(updatedMatch[1]) : null),
+      updatedAt: collectedAt === undefined ? parsedUpdate : clampFeedClockLead(parsedUpdate, collectedAt),
       countryCode,
       countryBasis: inferredCountry ? 'inferred_topic' : 'media',
       category,
@@ -451,71 +161,48 @@ type CacheEntry = {
   expiresAt: number;
 };
 
-let rssCache: CacheEntry | null = null;
+const rssCaches = new Map<Edition, CacheEntry>();
 const feedCache = new Map<string, { articles: RadarRssArticle[]; savedAt: number }>();
-let inFlightPromise: Promise<RadarRssSnapshot> | null = null;
+const inFlight = new Map<Edition, Promise<RadarRssSnapshot>>();
 
 export function clearRssCacheForTesting(): void {
-  rssCache = null;
+  rssCaches.clear();
   feedCache.clear();
-  inFlightPromise = null;
+  inFlight.clear();
+  httpCache.clear();
 }
 
-async function readBoundedText(response: Response, maxBytes: number): Promise<string> {
-  const declaredLength = Number(response.headers.get('content-length'));
-  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
-    throw new Error('Upstream response exceeded the allowed size.');
-  }
-
-  if (!response.body) return '';
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let result = '';
-  let byteCount = 0;
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      byteCount += value.byteLength;
-      if (byteCount > maxBytes) {
-        await reader.cancel();
-        throw new Error('Upstream response exceeded the allowed size.');
-      }
-      result += decoder.decode(value, { stream: true });
-    }
-    result += decoder.decode();
-  } finally {
-    reader.releaseLock();
-  }
-
-  return result;
-}
+/** En-têtes des lectures de flux, repris par `npm run feeds:verify` pour mesurer ce que voit l'application. */
+export const RSS_FEED_TIMEOUT_MS = 8_000;
+export const RSS_FEED_HEADERS = {
+  Accept: 'application/rss+xml, application/xml, text/xml, application/atom+xml, text/plain;q=0.9',
+  'User-Agent': 'AfricaLive-Radar/1.0 (Direct media intelligence; +https://africatv.sn)',
+} as const;
 
 /** Lecture bornée d'un flux (taille, délai, format) ; partagée avec « Regards sur le monde ». */
+type HttpFeedCache = { articles: RadarRssArticle[]; etag: string | null; modified: string | null };
+const httpCache = new Map<string, HttpFeedCache>();
+export function clearFeedHttpCacheForTesting(ids: readonly string[]) { for (const id of ids) httpCache.delete(id); }
+
 export async function fetchSingleFeed(feed: FeedConfig): Promise<RadarRssArticle[]> {
-    const response = await fetch(feed.url, {
-      cache: 'no-store',
-      redirect: 'follow',
-      signal: AbortSignal.timeout(8_000),
-      headers: {
-        Accept: 'application/rss+xml, application/xml, text/xml, application/atom+xml, text/plain;q=0.9',
-        'User-Agent': 'AfricaLive-Radar/1.0 (Direct media intelligence; +https://africatv.sn)',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('RSS_HTTP_ERROR');
-    }
-
-    const xml = await readBoundedText(response, MAX_FEED_BYTES);
-    if (!/<(?:rss|feed|rdf:RDF)[\s>]/i.test(xml)) throw new Error('RSS_INVALID_PAYLOAD');
-    return parseFeedXml(xml, feed, response.url || feed.url);
+  const cached = httpCache.get(feed.id);
+  const response = await fetch(feed.url, {
+    cache: 'no-store', redirect: 'follow', signal: AbortSignal.timeout(RSS_FEED_TIMEOUT_MS),
+    headers: { ...RSS_FEED_HEADERS, ...(cached?.etag ? { 'If-None-Match': cached.etag } : {}), ...(cached?.modified ? { 'If-Modified-Since': cached.modified } : {}) },
+  });
+  if (response.status === 304 && cached) return cached.articles;
+  if (!response.ok) throw new Error('RSS_HTTP_ERROR');
+  const xml = await readBoundedText(response, MAX_FEED_BYTES, feed.charset);
+  if (!/<(?:rss|feed|rdf:RDF)[\s>]/i.test(xml)) throw new Error('RSS_INVALID_PAYLOAD');
+  const parsed = parseFeedXml(xml, feed, response.url || feed.url, Date.now());
+  const articles = feed.africaOnly ? parsed.filter(article => africanMentions(article.title, feed.edition).touchesAfrica) : parsed;
+  httpCache.set(feed.id, { articles, etag: response.headers.get('etag'), modified: response.headers.get('last-modified') });
+  return articles;
 }
 
-async function fetchAllFeeds(): Promise<RadarRssSnapshot> {
-  const activeFeeds = RSS_FEEDS.filter((f) => f.enabled);
-  const settled = await Promise.allSettled(activeFeeds.map(fetchSingleFeed));
+async function fetchAllFeeds(edition: Edition): Promise<RadarRssSnapshot> {
+  const activeFeeds = AFRICA_FEEDS[edition].filter((f) => f.enabled);
+  const settled = await settleFeeds(activeFeeds, fetchSingleFeed);
 
   const allArticles: RadarRssArticle[] = [];
   const sourceCounts = new Map<string, number>();
@@ -529,13 +216,13 @@ async function fetchAllFeeds(): Promise<RadarRssSnapshot> {
       allArticles.push(...outcome.value);
       sourceCounts.set(feed.id, outcome.value.length);
       feedCache.set(feed.id, { articles: outcome.value, savedAt: now });
-      availability.push(radarSource(feed.name, 'Afrique · dépêches', now, RSS_TTL_MS, outcome.value.length, { limit: 150, dataAt: outcome.value.find(a => a.publishedAt)?.publishedAt }));
+      availability.push(radarSource(feed.name, feedMessages[edition].africa, now, RSS_TTL_MS, outcome.value.length, { limit: 150, dataAt: outcome.value.find(a => a.publishedAt)?.publishedAt }));
     } else {
       const cached = feedCache.get(feed.id);
       const reusable = cached && now - cached.savedAt <= RSS_MAX_STALE_MS;
       if (reusable) allArticles.push(...cached.articles);
       sourceCounts.set(feed.id, reusable ? cached.articles.length : 0);
-      availability.push(radarSource(feed.name, 'Afrique · dépêches', now, RSS_TTL_MS, reusable ? cached.articles.length : 0, { status: reusable ? 'stale' : 'unavailable', lastSuccessAt: cached ? new Date(cached.savedAt).toISOString() : null, limit: 150 }));
+      availability.push(radarSource(feed.name, feedMessages[edition].africa, now, RSS_TTL_MS, reusable ? cached.articles.length : 0, { status: reusable ? 'stale' : 'unavailable', lastSuccessAt: cached ? new Date(cached.savedAt).toISOString() : null, limit: 150 }));
     }
   }
 
@@ -563,12 +250,12 @@ async function fetchAllFeeds(): Promise<RadarRssSnapshot> {
   // Sort descending by date
   deduplicatedArticles.sort((a, b) => (Date.parse(b.publishedAt ?? '') || 0) - (Date.parse(a.publishedAt ?? '') || 0));
 
-  const sources: RssSourceMetric[] = activeFeeds.map((feed) => ({
+  const sources: RssSourceMetric[] = activeFeeds.map((feed, index) => ({
     id: feed.id,
     name: feed.name,
     domain: feed.domain,
     count: sourceCounts.get(feed.id) ?? 0,
-    availability: availability.find(source => source.provider === feed.name),
+    availability: availability[index],
   }));
 
   const snapshot: RadarRssSnapshot = {
@@ -580,36 +267,47 @@ async function fetchAllFeeds(): Promise<RadarRssSnapshot> {
     availability,
   };
 
-  rssCache = {
+  rssCaches.set(edition, {
     snapshot,
     savedAt: now,
     expiresAt: now + RSS_TTL_MS,
-  };
+  });
 
   return snapshot;
 }
 
+/**
+ * Pont entre éditions (EDI-601) : dépêches des dernières 24 h par pays dans les **seuls caches encore valides** des autres
+ * éditions actives. Lecture pure de la mémoire : aucune collecte n'est lancée, une édition sans cache valide est absente.
+ */
+export function editionBridgeCounts(current: Edition, enabled: readonly Edition[], now = Date.now()): EditionBridgeEntry[] {
+  const entries: EditionBridgeEntry[] = [];
+  for (const edition of enabled) {
+    if (edition === current) continue;
+    const cache = rssCaches.get(edition);
+    if (!cache || cache.expiresAt <= now) continue;
+    const counts = countryCountsFromArticles(cache.snapshot.articles, now);
+    if (Object.keys(counts).length) entries.push({ edition, counts, updatedAt: cache.snapshot.updatedAt });
+  }
+  return entries;
+}
+
 export async function getRadarRss(query?: {
+  edition?: Edition;
   source?: string;
   country?: string;
   limit?: number;
 }): Promise<RadarRssSnapshot> {
-  const now = Date.now();
-
-  if (rssCache && rssCache.expiresAt > now) {
-    return filterSnapshot(rssCache.snapshot, query);
+  const edition = query?.edition ?? 'fr';
+  const now = Date.now(), cache = rssCaches.get(edition);
+  if (cache && cache.expiresAt > now) return filterSnapshot(cache.snapshot, query);
+  let promise = inFlight.get(edition);
+  if (!promise) {
+    promise = fetchAllFeeds(edition).finally(() => { inFlight.delete(edition); });
+    inFlight.set(edition, promise);
   }
-
-  if (!inFlightPromise) {
-    inFlightPromise = fetchAllFeeds()
-      .finally(() => {
-        inFlightPromise = null;
-      });
-  }
-
   try {
-    const snapshot = await inFlightPromise;
-    return filterSnapshot(snapshot, query);
+    return filterSnapshot(await promise, query);
   } catch {
     throw new ServiceUnavailableError(
       'Le service de dépêches des rédactions africaines est temporairement indisponible.',

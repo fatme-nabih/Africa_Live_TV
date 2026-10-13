@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>Heure locale étiquetée UTC</title>
+<link>https://feed.fixture.test/</link>
+<description>Flux synthétique Africa Live (EDI-002) : titres inventés, format de date réel.</description>
+<item>
+<title>Synthetic Lagos headline</title>
+<link>https://feed.fixture.test/heure-locale-tiquet-e-utc/1</link>
+<pubDate>Sun, 11 Oct 2026 19:16:09 +0000</pubDate>
+</item>
+<item>
+<title>Synthetic Johannesburg headline</title>
+<link>https://feed.fixture.test/heure-locale-tiquet-e-utc/2</link>
+<pubDate>Sun, 11 Oct 2026 20:32:06 GMT</pubDate>
+</item>
+<item>
+<title>عنوان تجريبي من القاهرة</title>
+<link>https://feed.fixture.test/heure-locale-tiquet-e-utc/3</link>
+<pubDate>Sun, 11 Oct 2026 21:30:22 GMT</pubDate>
+</item>
+<item>
+<title>عنوان تجريبي من لندن</title>
+<link>https://feed.fixture.test/heure-locale-tiquet-e-utc/4</link>
+<pubDate>Sun, 11 Oct 2026 19:25:28 GMT</pubDate>
+</item>
+<item>
+<title>عنوان تجريبي من لندن بعد التوقيت الصيفي</title>
+<link>https://feed.fixture.test/heure-locale-tiquet-e-utc/5</link>
+<pubDate>Mon, 26 Oct 2026 10:00:00 GMT</pubDate>
+</item>
+</channel>
+</rss>

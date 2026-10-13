@@ -3,15 +3,19 @@ import { normalizeOpenMeteo } from '../../src/lib/weather-adapters';
 import { resolveWeatherTarget } from '../../src/lib/weather-locations';
 import type { Page } from '@playwright/test';
 
-export async function fixtureRadar(page: Page, options: { rssFails?: boolean; weatherOk?: boolean; allFail?: boolean; asOf?: string } = {}) {
+export async function fixtureRadar(page: Page, options: { rssFails?: boolean; weatherOk?: boolean; allFail?: boolean; asOf?: string; leadCountry?: 'SN' } = {}) {
   const now = options.asOf ?? new Date().toISOString();
   const source = { provider: 'RSS · rédactions', scope: 'Afrique', status: 'available', fetchedAt: now, lastSuccessAt: now, dataAt: now, cacheExpiresAt: new Date(Date.parse(now) + 5 * 60_000).toISOString(), count: 1 };
+  // EDI-603 : un changement d'édition pendant un E2E n'écrit jamais dans le compte local réel.
+  await page.route('**/api/edition-preference', route => route.fulfill({ json: { edition: route.request().postDataJSON()?.edition ?? null } }));
   await page.route('**/api/live/**', async route => {
     const url = new URL(route.request().url());
     const api = url.pathname.split('/').pop();
     const article = { id: 'sn-current', title: 'Dépêche Sénégal récente', url: 'https://example.org/current', domain: 'example.org',
       sourceName: 'APS (Sénégal)', sourceType: 'rss', publishedAt: now, countryCode: 'SN', category: 'National', editorialScope: 'africa', countryBasis: 'media' };
-    const rssArticle = { ...article, id: 'ci-eco', title: 'Économie Côte d’Ivoire', url: 'https://example.org/eco', sourceName: 'Agence Ecofin', category: 'Économie', countryCode: 'CI', countryBasis: 'inferred_topic' };
+    const rssArticle = { ...article, id: 'ci-eco', title: 'Économie Côte d’Ivoire', url: 'https://example.org/eco', sourceName: 'Agence Ecofin', category: 'Économie', countryCode: 'CI', countryBasis: 'inferred_topic',
+      // Le scénario de visibilité du premier titre choisit un ordre de publication explicite, sans égalité.
+      publishedAt: options.leadCountry === 'SN' ? new Date(Date.parse(now) - 60_000).toISOString() : now };
     const alert = { id: 'same', title: 'Économie africaine du bandeau', url: 'https://example.org/alert', timestamp: now, type: 'news', severity: 'info', scope: 'Africa', source: 'Ecofin', dateKind: 'publication', countryCode: 'SN' };
     const body = api === 'rss' ? { articles: [rssArticle, article, { ...article, url: article.url + '?utm_source=duplicate' }, rssArticle,
       { ...article, id: 'old', title: 'Ancienne dépêche exclue', url: 'https://example.org/old', publishedAt: new Date(Date.parse(now) - 25 * 3600_000).toISOString() },

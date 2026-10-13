@@ -5,6 +5,7 @@ import { ButtonLink, Tabs, tabPanelId } from '@/components/ui';
 import type { LiveChannelsSummarySnapshot } from '@/lib/live-channels-types';
 import type { RadarCountry } from '@/lib/live-osint-types';
 import type { Channel } from '@/types/channel';
+import { useI18n } from '@/i18n/client';
 
 export type RadarPanelTab = 'news' | 'channels';
 const ID_PREFIX = 'radar-feed';
@@ -46,26 +47,28 @@ export default function RadarFeedPanel({
   onRetry: () => void;
   news: ReactNode;
 }) {
+  const { t } = useI18n();
+  const labels = t.radar.panel;
   const channelCount = selectedCountry
     ? (channelsSummary?.countries[selectedCountry]?.channelCount ?? countryChannels.length)
     : (channelsSummary?.totalChannels ?? 0);
   return (
-    <article id="radar-fil" aria-label="Fil et chaînes du pays" className={`relative flex min-h-[520px] scroll-mt-20 flex-col overflow-hidden rounded-card border border-line bg-surface-1 ${className}`}>
-      <div className="h-[2px] w-full bg-tricolor-bar absolute top-0 left-0 right-0 opacity-80" />
+    <article id="radar-fil" aria-label={labels.region} className={`relative flex min-h-[520px] scroll-mt-20 flex-col overflow-hidden rounded-card border border-line bg-surface-1 ${className}`}>
+      <div className="h-[2px] w-full bg-tricolor-bar absolute top-0 inset-x-0 opacity-80" />
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-black/40 px-3 py-2 sm:px-4">
         <Tabs
           idPrefix={ID_PREFIX}
-          ariaLabel="Dépêches ou chaînes TV"
+          ariaLabel={labels.tabs}
           value={tab}
           onChange={id => onTabChange(id as RadarPanelTab)}
           tabs={[
-            { id: 'news', label: 'Dépêches', count: articleCount },
-            { id: 'channels', label: 'Chaînes TV', count: channelCount },
+            { id: 'news', label: labels.news, count: articleCount },
+            { id: 'channels', label: labels.channels, count: channelCount },
           ]}
         />
         <ButtonLink href={activeCountry ? `/app?country=${activeCountry.code}` : '/app'} variant="ghost" size="sm">
-          {selectedCountry ? 'Voir les chaînes du pays' : 'Voir toutes les chaînes'}
-          <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" />
+          {selectedCountry ? labels.countryChannels : labels.allChannels}
+          <ArrowUpRight aria-hidden="true" className="rtl:-scale-x-100 h-3.5 w-3.5" />
         </ButtonLink>
       </div>
 

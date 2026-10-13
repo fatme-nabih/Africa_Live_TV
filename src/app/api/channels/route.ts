@@ -1,3 +1,4 @@
+import { apiEdition } from '@/lib/api-edition';
 import {
   and,
   asc,
@@ -55,6 +56,9 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     throw new BadRequestError('Les paramètres du catalogue sont invalides.');
   }
 
+  const editionUrl = new URL(request.url);
+  if (parsedInput.data.edition) editionUrl.searchParams.set('edition', parsedInput.data.edition);
+  const edition = apiEdition(editionUrl);
   const {
     search,
     country,
@@ -85,6 +89,12 @@ export const POST = withApiErrorHandler(async (request: Request) => {
   const freshnessCutoffDate = new Date(
     Date.now() - PLAYBACK_SOURCE_FRESHNESS_MS,
   );
+  const languageFirst = edition !== 'fr' && Boolean(country) && !language;
+  let preferredValues: string[] = [];
+  if (languageFirst) {
+    const rows = await db.selectDistinct({ language: channels.language }).from(channels).where(and(eq(channels.active, true), publicCatalogChannelCondition()));
+    preferredValues = metadataValuesMatching(rows.map(row => row.language), edition, 'language').filter((value): value is string => value !== null);
+  }
   const cursorContext = catalogCursorContext({
     userId: authorization.user.id,
     clerkSessionId: authorization.clerkSessionId,
@@ -95,6 +105,7 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     language,
     status,
     favoritesOnly,
+    preferredLanguage: languageFirst ? edition : undefined,
   });
 
   let cursor;
@@ -105,10 +116,14 @@ export const POST = withApiErrorHandler(async (request: Request) => {
   }
   // Ordre par défaut : Afrique d'abord, puis nom. Un curseur sans rang ne peut pas continuer cet ordre.
   const africaFirst = usesAfricaFirstOrder({ search, favoritesOnly });
-  if (cursor && africaFirst !== (cursor.rank !== undefined)) {
+  const ranked = africaFirst || languageFirst;
+  if (cursor && ranked !== (cursor.rank !== undefined)) {
     throw new BadRequestError('Le curseur de pagination est invalide.', 'INVALID_CATALOG_CURSOR');
   }
-  const rankColumn = sql<number>`case when ${inArray(channels.countryCode, [...AFRICAN_COUNTRY_CODES])} then 0 else 1 end`;
+  const rankColumn = languageFirst
+    ? sql<number>`case when ${preferredValues.length ? inArray(channels.language, preferredValues) : sql`false`} then 0 else 1 end`
+    : sql<number>`case when ${inArray(channels.countryCode, [...AFRICAN_COUNTRY_CODES])} then 0 else 1 end`;
+  const rankOf = (row: typeof channels.$inferSelect) => languageFirst ? preferredValues.includes(row.language ?? '') ? 0 : 1 : africaRank(row.countryCode);
 
   const conditions: SQL[] = [
     eq(channels.active, true),
@@ -165,7 +180,7 @@ export const POST = withApiErrorHandler(async (request: Request) => {
 
   while (visibleRows.length < limit + 1 && !exhausted) {
     const cursorCondition = scanCursor
-      ? africaFirst && scanCursor.rank !== undefined
+      ? ranked && scanCursor.rank !== undefined
         ? or(
             gt(rankColumn, scanCursor.rank),
             and(eq(rankColumn, scanCursor.rank), gt(channels.name, scanCursor.name)),
@@ -180,7 +195,7 @@ export const POST = withApiErrorHandler(async (request: Request) => {
       .select()
       .from(channels)
       .where(cursorCondition ? and(baseWhere, cursorCondition) : baseWhere)
-      .orderBy(...(africaFirst ? [asc(rankColumn)] : []), asc(channels.name), asc(channels.id))
+      .orderBy(...(ranked ? [asc(rankColumn)] : []), asc(channels.name), asc(channels.id))
       .limit(scanBatchSize);
 
     if (rows.length === 0) {
@@ -189,8 +204,8 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     }
 
     const lastScannedChannel = rows.at(-1)!;
-    scanCursor = africaFirst
-      ? { name: lastScannedChannel.name, id: lastScannedChannel.id, rank: africaRank(lastScannedChannel.countryCode) }
+    scanCursor = ranked
+      ? { name: lastScannedChannel.name, id: lastScannedChannel.id, rank: rankOf(lastScannedChannel) }
       : { name: lastScannedChannel.name, id: lastScannedChannel.id };
     exhausted = rows.length < scanBatchSize;
 
@@ -236,6 +251,7 @@ export const POST = withApiErrorHandler(async (request: Request) => {
           logoUrl: channel.logoUrl,
           groupTitle: channel.groupTitle,
           countryCode: channel.countryCode,
+          ...(edition !== 'fr' ? { language: channel.language } : {}),
           playbackMode: resolvePlaybackMode(channelStreams),
           availabilityStatus,
         },
@@ -253,8 +269,8 @@ export const POST = withApiErrorHandler(async (request: Request) => {
     canPlay: authorization.decision.hasAccess,
     nextCursor: hasMore && lastChannel
       ? encodeCatalogCursor(
-          africaFirst
-            ? { name: lastChannel.name, id: lastChannel.id, rank: africaRank(lastChannel.countryCode) }
+          ranked
+            ? { name: lastChannel.name, id: lastChannel.id, rank: rankOf(lastChannel) }
             : { name: lastChannel.name, id: lastChannel.id },
           cursorContext,
         )

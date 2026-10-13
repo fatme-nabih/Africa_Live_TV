@@ -1,3 +1,4 @@
+import type { Edition } from './editions';
 import type { RadarRssArticle } from './rss-collector-types';
 export const SEARCH_ARTICLES_TTL_MS=5*60_000;
 export class SearchArticlesCache {
@@ -13,3 +14,10 @@ export class SearchArticlesCache {
   }
 }
 export const searchArticlesCache=new SearchArticlesCache();
+
+const editionCaches = new Map<Edition, SearchArticlesCache>([['fr', searchArticlesCache]]);
+export function searchCacheForEdition(edition: Edition) {
+  let cache = editionCaches.get(edition);
+  if (!cache) { cache = new SearchArticlesCache(); editionCaches.set(edition, cache); }
+  return cache;
+}

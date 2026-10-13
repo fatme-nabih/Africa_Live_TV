@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-13",
+  "leafMessagesCompared": 1111,
+  "pluralGroups": 16,
+  "arabicPluralMessages": 88,
+  "errors": [],
+  "neutralPluralFallbacks": [
+    "shell.legacy.savedMasculine",
+    "shell.legacy.savedFeminine"
+  ],
+  "legalRows": 65,
+  "realTitles": 228,
+  "syntheticTraps": 28,
+  "clerkCustomRows": 19,
+  "sourceHashes": {
+    "src/i18n/fr.ts": "0a0d7beeb83a1011c562968487fd48f90de2da84c9d751b0963402362458c48e",
+    "src/i18n/en.ts": "0d1f0b009060b1ab059075c3187d63588e09f4afe45d0be0ba45f43b0351349c",
+    "src/i18n/ar.ts": "7c7c9f2d3de5c69958afe440a1af679505814b2162a1e3285bd6c7f6fa19c8e2",
+    "src/lib/clerk-theme.ts": "8f6e11de074d575775a08c1c44762fc3319b7d30e9af096b6f7d54e9a95b1490",
+    "src/lib/fixtures/editions/titles-ar.json": "410dd54467ccd56939ad009156cce7dffd2a8b2a9676331c818923dc3b081321",
+    "docs/relecture-arabe-e4-2026-10-12.csv": "efdbca8a3fd07cc1585a566bb036fc41fc5feabd4915f685c6bcbf0e90f19390",
+    ".local-logs/stream-cycle/run-cycle.cjs": "2b3b8c68a58e1c5ff69ff32bb8e9a18d3b9ec165655724ac8c8a293f17cf824c"
+  },
+  "nativeReview": "Validé par le propriétaire le 13/10/2026 : textes actuels, sans correction demandée",
+  "legalHumanReview": "Validé par le propriétaire le 13/10/2026 : textes actuels, sans application des propositions",
+  "ownerApproval": {
+    "date": "2026-10-13",
+    "quote": "Relectures validées, publier les textes actuels",
+    "scope": "Périmètre du dossier soumis ; version actuelle aux empreintes sourceHashes",
+    "draftLegalProposalsApplied": false,
+    "independentLegalCertification": false,
+    "authenticatedBrowserReception": false
+  }
+}

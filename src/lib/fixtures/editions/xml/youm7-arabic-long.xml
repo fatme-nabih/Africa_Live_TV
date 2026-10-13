@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>Youm7</title>
+<link>https://feed.fixture.test/</link>
+<description>Flux synthétique Africa Live (EDI-002) : titres inventés, format de date réel.</description>
+<item>
+<title>عنوان تجريبي أول عن القاهرة</title>
+<link>https://feed.fixture.test/youm7/1</link>
+<pubDate>الأحد، 11 أكتوبر 2026 08:50 م</pubDate>
+</item>
+<item>
+<title>عنوان تجريبي بعد منتصف الليل</title>
+<link>https://feed.fixture.test/youm7/2</link>
+<pubDate>الأحد، 11 أكتوبر 2026 12:15 ص</pubDate>
+</item>
+<item>
+<title>عنوان تجريبي عند الظهر</title>
+<link>https://feed.fixture.test/youm7/3</link>
+<pubDate>الأحد، 11 أكتوبر 2026 12:30 م</pubDate>
+</item>
+<item>
+<title>عنوان تجريبي بعد انتهاء التوقيت الصيفي</title>
+<link>https://feed.fixture.test/youm7/4</link>
+<pubDate>الجمعة، 30 أكتوبر 2026 09:05 ص</pubDate>
+</item>
+<item>
+<title>عنوان تجريبي في يناير</title>
+<link>https://feed.fixture.test/youm7/5</link>
+<pubDate>الإثنين، 05 يناير 2026 07:00 م</pubDate>
+</item>
+</channel>
+</rss>

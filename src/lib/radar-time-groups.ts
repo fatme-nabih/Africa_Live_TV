@@ -3,15 +3,14 @@
  * « Dernière heure », puis « Il y a 1 à 3 h », « Plus tôt aujourd'hui » et « Hier ».
  * Le jour calendaire est celui du fuseau du lecteur ; `now` vaut 0 avant l'hydratation : aucun groupe n'est alors calculé.
  */
+import { fr } from '@/i18n/fr';
+import { dateTimeFormat, intlLocale } from '@/i18n/format';
+import { DEFAULT_EDITION, type Edition } from './editions';
+
 export type RadarTimeGroup = 'hour' | 'recent' | 'today' | 'yesterday' | 'older';
 
-export const RADAR_TIME_GROUP_LABELS: Record<RadarTimeGroup, string> = {
-  hour: 'Dernière heure',
-  recent: 'Il y a 1 à 3 h',
-  today: 'Plus tôt aujourd’hui',
-  yesterday: 'Hier',
-  older: 'Plus ancien',
-};
+/** Libellés français (le composant lit ceux de son édition dans le dictionnaire). */
+export const RADAR_TIME_GROUP_LABELS: Record<RadarTimeGroup, string> = fr.time.groups;
 
 const HOUR = 3_600_000;
 
@@ -51,8 +50,8 @@ export function groupByTime<T>(items: T[], dateOf: (item: T) => string | null | 
 }
 
 /** Heure d'une dépêche (« 19:05 ») dans le fuseau du lecteur ; vide avant l'hydratation ou si la date est inconnue. */
-export function formatRadarClock(iso: string | null | undefined, now: number): string {
+export function formatRadarClock(iso: string | null | undefined, now: number, edition: Edition = DEFAULT_EDITION): string {
   const time = Date.parse(iso ?? '');
   if (!Number.isFinite(time) || now <= 0) return '';
-  return new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' }).format(time);
+  return dateTimeFormat(intlLocale(edition), { hour: '2-digit', minute: '2-digit' }).format(time);
 }

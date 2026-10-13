@@ -1,4 +1,6 @@
+import { intlLocale, numberFormat } from '@/i18n/format';
 import { categoryCodes } from './catalog-metadata';
+import { DEFAULT_EDITION, type Edition } from './editions';
 import { AFRICAN_COUNTRIES } from './radar-countries';
 
 const AFRICAN_COUNTRY_CODES = AFRICAN_COUNTRIES.map(country => country.code);
@@ -52,9 +54,7 @@ export function summarizePublicStats(rows: readonly PublicStatsRow[], now = new 
   return { totalChannels, africanChannels, africanCountries: countries.size, categories, updatedAt: now.toISOString() };
 }
 
-const formatter = new Intl.NumberFormat('fr-FR');
-
 /** « 14 205 » : espace insécable (l'espace fine de fr-FR n'a pas de glyphe dans la police des titres). */
-export function formatCount(value: number) {
-  return formatter.format(value).replace(/\u202f/g, '\u00a0');
+export function formatCount(value: number, edition: Edition = DEFAULT_EDITION) {
+  return numberFormat(intlLocale(edition)).format(value).replace(/\u202f/g, '\u00a0');
 }

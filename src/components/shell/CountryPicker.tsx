@@ -21,6 +21,8 @@ import {
   type PickerCountry,
 } from '@/lib/country-picker';
 import { STORAGE_KEYS } from '@/lib/storage-keys';
+import { useI18n } from '@/i18n/client';
+import { format } from '@/i18n/message';
 
 const RECENTS_EVENT = RECENT_COUNTRIES_EVENT;
 const MAX_RECENTS_SHOWN = 3;
@@ -62,8 +64,8 @@ export default function CountryPicker({
   valueName,
   countries,
   onChange,
-  allLabel = 'Afrique · tous les pays',
-  label = 'Choisir un pays',
+  allLabel: allLabelProp,
+  label: labelProp,
   className = '',
 }: {
   value: string | null;
@@ -75,6 +77,10 @@ export default function CountryPicker({
   label?: string;
   className?: string;
 }) {
+  const { t, edition, enabled } = useI18n();
+  const labels = t.shell.picker;
+  const allLabel = allLabelProp ?? labels.all;
+  const label = labelProp ?? labels.label;
   const baseId = useId();
   const listId = `${baseId}-list`;
   const inputRef = useRef<HTMLInputElement>(null);
@@ -98,7 +104,7 @@ export default function CountryPicker({
       list.push({ id: `${baseId}-opt-${list.length}`, code, name, group });
     const query = editing?.query ?? '';
     if (query.trim()) {
-      for (const country of filterCountries(countries, query)) push(country.code, country.name, 'result');
+      for (const country of filterCountries(countries, query, edition)) push(country.code, country.name, 'result');
       return list;
     }
     push(null, allLabel, 'all');
@@ -108,7 +114,7 @@ export default function CountryPicker({
     }
     for (const country of filterCountries(countries, '')) push(country.code, country.name, 'country');
     return list;
-  }, [allLabel, baseId, countries, editing?.query, recents]);
+  }, [allLabel, baseId, countries, editing?.query, recents, edition]);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -195,7 +201,7 @@ export default function CountryPicker({
     <div ref={containerRef} className={`relative ${className}`}>
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base leading-none"
+        className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-base leading-none"
       >
         {flag}
       </span>
@@ -219,19 +225,19 @@ export default function CountryPicker({
         onKeyDown={onKeyDown}
         onClick={openList}
         onFocus={event => event.currentTarget.select()}
-        className="h-11 w-full min-w-0 truncate rounded-control border border-line bg-surface-2 pl-10 pr-16 text-sm font-medium text-text placeholder:text-text-muted hover:border-line-gold focus-visible:border-al-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold/40"
+        className="h-11 w-full min-w-0 truncate rounded-control border border-line bg-surface-2 ps-10 pe-16 text-sm font-medium text-text placeholder:text-text-muted hover:border-line-gold focus-visible:border-al-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold/40"
       />
-      <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center">
+      <div className="absolute end-1 top-1/2 flex -translate-y-1/2 items-center">
         {value && !editing && (
           <button
             type="button"
-            aria-label="Réinitialiser le pays"
+            aria-label={labels.reset}
             onClick={() => {
               close();
               onChange(null);
               inputRef.current?.focus();
             }}
-            className="inline-flex size-9 items-center justify-center rounded-pill text-text-muted hover:text-text"
+            className={`inline-flex size-9 items-center justify-center rounded-pill text-text-muted hover:text-text ${enabled.length > 1 ? 'max-[360px]:size-6' : ''}`}
           >
             <X size={16} aria-hidden="true" />
           </button>
@@ -248,7 +254,7 @@ export default function CountryPicker({
       </div>
 
       <span role="status" aria-live="polite" className="sr-only">
-        {open ? (options.length === 0 ? 'Aucun pays trouvé' : `${options.length} résultats`) : ''}
+        {open ? (options.length === 0 ? labels.noneFound : format(labels.results, { count: options.length })) : ''}
       </span>
 
       {open && (
@@ -256,18 +262,18 @@ export default function CountryPicker({
           id={listId}
           role="listbox"
           aria-label={label}
-          className="fixed inset-x-3 top-[3.75rem] z-[60] max-h-[min(70vh,26rem)] overflow-y-auto overscroll-contain rounded-card border border-line-gold bg-surface-1 p-1.5 shadow-2xl sm:absolute sm:inset-x-auto sm:left-0 sm:top-full sm:mt-2 sm:w-80"
+          className="fixed inset-x-3 top-[3.75rem] z-[60] max-h-[min(70vh,26rem)] overflow-y-auto overscroll-contain rounded-card border border-line-gold bg-surface-1 p-1.5 shadow-2xl sm:absolute sm:inset-x-auto sm:start-0 sm:top-full sm:mt-2 sm:w-80"
         >
           {options.length === 0 && (
             <li role="presentation" className="px-3 py-4 text-sm text-text-muted">
-              Aucun pays ne correspond à « {editing?.query} ».
+              {format(labels.noMatch, { query: editing?.query ?? '' })}
             </li>
           )}
           {options.map((option, index) => {
             const previous = options[index - 1];
             const heading =
-              option.group === 'recent' && previous?.group !== 'recent' ? 'Récents'
-              : option.group === 'country' && previous?.group !== 'country' ? 'Tous les pays'
+              option.group === 'recent' && previous?.group !== 'recent' ? labels.recent
+              : option.group === 'country' && previous?.group !== 'country' ? labels.allCountries
               : null;
             const isSelected = option.code === value;
             return (

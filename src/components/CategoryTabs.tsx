@@ -1,4 +1,7 @@
 'use client';
+import { EDITIONS } from '@/lib/editions';
+import { countryName } from '@/lib/country-names';
+import { useI18n } from '@/i18n/client';
 
 import React, { useRef, useState, useEffect } from 'react';
 import {
@@ -46,6 +49,8 @@ export default function CategoryTabs({
   onSelectPreset,
   favoritesCount = 0,
 }: CategoryTabsProps) {
+  const { t, edition } = useI18n();
+  const presets = CATEGORY_PRESETS.map(preset => preset.id === 'senegal' ? { ...preset, country: EDITIONS[edition].defaultCountry, label: countryName(EDITIONS[edition].defaultCountry, edition) } : { ...preset, label: (t.tv.copy as Record<string, string>)[preset.label] ?? preset.label });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -53,8 +58,11 @@ export default function CategoryTabs({
   const checkScroll = () => {
     const el = scrollContainerRef.current;
     if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 4);
-    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+    // En droite → gauche, scrollLeft part de 0 et devient négatif : on mesure la marge restante de chaque côté physique.
+    const overflow = el.scrollWidth - el.clientWidth;
+    const fromLeft = getComputedStyle(el).direction === 'rtl' ? overflow + el.scrollLeft : el.scrollLeft;
+    setCanScrollLeft(fromLeft > 4);
+    setCanScrollRight(fromLeft < overflow - 4);
   };
 
   useEffect(() => {
@@ -70,13 +78,14 @@ export default function CategoryTabs({
   };
 
   return (
-    <nav aria-label="Accès rapide aux catégories" className="relative w-full overflow-hidden rounded-2xl border border-line bg-surface-1/80 p-1.5 shadow-xl">
+    <nav aria-label={t.tv.copy["Accès rapide aux catégories"]} className="relative w-full overflow-hidden rounded-2xl border border-line bg-surface-1/80 p-1.5 shadow-xl">
+      {/* Boutons physiques (gauche/droite) : ils font défiler dans leur propre direction, quel que soit le sens de lecture. */}
       {/* Scroll Left Button */}
       {canScrollLeft && (
         <button
           type="button"
           onClick={() => scrollBy(-200)}
-          aria-label="Faire défiler vers la gauche"
+          aria-label={t.tv.copy["Faire défiler vers la gauche"]}
           className="absolute left-2 top-1/2 z-20 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full border border-line bg-black/80 text-text shadow-md transition hover:border-al-gold/40 hover:text-al-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -88,7 +97,7 @@ export default function CategoryTabs({
         <button
           type="button"
           onClick={() => scrollBy(200)}
-          aria-label="Faire défiler vers la droite"
+          aria-label={t.tv.copy["Faire défiler vers la droite"]}
           className="absolute right-2 top-1/2 z-20 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full border border-line bg-black/80 text-text shadow-md transition hover:border-al-gold/40 hover:text-al-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold"
         >
           <ChevronRight className="h-4 w-4" />
@@ -102,7 +111,7 @@ export default function CategoryTabs({
         className="no-scrollbar flex items-center gap-1.5 overflow-x-auto px-1 py-1 scroll-smooth"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {CATEGORY_PRESETS.map((preset) => {
+        {presets.map((preset) => {
           const isActive = activePresetId === preset.id;
           const Icon = preset.icon;
 
@@ -126,7 +135,7 @@ export default function CategoryTabs({
               <span>{preset.label}</span>
               {preset.id === 'favorites' && favoritesCount > 0 && (
                 <span
-                  className={`ml-0.5 rounded-full px-1.5 py-0.5 text-xs font-bold ${
+                  className={`ms-0.5 rounded-full px-1.5 py-0.5 text-xs font-bold ${
                     isActive ? 'bg-al-gold/20 text-text border border-al-gold/30' : 'bg-white/10 text-text'
                   }`}
                 >

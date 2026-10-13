@@ -1,4 +1,6 @@
 'use client';
+import { useI18n } from '@/i18n/client';
+import { format } from '@/i18n/message';
 
 import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import {useMediaLifecycle} from './player/useMediaLifecycle';
@@ -92,6 +94,7 @@ function telemetryEngine(engine: PlayerEngine | null | undefined): TelemetryPlay
 }
 
 export default function Player({ channelId, channelName = '', anchored = false, onExternalHandoff, initialVolume = 1, onVolumePreference, zapping, manualExternal = false, onPlaybackStarted, compact = false, forceMuted, onMutedChange }: PlayerProps) {
+  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
   const [paused, setPaused] = useState(true);
   const [volume, setVolume] = useState(initialVolume);
@@ -115,7 +118,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
   const [resolvedChannel, setResolvedChannel] = React.useState({ channelId, name: channelName });
   const displayedChannelName = channelName || (
     resolvedChannel.channelId === channelId ? resolvedChannel.name : ''
-  ) || 'Chaîne Africa Live';
+  ) || t.player.copy["Chaîne Africa Live"];
   const source = state.channelId === channelId ? state.source : null;
   const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
@@ -196,10 +199,10 @@ export default function Player({ channelId, channelName = '', anchored = false, 
         code: error instanceof ApiRequestError
           ? error.code ?? 'STREAM_RESOLUTION_FAILED'
           : 'STREAM_RESOLUTION_FAILED',
-        message: messageForApiError(error, 'Impossible de préparer la lecture de cette chaîne.'),
+        message: messageForApiError(error, t.player.copy["Impossible de préparer la lecture de cette chaîne."]),
       },
     });
-  }, []);
+  }, [t.player.copy]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -337,7 +340,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
       failCurrentAttempt({
         category: 'network',
         code: 'PLAYBACK_START_TIMEOUT',
-        message: 'Le flux n’a fourni aucune image dans le délai attendu.',
+        message: t.player.copy["Le flux n’a fourni aucune image dans le délai attendu."],
       });
     }, PLAYBACK_START_TIMEOUT_MS);
 
@@ -362,7 +365,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
         failCurrentAttempt(failure);
       }
     });
-  }, [emitForActiveAttempt, failCurrentAttempt, stopStartupTimeout, forceMuted]);
+  }, [emitForActiveAttempt, failCurrentAttempt, stopStartupTimeout, forceMuted, t.player.copy]);
 
   useEffect(() => {
     // Éco data : le flux est prêt mais ne charge aucun segment tant que l'utilisateur n'a pas touché « Lire maintenant ».
@@ -504,7 +507,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
           const failure: PlaybackFailure = {
             category: 'unknown',
             code: 'VLC_LAUNCH_FAILED',
-            message: `VLC n’a pas pu être lancé${error instanceof Error ? ` (${error.message})` : ''}.`,
+            message: format(t.player.copy["VLC n’a pas pu être lancé{v0}."], {v0: error instanceof Error ? ` (${error.message})` : ''}),
           };
           emitForActiveAttempt('failed', {
             playerEngine: 'vlc',
@@ -597,7 +600,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
           code: error instanceof ApiRequestError
             ? error.code ?? 'EXTERNAL_STREAM_UNAVAILABLE'
             : 'EXTERNAL_STREAM_UNAVAILABLE',
-          message: messageForApiError(error, 'Impossible de lancer VLC pour cette chaîne.'),
+          message: messageForApiError(error, t.player.copy["Impossible de lancer VLC pour cette chaîne."]),
         };
         emitForActiveAttempt('failed', {
           playerEngine: 'vlc',
@@ -610,7 +613,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
         window.clearTimeout(deadline);
         if (externalControllerRef.current === controller) externalLaunchPendingRef.current = false;
       });
-  }, [anchored, onExternalHandoff, channelId, emitForActiveAttempt, stopStartupTimeout, cancelResolution]);
+  }, [anchored, onExternalHandoff, channelId, emitForActiveAttempt, stopStartupTimeout, cancelResolution, t.player.copy]);
 
   const handlePreparedExternalClick = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
     const attempt = preparedExternalAttemptRef.current;
@@ -676,11 +679,11 @@ export default function Player({ channelId, channelName = '', anchored = false, 
     const video = videoRef.current as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null;
     if (document.fullscreenElement) { void document.exitFullscreen().catch(() => undefined); return; }
     const action = container?.requestFullscreen?.();
-    if (action) { void action.catch(() => setFullscreenError('Le plein écran a été refusé par le navigateur.')); return; }
+    if (action) { void action.catch(() => setFullscreenError(t.player.copy["Le plein écran a été refusé par le navigateur."])); return; }
     // iOS Safari ne met en plein écran que l'élément vidéo lui-même.
     if (video?.webkitEnterFullscreen) video.webkitEnterFullscreen();
-    else setFullscreenError('Le plein écran est indisponible sur ce navigateur.');
-  }, []);
+    else setFullscreenError(t.player.copy["Le plein écran est indisponible sur ce navigateur."]);
+  }, [t.player.copy]);
 
   const togglePip = useCallback(() => {
     const video = videoRef.current;
@@ -744,9 +747,9 @@ export default function Player({ channelId, channelName = '', anchored = false, 
         {state.phase === 'external-opening' ? (
           <LoaderCircle className="h-4 w-4 animate-spin" />
         ) : (
-          <ExternalLink className="h-4 w-4" />
+          <ExternalLink className="rtl:-scale-x-100 h-4 w-4" />
         )}
-        {state.phase === 'external-opening' ? 'Lancement…' : 'Relancer VLC'}
+        {state.phase === 'external-opening' ? t.player.copy["Lancement…"] : t.player.copy["Relancer VLC"]}
       </button>
   ) : null;
 
@@ -840,7 +843,7 @@ export default function Player({ channelId, channelName = '', anchored = false, 
             hasNext={Boolean(zapping?.next)}
           />
         )}
-        {fullscreenError && !anchored && <p role="status" className="absolute left-3 top-3 z-20 rounded-control bg-black/80 px-3 py-1.5 text-xs text-text">{fullscreenError}</p>}
+        {fullscreenError && !anchored && <p role="status" className="absolute start-3 top-3 z-20 rounded-control bg-black/80 px-3 py-1.5 text-xs text-text">{fullscreenError}</p>}
       </div>
 
       {anchored && (
@@ -851,10 +854,9 @@ export default function Player({ channelId, channelName = '', anchored = false, 
               else { videoRef.current?.pause(); hlsRef.current?.stopLoad(); }
             }}
             className="rounded-lg border border-white/20 px-3 py-2 focus-visible:ring-2 focus-visible:ring-al-gold disabled:opacity-40">
-            {paused ? 'Lire' : 'Pause'}
+            {paused ? t.player.copy["Lire"] : t.player.copy["Pause"]}
           </button>
-          <label className="flex items-center gap-2">Volume
-            <input aria-label="Volume" type="range" min="0" max="1" step="0.05" value={volume}
+          <label className="flex items-center gap-2">{t.player.copy["Volume"]}<input aria-label={t.player.copy["Volume"]} type="range" min="0" max="1" step="0.05" value={volume}
               className="w-24 accent-al-yellow focus-visible:ring-2 focus-visible:ring-al-gold"
               onChange={event => changeVolume(Number(event.target.value))} />
           </label>
@@ -862,9 +864,9 @@ export default function Player({ channelId, channelName = '', anchored = false, 
             onClick={() => {
               setFullscreenError('');
               const action = document.fullscreenElement ? document.exitFullscreen() : containerRef.current?.requestFullscreen?.();
-              if (!action) setFullscreenError('Le plein écran est indisponible sur ce navigateur.');
-              else void action.catch(() => setFullscreenError('Le plein écran a été refusé par le navigateur.'));
-            }}>Plein écran</button>
+              if (!action) setFullscreenError(t.player.copy["Le plein écran est indisponible sur ce navigateur."]);
+              else void action.catch(() => setFullscreenError(t.player.copy["Le plein écran a été refusé par le navigateur."]));
+            }}>{t.player.copy["Plein écran"]}</button>
           {fullscreenError && <p role="status">{fullscreenError}</p>}
         </div>
       )}
@@ -876,10 +878,9 @@ export default function Player({ channelId, channelName = '', anchored = false, 
           <div className="mb-1 flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-pill border border-al-green/30 bg-al-green/10 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-al-green">
               <span className="live-dot" aria-hidden="true" />
-              Direct
-            </span>
+              {t.player.copy["Direct"]}</span>
             {(externalSuggested || externalReady || externalOpened || state.engine === 'vlc') && (
-              <span className="inline-flex items-center rounded-pill border border-line-gold bg-al-gold/10 px-2.5 py-0.5 text-xs font-semibold text-al-gold">Lecteur VLC</span>
+              <span className="inline-flex items-center rounded-pill border border-line-gold bg-al-gold/10 px-2.5 py-0.5 text-xs font-semibold text-al-gold">{t.player.copy["Lecteur VLC"]}</span>
             )}
           </div>
           <h3 className="truncate font-display text-lg font-bold tracking-tight text-text sm:text-xl">{displayedChannelName}</h3>

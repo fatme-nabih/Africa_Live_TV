@@ -1,7 +1,10 @@
 import React from 'react';
+import { I18nProvider } from '../../src/i18n/client';
+import { en } from '../../src/i18n/en';
 import { createRoot } from 'react-dom/client';
-import Pricing from '../../src/app/(clerk)/pricing/page';
-import Success from '../../src/app/(clerk)/pricing/success/SuccessClient';
+// Composant client de la page des tarifs (la page elle-même est devenue serveur pour ses métadonnées, EDI-501).
+import Pricing from '../../src/app/[edition]/(clerk)/pricing/PricingClient';
+import Success from '../../src/app/[edition]/(clerk)/pricing/success/SuccessClient';
 import Player from '../../src/components/Player';
 import { PlayerDockProvider, usePlayerDock } from '../../src/components/player/PlayerDock';
 import type { Channel } from '../../src/types/channel';
@@ -109,6 +112,8 @@ function TestPlayer() {
 }
 
 const kind = new URLSearchParams(location.search).get('kind');
-createRoot(document.getElementById('root')!).render(
-  kind === 'ticker' ? <TestTicker /> : kind === 'world' ? <TestWorld /> : kind === 'country-grid' ? <TestCountryGrid /> : kind === 'share' ? <TestShare /> : kind === 'pricing' ? <TestPricing /> : kind === 'success' ? <Success /> : kind === 'radar' ? <TestRadar /> : kind === 'countries' || kind === 'favorites' || kind === 'legacy' ? <TestPreferences kind={kind}/> : kind === 'dock' ? <PlayerDockProvider><DockActions /></PlayerDockProvider> : <TestPlayer />,
+const screen = (
+  kind === 'ticker' ? <TestTicker /> : kind === 'world' ? <TestWorld /> : kind === 'country-grid' ? <TestCountryGrid /> : kind === 'share' ? <TestShare /> : kind === 'pricing' ? <TestPricing /> : kind === 'success' ? <Success /> : kind === 'radar' ? <TestRadar /> : kind === 'countries' || kind === 'favorites' || kind === 'legacy' ? <TestPreferences kind={kind}/> : kind === 'dock' ? <PlayerDockProvider><DockActions /></PlayerDockProvider> : <TestPlayer />
 );
+createRoot(document.getElementById('root')!).render(new URLSearchParams(location.search).get('edition') === 'en'
+  ? <I18nProvider edition="en" messages={en}>{screen}</I18nProvider> : screen);

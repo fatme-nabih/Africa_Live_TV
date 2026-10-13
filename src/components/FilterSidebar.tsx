@@ -1,6 +1,9 @@
 'use client';
+import { useI18n } from '@/i18n/client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useEdition } from '@/i18n/client';
+import { collator, intlLanguage } from '@/i18n/format';
 import {
   Globe as GlobeIcon,
   Filter as FilterIcon,
@@ -38,10 +41,12 @@ export default function FilterSidebar({
   isOpenMobile = false,
   onCloseMobile,
 }: FilterSidebarProps) {
+  const { t } = useI18n();
   const { search, country, group, language } = filters;
   const setCountry = (country: string) => onFilterChange({ ...filters, country });
   const setGroup = (group: string) => onFilterChange({ ...filters, group });
   const setLanguage = (language: string) => onFilterChange({ ...filters, language });
+  const edition = useEdition();
   const [countries, setCountries] = useState<string[]>([]);
   const [groups, setGroups] = useState<string[]>([]);
   const [languages, setLanguages] = useState<string[]>([]);
@@ -64,14 +69,14 @@ export default function FilterSidebar({
       setLanguages(uniqueFilterOptions(data.languages.flatMap(catalogLanguageCodes)));
     } catch (requestError) {
       if (request.signal.aborted || !filterRequestsRef.current!.isCurrent(request.id)) return;
-      setError(messageForApiError(requestError, 'Impossible de charger les options de filtre.'));
+      setError(messageForApiError(requestError, edition === 'fr' ? 'Impossible de charger les options de filtre.' : t.tv.copy['Filtres momentanément indisponibles'], edition === 'fr' ? undefined : t.errors.api));
     } finally {
       if (filterRequestsRef.current!.isCurrent(request.id)) {
         setLoading(false);
         filterRequestsRef.current!.finish(request.id);
       }
     }
-  }, []);
+  }, [edition, t]);
 
   useEffect(() => {
     let active = true;
@@ -112,8 +117,7 @@ export default function FilterSidebar({
             <FilterIcon className="h-3.5 w-3.5" aria-hidden="true" />
           </div>
           <h2 id="catalog-filters-title" className="text-xs sm:text-sm font-bold text-text">
-            Filtres
-          </h2>
+            {t.tv.copy["Filtres"]}</h2>
         </div>
         <div className="flex items-center gap-2">
           {(search || country || group || language || filters.region || showFavoritesOnly) && (
@@ -122,14 +126,13 @@ export default function FilterSidebar({
               onClick={onReset}
               className="text-xs font-bold text-al-gold hover:text-al-gold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold rounded px-1"
             >
-              Réinitialiser
-            </button>
+              {t.tv.copy["Réinitialiser"]}</button>
           )}
           {onCloseMobile && (
             <button
               type="button"
               onClick={onCloseMobile}
-              aria-label="Fermer les filtres"
+              aria-label={t.tv.copy["Fermer les filtres"]}
               className="flex size-9 items-center justify-center rounded-control border border-line bg-surface-2 text-text-muted hover:text-text hover:border-line-gold"
             >
               <XIcon className="h-3.5 w-3.5" />
@@ -139,7 +142,7 @@ export default function FilterSidebar({
       </div>
 
       {error && (
-        <ErrorState className="p-3 sm:p-3" title="Filtres momentanément indisponibles" description={error} onRetry={() => void loadFilters()} />
+        <ErrorState className="p-3 sm:p-3" title={t.tv.copy["Filtres momentanément indisponibles"]} description={error} onRetry={() => void loadFilters()} />
       )}
 
       <button
@@ -154,7 +157,7 @@ export default function FilterSidebar({
       >
         <span className="flex items-center gap-2">
           <StarIcon className={`h-3.5 w-3.5 ${showFavoritesOnly ? 'fill-current text-al-gold' : 'text-text-muted'}`} aria-hidden="true" />
-          <span className="text-xs font-semibold">Mes favoris</span>
+          <span className="text-xs font-semibold">{t.tv.copy["Mes favoris"]}</span>
         </span>
         {showFavoritesOnly && (
           <span className="flex h-1.5 w-1.5 rounded-full bg-al-yellow shadow-[0_0_8px_rgba(252,209,22,0.8)]" aria-hidden="true" />
@@ -162,65 +165,65 @@ export default function FilterSidebar({
       </button>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="catalog-group" className="text-xs font-bold uppercase tracking-wider text-text-muted">Catégorie</label>
+        <label htmlFor="catalog-group" className="text-xs font-bold uppercase tracking-wider text-text-muted">{t.tv.copy["Catégorie"]}</label>
         <div className="relative">
           <select
             id="catalog-group"
             value={group}
             onChange={(event) => setGroup(event.target.value)}
             disabled={loading && groups.length === 0}
-            className="w-full appearance-none rounded-xl border border-line bg-white/[0.03] py-1.5 pl-8 pr-7 text-xs text-text transition hover:border-white/20 focus-visible:border-al-gold/60 focus-visible:bg-surface-1/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-al-gold/30"
+            className="w-full appearance-none rounded-xl border border-line bg-white/[0.03] py-1.5 ps-8 pe-7 text-xs text-text transition hover:border-white/20 focus-visible:border-al-gold/60 focus-visible:bg-surface-1/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-al-gold/30"
           >
-            <option value="" className="bg-black text-text">Toutes</option>
-            {uniqueFilterOptions([...groups, ...(group ? [group] : [])]).map((availableGroup) => <option key={availableGroup} value={availableGroup} className="bg-black text-text">{categoryLabel(availableGroup)}</option>)}
+            <option value="" className="bg-black text-text">{t.tv.copy["Toutes"]}</option>
+            {uniqueFilterOptions([...groups, ...(group ? [group] : [])]).map((availableGroup) => <option key={availableGroup} value={availableGroup} className="bg-black text-text">{categoryLabel(availableGroup, edition, t.tv.categories)}</option>)}
           </select>
-          <FilmIcon className="pointer-events-none absolute left-2.5 top-2 h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
+          <FilmIcon className="pointer-events-none absolute start-2.5 top-2 h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
         </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="catalog-country" className="text-xs font-bold uppercase tracking-wider text-text-muted">Pays</label>
+        <label htmlFor="catalog-country" className="text-xs font-bold uppercase tracking-wider text-text-muted">{t.tv.copy["Pays"]}</label>
         <div className="relative">
           <select
             id="catalog-country"
             value={country}
             onChange={(event) => setCountry(event.target.value)}
             disabled={loading && countries.length === 0}
-            className="w-full appearance-none rounded-xl border border-line bg-white/[0.03] py-1.5 pl-8 pr-7 text-xs text-text transition hover:border-white/20 focus-visible:border-al-gold/60 focus-visible:bg-surface-1/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-al-gold/30"
+            className="w-full appearance-none rounded-xl border border-line bg-white/[0.03] py-1.5 ps-8 pe-7 text-xs text-text transition hover:border-white/20 focus-visible:border-al-gold/60 focus-visible:bg-surface-1/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-al-gold/30"
           >
-            <option value="" className="bg-black text-text">Tous</option>
+            <option value="" className="bg-black text-text">{t.tv.copy["Tous"]}</option>
             {uniqueFilterOptions([...countries, ...(country ? [country] : [])])
-              .map((code) => ({ code, name: formatCountryName(code, code) }))
-              .sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+              .map((code) => ({ code, name: formatCountryName(code, code, edition) }))
+              .sort((left, right) => collator(intlLanguage(edition)).compare(left.name, right.name))
               .map(({ code, name }) => <option key={code} value={code} className="bg-black text-text">{name}</option>)}
           </select>
-          <GlobeIcon className="pointer-events-none absolute left-2.5 top-2 h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
+          <GlobeIcon className="pointer-events-none absolute start-2.5 top-2 h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
         </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="catalog-language" className="text-xs font-bold uppercase tracking-wider text-text-muted">Langue</label>
+        <label htmlFor="catalog-language" className="text-xs font-bold uppercase tracking-wider text-text-muted">{t.tv.copy["Langue"]}</label>
         <div className="relative">
           <select
             id="catalog-language"
             value={language}
             onChange={(event) => setLanguage(event.target.value)}
             disabled={loading && languages.length === 0}
-            className="w-full appearance-none rounded-xl border border-line bg-white/[0.03] py-1.5 pl-8 pr-7 text-xs text-text transition hover:border-white/20 focus-visible:border-al-gold/60 focus-visible:bg-surface-1/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-al-gold/30"
+            className="w-full appearance-none rounded-xl border border-line bg-white/[0.03] py-1.5 ps-8 pe-7 text-xs text-text transition hover:border-white/20 focus-visible:border-al-gold/60 focus-visible:bg-surface-1/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-al-gold/30"
           >
-            <option value="" className="bg-black text-text">Toutes</option>
+            <option value="" className="bg-black text-text">{t.tv.copy["Toutes"]}</option>
             {uniqueFilterOptions([...languages, ...(language ? [language] : [])])
-              .map((code) => ({ code, name: catalogLanguageLabel(code) }))
-              .sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+              .map((code) => ({ code, name: catalogLanguageLabel(code, edition) }))
+              .sort((left, right) => collator(intlLanguage(edition)).compare(left.name, right.name))
               .map(({ code, name }) => <option key={code} value={code} className="bg-black text-text">{name}</option>)}
           </select>
-          <LanguageIcon className="pointer-events-none absolute left-2.5 top-2 h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
+          <LanguageIcon className="pointer-events-none absolute start-2.5 top-2 h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
         </div>
       </div>
 
-      {filters.region === 'africa' && <p className="text-xs text-text">Périmètre : Afrique</p>}
+      {filters.region === 'africa' && <p className="text-xs text-text">{t.tv.copy["Périmètre : Afrique"]}</p>}
       <p className="sr-only" aria-live="polite">
-        {loading ? 'Chargement des options de filtre.' : 'Options de filtre chargées.'}
+        {loading ? t.tv.copy["Chargement des options de filtre."] : t.tv.copy["Options de filtre chargées."]}
       </p>
     </>
   );
@@ -236,10 +239,10 @@ export default function FilterSidebar({
             aria-hidden="true"
           />
           <aside
-            className="dock-rise relative z-10 flex h-full w-full max-w-[320px] flex-col justify-between overflow-y-auto border-l border-line bg-surface-1 p-4 shadow-2xl"
+            className="dock-rise relative z-10 flex h-full w-full max-w-[320px] flex-col justify-between overflow-y-auto border-s border-line bg-surface-1 p-4 shadow-2xl"
           >
             {/* Tricolor top border accent */}
-            <div className="absolute top-0 left-0 w-full h-[2px] bg-tricolor-bar opacity-80" />
+            <div className="absolute top-0 start-0 w-full h-[2px] bg-tricolor-bar opacity-80" />
 
             <div className="flex flex-col gap-3 mt-2">
               {filterForm}
@@ -251,9 +254,8 @@ export default function FilterSidebar({
                 onClick={onCloseMobile}
                 className="w-full relative overflow-hidden rounded-xl border border-al-gold/30 bg-al-gold/10 hover:bg-al-gold/20 py-2.5 text-xs font-bold text-text shadow-lg transition active:scale-[0.98]"
               >
-                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-tricolor-bar opacity-80" />
-                Voir les résultats
-              </button>
+                <div className="absolute bottom-0 start-0 w-full h-0.5 bg-tricolor-bar opacity-80" />
+                {t.tv.copy["Voir les résultats"]}</button>
             </div>
           </aside>
         </div>

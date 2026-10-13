@@ -1,3 +1,4 @@
+import { apiEdition } from '@/lib/api-edition';
 import { NextResponse } from 'next/server';
 import { withApiErrorHandler } from '@/lib/api-errors';
 import { authorizeAppRequest } from '@/lib/require-app-access';
@@ -28,12 +29,14 @@ export const GET = withApiErrorHandler(async (request: Request) => {
     });
   }
 
+  const edition = apiEdition(url);
   const result = await getChannelsForAfricanCountry(
     country,
     authorization.decision.hasAccess,
     40,
     undefined,
     usesLocalPlaybackPolicy(request),
+    edition,
   );
 
   return NextResponse.json(result, {

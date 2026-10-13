@@ -1,4 +1,7 @@
 'use client';
+import { editionApiUrl } from '@/lib/edition-client';
+import { useI18n } from '@/i18n/client';
+import { format } from '@/i18n/message';
 
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
@@ -14,11 +17,11 @@ import {
   catalogSearchHref, MIN_REMOTE_QUERY, OPEN_UNIVERSAL_SEARCH_EVENT, searchArticles, searchCities, searchCountries,
 } from '@/lib/universal-search';
 import type { Channel } from '@/types/channel';
-import { searchArticlesCache, SEARCH_ARTICLES_TTL_MS } from '@/lib/search-articles-cache';
+import { searchCacheForEdition, SEARCH_ARTICLES_TTL_MS } from '@/lib/search-articles-cache';
 
 type Item = {
   id: string;
-  group: 'Pays' | 'Météo' | 'Chaînes' | 'Dépêches' | 'Catalogue';
+  group: string;
   label: string;
   hint?: string;
   icon: typeof Search;
@@ -55,6 +58,8 @@ export default function UniversalSearch() {
 }
 
 function Palette({ onClose }: { onClose: () => void }) {
+  const { t, edition } = useI18n();
+  const searchArticlesCache = searchCacheForEdition(edition);
   const router = useRouter();
   const dock = usePlayerDock();
   const listId = useId();
@@ -103,7 +108,7 @@ function Palette({ onClose }: { onClose: () => void }) {
     if (!remote) return;
     let stopped=false;
     const load=()=>void searchArticlesCache.load(async()=>{
-      const response=await fetch('/api/live/rss',{signal:AbortSignal.timeout(15_000)});
+      const response=await fetch(editionApiUrl('/api/live/rss', edition),{signal:AbortSignal.timeout(15_000)});
       const body:unknown=await response.json();
       if(!response.ok||!body||typeof body!=='object'||!('articles' in body)||!Array.isArray(body.articles)) throw new Error('RSS_UNAVAILABLE');
       return body.articles as RadarRssArticle[];
@@ -111,23 +116,23 @@ function Palette({ onClose }: { onClose: () => void }) {
     load();
     const timer=window.setInterval(load,Math.min(60_000,SEARCH_ARTICLES_TTL_MS));
     return ()=>{stopped=true;window.clearInterval(timer);};
-  }, [remote]);
+  }, [remote, edition, searchArticlesCache]);
 
   const go = useCallback((href: string) => { onClose(); router.push(href); }, [onClose, router]);
 
   const items = useMemo<Item[]>(() => {
     const list: Item[] = [];
-    for (const country of searchCountries(trimmed)) {
-      list.push({ id: `country-${country.code}`, group: 'Pays', label: country.name, hint: 'Radar du pays', icon: MapPin, prefix: flagEmoji(country.code),
+    for (const country of searchCountries(trimmed, 5, edition)) {
+      list.push({ id: `country-${country.code}`, group: t.search.copy["Pays"], label: country.name, hint: t.search.copy['Radar du pays'], icon: MapPin, prefix: flagEmoji(country.code),
         run: () => go(`/app/live?country=${country.code}`) });
     }
-    for (const city of searchCities(trimmed)) {
-      list.push({ id: `city-${city.city}`, group: 'Météo', label: `Météo à ${city.city}`, hint: city.countryName, icon: CloudSun,
+    for (const city of searchCities(trimmed, 3, edition)) {
+      list.push({ id: `city-${city.city}`, group: t.search.copy["Météo"], label: format(t.search.copy["Météo à {v0}"], {v0: city.city}), hint: city.countryName, icon: CloudSun,
         run: () => go(`/app/live?country=${city.code}`) });
     }
     if (remote && channels?.query === trimmed) {
       for (const channel of channels.list) {
-        list.push({ id: `channel-${channel.id}`, group: 'Chaînes', label: channel.name, hint: formatCountryName(channel.countryCode), icon: Tv,
+        list.push({ id: `channel-${channel.id}`, group: t.search.copy["Chaînes"], label: channel.name, hint: formatCountryName(channel.countryCode, 'International', edition), icon: Tv,
           run: () => {
             onClose();
             if (channels.canPlay) dock.open({ channel, playlist: channels.list });
@@ -137,14 +142,14 @@ function Palette({ onClose }: { onClose: () => void }) {
     }
     if (remote) {
       for (const article of searchArticles(articles, trimmed)) {
-        list.push({ id: `article-${article.url}`, group: 'Dépêches', label: article.title,
-          hint: [article.sourceName, formatAgo(article.publishedAt, now)].filter(Boolean).join(' · '), icon: Newspaper,
+        list.push({ id: `article-${article.url}`, group: t.search.copy["Dépêches"], label: article.title,
+          hint: [article.sourceName, formatAgo(article.publishedAt, now, t.time.ago)].filter(Boolean).join(' · '), icon: Newspaper,
           run: () => { onClose(); window.open(article.url, '_blank', 'noopener,noreferrer'); } });
       }
-      list.push({ id: 'catalog', group: 'Catalogue', label: `Chercher « ${trimmed} » dans la TV`, icon: Search, run: () => go(catalogSearchHref(trimmed)) });
+      list.push({ id: 'catalog', group: t.search.copy['Catalogue'], label: format(t.search.copy['Chercher « {v0} » dans la TV'], {v0: trimmed}), icon: Search, run: () => go(catalogSearchHref(trimmed)) });
     }
     return list;
-  }, [trimmed, remote, channels, articles, go, onClose, dock, router, now]);
+  }, [trimmed, remote, channels, articles, go, onClose, dock, router, now, t, edition]);
 
   const current = Math.min(active, Math.max(0, items.length - 1));
   const onKeyDown = (event: React.KeyboardEvent) => {
@@ -155,14 +160,14 @@ function Palette({ onClose }: { onClose: () => void }) {
     else if (event.key === 'Enter') { event.preventDefault(); items[current]?.run(); }
   };
 
-  const status = !trimmed ? 'Pays, villes, chaînes ou dépêches.'
-    : items.length ? `${items.length} résultat${items.length > 1 ? 's' : ''}${channelsLoading ? ', chaînes en cours…' : ''}`
-    : channelsLoading ? 'Recherche des chaînes…' : 'Aucun résultat.';
+  const status = !trimmed ? t.search.copy["Pays, villes, chaînes ou dépêches."]
+    : items.length ? `${items.length} résultat${items.length > 1 ? 's' : ''}${channelsLoading ? t.search.copy[", chaînes en cours…"] : ''}`
+    : channelsLoading ? t.search.copy["Recherche des chaînes…"] : t.search.copy["Aucun résultat."];
 
   return (
     <div className="fixed inset-0 z-[60] flex items-start justify-center px-3 pt-[8vh] sm:pt-[12vh]">
       <div className="dock-fade absolute inset-0 bg-black/80" aria-hidden="true" onClick={onClose} />
-      <div role="dialog" aria-modal="true" aria-label="Recherche universelle" onKeyDown={onKeyDown}
+      <div role="dialog" aria-modal="true" aria-label={t.search.copy["Recherche universelle"]} onKeyDown={onKeyDown}
         className="dock-rise relative w-full max-w-xl overflow-hidden rounded-card border border-line-gold bg-surface-1 shadow-2xl shadow-black/70">
         <div className="flex items-center gap-2 border-b border-line px-3">
           <Search size={18} aria-hidden="true" className="shrink-0 text-al-gold" />
@@ -175,19 +180,19 @@ function Palette({ onClose }: { onClose: () => void }) {
             aria-controls={listId}
             aria-activedescendant={items[current] ? `${listId}-${current}` : undefined}
             aria-autocomplete="list"
-            aria-label="Rechercher un pays, une ville, une chaîne ou une dépêche"
-            placeholder="Pays, ville, chaîne, dépêche…"
+            aria-label={t.search.copy["Rechercher un pays, une ville, une chaîne ou une dépêche"]}
+            placeholder={t.search.copy["Pays, ville, chaîne, dépêche…"]}
             autoComplete="off"
             spellCheck={false}
             enterKeyHint="go"
             className="h-14 min-w-0 flex-1 bg-transparent text-base text-text placeholder:text-text-muted focus:outline-none focus-visible:outline-none"
           />
-          <button type="button" onClick={onClose} aria-label="Fermer la recherche" className="inline-flex size-9 shrink-0 items-center justify-center rounded-control text-text-muted hover:bg-surface-2 hover:text-text">
+          <button type="button" onClick={onClose} aria-label={t.search.copy["Fermer la recherche"]} className="inline-flex size-9 shrink-0 items-center justify-center rounded-control text-text-muted hover:bg-surface-2 hover:text-text">
             <X size={18} aria-hidden="true" />
           </button>
         </div>
         <p role="status" className="px-4 pt-3 text-xs text-text-muted">{status}</p>
-        <ul id={listId} role="listbox" aria-label="Résultats" className="max-h-[60vh] overflow-y-auto px-2 pt-1 pb-2">
+        <ul id={listId} role="listbox" aria-label={t.search.copy["Résultats"]} className="max-h-[60vh] overflow-y-auto px-2 pt-1 pb-2">
           {items.map((item, index) => {
             const Icon = item.icon;
             const firstOfGroup = index === 0 || items[index - 1].group !== item.group;
@@ -213,7 +218,7 @@ function Palette({ onClose }: { onClose: () => void }) {
             );
           })}
         </ul>
-        <p className="hidden border-t border-line px-4 py-2 text-xs text-text-muted sm:block">↑ ↓ pour choisir · Entrée pour ouvrir · Échap pour fermer</p>
+        <p className="hidden border-t border-line px-4 py-2 text-xs text-text-muted sm:block">{t.search.copy["↑ ↓ pour choisir · Entrée pour ouvrir · Échap pour fermer"]}</p>
       </div>
     </div>
   );

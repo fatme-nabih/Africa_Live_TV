@@ -1,4 +1,95 @@
+## EDI-903 — publication staging FR/EN/AR reçue, 13 octobre 2026
+
+Relectures validées par le propriétaire sur les textes actuels ; EDI-404 reçu. **43/43 tickets**, staging f4d85931-e353-422e-bbe6-aa1476ab360a SUCCESS, EDITIONS=fr,en,ar identique build/runtime. Sauvegarde chiffrée restaurée (25 tables) puis migration additive 0021 via pré-déploiement db:migrate:deploy ; 22 migrations, 646/646 fichiers. Santé 200 deux domaines, 28 E2E reçus +22 ignorés, 45 captures ; adaptations privées cookie localhost et URL canonique documentées, aucun test/app modifié. Données/index/.env/tâche/cycle conservés ; aucun commit/push, production, DNS, Clerk ou OVHcloud. Session Clerk connectée et deux navigateurs non reçus, paiement réel/lecture amont non effectués. [Dossier](publication-editions-edi903-2026-10-13.md), [passation](passation-editions-publication-2026-10-13.md).
+
 # Progression — préparation production
+
+## Relectures préparées, accord conditionnel EDI-903 — 13 octobre 2026, après E9
+
+Le propriétaire validera l'arabe D7 et le juridique, puis la publication EDI-903 est autorisée avec `EDITIONS=fr,en,ar` sur staging. [Dossier à valider](relectures-editions-2026-10-13/README.md), [constats juridiques](relectures-editions-2026-10-13/juridique-prerelecture.md), [propositions FR/EN/AR](relectures-editions-2026-10-13/propositions-juridiques.md). 1 175 textes D7 conservés, 65 clés juridiques, 19 libellés Clerk personnalisés, 228 titres +28 pièges ; contrôle structurel sans anomalie, deux formulations de pluriel neutres expliquées. Notice arabe actualisée (anciens volumes corrigés). Les propositions ne sont pas appliquées aux dictionnaires. Validation humaine encore attendue, 41/43 tickets faits ; pas de déploiement, migration, commit/push, base/`.env`/cycle/tâche Windows ou état distant modifiés. La demande explicite de commit/push reste à obtenir avant ces opérations.
+
+## Éditions E9 : réception globale et dossier final — 13 octobre 2026
+
+**EDI-901/902 terminés après « Vert pour E9 », 41/43 tickets faits.** [Réception E9](reception-editions-e9-2026-10-13.md), [dossier des 43 tickets](validation-editions-2026-10-11.md), [passation](passation-editions-fin-e9-2026-10-13.md). Types/lint, 519 unités +44 ignorées, 44 intégrations, 4 invariants, 104 composants, 21 bandeau/monde, 45/45 pixels contrôlés et 45 captures publiques. 187 réussis, 18 ignorés, 4 échecs connus en MVP ; Clerk 30 + 16 ignorés, FR seul 23 + 23 ignorés ; API FR seule 5/5. Les 4 écarts MVP sont 3 cas du mode Clerk et 1 local-mvp préexistant ; aucune assertion ni code applicatif changé. Identité FR face aux références avant E1 documentée (D5, cache de l’image, données Radar variables).
+
+Huit empreintes SQL, `.env*`, index Git (27 entrées, contenu indexé inclus), 22 migrations, `run-cycle.cjs` et définition de la tâche Windows inchangés. Aucune valeur `preferred_edition` renseignée. Ports 3001/3002 libres ; dernier `.next` reconstruit en FR seul, mode Clerk. Aucun commit/push/déploiement, migration supplémentaire ou action distante. **EDI-404 attend D7 ; EDI-903 non autorisé.** [Check-list EDI-903 préparée](checklist-publication-editions-e9-2026-10-13.md), sans exécution.
+
+## Éditions : EDI-604 branché, passation pour E9 — 13 octobre 2026 au soir
+
+Avec l'accord du propriétaire :
+- **EDI-604 branché.** L'étape des flux RSS (FR, EN, AR, lecture seule, non bloquante) est appelée par `.local-logs/stream-cycle/run-cycle.cjs` à chaque cycle de 15 jours. La tâche Windows est inchangée ; prochaine exécution le 19/10 à 20:00.
+- **Relevé de référence pris** : FR 31/36, EN 83/85, AR 38/41 flux sains.
+- **Comparaison corrigée dans l'étape privée** : elle ne passe plus par `verify-feeds --compare`, qui relisait mal ses propres relevés.
+- **« Vert pour E9 » reçu**, mais E9 n'est pas commencé : le propriétaire relance une nouvelle session. [Passation fin E6](passation-editions-fin-e6-2026-10-13.md) et [prompt E9](prompt-agent-editions-2026-10-11.md) réécrits.
+- **Tickets** : 39/43 faits ; restent EDI-901/902, EDI-404 (D7) et EDI-903 (conditionnel).
+- Aucun code applicatif, commit, migration ni action distante.
+
+## Éditions linguistiques — E6 (pont, halo, choix au compte, cycle des flux) reçu localement — 13 octobre 2026
+
+Après « Feu vert pour E6, option A pour EDI-603 » : EDI-601 pont entre éditions (comptes par pays des seuls caches valides des autres éditions, aucune collecte déclenchée ; ligne sous les seuils < 3 / ≥ 5 ; geste → cookie + Radar du pays), EDI-602 halo de la sphère sur la carte (une fois ; rien en Éco ni en mouvement réduit), EDI-603 option A (colonne additive `users.preferred_edition`, migration **0021 appliquée seulement en local** après sauvegarde restaurable, `PUT /api/edition-preference`, cookie de l'appareil prioritaire), EDI-604 étape `feeds:verify` préparée (`run-cycle.cjs` et tâche Windows inchangés). [Réception E6](reception-editions-e6-2026-10-13.md).
+**519 unités +44 ignorées**, **44 intégrations** (dont 3 EDI-603), **4 invariants**, **104 composants**, tsc/lint, builds `fr,en,ar` et `fr`. **45/45 captures FR/EN/AR identiques au pixel** (références prises avant le lot). E2E MVP 130 + 8 ignorés (écart `local-mvp` préexistant), Clerk 30 + 16 ignorés, FR seul 23 + 23 ignorés ; contrôle réel de la préférence au compte, valeur d'origine remise. 22 migrations locales, anciennes inchangées, sans dérive ; huit empreintes SQL et `.env*` identiques ; index Git inchangé.
+**39/43 tickets faits** ; restent EDI-404 (D7, 1 175 textes arabes), EDI-901/902, EDI-903 (conditionnel ; sauvegarde Railway + `db:migrate:deploy` avant le code). Aucun commit, push ou déploiement ; E9 attend son feu vert.
+
+## Passation éditions pour une nouvelle session — 13 octobre 2026
+
+À la demande du propriétaire, [passation du 13/10](passation-editions-2026-10-13.md) (fait/restant, décisions, limites, état du poste, outils privés) et [prompt pour l'agent codeur](prompt-agent-editions-2026-10-11.md) actualisés. **35/43 tickets faits ; 8 restants** : réception EDI-404 (D7), E6 (EDI-601, 602, 604 ; EDI-603 sur décision), E9 (901, 902 ; 903 conditionnel). Prochain lot : E6, au feu vert. Relectures arabe et juridique, contrôle Edge connecté et décisions EDI-603/R1–R5 en attente. Markdown uniquement : aucun code, test, commit, migration ou action distante.
+
+## Éditions linguistiques — E5 (pages publiques et partage) reçu localement — 13 octobre 2026
+
+Après « feu vert pour E5 » : landing, CGU, confidentialité, contact et tarifs par édition (statiques au build), métadonnées et images d'aperçu EN/AR, canonique/`hreflang` seulement avec plusieurs éditions, partage WhatsApp/Facebook de l'édition, suggestion de langue sans redirection, CGU/confidentialité EN/AR avec « la version française fait foi ». [Réception E5](reception-editions-e5-2026-10-13.md).
+**512 unités +41 ignorées**, **4 invariants**, **104 composants**, tsc/lint, builds `fr,en,ar` et `fr`. FR 15/15 pages publiques identiques au pixel ; build FR seul sans canonique ni `hreflang`. E2E Clerk 30 + 11 ignorés, FR seul 23 + 18 ignorés, MVP 93 + 7 ignorés (écart `local-mvp` préexistant). Défaut trouvé et corrigé : le préchargement de `/en/sign-in` posait le cookie d'édition à la simple visite de `/en`. Huit empreintes SQL et `.env*` identiques ; index Git inchangé.
+Relectures à faire : arabe (D7, CSV régénéré, 1 165 textes) et juridique (traductions, et mention éventuelle du cookie d'édition dans la confidentialité FR). Aucun commit, push, migration ou déploiement ; E6 attend son feu vert.
+
+## Éditions linguistiques — E4 (arabe) terminé techniquement, réception en attente de D7 — 12 octobre 2026
+
+Après « Feu vert pour E4 uniquement » : EDI-401 classes logiques (95 occurrences réelles, 73 converties, 7 physiques justifiées ; **30/30 captures FR/EN identiques au pixel**), EDI-402 RTL (Cairo **+31 Ko** seulement en arabe, icônes, bandeau `marquee-scroll-rtl`, clavier, `<bdi>`/`plaintext`, barre média LTR), EDI-403 `ar.ts` complet à relire, Clerk `arSA` + marque, `READY_EDITIONS` fr/en/ar. [Réception E4](reception-editions-e4-2026-10-12.md).
+**507 unités +41 ignorées**, **4 invariants**, **104 composants**, tsc/lint, builds `fr,en,ar` et `fr`. E2E : MVP zones touchées 74 + 2 ignorés ; Clerk 25 + 11 ignorés ; FR seul 23 + 13 ignorés ; suite complète MVP analysée (tests « arabe inactif » généralisés, aléas et dépendances de données consignés). 30 captures arabes sans débordement ni erreur ; Clerk arabe réel sur connexion/inscription ; flux AR 41/41 lundi. Bidi des montants corrigé (« 900 9 »). Restes E3 corrigés : pays des tuiles, origines, lieu météo, titres de connexion. Huit empreintes SQL et `.env*` identiques ; `l5-anchored-*.png` restaurées depuis `HEAD`.
+**D7 relecture native** requise : [notice et CSV de 993 textes](relecture-arabe-e4-2026-10-12.md). Session Edge connectée non pilotée (outils indisponibles). Aucun commit, push, migration ou déploiement ; E5 attend son feu vert.
+
+## Passation éditions pour une nouvelle session — 12 octobre 2026
+
+À la demande du propriétaire, [bilan complet fait/restant](passation-editions-2026-10-12.md) et [prompt pour l'agent codeur](prompt-agent-editions-2026-10-11.md) actualisés. **E0–E3 : 27/43 tickets reçus localement ; E4/E5/E6/E9 : 16 restants**, dont décisions et publication conditionnelle. E4 n'a pas commencé ; aucun feu vert E4 reçu à ce stade. D7 relecture arabe native reste nécessaire pour sa réception.
+Ancien audit E1 désormais archivé sous un bilan courant ; consignes obsolètes de compte local et de routage corrigées. Reprendre le même checkout sale ; dernier build FR seul, ports 3001/3002 libres au contrôle. Limite EN à froid/reprise et grand corps public FR jusqu'à E5 transmis. Markdown uniquement pendant cette passation : aucun code, test applicatif supplémentaire, commit, migration ou action distante.
+
+## Éditions linguistiques — E3 reçu localement, 12 octobre 2026
+
+EDI-301 à EDI-308 implémentés : interface anglaise, sélecteur/cookie/navigation complète, consommateurs et caches par édition, noms/pays/TV, tri linguistique SQL avec curseur lié, paniers de devises, météo par code, briefing anglais, Clerk enGB et précisions D5. [Réception complète](reception-editions-e3-2026-10-12.md).
+**501 unités +41 ignorées**, **104 composants**, **4 invariants**, types/lint/builds FR/EN et FR seul verts. Les deux parcours EN ajoutés vérifient les erreurs/reprise et l'import partiel des préférences partagées. E2E pertinents FR/EN/Clerk reçus, cas ignorés et réparations détaillés au dossier. Pagination PostgreSQL Nigeria : 50/50 mêmes IDs, aucun doublon, 46 eng devant ; aucun filtre imposé. Session Clerk existante : EN compte/TV/Radar puis FR. Captures 360/768/1366 sans débordement/erreur de page ; FR seul, 17/18 pixels identiques au seuil, écart D5 volontaire. Huit empreintes SQL et `.env*` identiques.
+EN active seulement avec EDITIONS correspondant ; aucune configuration distante changée. Nation EN désactivé après nouveau404 ; FR conservé, R1–R5 ultérieurs. E4 non commencé, attendre « vert pour E4 » ; D7 reste le verrou de réception arabe. Aucun commit, push, migration ou déploiement.
+
+Complément final : dernier banc FR additionnel **34/34** (axe/clavier, catalogue, SQL réel, rangées/mur TV, lecteur direct synthétique, profil 1/2/4 lectures). Démarrage Clerk EN à froid : repli « Signal interrupted », puis « Try again » reçoit 300 dépêches/60 rédactions et les marchés. Limite navigateur 15 s conservée ; pas de garantie au premier appel pour les amonts lents. Capture stabilisée `clerk-en-radar-final.jpg`, puis retour FR et fermeture du seul onglet de réception.
+
+
+## Éditions linguistiques — E2 reçu localement, 11 octobre 2026
+
+EDI-201 à EDI-209 terminés après feu vert : six registres, caches/collectes isolés par édition, limite de 8, ETag/304, API privées et cache briefing `édition|pays`, dates par source/ICU, encodage borné, lexiques et recherche/régions EN/AR. [Dossier de réception](reception-editions-e2-2026-10-11.md).
+496 unités réussies + 41 ignorées, 4 invariants, 102 composants ; 59 E2E MVP + 1 ignoré, 23 E2E Clerk + 1 ignoré ; types/lint/builds FR et `fr,en` verts. Détection : 99,56 % EN/AR, ≥ 98,99 % sur les seuls pays nommés, zéro erreur sur les pièges. 162 flux réels revérifiés ; collectes RSS+monde 9,052 / 12,804 / 12,229 s, mémoire mesurée avec limites documentées.
+Captures 360/768/1366 : 6 MVP sans erreur/débordement ; 18 publics comparés à E1. Huit empreintes SQL identiques, compte local conservé, ports 3001/3002 libérés. FR inchangé sur les mêmes flux simulés, hormis garde volontaire +3 h à la collecte RSS.
+Choix reçu du propriétaire : garder les flux FR pour E2, R1–R5 reportés aux mesures de semaine. Seul FR reste actif ; E3 non commencé, attendre « vert pour E3 ». Aucun commit, push, migration, déploiement ou changement distant.
+
+
+## Éditions linguistiques — E1 reçu localement, 11 octobre 2026
+
+Après feu vert, EDI-101 à EDI-107 terminés : pluriels arabes typés sans perte des clés, fournisseur i18n applicatif, tests de formats/pluriels et configuration,
+réécritures relatives `next.config.ts` reçues, cookies normalisés concordants. [Dossier de réception](reception-editions-e1-2026-10-11.md).
+tsc/lint/builds `fr` et `fr,en` réussis ; **469 unités + 41 ignorées**, **4 invariants**, **102 composants**, **20 E2E Clerk**,
+**107 E2E MVP + 1 ignoré**, **20 E2E anonyme `fr,en` + 10 ignorés**. Navigation Clerk connectée réelle et captures 360/768/1366.
+Deux fixtures de dates stabilisées avec assertions de visibilité/ordre conservées ; limites de captures et de simulation consignées.
+Empreintes catalogue/sources/utilisateurs/favoris/pays suivis identiques, compte local existant conservé, ports 3001/3002 libres.
+E0 conservé ; aucun E2, commit, push, migration, déploiement ou changement distant. Prompt et contexte prêts pour **E2 au feu vert explicite**.
+
+## Éditions linguistiques — audit après interruption par quota, 11 octobre 2026
+
+[État réel et reprise](etat-implementation-editions-2026-10-11.md) : E0 terminé ; E1 largement codé, incomplet et non réceptionné ; E2 à E6/E9 à faire.
+Contrôles relancés : tsc/lint/build réussis, landing ISR 600 s, **464 unités réussies + 41 ignorées**, **4 invariants**, **102 composants**,
+**16 E2E anonymes réussis + 10 ignorés** (paiement simulé ; aucun parcours Clerk connecté prouvé).
+EDI-104 reste incomplet : type du dictionnaire refusant les pluriels arabes supplémentaires (TS2353), fournisseur applicatif et tests de formats/pluriels absents.
+Réécriture via `next.config.ts` à réceptionner ; captures après E1 et parcours MVP/Clerk à finir. Backlog, validation, contexte et prompt de reprise actualisés.
+Cette session n'a modifié que la documentation ; aucun correctif applicatif, commit, push, migration ou déploiement. Preuves privées `.local-logs/editions-audit-2026-10-11/`.
+
+## Éditions linguistiques — lot E0 (préparation) vérifié localement, 11 octobre 2026
+
+Non committé, non publié. Référence relevée sur `ab9a6f7` (437/478 tests, 41 ignorés ; tsc, lint sans erreur ; aucun serveur sur 3001). Nouvel outil hors CI `npm run feeds:verify` (`src/scripts/verify-feeds.ts`, fonctions pures `src/lib/feed-verify.ts`) : même User-Agent, même délai et même parseur que l'application ; seule ligne applicative touchée, l'export des en-têtes de `rss-collector.ts` (valeurs inchangées). Relance réelle de 162 flux (registre FR + annexes A/B) : Nation (KE) en 404, Nairametrics, Leadership, Eye Radio et Anadolu lents ou intermittents ; avances d'horloge et formats de date de Punch, Daily Maverick, Cairo24, Arabi21, Masrawy, Youm7 et El Bilad remesurés ; dans le registre français, Ecofin sans article récent, Radio Okapi ancien, Jeune Afrique en 403, AIP lent. Échantillons de test `src/lib/fixtures/editions/` : 229 titres anglais et 228 titres arabes réels annotés à la main, 48 pièges synthétiques, 9 flux XML synthétiques (formats de date, `windows-1256`). Contrôles : tsc, lint, **453/494 tests (41 ignorés)**, invariants 4/4, build réussi. E2E et captures non lancés (aucune page modifiée). [Dossier](validation-editions-2026-10-11.md).
 
 ## Bouton pause du bandeau supprimé — publié sur staging, 11 octobre 2026
 

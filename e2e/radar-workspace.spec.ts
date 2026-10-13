@@ -134,7 +134,7 @@ test('Pays rapides SN→CI : réponses météo et TV obsolètes ignorées', asyn
 
 test('Carte et contrôle partagent le pays ; médias restent accessibles en 2D et 3D', async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
-  await fixtureRadar(page, { weatherOk: true });
+  await fixtureRadar(page, { weatherOk: true, leadCountry: 'SN' });
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto('/app/live');
   const marker = page.locator('.tactical-radar-marker').filter({ hasText: 'Sénégal' });

@@ -33,10 +33,13 @@ export const users = pgTable(
       .default(sql`(now() + '5 days'::interval)`),
     clerkSyncedAt: timestampWithTimezone('clerk_synced_at'),
     clerkProfileUpdatedAt: timestampWithTimezone('clerk_profile_updated_at'),
+    // Édition choisie par la personne (EDI-603) : vide = choix de l'appareil, sinon français. Écrite seulement par un geste explicite.
+    preferredEdition: text('preferred_edition'),
   },
   (table) => [
     unique('users_clerk_user_id_key').on(table.clerkUserId),
     check('users_status_check', sql`${table.status} in ('active', 'blocked', 'deleted')`),
+    check('users_preferred_edition_check', sql`${table.preferredEdition} is null or ${table.preferredEdition} in ('fr', 'en', 'ar')`),
   ],
 );
 

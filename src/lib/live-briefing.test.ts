@@ -64,3 +64,18 @@ test('getLiveBriefing uses in-memory caching and supports forceRefresh', async (
   assert.equal(Date.parse(refreshed.generatedAt),now);
   assert.notEqual(refreshed.generatedAt,first.generatedAt);
 });
+
+test('EDI-203: briefing cache uses edition|country and each edition reads its own RSS', async () => {
+  clearBriefingCache();
+  const seen: string[] = [];
+  const isolated: BriefingProviders = { ...providers, rss: async options => {
+    const edition = options?.edition ?? 'fr'; seen.push(edition);
+    return { articles: [{ id: edition, title: edition + ' headline', url: 'https://example.org/' + edition, domain: 'example.org', sourceName: 'Fixture', sourceType: 'rss', publishedAt: new Date(now).toISOString(), countryCode: 'NG', editorialScope: 'africa', category: '' }], sources: [], updatedAt: new Date(now).toISOString(), stale: false };
+  } };
+  const fr = await getBriefing({ countryCode: 'NG' }, isolated), en = await getBriefing({ edition: 'en', countryCode: 'NG' }, isolated);
+  assert.match(fr.sections[0].highlights[0], /fr headline/); assert.match(en.sections[0].highlights[0], /en headline/);
+  assert.equal(await getBriefing({ countryCode: 'NG' }, isolated), fr);
+  assert.equal(await getBriefing({ edition: 'en', countryCode: 'NG' }, isolated), en);
+  await getBriefing({ edition: 'en', countryCode: 'SN' }, isolated);
+  assert.deepEqual(seen, ['fr', 'en', 'en']); clearBriefingCache();
+});

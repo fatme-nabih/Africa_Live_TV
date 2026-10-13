@@ -1,4 +1,6 @@
 'use client';
+import { useEdition } from '@/i18n/client';
+import { EDITIONS } from '@/lib/editions';
 
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { ECO_EVENT, effectiveEco, readEcoRaw, readSaveData } from '@/lib/eco-mode';
@@ -8,7 +10,6 @@ import { chooseCountries, displayCountries } from '@/lib/preference-store';
 import { usePreferences } from '@/components/shell/usePreferences';
 import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
 import { parseRecentChannels, pushRecentChannel } from '@/lib/recent-channels';
-import { DEFAULT_FOLLOWED_COUNTRY } from '@/lib/tv-rows';
 import { STORAGE_KEYS } from '@/lib/storage-keys';
 import type { Channel } from '@/types/channel';
 
@@ -94,7 +95,8 @@ export function useWriteFollowedCountries() {
 
 /** Pays de l'accueil TV : le pays principal suivi, sinon le dernier choisi dans la barre, sinon le Sénégal. */
 export function useFollowedCountry(): string {
+  const edition = useEdition();
   const raw = useSyncExternalStore(subscribeCountries, readCountriesRaw, () => null);
   const followed = useFollowedCountries();
-  return followed[0] ?? parseRecentCountries(raw, AFRICAN_CODES)[0] ?? DEFAULT_FOLLOWED_COUNTRY;
+  return followed[0] ?? parseRecentCountries(raw, AFRICAN_CODES)[0] ?? EDITIONS[edition].defaultCountry;
 }

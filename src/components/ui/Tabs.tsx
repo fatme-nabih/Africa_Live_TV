@@ -2,6 +2,7 @@
 
 import { useRef, type KeyboardEvent, type ReactNode } from 'react';
 import { cn } from './cn';
+import { horizontalStep, isRtl } from '@/lib/direction';
 
 export type TabItem = { id: string; label: ReactNode; count?: number };
 
@@ -32,9 +33,10 @@ export function Tabs({
 
   function onKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
     const last = tabs.length - 1;
+    const step = horizontalStep(event.key, isRtl(event.currentTarget));
     const target =
-      event.key === 'ArrowRight' ? (index === last ? 0 : index + 1)
-      : event.key === 'ArrowLeft' ? (index === 0 ? last : index - 1)
+      step === 1 ? (index === last ? 0 : index + 1)
+      : step === -1 ? (index === 0 ? last : index - 1)
       : event.key === 'Home' ? 0
       : event.key === 'End' ? last
       : null;

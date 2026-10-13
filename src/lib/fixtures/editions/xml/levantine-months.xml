@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>Mois levantins</title>
+<link>https://feed.fixture.test/</link>
+<description>Flux synthétique Africa Live (EDI-002) : titres inventés, format de date réel.</description>
+<item>
+<title>عنوان تجريبي في تشرين الأول</title>
+<link>https://feed.fixture.test/mois-levantins/1</link>
+<pubDate>الأحد، 11 تشرين الأول 2026 08:50 م</pubDate>
+</item>
+<item>
+<title>عنوان تجريبي في كانون الثاني</title>
+<link>https://feed.fixture.test/mois-levantins/2</link>
+<pubDate>الإثنين، 05 كانون الثاني 2026 10:00 ص</pubDate>
+</item>
+<item>
+<title>عنوان تجريبي في آب</title>
+<link>https://feed.fixture.test/mois-levantins/3</link>
+<pubDate>السبت، 01 آب 2026 01:00 م</pubDate>
+</item>
+</channel>
+</rss>

@@ -1,3 +1,5 @@
+import type { Edition } from './editions';
+import { editionCountries, countryName as translatedCountry } from './country-names';
 import { filterCountries, normalizeSearch, type PickerCountry } from './country-picker';
 import { AFRICAN_COUNTRIES } from './radar-countries';
 import { canonicalArticleUrl } from './radar-data';
@@ -14,19 +16,19 @@ export const OPEN_UNIVERSAL_SEARCH_EVENT = 'al_open_universal_search';
 
 const COUNTRIES: PickerCountry[] = AFRICAN_COUNTRIES.map(({ code, name }) => ({ code, name }));
 
-export function searchCountries(query: string, limit = 5): PickerCountry[] {
-  return normalizeSearch(query) ? filterCountries(COUNTRIES, query).slice(0, limit) : [];
+export function searchCountries(query: string, limit = 5, edition: Edition = 'fr'): PickerCountry[] {
+  return normalizeSearch(query) ? filterCountries(edition === 'fr' ? COUNTRIES : editionCountries(edition), query, edition).slice(0, limit) : [];
 }
 
 export type CityHit = { city: string; code: string; countryName: string };
 
-export function searchCities(query: string, limit = 3): CityHit[] {
+export function searchCities(query: string, limit = 3, edition: Edition = 'fr'): CityHit[] {
   const q = normalizeSearch(query);
   if (!q) return [];
   return QUICK_WEATHER_LOCATIONS
     .filter(location => normalizeSearch(location.city).includes(q))
     .slice(0, limit)
-    .map(({ city, code, countryName }) => ({ city, code, countryName }));
+    .map(({ city, code, countryName }) => ({ city, code, countryName: edition === 'fr' ? countryName : translatedCountry(code, edition) }));
 }
 
 export type ArticleHit = { title: string; url: string; sourceName: string; publishedAt: string | null };

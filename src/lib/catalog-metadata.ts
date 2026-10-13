@@ -1,3 +1,6 @@
+import type { Dictionary } from '@/i18n/dictionary';
+import { displayNames, intlLanguage } from '@/i18n/format';
+import { DEFAULT_EDITION, type Edition } from './editions';
 const key = (value: string) => value.normalize('NFKD').replace(/\p{M}/gu, '').trim().toLowerCase().replace(/\s+/g, ' ');
 const categories: Record<string, string> = {
   News: 'Actualités', Business: 'Économie', General: 'Généralistes', Entertainment: 'Divertissement',
@@ -17,13 +20,12 @@ export function categoryCodes(raw: string | null | undefined): string[] {
   if (!raw?.trim()) return ['General'];
   return [...new Set(raw.split(/[;|,]/).map(token => aliases.get(key(token)) ?? key(token)))];
 }
-export function categoryLabel(code: string) {
-  return categories[code] ?? 'Autre catégorie';
+export function categoryLabel(code: string, edition: Edition = DEFAULT_EDITION, labels?: Dictionary['tv']['categories']) {
+  return labels?.[code as keyof typeof labels] ?? (edition === 'en' ? code.replace(/([a-z])([A-Z])/g, '$1 $2') : categories[code] ?? 'Autre catégorie');
 }
-export function categoryLabels(raw: string | null | undefined) {
-  return categoryCodes(raw).map(categoryLabel).join(' · ');
+export function categoryLabels(raw: string | null | undefined, edition: Edition = DEFAULT_EDITION, labels?: Dictionary['tv']['categories']) {
+  return categoryCodes(raw).map(code => categoryLabel(code, edition, labels)).join(' · ');
 }
-const languageNames = new Intl.DisplayNames(['fr'], { type: 'language' });
 const languageAliases: Record<string, string> = { francais: 'fr', french: 'fr', anglais: 'en', english: 'en', arabe: 'ar', arabic: 'ar', wolof: 'wo' };
 export function canonicalLanguage(raw: string): string {
   const token = key(raw);
@@ -35,10 +37,10 @@ export function canonicalLanguage(raw: string): string {
 export function catalogLanguageCodes(raw: string | null | undefined) {
   return raw?.trim() ? [...new Set(raw.split(/[;,|]/).map(canonicalLanguage))] : ['unknown'];
 }
-export function catalogLanguageLabel(code: string) {
-  if (code === 'unknown') return 'Langue non renseignée';
-  try { const name = languageNames.of(code); return name && name !== code ? name : 'Autre langue'; }
-  catch { return 'Autre langue'; }
+export function catalogLanguageLabel(code: string, edition: Edition = DEFAULT_EDITION) {
+  if (code === 'unknown') return edition === 'en' ? 'Language not specified' : 'Langue non renseignée';
+  try { const name = displayNames(intlLanguage(edition), 'language').of(code); return name && name !== code ? name : edition === 'en' ? 'Other language' : 'Autre langue'; }
+  catch { return edition === 'en' ? 'Other language' : 'Autre langue'; }
 }
 export function metadataValuesMatching(rows: (string | null)[], code: string, kind: 'category' | 'language') {
   const parse = kind === 'category' ? categoryCodes : catalogLanguageCodes;

@@ -1,0 +1,2675 @@
+{
+ "edition": "ar",
+ "collectedAt": "2026-10-11T18:40:00Z",
+ "source": "Titres réels relevés par `npm run feeds:verify -- --edition all --dump-titles` le 11/10/2026 (annexes A et B de l’étude), échantillon déterministe par flux puis pièges ; annotations manuelles relues titre par titre.",
+ "review": "Annoté par l’agent (lecture de l’arabe) ; à faire relire par le relecteur arabe natif (D7).",
+ "conventions": {
+  "country": "Pays africain attendu (ISO) en sortie de la détection, repli compris : pays nommé par le titre, sinon pays du média pour un flux national, sinon null.",
+  "basis": "title : le titre nomme le pays (nom, capitale, ville, gentilé, dirigeant) ; media : repli sur le pays du média ; none : aucun pays africain.",
+  "accept": "Autres pays acceptables quand le titre en cite plusieurs.",
+  "region": "Flux « monde » : région attendue (europe, ameriques, moyen-orient, asie-pacifique) ou null ; pour une rubrique régionale, la région de la rubrique.",
+  "regionAccept": "Autres régions acceptables quand le titre est ambigu (null = écarté s'il ne touche pas l'Afrique).",
+  "africa": "Flux « monde » : pays africains nommés par le titre ; touchesAfrica : le titre parle de l'Afrique.",
+  "trap": "Piège du plan technique § 1.5 ou piège réel relevé dans les flux du jour.",
+  "traps": "Phrases construites (synthetic: true) pour les pièges absents des flux du jour ; aucun article recopié.",
+  "criterion": "EDI-206 : au moins 90 % de pays exacts (country ou accept) sur titles, zéro faux positif sur traps et sur les titres marqués trap."
+ },
+ "titles": [
+  {
+   "id": "ar-001",
+   "feed": "Echorouk",
+   "feedCountry": "DZ",
+   "role": "national",
+   "title": "مهرّب ينقل قناطير من “الكيف” وسط شحنة من الخضر",
+   "country": "DZ",
+   "basis": "media"
+  },
+  {
+   "id": "ar-002",
+   "feed": "Echorouk",
+   "feedCountry": "DZ",
+   "role": "national",
+   "title": "وضعية آيت نوري تتعقّد",
+   "country": "DZ",
+   "basis": "media",
+   "note": "Aït-Nouri, footballeur algérien"
+  },
+  {
+   "id": "ar-003",
+   "feed": "Echorouk",
+   "feedCountry": "DZ",
+   "role": "national",
+   "title": "الإِمَامُ المُتَّبَعُ",
+   "country": "DZ",
+   "basis": "media",
+   "note": "texte vocalisé"
+  },
+  {
+   "id": "ar-004",
+   "feed": "Echorouk",
+   "feedCountry": "DZ",
+   "role": "national",
+   "title": "توقيف 61 مغربيا كانوا بصدد التحضير لارتكاب أعمال تخريبية في الجزائر",
+   "country": "DZ",
+   "basis": "title",
+   "accept": [
+    "MA"
+   ],
+   "trap": "gentile-maghribi"
+  },
+  {
+   "id": "ar-005",
+   "feed": "Ennahar",
+   "feedCountry": "DZ",
+   "role": "national",
+   "title": "الجزائر تدين استهداف مطار الملك خالد بالرياض وتؤكد تضامنها الكامل مع السعودية",
+   "country": "DZ",
+   "basis": "title"
+  },
+  {
+   "id": "ar-006",
+   "feed": "Ennahar",
+   "feedCountry": "DZ",
+   "role": "national",
+   "title": "لوكا زيدان على موعد مع تربص استثنائي رفقة الخُضر !",
+   "country": "DZ",
+   "basis": "media",
+   "note": "« الخضر » : l’équipe nationale"
+  },
+  {
+   "id": "ar-007",
+   "feed": "Ennahar",
+   "feedCountry": "DZ",
+   "role": "national",
+   "title": "وزير الصحة يشرف على تنصيب المدير العام الجديد للوكالة الوطنية للدم",
+   "country": "DZ",
+   "basis": "media"
+  },
+  {
+   "id": "ar-008",
+   "feed": "Ennahar",
+   "feedCountry": "DZ",
+   "role": "national",
+   "title": "زراعة الموز بجيجل.. نتائج واعدة وآفاق إنتاجية أكبر",
+   "country": "DZ",
+   "basis": "media",
+   "note": "Jijel"
+  },
+  {
+   "id": "ar-009",
+   "feed": "El Bilad",
+   "feedCountry": "DZ",
+   "role": "national",
+   "title": "\"اليوم ماشي يتيمة.. اليوم بنت الجزائر كامل\".. شهرزاد في عرس أسطوري #شاهدوا",
+   "country": "DZ",
+   "basis": "title"
+  },
+  {
+   "id": "ar-010",
+   "feed": "El Bilad",
+   "feedCountry": "DZ",
+   "role": "national",
+   "title": "\"تشري سيارة وتندم بسبب الغش\".. الفحص التقني يكشف المستور #شاهدوا",
+   "country": "DZ",
+   "basis": "media"
+  },
+  {
+   "id": "ar-011",
+   "feed": "El Bilad",
+   "feedCountry": "DZ",
+   "role": "national",
+   "title": "بولندا تستنفر أمنيا عقب معلومات عن هجوم محتمل يستهدف رئيس الوزراء ونائبه",
+   "country": "DZ",
+   "basis": "media",
+   "note": "Pologne : aucun pays africain"
+  },
+  {
+   "id": "ar-012",
+   "feed": "El Bilad",
+   "feedCountry": "DZ",
+   "role": "national",
+   "title": "الجزائر تبلغ عتبة أربعة ملايين أسرة موصولة بالألياف البصرية",
+   "country": "DZ",
+   "basis": "title"
+  },
+  {
+   "id": "ar-013",
+   "feed": "Al-Masry Al-Youm",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "الأمم المتحدة تدين هجوم الحوثيين على مطار الملك خالد في السعودية",
+   "country": "EG",
+   "basis": "media"
+  },
+  {
+   "id": "ar-014",
+   "feed": "Al-Masry Al-Youm",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "أمطار رعدية على هذه المناطق.. بيان مهم من الأرصاد يكشف حالة الطقس اليوم",
+   "country": "EG",
+   "basis": "media"
+  },
+  {
+   "id": "ar-015",
+   "feed": "Al-Masry Al-Youm",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "هل يدفع الطلاب فلوس لتصوير امتحانات أكتوبر 2026؟.. «التعليم» توجه رسالة حاسمة للمدارس",
+   "country": "EG",
+   "basis": "media"
+  },
+  {
+   "id": "ar-016",
+   "feed": "Al-Masry Al-Youm",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "«وداعًا لـAI».. مصطفى غريب وأبطال «ليلة عسل» يروجون للمسرحية بتريند الغناء بالإسبانية (فيديو)",
+   "country": "EG",
+   "basis": "media"
+  },
+  {
+   "id": "ar-017",
+   "feed": "Youm7",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "وزير الخارجية يبحث هاتفياً مع نظيرته اليمنية تطورات الأوضاع في المنطقة",
+   "country": "EG",
+   "basis": "media"
+  },
+  {
+   "id": "ar-018",
+   "feed": "Youm7",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "دار الإفتاء: غدا أول أيام شهر جمادى الأولى لعام 1448 هجريا",
+   "country": "EG",
+   "basis": "media"
+  },
+  {
+   "id": "ar-019",
+   "feed": "Youm7",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "رئيس الوزراء يستعرض محاور جلسة \"مصر الرقمية\" بمنتدى مصر 2026",
+   "country": "EG",
+   "basis": "title"
+  },
+  {
+   "id": "ar-020",
+   "feed": "Youm7",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "​تحفة إنشائية تخدم ملايين الركاب.. لقطات مبهرة لمحطة عدلي منصور المركزية",
+   "country": "EG",
+   "basis": "media"
+  },
+  {
+   "id": "ar-021",
+   "feed": "Masrawy",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "لأول مرة منذ 3 عقود.. وزير الخارجية يبدأ زيارة رسمية إلى تايلاند",
+   "country": "EG",
+   "basis": "media"
+  },
+  {
+   "id": "ar-022",
+   "feed": "Masrawy",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "مصرع طفل وإصابة آخر في انفجار كمبروسر داخل ورشة بالمنوفية",
+   "country": "EG",
+   "basis": "media",
+   "trap": "masra-death",
+   "note": "« مصرع » (décès) contient « مصر »"
+  },
+  {
+   "id": "ar-023",
+   "feed": "Masrawy",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "الحوثيون يعلنون شروطهم لوقف استهداف السعودية.. ما أبرز المطالب؟",
+   "country": "EG",
+   "basis": "media"
+  },
+  {
+   "id": "ar-024",
+   "feed": "Masrawy",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "طارق فهمي: كوريا الجنوبية وإندونيسيا أبدتا تفهمًا لمواقف مصر في الملفات المصيرية",
+   "country": "EG",
+   "basis": "title"
+  },
+  {
+   "id": "ar-025",
+   "feed": "Cairo24",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "جهاز 6 أكتوبر يواصل أعمال رفع كفاءة طرق المنطقة الصناعية لتيسير حركة النقل وخدمة المصانع",
+   "country": "EG",
+   "basis": "media",
+   "trap": "october-6-city",
+   "note": "« 6 أكتوبر » : ville, pas une date"
+  },
+  {
+   "id": "ar-026",
+   "feed": "Cairo24",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "أمير رمزي: علاج مليون طفل في 1000 قرية وتقديم 3 ملايين خدمة طبية بالتعاون مع مؤسسة البنك التجاري الدولي",
+   "country": "EG",
+   "basis": "media"
+  },
+  {
+   "id": "ar-027",
+   "feed": "Cairo24",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "زعم قدرته على العلاج الروحاني.. ضبط شخص بتهمة النصب على المواطنين وممارسة الدجل والشعوذة في الإسكندرية",
+   "country": "EG",
+   "basis": "title",
+   "note": "Alexandrie"
+  },
+  {
+   "id": "ar-028",
+   "feed": "Cairo24",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "انطلاق اختبارات اختيار أئمة القبلة بالجامع الأزهر لاختيار صفوة الكفاءات الصوتية والعلمية",
+   "country": "EG",
+   "basis": "media"
+  },
+  {
+   "id": "ar-029",
+   "feed": "Mada Masr",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "تضخُم الإنجازات",
+   "country": "EG",
+   "basis": "media"
+  },
+  {
+   "id": "ar-030",
+   "feed": "Mada Masr",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "أخلاقيات جونرا موسيقى المهرجانات وحرية التعبير",
+   "country": "EG",
+   "basis": "media"
+  },
+  {
+   "id": "ar-031",
+   "feed": "Mada Masr",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "تنفيسة أو نحدثكم من عنق الزجاجة",
+   "country": "EG",
+   "basis": "media"
+  },
+  {
+   "id": "ar-032",
+   "feed": "Mada Masr",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "النيابة: أحد صحفيي «متصدقش» أقر بانضمامهم إلى لجنة إعلامية إخوانية.. و«المبادرة»: بيان أضفى طابعًا إجراميًا غير حقيقي على أفعال مشروعة",
+   "country": "EG",
+   "basis": "media"
+  },
+  {
+   "id": "ar-033",
+   "feed": "Libya Observer",
+   "feedCountry": "LY",
+   "role": "national",
+   "title": "السيول تكشف ضعف البنية التحتية في ليبيا رغم وفرة الإيرادات النفطية",
+   "country": "LY",
+   "basis": "title"
+  },
+  {
+   "id": "ar-034",
+   "feed": "Libya Observer",
+   "feedCountry": "LY",
+   "role": "national",
+   "title": "ليبيا تستضيف الاجتماع الوزاري الرابع عشر لمجموعة العشرة الإفريقية لإصلاح مجلس الأمن",
+   "country": "LY",
+   "basis": "title"
+  },
+  {
+   "id": "ar-035",
+   "feed": "Libya Observer",
+   "feedCountry": "LY",
+   "role": "national",
+   "title": "المنفي يؤكد دعم ليبيا لحقوق الشعب الفلسطيني وتقرير مصيره",
+   "country": "LY",
+   "basis": "title",
+   "note": "Menfi"
+  },
+  {
+   "id": "ar-036",
+   "feed": "Libya Observer",
+   "feedCountry": "LY",
+   "role": "national",
+   "title": "الأمن الداخلي يحذر من تعطيل الدراسة ويهدد باتخاذ إجراءات قانونية",
+   "country": "LY",
+   "basis": "media"
+  },
+  {
+   "id": "ar-037",
+   "feed": "Al Marsad",
+   "feedCountry": "LY",
+   "role": "national",
+   "title": "روسيا.. ابتكار رادار سلبي يلتقط المسيّرات الصامتة برصد “خيالها”",
+   "country": "LY",
+   "basis": "media"
+  },
+  {
+   "id": "ar-038",
+   "feed": "Al Marsad",
+   "feedCountry": "LY",
+   "role": "national",
+   "title": "مواد كيميائية في الأسنان اللبنية تثير تساؤلات حول علاقتها بالتوحد",
+   "country": "LY",
+   "basis": "media"
+  },
+  {
+   "id": "ar-039",
+   "feed": "Al Marsad",
+   "feedCountry": "LY",
+   "role": "national",
+   "title": "صلاح يحقق رقما تاريخيا في الدوري التركي",
+   "country": "LY",
+   "basis": "media",
+   "note": "Salah, sans nom de pays"
+  },
+  {
+   "id": "ar-040",
+   "feed": "Al Marsad",
+   "feedCountry": "LY",
+   "role": "national",
+   "title": "برشلونة يحقق إنجازا تاريخيا",
+   "country": "LY",
+   "basis": "media"
+  },
+  {
+   "id": "ar-041",
+   "feed": "Al3omk",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "شيشاوة.. قرويون بجماعة سيدي المختار يطالبون بمحطة لتحلية المياه بسبب ملوحتها",
+   "country": "MA",
+   "basis": "media",
+   "note": "Chichaoua"
+  },
+  {
+   "id": "ar-042",
+   "feed": "Al3omk",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "انقطاع الماء بتازناخت لأزيد من يوم يفاقم معاناة الساكنة وسط استياء واسع",
+   "country": "MA",
+   "basis": "media",
+   "note": "Taznakht"
+  },
+  {
+   "id": "ar-043",
+   "feed": "Al3omk",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "حق التمدرس يصطدم بمعاناة التنقل.. تلاميذ “مغيميمة” يناشدون مسؤولي طاطا (صور)",
+   "country": "MA",
+   "basis": "media",
+   "note": "Tata"
+  },
+  {
+   "id": "ar-044",
+   "feed": "Al3omk",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "ماذا نختار…الأغلبية أم المعارضة؟",
+   "country": "MA",
+   "basis": "media"
+  },
+  {
+   "id": "ar-045",
+   "feed": "Hespress",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "أمريكا تحقق مع خمس شبكات إعلامية",
+   "country": "MA",
+   "basis": "media"
+  },
+  {
+   "id": "ar-046",
+   "feed": "Hespress",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "إصابات في هجوم جديد على مطار الرياض",
+   "country": "MA",
+   "basis": "media"
+  },
+  {
+   "id": "ar-047",
+   "feed": "Hespress",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "جنرال أمريكي: المغرب مصدر للأمن",
+   "country": "MA",
+   "basis": "title"
+  },
+  {
+   "id": "ar-048",
+   "feed": "Hespress",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "بعد اصطفاف \"الحصان\" خارج الحكومة.. أوزين ينتظر عرض المنصوري",
+   "country": "MA",
+   "basis": "media"
+  },
+  {
+   "id": "ar-049",
+   "feed": "Alyaoum24",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "توقيع اتفاقية بين ستة قطاعات وزارية ومؤسستين عموميتين لدعم تمدرس وإدماج الأشخاص في وضعية إعاقة",
+   "country": "MA",
+   "basis": "media"
+  },
+  {
+   "id": "ar-050",
+   "feed": "Alyaoum24",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "رئيس جهة الرباط سابقا يدعو إلى نقل ورش الجهوية إلى رئاسة الحكومة واختيار وزير داخلية يؤمن بدور الجماعات الترابية",
+   "country": "MA",
+   "basis": "title",
+   "note": "جهة الرباط"
+  },
+  {
+   "id": "ar-051",
+   "feed": "Alyaoum24",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "الهاكا تكشف تفاوت الحضور الرقمي للأحزاب المغربية بين النشر والتفاعل",
+   "country": "MA",
+   "basis": "title",
+   "note": "adjectif"
+  },
+  {
+   "id": "ar-052",
+   "feed": "Alyaoum24",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "الصحف الإسبانية ترصد دلالات ورسائل خطاب الملك محمد السادس بشأن الهجرة والعلاقات الثنائية",
+   "country": "MA",
+   "basis": "title",
+   "note": "dirigeant : Mohammed VI"
+  },
+  {
+   "id": "ar-053",
+   "feed": "Barlamane",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "المنتخب الوطني النسوي لأقل من 17 سنة يواصل استعداداته لكأس العالم",
+   "country": "MA",
+   "basis": "media"
+  },
+  {
+   "id": "ar-054",
+   "feed": "Barlamane",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "خبير مكسيكي: الخطاب الملكي يرسم ملامح مرحلة جديدة من التحول الاقتصادي والاجتماعي بالمغرب",
+   "country": "MA",
+   "basis": "title",
+   "trap": "proclitic-bi",
+   "note": "« بالمغرب »"
+  },
+  {
+   "id": "ar-055",
+   "feed": "Barlamane",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "تراجع صادرات إسبانيا الزراعية والغذائية نحو المغرب خلال النصف الأول من 2026",
+   "country": "MA",
+   "basis": "title"
+  },
+  {
+   "id": "ar-056",
+   "feed": "Barlamane",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "الكونغو الديمقراطية.. “إيبولا” يودي بحياة 4242 شخصا",
+   "country": "CD",
+   "basis": "title",
+   "note": "média marocain, sujet congolais"
+  },
+  {
+   "id": "ar-057",
+   "feed": "Sahara Medias",
+   "feedCountry": "MR",
+   "role": "national",
+   "title": "موريتانيا تدين استهداف مطار الرياض وتدعو إلى اتخاذ موقف حازم",
+   "country": "MR",
+   "basis": "title"
+  },
+  {
+   "id": "ar-058",
+   "feed": "Sahara Medias",
+   "feedCountry": "MR",
+   "role": "national",
+   "title": "بجائزة «الهرم الذهبي».. مهرجان القاهرة يكرم المخرج الموريتاني عبد الرحمن سيساكو",
+   "country": "MR",
+   "basis": "title",
+   "accept": [
+    "EG"
+   ]
+  },
+  {
+   "id": "ar-059",
+   "feed": "Sahara Medias",
+   "feedCountry": "MR",
+   "role": "national",
+   "title": "وفاة 139 مهاجرا وفقدان 116 إثر غرق قارب قبالة سواحل جيبوتي",
+   "country": "DJ",
+   "basis": "title",
+   "note": "média mauritanien, naufrage au large de Djibouti"
+  },
+  {
+   "id": "ar-060",
+   "feed": "Sahara Medias",
+   "feedCountry": "MR",
+   "role": "national",
+   "title": "سيدي سالم يعترض على خلاصات تحقيق محطتي الكهرباء",
+   "country": "MR",
+   "basis": "media"
+  },
+  {
+   "id": "ar-061",
+   "feed": "Dabanga",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "ساعد في بقاء دبنقا على الهواء",
+   "country": "SD",
+   "basis": "media"
+  },
+  {
+   "id": "ar-062",
+   "feed": "Dabanga",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "النيل الأزرق: نزوح من الدمازين والرصيرص وارتفاع عدد ضحايا “أبو شندي” إلى 32",
+   "country": "SD",
+   "basis": "media",
+   "note": "Nil Bleu, Damazin"
+  },
+  {
+   "id": "ar-063",
+   "feed": "Dabanga",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "ارتفاع أسعار الخبز بالخرطوم والولايات بسبب قفزات تكاليف الإنتاج",
+   "country": "SD",
+   "basis": "title",
+   "note": "Khartoum"
+  },
+  {
+   "id": "ar-064",
+   "feed": "Dabanga",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "إدانات سودانية واسعة للعمليات الحوثية ضد السعودية",
+   "country": "SD",
+   "basis": "title",
+   "note": "adjectif"
+  },
+  {
+   "id": "ar-065",
+   "feed": "Al Nilin",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "والي البحر الأحمر يدشن مشروع 23 محطة تحلية مياه",
+   "country": "SD",
+   "basis": "media"
+  },
+  {
+   "id": "ar-066",
+   "feed": "Al Nilin",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "السودان يدين الاعتداء الحوثي الإرهابي على مطار الملك خالد الدولي بالرياض",
+   "country": "SD",
+   "basis": "title"
+  },
+  {
+   "id": "ar-067",
+   "feed": "Al Nilin",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "صندوق الإسكان والتعمير بالخرطوم يواصل تسليم المستحقين منازلهم",
+   "country": "SD",
+   "basis": "title",
+   "note": "Khartoum"
+  },
+  {
+   "id": "ar-068",
+   "feed": "Al Nilin",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "مبابي قد يرحل عن ريال مدريد.. مورينيو السبب؟",
+   "country": "SD",
+   "basis": "media"
+  },
+  {
+   "id": "ar-069",
+   "feed": "Al Sudani",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "الخارجية تدين الاعتداء الحوثي على مطار الملك خالد بالرياض",
+   "country": "SD",
+   "basis": "media"
+  },
+  {
+   "id": "ar-070",
+   "feed": "Al Sudani",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "حكومة جنوب كردفان تؤدي واجب العزاء في شهداء قصف حركة الحلو على كادقلي",
+   "country": "SD",
+   "basis": "media",
+   "trap": "south-kordofan",
+   "note": "« جنوب كردفان » n’est pas le Soudan du Sud"
+  },
+  {
+   "id": "ar-071",
+   "feed": "Al Sudani",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "*خذوا إعادة التأهيل من الصحة.. نموذجٌ يُحتذى*",
+   "country": "SD",
+   "basis": "media"
+  },
+  {
+   "id": "ar-072",
+   "feed": "Al Sudani",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "الأمم المتحدة تدين الهجوم على معسكر ود الماحي للنازحين",
+   "country": "SD",
+   "basis": "media"
+  },
+  {
+   "id": "ar-073",
+   "feed": "Sudan Tribune",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "ناجون: مقتل أكثر من (200) معدن في غارات جوية على مناجم قرب الحدود المصرية",
+   "country": "SD",
+   "basis": "media",
+   "accept": [
+    "EG"
+   ],
+   "trap": "egyptian-border"
+  },
+  {
+   "id": "ar-074",
+   "feed": "Sudan Tribune",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "بنك السودان يسرّع إصدار أوراق مالية لتمويل عجز الموازنة وسط جدل اقتصادي",
+   "country": "SD",
+   "basis": "title",
+   "trap": "maliya-finance",
+   "note": "« مالية » (financier) n’est pas le Mali"
+  },
+  {
+   "id": "ar-075",
+   "feed": "Sudan Tribune",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "مقتل وإصابة عشرات المعدنيين السودانيين قرب الحدود المصرية",
+   "country": "SD",
+   "basis": "title",
+   "accept": [
+    "EG"
+   ],
+   "trap": "egyptian-border"
+  },
+  {
+   "id": "ar-076",
+   "feed": "Sudan Tribune",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "الخرطوم تؤجل بداية العام الدراسي إلى 18 أكتوبر",
+   "country": "SD",
+   "basis": "title",
+   "note": "Khartoum"
+  },
+  {
+   "id": "ar-077",
+   "feed": "Al Taghyeer",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "التحريض على قتل الأستاذة رشا عوض: الإرهاب في مواجهة الكلمة الحرة",
+   "country": "SD",
+   "basis": "media"
+  },
+  {
+   "id": "ar-078",
+   "feed": "Al Taghyeer",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "على خلفية تهديدها بالقتل.. كيف أرعبت رشا عوض الإسلامويين؟",
+   "country": "SD",
+   "basis": "media"
+  },
+  {
+   "id": "ar-079",
+   "feed": "Al Taghyeer",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "لجان مقاومة أمري تنتقد تصريحات الفنان محمد النصري وتؤكد التمسك بذاكرة المنطقة",
+   "country": "SD",
+   "basis": "media"
+  },
+  {
+   "id": "ar-080",
+   "feed": "Al Taghyeer",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "السودانوية ومدرسة الغابة والصحراء",
+   "country": "SD",
+   "basis": "title",
+   "trap": "sahara-desert",
+   "note": "« الصحراء » : le désert, pas le Sahara occidental"
+  },
+  {
+   "id": "ar-081",
+   "feed": "Al-Somal Al-Jadid",
+   "feedCountry": "SO",
+   "role": "national",
+   "title": "مصر تضع اللمسات الأخيرة لنشر قواتها في الصومال",
+   "country": "SO",
+   "basis": "title",
+   "accept": [
+    "EG"
+   ]
+  },
+  {
+   "id": "ar-082",
+   "feed": "Al-Somal Al-Jadid",
+   "feedCountry": "SO",
+   "role": "national",
+   "title": "المخابرات الصومالية تعلن اغتيال قيادي في حركة الشباب",
+   "country": "SO",
+   "basis": "title",
+   "trap": "somali-contains-mali"
+  },
+  {
+   "id": "ar-083",
+   "feed": "Al-Somal Al-Jadid",
+   "feedCountry": "SO",
+   "role": "national",
+   "title": "الصومال والنرويج تبحثان النمو الاقتصادي والإصلاحات المالية في مقديشو",
+   "country": "SO",
+   "basis": "title",
+   "trap": "maliya-finance"
+  },
+  {
+   "id": "ar-084",
+   "feed": "Al-Somal Al-Jadid",
+   "feedCountry": "SO",
+   "role": "national",
+   "title": "رئيس الوزراء الصومالي يرعى حفل تخرج الدفعة الثانية عشرة من قوات “دنب” الخاصة في شبيلي السفلى",
+   "country": "SO",
+   "basis": "title",
+   "trap": "somali-contains-mali"
+  },
+  {
+   "id": "ar-085",
+   "feed": "Babnet",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "منظمة الصحة العالمية بتونس تشدد على أهمية الدعم النفسي والإنصات دون أحكام لضحايا الضغوط النفسية",
+   "country": "TN",
+   "basis": "title",
+   "trap": "proclitic-bi"
+  },
+  {
+   "id": "ar-086",
+   "feed": "Babnet",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "النادي الصفاقسي: محادثات متقدمة مع المدرب نبيل الكوكي لإنهاء العلاقة التعاقدية (الكاتب العام المساعد)",
+   "country": "TN",
+   "basis": "media",
+   "note": "club de Sfax"
+  },
+  {
+   "id": "ar-087",
+   "feed": "Babnet",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "جماعة الحوثي تصدر تحذيرا جديدا لقطاع الملاحة الجوية في المملكة العربية السعودية",
+   "country": "TN",
+   "basis": "media"
+  },
+  {
+   "id": "ar-088",
+   "feed": "Babnet",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "مجلس وزاري لتطوير حوكمة الشركات الأهلية وتسريع إحداثها",
+   "country": "TN",
+   "basis": "media"
+  },
+  {
+   "id": "ar-089",
+   "feed": "Mosaïque FM",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "البطولة الانقليزية: مانشستر سيتي يفوز على ليفربول بثلاثية ويعزز صدارته",
+   "country": "TN",
+   "basis": "media"
+  },
+  {
+   "id": "ar-090",
+   "feed": "Mosaïque FM",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "ترامب: روسيا وأوكرانيا تتّفقان على وقف استهداف منشآت الطاقة",
+   "country": "TN",
+   "basis": "media"
+  },
+  {
+   "id": "ar-091",
+   "feed": "Mosaïque FM",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "بعد الهزيمة أمام ساقية الداير.. الكوكي يقترب من مغادرة النادي الصفاقسي",
+   "country": "TN",
+   "basis": "media"
+  },
+  {
+   "id": "ar-092",
+   "feed": "Mosaïque FM",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "الرابطة الأولى: مباريات الدفعة الثانية من الجولة الخامسة",
+   "country": "TN",
+   "basis": "media"
+  },
+  {
+   "id": "ar-093",
+   "feed": "Alchourouk",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "حاجب العيون: بعد 11 سنة من الفرار الإطاحة بشخص محلّ 77 منشور تفتيش",
+   "country": "TN",
+   "basis": "media"
+  },
+  {
+   "id": "ar-094",
+   "feed": "Alchourouk",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "الترجي الرياضي يفوز ودّيًا على نجم الفحص",
+   "country": "TN",
+   "basis": "media"
+  },
+  {
+   "id": "ar-095",
+   "feed": "Alchourouk",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "فايا يونان في اختتام أيام قرطاج الموسيقية: \"نرجعلك ديما\"",
+   "country": "TN",
+   "basis": "media",
+   "note": "Carthage"
+  },
+  {
+   "id": "ar-096",
+   "feed": "Alchourouk",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "وزارة تكنولوجيات الاتصال: تطبيقة «خدمات» متاحة للتحميل على «آبل ستور»",
+   "country": "TN",
+   "basis": "media"
+  },
+  {
+   "id": "ar-097",
+   "feed": "Nawaat",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "Médias en Tunisie : il était une fois le service public",
+   "country": "TN",
+   "basis": "title",
+   "note": "titre en français dans un flux arabe"
+  },
+  {
+   "id": "ar-098",
+   "feed": "Nawaat",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "Violences sexuelles en Tunisie: Ce que révèle l’affaire Yakine",
+   "country": "TN",
+   "basis": "title",
+   "note": "titre en français dans un flux arabe"
+  },
+  {
+   "id": "ar-099",
+   "feed": "Nawaat",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "نواة في دقيقة: إضراب الجوع الرياضة الأولى في تونس",
+   "country": "TN",
+   "basis": "title"
+  },
+  {
+   "id": "ar-100",
+   "feed": "Nawaat",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "بعد 9 أيام مشيا على الأقدام، مسيرة الكرامة تطل على العاصمة",
+   "country": "TN",
+   "basis": "media"
+  },
+  {
+   "id": "ar-101",
+   "feed": "Qiraat Afriqiya (قراءات إفريقية)",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "بوركينا فاسو تدعو إلى «الوطنية الاقتصادية» وتعلن خطة طوارئ",
+   "country": "BF",
+   "basis": "title"
+  },
+  {
+   "id": "ar-102",
+   "feed": "Qiraat Afriqiya (قراءات إفريقية)",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "جنوب إفريقيا تسحب توجيهًا يسمح بقبول طلبات اللجوء",
+   "country": "ZA",
+   "basis": "title",
+   "trap": "south-africa-janub"
+  },
+  {
+   "id": "ar-103",
+   "feed": "Qiraat Afriqiya (قراءات إفريقية)",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "خريطة تفاعلية: إثيوبيا والقرن الإفريقي بعيون إسرائيلية",
+   "country": "ET",
+   "basis": "title"
+  },
+  {
+   "id": "ar-104",
+   "feed": "Qiraat Afriqiya (قراءات إفريقية)",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "حزب “الديمقراطيون” المعارض في بنين ينتخب قيادة جديدة",
+   "country": "BJ",
+   "basis": "title"
+  },
+  {
+   "id": "ar-105",
+   "feed": "Qiraat Afriqiya (قراءات إفريقية)",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "109 قتلى و116 مفقودا في غرق قارب قبالة جيبوتي",
+   "country": "DJ",
+   "basis": "title"
+  },
+  {
+   "id": "ar-106",
+   "feed": "Qiraat Afriqiya (قراءات إفريقية)",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "إثيوبيا والقرن الإفريقي بعيون إسرائيلية: صراع النفوذ وأمن الممرات البحرية",
+   "country": "ET",
+   "basis": "title"
+  },
+  {
+   "id": "ar-107",
+   "feed": "Asharq Al-Awsat — Afrique",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "رئيس جهاز الاستخبارات الإثيوبي يصل في طائرة إلى ميكيلي مع استئناف الرحلات",
+   "country": "ET",
+   "basis": "title",
+   "note": "adjectif ; Mekele"
+  },
+  {
+   "id": "ar-108",
+   "feed": "Asharq Al-Awsat — Afrique",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "إثيوبيا تستعيد السيطرة على مدينة حدودية بعد أنباء عن توغل إريتري",
+   "country": "ET",
+   "basis": "title",
+   "accept": [
+    "ER"
+   ]
+  },
+  {
+   "id": "ar-109",
+   "feed": "Asharq Al-Awsat — Afrique",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "التصعيد الإثيوبي - الإريتري يثير مخاوف من مواجهة مفتوحة",
+   "country": "ET",
+   "basis": "title",
+   "accept": [
+    "ER"
+   ]
+  },
+  {
+   "id": "ar-110",
+   "feed": "Asharq Al-Awsat — Afrique",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "تحذيرات أمنية قبل 100 يوم من الانتخابات الرئاسية النيجيرية",
+   "country": "NG",
+   "basis": "title",
+   "trap": "niger-vs-nigeria"
+  },
+  {
+   "id": "ar-111",
+   "feed": "Asharq Al-Awsat — Afrique",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "الجيش المالي يوجه ضربات لمواقع المتمردين قرب حدود الجزائر",
+   "country": "ML",
+   "basis": "title",
+   "accept": [
+    "DZ"
+   ],
+   "trap": "mali-adjective",
+   "note": "« الجيش المالي » : l’armée malienne"
+  },
+  {
+   "id": "ar-112",
+   "feed": "Asharq Al-Awsat — Afrique",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "وفاة أول مصاب بـ«إيبولا» في كينيا بعد انتقال العدوى من الكونغو",
+   "country": "KE",
+   "basis": "title",
+   "accept": [
+    "CD"
+   ]
+  },
+  {
+   "id": "ar-113",
+   "feed": "Anadolu (arabe)",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "اليمن.. غارات جوية تستهدف مواقع وآليات للحوثيين في تعز",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "ar-114",
+   "feed": "Anadolu (arabe)",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "خلال أسبوع.. 9 هجمات على 5 مطارات سعودية تخلف 19 قتيلا ومئات المصابين",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "ar-115",
+   "feed": "Anadolu (arabe)",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "إرهاب المستوطنين بالضفة.. إصابات واحتجاز نساء خلال موسم قطف الزيتون",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "ar-116",
+   "feed": "Anadolu (arabe)",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "تنس.. الألماني زفيريف يتجاوز بصعوبة الفرنسي هاليس في بطولة شنغهاي",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "ar-117",
+   "feed": "Anadolu (arabe)",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "ترامب يعلن \"هدنة طاقة\" بين روسيا وأوكرانيا",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "ar-118",
+   "feed": "Anadolu (arabe)",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "الحكومة اليمنية: الحوثي تستهدف مسجدا بتعز أثناء وجود مصلين بداخله",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "ar-119",
+   "feed": "Asharq Al-Awsat",
+   "feedCountry": null,
+   "role": "world",
+   "title": "«الدوري الفرنسي»: رين يواصل صراع الصدارة بفوز «رباعي» على أوكسير",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false,
+   "note": "championnat de France"
+  },
+  {
+   "id": "ar-120",
+   "feed": "Asharq Al-Awsat",
+   "feedCountry": null,
+   "role": "world",
+   "title": "وزير الاقتصاد الياباني: التعاون مع السعودية ضرورة لضمان أمن الطاقة العالمي",
+   "country": null,
+   "basis": "none",
+   "region": "asie-pacifique",
+   "africa": [],
+   "touchesAfrica": false,
+   "regionAccept": [
+    "moyen-orient",
+    null
+   ]
+  },
+  {
+   "id": "ar-121",
+   "feed": "Asharq Al-Awsat",
+   "feedCountry": null,
+   "role": "world",
+   "title": "ليفربول يستعد لاستقبال مانشستر سيتي بغضب المدرجات بعد إدانته مالياً",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false,
+   "trap": "maliyan-finance",
+   "note": "« مالياً » (financièrement) n’est pas le Mali"
+  },
+  {
+   "id": "ar-122",
+   "feed": "Asharq Al-Awsat",
+   "feedCountry": null,
+   "role": "world",
+   "title": "أربيلوا يأسف على خسارة فولهام أمام إيبسويتش تاون",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-123",
+   "feed": "Asharq Al-Awsat",
+   "feedCountry": null,
+   "role": "world",
+   "title": "الاتحاد الأوروبي وأوكرانيا ينتقدان اتفاق الديزل بين ترمب وبوتين",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-124",
+   "feed": "Sky News Arabia",
+   "feedCountry": null,
+   "role": "world",
+   "title": "ضحية هجوم مطار الرياض.. هكذا وصل \"الخبر الأليم\" إلى مصر",
+   "country": "EG",
+   "basis": "title",
+   "region": "moyen-orient",
+   "africa": [
+    "EG"
+   ],
+   "touchesAfrica": true
+  },
+  {
+   "id": "ar-125",
+   "feed": "Sky News Arabia",
+   "feedCountry": null,
+   "role": "world",
+   "title": "القبض على سيدة عمرها 83 عاما بسبب \"حيازة المخدرات\"",
+   "country": null,
+   "basis": "none",
+   "region": null,
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-126",
+   "feed": "Sky News Arabia",
+   "feedCountry": null,
+   "role": "world",
+   "title": "تحذير غربي: روسيا تخطط لاغتيال قادة دفاع أوروبيين",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-127",
+   "feed": "Sky News Arabia",
+   "feedCountry": null,
+   "role": "world",
+   "title": "صدمة عائلية في أميركا.. 5 ضحايا في حادثة \"قتل وانتحار\"",
+   "country": null,
+   "basis": "none",
+   "region": "ameriques",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-128",
+   "feed": "Sky News Arabia",
+   "feedCountry": null,
+   "role": "world",
+   "title": "المالكي: الاعتداء على المطار عمل إرهابي وسنرد عليه بحزم",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false,
+   "regionAccept": [
+    null
+   ],
+   "trap": "maliki-not-mali",
+   "note": "« المالكي » : nom propre"
+  },
+  {
+   "id": "ar-129",
+   "feed": "Al Jazeera",
+   "feedCountry": null,
+   "role": "world",
+   "title": "عشرات الأعلام الإسرائيلية أمام مقهى فلسطيني.. ما القصة؟",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-130",
+   "feed": "Al Jazeera",
+   "feedCountry": null,
+   "role": "world",
+   "title": "باسم رئيس رماة السلطان الفاتح.. مدرسة \"أوقجو موسى\" شاهدة على قرنين من تحولات إسطنبول",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false,
+   "regionAccept": [
+    "moyen-orient"
+   ],
+   "note": "Istanbul"
+  },
+  {
+   "id": "ar-131",
+   "feed": "Al Jazeera",
+   "feedCountry": null,
+   "role": "world",
+   "title": "مقتل شاب بين فكي نمر في بريطانيا يثير الصدمة والذهول.. كيف تفاعلت المنصات؟",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-132",
+   "feed": "Al Jazeera",
+   "feedCountry": null,
+   "role": "world",
+   "title": "هذه حصيلة عملية \"فجر اليمن\" في أسبوعها الأول",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-133",
+   "feed": "Al Jazeera",
+   "feedCountry": null,
+   "role": "world",
+   "title": "الاستعانة بمجرمين ومواطنين.. روسيا والصين أخطر المتجسسين على أوروبا",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-134",
+   "feed": "France 24",
+   "feedCountry": null,
+   "role": "world",
+   "title": "تغطية خاصة لنتائج الانتخابات التمهيدية للحزب الإشتراكي",
+   "country": null,
+   "basis": "none",
+   "region": null,
+   "africa": [],
+   "touchesAfrica": false,
+   "note": "primaires socialistes : aucun lieu dans le titre"
+  },
+  {
+   "id": "ar-135",
+   "feed": "France 24",
+   "feedCountry": null,
+   "role": "world",
+   "title": "ترامب يعلن توصل أوكرانيا وروسيا لاتفاق بوقف الهجمات المتبادلة على منشآت الطاقة",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-136",
+   "feed": "France 24",
+   "feedCountry": null,
+   "role": "world",
+   "title": "الأمم المتحدة: ارتفاع حصيلة غرق مركب المهاجرين قبالة سواحل جيبوتي إلى 139 قتيلا",
+   "country": "DJ",
+   "basis": "title",
+   "region": null,
+   "africa": [
+    "DJ"
+   ],
+   "touchesAfrica": true
+  },
+  {
+   "id": "ar-137",
+   "feed": "France 24",
+   "feedCountry": null,
+   "role": "world",
+   "title": "قصف مطار الرياض.. ضحايا بالعشرات ووعيد سعودي بالرد",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-138",
+   "feed": "France 24",
+   "feedCountry": null,
+   "role": "world",
+   "title": "الديزل الروسي يعود للأسواق.. ماذا عن أوروبا؟",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-139",
+   "feed": "Euronews",
+   "feedCountry": null,
+   "role": "world",
+   "title": "من مضيق هرمز إلى المنشآت النووية.. ما الذي يمنع انفجار الحرب مجددًا بين واشنطن وطهران؟",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-140",
+   "feed": "Euronews",
+   "feedCountry": null,
+   "role": "world",
+   "title": "\"سنرسله للقاء هنية في أعماق الجحيم\".. كاتس يهدّد باغتيال خليل الحية ويتهم أردوغان بدعم أنشطة \"حماس\"",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-141",
+   "feed": "Euronews",
+   "feedCountry": null,
+   "role": "world",
+   "title": "وسط التوتر مع الصين.. تايوان تؤكد أن زيادة إنفاقها الدفاعي تهدف إلى \"منع نشوب حرب\"",
+   "country": null,
+   "basis": "none",
+   "region": "asie-pacifique",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-142",
+   "feed": "Euronews",
+   "feedCountry": null,
+   "role": "world",
+   "title": "ذعر في بنما.. زلزال بقوة 7.7 درجات يضرب البلاد ويتسبب بانهيار كاتدرائية وسط تحذيرات من تسونامي",
+   "country": null,
+   "basis": "none",
+   "region": "ameriques",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-143",
+   "feed": "Euronews",
+   "feedCountry": null,
+   "role": "world",
+   "title": "\"نتنياهو سوّق أوهام إسقاط النظام\".. يائير غولان يعتبر اغتيال خامنئي \"خطأ\" عزّز التطرّف",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-144",
+   "feed": "CNN Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "مصر: تراجع عجز الموازنة إلى 5.8% من الناتج المحلي الإجمالي",
+   "country": "EG",
+   "basis": "title",
+   "region": null,
+   "africa": [
+    "EG"
+   ],
+   "touchesAfrica": true
+  },
+  {
+   "id": "ar-145",
+   "feed": "CNN Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "بعد هجوم مطار الرياض الدامي.. ما الخيارات المتاحة أمام السعودية للرد على الحوثيين؟",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-146",
+   "feed": "CNN Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "هل تستطيع السعودية الدفاع عن نفسها ضد الحوثيين؟ ترامب يعلق",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-147",
+   "feed": "CNN Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "أبرز تفاصيل الدورة الـ47 من مهرجان القاهرة السينمائي الدولي",
+   "country": "EG",
+   "basis": "title",
+   "region": null,
+   "africa": [
+    "EG"
+   ],
+   "touchesAfrica": true,
+   "note": "festival du Caire"
+  },
+  {
+   "id": "ar-148",
+   "feed": "CNN Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "تركيا تدين هجمات الحوثيين على السعودية وتدعو إلى \"موقف حازم\"",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-149",
+   "feed": "Arabi21",
+   "feedCountry": null,
+   "role": "world",
+   "title": "ملاحظات على أداء المصارف المصرية",
+   "country": "EG",
+   "basis": "title",
+   "region": null,
+   "africa": [
+    "EG"
+   ],
+   "touchesAfrica": true,
+   "trap": "masarif-bank",
+   "note": "« المصارف » (banques) contient « مصر » ; « المصرية » est le vrai indice"
+  },
+  {
+   "id": "ar-150",
+   "feed": "Arabi21",
+   "feedCountry": null,
+   "role": "world",
+   "title": "\"معاريف\": تحذير مرعب من تكرار الأخطاء السابقة والوصول إلى كارثة",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false,
+   "regionAccept": [
+    null
+   ],
+   "note": "Maariv, journal israélien"
+  },
+  {
+   "id": "ar-151",
+   "feed": "Arabi21",
+   "feedCountry": null,
+   "role": "world",
+   "title": "تركيا وإسرائيل ومصر.. من يشعل النار ومن يطفئها في القرن الأفريقي؟",
+   "country": "EG",
+   "basis": "title",
+   "region": "moyen-orient",
+   "africa": [
+    "EG"
+   ],
+   "touchesAfrica": true,
+   "regionAccept": [
+    null
+   ],
+   "note": "Corne de l’Afrique"
+  },
+  {
+   "id": "ar-152",
+   "feed": "Arabi21",
+   "feedCountry": null,
+   "role": "world",
+   "title": "رضائي يهدد باستهداف أصول أمريكية في الإمارات إذا وقعت مواجهة أخرى",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-153",
+   "feed": "Arabi21",
+   "feedCountry": null,
+   "role": "world",
+   "title": "\"حماس\": التهديد باغتيال خليل الحية لن يغير نهجنا في المقاومة",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-154",
+   "feed": "DW Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "تقرير: هجمات الحوثيين تربك عودة وزيرة الاقتصاد الألمانية من الرياض",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false,
+   "regionAccept": [
+    "europe"
+   ]
+  },
+  {
+   "id": "ar-155",
+   "feed": "DW Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "عيد ميلاد بوتين يلاحق شرودر.. دعوات لطرده من الاشتراكي الألماني",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-156",
+   "feed": "DW Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "البنتاغون يعتزم بث عملية إعدام على المباشر وسط جدل كبير",
+   "country": null,
+   "basis": "none",
+   "region": "ameriques",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-157",
+   "feed": "DW Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "ُشبِّه بـ\"الملك الشمس\" .. وزير ألماني يتخلى عن \"كرسي شاطئ\" بعد عاصفة من الانتقادات",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-158",
+   "feed": "DW Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "قصة تعاون ضد الأوبئة.. كيف ربط فيروس بين ألمانيا وكوسوفو؟",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-159",
+   "feed": "BBC Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "السعودية تعلن وقوع إصابات بهجوم صاروخي جديد استهدف مطار الرياض اليوم، وارتفاع عدد قتلى هجوم يوم السبت إلى 13",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-160",
+   "feed": "BBC Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "خروج القاتلة الأمريكية كريستا بايك من المستشفى بعد 10 أيام من محاولة إعدام فاشلة",
+   "country": null,
+   "basis": "none",
+   "region": "ameriques",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-161",
+   "feed": "BBC Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "ما هو \"الاكتئاب المبتسم\" وكيف تعرف إذا كنت مصاباً به؟",
+   "country": null,
+   "basis": "none",
+   "region": null,
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-162",
+   "feed": "BBC Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "شركة أرامكو هدف لهجمات الحوثيين، فما أهميتها للسعودية؟",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-163",
+   "feed": "BBC Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "الذكاء الاصطناعي يدعم فحوصات الموجات فوق الصوتية للجنين",
+   "country": null,
+   "basis": "none",
+   "region": null,
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-164",
+   "feed": "Al-Quds Al-Arabi",
+   "feedCountry": null,
+   "role": "world",
+   "title": "خليل حاوي… من حلم النهضة إلى نهر الرماد",
+   "country": null,
+   "basis": "none",
+   "region": null,
+   "africa": [],
+   "touchesAfrica": false,
+   "note": "poète libanais non situé"
+  },
+  {
+   "id": "ar-165",
+   "feed": "Al-Quds Al-Arabi",
+   "feedCountry": null,
+   "role": "world",
+   "title": "الحوثيون يوسّعون هجماتهم على المطارات والنفط السعودي… و«التحالف» يتوعّد برد حازم",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-166",
+   "feed": "Al-Quds Al-Arabi",
+   "feedCountry": null,
+   "role": "world",
+   "title": "مقتل 139 مهاجرا في غرق قارب متوجّه من جيبوتي إلى اليمن",
+   "country": "DJ",
+   "basis": "title",
+   "region": "moyen-orient",
+   "africa": [
+    "DJ"
+   ],
+   "touchesAfrica": true
+  },
+  {
+   "id": "ar-167",
+   "feed": "Al-Quds Al-Arabi",
+   "feedCountry": null,
+   "role": "world",
+   "title": "مَحمد كريشان يقرأ سبع سنوات من حكم قيس سعيد",
+   "country": "TN",
+   "basis": "title",
+   "region": null,
+   "africa": [
+    "TN"
+   ],
+   "touchesAfrica": true,
+   "note": "dirigeant : Kaïs Saïed"
+  },
+  {
+   "id": "ar-168",
+   "feed": "Al-Quds Al-Arabi",
+   "feedCountry": null,
+   "role": "world",
+   "title": "حفتر يثبّت رئاسة البرلمان الجديدة بدعم دولي وانقسام القضاء يعقّد مسار الانتخابات في ليبيا",
+   "country": "LY",
+   "basis": "title",
+   "region": null,
+   "africa": [
+    "LY"
+   ],
+   "touchesAfrica": true,
+   "note": "Haftar, Libye"
+  },
+  {
+   "id": "ar-169",
+   "feed": "Alhurra",
+   "feedCountry": null,
+   "role": "world",
+   "title": "من فلاي دبي إلى فيرفورد.. مخاوف من عودة الإرهاب سلسلة حوادث وتحذيرات أمنية في الشرق الأوسط وأوروبا أثارت القلق من تصاعد التهديدات الإرهابية.",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false,
+   "regionAccept": [
+    "europe"
+   ]
+  },
+  {
+   "id": "ar-170",
+   "feed": "Alhurra",
+   "feedCountry": null,
+   "role": "world",
+   "title": "رغم التهديدات: تركيا تلتزم الحذر العسكري في البحر الأسود اتساع نطاق الحرب الروسية الأوكرانية في حوض البحر المتوسط يهدد حركة الملاحة البحرية.",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-171",
+   "feed": "Alhurra",
+   "feedCountry": null,
+   "role": "world",
+   "title": "ناشطون معارضون: إبعاد ضباط من الجيش الإيراني وسط إعادة هيكلة قرارات إعادة هيكلة القوات المسلحة الإيرانية تبدو خطوة استباقية لأي تحرك يهدد استقرار النظام.",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-172",
+   "feed": "Alhurra",
+   "feedCountry": null,
+   "role": "world",
+   "title": "المساعدات الصينية في الأراضي الفلسطينية: وعود كبيرة ومساعدات محدودة تُقدَّر تكلفة التعافي الكامل لقطاع غزة بنحو 71.4 مليار دولار. وبعد تسعة أشهر من تعهّد شي جين بينغ بتقديم 100 مليون دولار للتخفيف من الأزمة هناك، لم تكشف بكين عن حجم ما أنفقته من هذا المبلغ.",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false,
+   "regionAccept": [
+    "asie-pacifique"
+   ]
+  },
+  {
+   "id": "ar-173",
+   "feed": "Alhurra",
+   "feedCountry": null,
+   "role": "world",
+   "title": "الصين تعزز حضورها التقني في الخليج.. وواشنطن تضع الشروط الاستثمارات الصينية تزدهر في الإمارات والسعودية، لكن واشنطن تربط إتاحة أحدث رقائق الذكاء الاصطناعي لديها بإزالة التكنولوجيا الصينية من شبكات الخليج.",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false,
+   "regionAccept": [
+    "asie-pacifique"
+   ]
+  },
+  {
+   "id": "ar-174",
+   "feed": "RT Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "وعيد سعودي برد حازم على ضربات الحوثيين",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-175",
+   "feed": "RT Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "بيسنت: العقوبات على روسيا لا تمنع اتفاق توريد الديزل مع موسكو",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false,
+   "regionAccept": [
+    "ameriques"
+   ]
+  },
+  {
+   "id": "ar-176",
+   "feed": "RT Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "الخارجية التركية تدين هجوم الحوثيين على مطار الملك خالد",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-177",
+   "feed": "RT Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "وزير الخارجية السوري أسعد الشيباني يصل إلى بنغازي في زيارة رسمية",
+   "country": "LY",
+   "basis": "title",
+   "region": "moyen-orient",
+   "africa": [
+    "LY"
+   ],
+   "touchesAfrica": true,
+   "note": "Benghazi"
+  },
+  {
+   "id": "ar-178",
+   "feed": "RT Arabic",
+   "feedCountry": null,
+   "role": "world",
+   "title": "إدانات عربية لاستهداف مطار الملك خالد وتضامن واسع مع السعودية",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-179",
+   "feed": "ONU Info",
+   "feedCountry": null,
+   "role": "world",
+   "title": "الأمم المتحدة: الهجمات الروسية على أوكرانيا تصل إلى مستوى مروع",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-180",
+   "feed": "ONU Info",
+   "feedCountry": null,
+   "role": "world",
+   "title": "مكتب حقوق الإنسان يحذر من تأثير العمليات العسكرية الإسرائيلية على المدنيين في جنوب سوريا",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-181",
+   "feed": "ONU Info",
+   "feedCountry": null,
+   "role": "world",
+   "title": "ظلم الاستعباد لا يزال حيا - الأمم المتحدة تدعو إلى ضمان العدالة التعويضية للأفارقة",
+   "country": null,
+   "basis": "none",
+   "region": null,
+   "africa": [],
+   "touchesAfrica": true,
+   "note": "« للأفارقة » : l’Afrique sans pays"
+  },
+  {
+   "id": "ar-182",
+   "feed": "ONU Info",
+   "feedCountry": null,
+   "role": "world",
+   "title": "تقارير عن عدد غير مسبوق من الضحايا - الأمم المتحدة تدين الهجمات الروسية على أوكرانيا",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "ar-183",
+   "feed": "ONU Info",
+   "feedCountry": null,
+   "role": "world",
+   "title": "تفشي الإيبولا - تسجيل أول حالة إصابة في كينيا، والمرض يحرم أطفالا من آبائهم في الكونغو الديمقراطية",
+   "country": "KE",
+   "basis": "title",
+   "region": null,
+   "africa": [
+    "KE",
+    "CD"
+   ],
+   "touchesAfrica": true
+  },
+  {
+   "id": "ar-184",
+   "feed": "Echorouk",
+   "feedCountry": "DZ",
+   "role": "national",
+   "title": "الجزائر تدين بشدّة استهداف مطار الملك خالد الدولي في الرياض",
+   "country": "DZ",
+   "basis": "title"
+  },
+  {
+   "id": "ar-185",
+   "feed": "Ennahar",
+   "feedCountry": "DZ",
+   "role": "national",
+   "title": "توقيف 61 مغربيًا كانوا بصدد التحضير لأعمال تخريبية في الجزائر",
+   "country": "DZ",
+   "basis": "title",
+   "accept": [
+    "MA"
+   ],
+   "trap": "gentile-maghribi"
+  },
+  {
+   "id": "ar-186",
+   "feed": "Ennahar",
+   "feedCountry": "DZ",
+   "role": "national",
+   "title": "ولاية الجزائر تستعرض تجربتها في حماية التراث الحضاري بمنتدى عالمي بالصين",
+   "country": "DZ",
+   "basis": "title",
+   "note": "wilaya d’Alger"
+  },
+  {
+   "id": "ar-187",
+   "feed": "El Bilad",
+   "feedCountry": "DZ",
+   "role": "national",
+   "title": "خط السكة الحديدية \"الجزائر - تمنراست\".. مشروع استراتيجي بأبعاد تنموية",
+   "country": "DZ",
+   "basis": "title",
+   "note": "Tamanrasset"
+  },
+  {
+   "id": "ar-188",
+   "feed": "Cairo24",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "بينهم صغيرة وشقيقتان.. مصرع 7 أشخاص وإصابة 12 آخرين في تصادم ميكروباص وسيارة ربع نقل بالقليوبية",
+   "country": "EG",
+   "basis": "media",
+   "trap": "masra-death"
+  },
+  {
+   "id": "ar-189",
+   "feed": "Al3omk",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "لدواعٍ أمنية.. سلطات طنجة تمنع وقفة للجبهة المغربية لدعم فلسطين ومناهضة التطبيع",
+   "country": "MA",
+   "basis": "title",
+   "note": "Tanger"
+  },
+  {
+   "id": "ar-190",
+   "feed": "Al3omk",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "الصديقي: المغرب يدعو إلى شراكة جديدة مع إسبانيا تتجاوز ملف الهجرة",
+   "country": "MA",
+   "basis": "title"
+  },
+  {
+   "id": "ar-191",
+   "feed": "Al3omk",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "الملك محمد السادس بمنجز المغرب معتد… ومُجدِّد",
+   "country": "MA",
+   "basis": "title"
+  },
+  {
+   "id": "ar-192",
+   "feed": "Al3omk",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "بنك المغرب يدرس إطلاق عملة رقمية وطنية لمواجهة زحف العملات المشفرة",
+   "country": "MA",
+   "basis": "title",
+   "note": "Bank Al-Maghrib"
+  },
+  {
+   "id": "ar-193",
+   "feed": "Al3omk",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "حسن طارق يدعو إلى تجديد السردية الوطنية المغربية لتعزيز ارتباط الشباب بالهوية",
+   "country": "MA",
+   "basis": "title"
+  },
+  {
+   "id": "ar-194",
+   "feed": "Alyaoum24",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "الحسين حنين: الهوية الثقافية المغربية رافعة لتعزيز إشعاع السينما الوطنية عالميا",
+   "country": "MA",
+   "basis": "title"
+  },
+  {
+   "id": "ar-195",
+   "feed": "Alyaoum24",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "دوري الأبطال: المغرب الفاسي يستقبل أسيك ميموزا الإيفواري بالملعب الشرفي بمكناس",
+   "country": "MA",
+   "basis": "title",
+   "accept": [
+    "CI"
+   ],
+   "trap": "maghreb-club",
+   "note": "club « المغرب الفاسي », Meknès"
+  },
+  {
+   "id": "ar-196",
+   "feed": "Sahara Medias",
+   "feedCountry": "MR",
+   "role": "national",
+   "title": "“إيبولا” يودي بحياة 4242 شخصا بالكونغو الديمقراطية",
+   "country": "CD",
+   "basis": "title",
+   "trap": "proclitic-bi"
+  },
+  {
+   "id": "ar-197",
+   "feed": "Sahara Medias",
+   "feedCountry": "MR",
+   "role": "national",
+   "title": "بينهم ولد محمد الأمين ولد سيدي.. عشرة وزراء غادروا الحكومة الموريتانية",
+   "country": "MR",
+   "basis": "title"
+  },
+  {
+   "id": "ar-198",
+   "feed": "Sahara Medias",
+   "feedCountry": "MR",
+   "role": "national",
+   "title": "تضم 29 وزيرا.. إعلان عن الحكومة الجديدة في موريتانيا",
+   "country": "MR",
+   "basis": "title"
+  },
+  {
+   "id": "ar-199",
+   "feed": "Al-Somal Al-Jadid",
+   "feedCountry": "SO",
+   "role": "national",
+   "title": "عبد الرشيد جنان يسلم قوات كانت تابعة للحكومة الصومالية لولاية جوبالاند",
+   "country": "SO",
+   "basis": "title",
+   "trap": "somali-contains-mali"
+  },
+  {
+   "id": "ar-200",
+   "feed": "Al-Somal Al-Jadid",
+   "feedCountry": "SO",
+   "role": "national",
+   "title": "الرئيس السابق شريف شيخ أحمد يتهم الحكومة الصومالية بالبحث عن الذرائع لاستهداف المعارضة",
+   "country": "SO",
+   "basis": "title",
+   "trap": "somali-contains-mali"
+  },
+  {
+   "id": "ar-201",
+   "feed": "Al-Somal Al-Jadid",
+   "feedCountry": "SO",
+   "role": "national",
+   "title": "هيئة الطيران المدني الصومالية تنفي تقارير عن إغلاق وشيك لمطار آدم عبدلي الدولي في مقديشو",
+   "country": "SO",
+   "basis": "title",
+   "trap": "somali-contains-mali"
+  },
+  {
+   "id": "ar-202",
+   "feed": "Al-Somal Al-Jadid",
+   "feedCountry": "SO",
+   "role": "national",
+   "title": "الحكومة الصومالية تحذر سياسيي المعارضة من إثارة مشاكل أمنية في مقديشو",
+   "country": "SO",
+   "basis": "title",
+   "trap": "somali-contains-mali"
+  },
+  {
+   "id": "ar-203",
+   "feed": "Babnet",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "الطاقة والقدرة التنافسية لقطاع النسيج والملابس في تونس محور ندوة عبر الإنترنت يوم 16 أكتوبر 2026",
+   "country": "TN",
+   "basis": "title"
+  },
+  {
+   "id": "ar-204",
+   "feed": "Babnet",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "الرابطة المحترفة الأولى: نادي حمام الأنف يحقق فوزه الأول والملعب التونسي يقلب تأخره أمام نجم المتلوي",
+   "country": "TN",
+   "basis": "title"
+  },
+  {
+   "id": "ar-205",
+   "feed": "Babnet",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "المدير العام للفاو يزور الجناح التونسي في المعرض العالمي للاغذية والزراعة المنعقد من 8 الى 12 اكتوبر بروما",
+   "country": "TN",
+   "basis": "title"
+  },
+  {
+   "id": "ar-206",
+   "feed": "Babnet",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "كونكت تنظم الدورة الأولى لتظاهرة \"حوارات الصناعة التونسية 2026\" يوم 21 أكتوبر 2026",
+   "country": "TN",
+   "basis": "title"
+  },
+  {
+   "id": "ar-207",
+   "feed": "Babnet",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "الجامعة التونسية لوكالات الاسفار والسياحة تقر خطة عمل استراتيجية لمعالجة أزمات قطاع النقل السياحي وتجاوز اشكاليته العالقة",
+   "country": "TN",
+   "basis": "title"
+  },
+  {
+   "id": "ar-208",
+   "feed": "Babnet",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "بلدية تونس: تدخلات ميدانية للنظافة وصيانة الطرقات والعناية بالمساحات الخضراء",
+   "country": "TN",
+   "basis": "title"
+  },
+  {
+   "id": "ar-209",
+   "feed": "Babnet",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "المهام الدورية بالجهات وتسهيل الاعتراف بالمؤهلات محور لقاء وزير الصحة بالكفاءات التونسية بألمانيا",
+   "country": "TN",
+   "basis": "title"
+  },
+  {
+   "id": "ar-210",
+   "feed": "Babnet",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "أيام قرطاج الموسيقية تختتم دورتها الـ11 وتتويج ثلاث فرق بجولات فنية في عدد من المناطق التونسية",
+   "country": "TN",
+   "basis": "title"
+  },
+  {
+   "id": "ar-211",
+   "feed": "Babnet",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "السجن 5 أعوام لرجل الأعمال ماهر شعبان مع خطية مالية بمليوني دينار",
+   "country": "TN",
+   "basis": "media",
+   "trap": "maliya-finance"
+  },
+  {
+   "id": "ar-212",
+   "feed": "Babnet",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "هيئة السوق المالية ومخبر فقه التشريع والقضاء يوقّعان اتفاقية تعاون في مجالي البحث والتكوين",
+   "country": "TN",
+   "basis": "media",
+   "trap": "maliya-finance"
+  },
+  {
+   "id": "ar-213",
+   "feed": "Babnet",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "في الذكرى السبعين لتأسيس الهلال الأحمر التونسي: انطلاق تظاهرة \"شهر تونس الإنسانية\" لتشمل كل الولايات على مدى شهر كامل",
+   "country": "TN",
+   "basis": "title"
+  },
+  {
+   "id": "ar-214",
+   "feed": "Babnet",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "عدنان الموفق رئيسا جديدا للجامعة التونسية لرياضة المعوقين",
+   "country": "TN",
+   "basis": "title"
+  },
+  {
+   "id": "ar-215",
+   "feed": "Mosaïque FM",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "منظمة الصحة بتونس تؤكد أهمية الدعم النفسي لضحايا الضغوط النفسية",
+   "country": "TN",
+   "basis": "title",
+   "trap": "proclitic-bi"
+  },
+  {
+   "id": "ar-216",
+   "feed": "Mosaïque FM",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "محمد خليل البحري: 'لص شايح' حكاية تونسية خالصة بعيدا عن الابتذال",
+   "country": "TN",
+   "basis": "title"
+  },
+  {
+   "id": "ar-217",
+   "feed": "Mosaïque FM",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "نابل: البيتزا الإيطالية تحتفي بالهريسة التونسية في مهرجانها",
+   "country": "TN",
+   "basis": "title"
+  },
+  {
+   "id": "ar-218",
+   "feed": "Nawaat",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "الكهرباء والصناعات الخضراء بتونس: الفرص المهدورة للسياسات الحكومية",
+   "country": "TN",
+   "basis": "title",
+   "trap": "proclitic-bi"
+  },
+  {
+   "id": "ar-219",
+   "feed": "Nawaat",
+   "feedCountry": "TN",
+   "role": "national",
+   "title": "كان يا ما كان إعلام عمومي في تونس.. حتى داهمه 25 جويلية",
+   "country": "TN",
+   "basis": "title",
+   "note": "« جويلية » : mois maghrébin"
+  },
+  {
+   "id": "ar-220",
+   "feed": "Qiraat Afriqiya (قراءات إفريقية)",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "مقتل 20 من قوات مؤسس “بلاك ووتر” شرق الكونغو الديمقراطية",
+   "country": "CD",
+   "basis": "title"
+  },
+  {
+   "id": "ar-221",
+   "feed": "Asharq Al-Awsat — Afrique",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "مصرع 109 مهاجرين في انقلاب قارب قبالة جيبوتي",
+   "country": "DJ",
+   "basis": "title",
+   "trap": "masra-death"
+  },
+  {
+   "id": "ar-222",
+   "feed": "Asharq Al-Awsat — Afrique",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "الرئيس النيجيري يأمر بفتح تحقيق في تحطم طائرة عسكرية",
+   "country": "NG",
+   "basis": "title",
+   "trap": "niger-vs-nigeria"
+  },
+  {
+   "id": "ar-223",
+   "feed": "Asharq Al-Awsat — Afrique",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "مقتل 32 شخصاً بتحطم طائرة عسكرية في جنوب نيجيريا",
+   "country": "NG",
+   "basis": "title",
+   "trap": "niger-vs-nigeria"
+  },
+  {
+   "id": "ar-224",
+   "feed": "Asharq Al-Awsat",
+   "feedCountry": null,
+   "role": "world",
+   "title": "الجزائر تجدد تحركها الدبلوماسي للمطالبة بمقعدين دائمين لأفريقيا بمجلس الأمن",
+   "country": "DZ",
+   "basis": "title",
+   "region": null,
+   "africa": [
+    "DZ"
+   ],
+   "touchesAfrica": true
+  },
+  {
+   "id": "ar-225",
+   "feed": "Asharq Al-Awsat",
+   "feedCountry": null,
+   "role": "world",
+   "title": "«الدوري الإنجليزي»: بالاس يفك عقدته أمام فورست... والجزائري بلُّومي ينقذ هال",
+   "country": "DZ",
+   "basis": "title",
+   "region": "europe",
+   "africa": [
+    "DZ"
+   ],
+   "touchesAfrica": true
+  },
+  {
+   "id": "ar-226",
+   "feed": "Asharq Al-Awsat",
+   "feedCountry": null,
+   "role": "world",
+   "title": "تحديات كبرى تواجه الحكومة الموريتانية الجديدة",
+   "country": "MR",
+   "basis": "title",
+   "region": null,
+   "africa": [
+    "MR"
+   ],
+   "touchesAfrica": true
+  },
+  {
+   "id": "ar-227",
+   "feed": "Asharq Al-Awsat",
+   "feedCountry": null,
+   "role": "world",
+   "title": "«البوندسليغا»: هامبورغ يعلن إصابة قائده ريمبرغ بتمزق في الرباط الصليبي",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false,
+   "trap": "ribat-ligament",
+   "note": "« الرباط الصليبي » : ligament croisé, pas Rabat"
+  },
+  {
+   "id": "ar-228",
+   "feed": "Asharq Al-Awsat",
+   "feedCountry": null,
+   "role": "world",
+   "title": "مصرع رجل في هجوم نمر بحديقة حيوان بريطانية",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false,
+   "trap": "masra-death"
+  }
+ ],
+ "traps": [
+  {
+   "id": "ar-trap-01",
+   "synthetic": true,
+   "title": "مصرف ليبيا المركزي يرفع سعر الفائدة",
+   "country": "LY",
+   "trap": "masraf-bank",
+   "note": "« مصرف » (banque) ne désigne pas l’Égypte"
+  },
+  {
+   "id": "ar-trap-02",
+   "synthetic": true,
+   "title": "ارتفاع أرباح المصارف الخليجية",
+   "country": null,
+   "trap": "masarif-bank"
+  },
+  {
+   "id": "ar-trap-03",
+   "synthetic": true,
+   "title": "موعد أذان المغرب في الرياض اليوم",
+   "country": null,
+   "trap": "maghrib-prayer"
+  },
+  {
+   "id": "ar-trap-04",
+   "synthetic": true,
+   "title": "قمة دول المغرب العربي تنعقد في نواكشوط",
+   "country": "MR",
+   "trap": "maghreb-region",
+   "accept": [
+    "MA",
+    "DZ",
+    "TN",
+    "LY"
+   ]
+  },
+  {
+   "id": "ar-trap-05",
+   "synthetic": true,
+   "title": "مبعوث أممي يزور الصحراء الغربية",
+   "country": "EH",
+   "trap": "western-sahara"
+  },
+  {
+   "id": "ar-trap-06",
+   "synthetic": true,
+   "title": "موجة حر غير مسبوقة في الصحراء الكبرى",
+   "country": null,
+   "trap": "sahara-desert"
+  },
+  {
+   "id": "ar-trap-07",
+   "synthetic": true,
+   "title": "انقلاب عسكري جديد في النيجر",
+   "country": "NE",
+   "trap": "niger-vs-nigeria"
+  },
+  {
+   "id": "ar-trap-08",
+   "synthetic": true,
+   "title": "نيجيريا تعلن ميزانية قياسية",
+   "country": "NG",
+   "trap": "niger-vs-nigeria"
+  },
+  {
+   "id": "ar-trap-09",
+   "synthetic": true,
+   "title": "رئيس جنوب السودان يعدل حكومته",
+   "country": "SS",
+   "trap": "south-sudan"
+  },
+  {
+   "id": "ar-trap-10",
+   "synthetic": true,
+   "title": "الجيش السوداني يستعيد مطار الخرطوم",
+   "country": "SD",
+   "trap": "sudan"
+  },
+  {
+   "id": "ar-trap-11",
+   "synthetic": true,
+   "title": "غينيا الاستوائية تفتتح ميناء جديدا",
+   "country": "GQ",
+   "trap": "equatorial-guinea"
+  },
+  {
+   "id": "ar-trap-12",
+   "synthetic": true,
+   "title": "انتخابات رئاسية في غينيا بيساو",
+   "country": "GW",
+   "trap": "guinea-bissau"
+  },
+  {
+   "id": "ar-trap-13",
+   "synthetic": true,
+   "title": "غينيا تعلق تصدير البوكسيت",
+   "country": "GN",
+   "trap": "guinea"
+  },
+  {
+   "id": "ar-trap-14",
+   "synthetic": true,
+   "title": "تشاد تغلق حدودها مع السودان",
+   "country": "TD",
+   "trap": "chad-country",
+   "accept": [
+    "SD"
+   ]
+  },
+  {
+   "id": "ar-trap-15",
+   "synthetic": true,
+   "title": "جمهورية الكونغو الديمقراطية ورواندا توقعان اتفاقا",
+   "country": "CD",
+   "trap": "drc",
+   "accept": [
+    "RW"
+   ]
+  },
+  {
+   "id": "ar-trap-16",
+   "synthetic": true,
+   "title": "ساحل العاج تحتفل بموسم الكاكاو",
+   "country": "CI",
+   "trap": "ivory-coast"
+  },
+  {
+   "id": "ar-trap-17",
+   "synthetic": true,
+   "title": "كوت ديفوار تستضيف قمة إقليمية",
+   "country": "CI",
+   "trap": "ivory-coast"
+  },
+  {
+   "id": "ar-trap-18",
+   "synthetic": true,
+   "title": "رئيس الوزراء الماليزي يزور القاهرة",
+   "country": "EG",
+   "trap": "malaysian-not-mali"
+  },
+  {
+   "id": "ar-trap-19",
+   "synthetic": true,
+   "title": "موريشيوس تطلق عملة رقمية",
+   "country": "MU",
+   "trap": "mauritius"
+  },
+  {
+   "id": "ar-trap-20",
+   "synthetic": true,
+   "title": "جزر القمر تستقبل وفدا تجاريا",
+   "country": "KM",
+   "trap": "comoros"
+  },
+  {
+   "id": "ar-trap-21",
+   "synthetic": true,
+   "title": "وبالجزائر العاصمة، افتتاح معرض الكتاب",
+   "country": "DZ",
+   "trap": "proclitic-wa-bi"
+  },
+  {
+   "id": "ar-trap-22",
+   "synthetic": true,
+   "title": "زيارة رسمية للمغرب الأسبوع المقبل",
+   "country": "MA",
+   "trap": "proclitic-li"
+  },
+  {
+   "id": "ar-trap-23",
+   "synthetic": true,
+   "title": "الجَزَائِرُ تُدِينُ الهُجُومَ",
+   "country": "DZ",
+   "trap": "diacritics"
+  },
+  {
+   "id": "ar-trap-24",
+   "synthetic": true,
+   "title": "اثيوبيا تفتتح السد",
+   "country": "ET",
+   "trap": "hamza-variant"
+  },
+  {
+   "id": "ar-trap-25",
+   "synthetic": true,
+   "title": "الرأس الأخضر يحتفل بعيد الاستقلال",
+   "country": "CV",
+   "trap": "cape-verde"
+  },
+  {
+   "id": "ar-trap-26",
+   "synthetic": true,
+   "title": "انتخابات في مالي العام المقبل",
+   "country": "ML",
+   "trap": "mali"
+  },
+  {
+   "id": "ar-trap-27",
+   "synthetic": true,
+   "title": "الكونغو برازافيل تعلن نتائج الانتخابات",
+   "country": "CG",
+   "trap": "republic-of-congo"
+  },
+  {
+   "id": "ar-trap-28",
+   "synthetic": true,
+   "title": "حصيلة ٢٠٢٦ للاقتصاد التونسي",
+   "country": "TN",
+   "trap": "eastern-digits"
+  }
+ ]
+}

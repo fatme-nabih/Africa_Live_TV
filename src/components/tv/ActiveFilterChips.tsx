@@ -1,4 +1,6 @@
 'use client';
+import { format } from '@/i18n/message';
+import { useI18n } from '@/i18n/client';
 
 import { X } from 'lucide-react';
 import { catalogLanguageLabel, categoryLabel } from '@/lib/catalog-metadata';
@@ -21,29 +23,30 @@ export default function ActiveFilterChips({
   onChange: (filters: ChannelFilters, favoritesOnly: boolean) => void;
   onClearAll: () => void;
 }) {
+  const { t, edition } = useI18n();
   const chips: Chip[] = [];
   const add = (key: string, label: string, patch: Partial<ChannelFilters>, favorites = favoritesOnly) =>
     chips.push({ key, label, next: { ...filters, ...patch }, favorites });
   if (filters.search) add('search', `« ${filters.search} »`, { search: '' });
-  if (filters.country) add('country', formatCountryName(filters.country, filters.country), { country: '' });
-  if (filters.region === 'africa') add('region', 'Afrique', { region: '' });
-  if (filters.group) add('group', categoryLabel(filters.group), { group: '' });
-  if (filters.language) add('language', catalogLanguageLabel(filters.language), { language: '' });
-  if (filters.status) add('status', STATUS_LABELS[filters.status] ?? filters.status, { status: '' });
-  if (favoritesOnly) add('favorites', 'Favoris', {}, false);
+  if (filters.country) add('country', formatCountryName(filters.country, filters.country, edition), { country: '' });
+  if (filters.region === 'africa') add('region', t.tv.copy['Afrique'], { region: '' });
+  if (filters.group) add('group', categoryLabel(filters.group, edition), { group: '' });
+  if (filters.language) add('language', catalogLanguageLabel(filters.language, edition), { language: '' });
+  if (filters.status) add('status', (t.tv.copy as Record<string, string>)[STATUS_LABELS[filters.status]] ?? filters.status, { status: '' });
+  if (favoritesOnly) add('favorites', t.tv.copy['Favoris'], {}, false);
   if (chips.length === 0) return null;
 
   return (
-    <div role="group" aria-label="Filtres actifs" className="flex flex-wrap items-center gap-2">
+    <div role="group" aria-label={t.tv.copy["Filtres actifs"]} className="flex flex-wrap items-center gap-2">
       <span className="text-xs font-semibold text-text-muted">
-        {chips.length} {chips.length > 1 ? 'filtres' : 'filtre'}
+        {chips.length} {chips.length > 1 ? t.tv.copy["filtres"] : t.tv.copy["filtre"]}
       </span>
       {chips.map(chip => (
         <button
           key={chip.key}
           type="button"
           onClick={() => onChange(chip.next, chip.favorites)}
-          aria-label={`Retirer le filtre ${chip.label}`}
+          aria-label={format(t.tv.copy["Retirer le filtre {v0}"], {v0: chip.label})}
           className="inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-pill border border-al-gold bg-al-gold/10 px-3.5 text-xs font-semibold text-text transition-colors hover:bg-al-gold/20 sm:min-h-9"
         >
           <span className="truncate">{chip.label}</span>
@@ -55,8 +58,7 @@ export default function ActiveFilterChips({
         onClick={onClearAll}
         className="inline-flex min-h-11 items-center rounded-control px-3 text-xs font-bold text-al-gold transition-colors hover:text-text sm:min-h-9"
       >
-        Tout effacer
-      </button>
+        {t.tv.copy["Tout effacer"]}</button>
     </div>
   );
 }

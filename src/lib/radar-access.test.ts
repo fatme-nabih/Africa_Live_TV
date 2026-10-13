@@ -7,6 +7,7 @@ import { compileFunction } from 'node:vm';
 import ts from 'typescript';
 
 import { evaluateAccess, type AccessDecision, type AccessSubscription } from './access-policy';
+import { isEdition, type Edition } from './editions';
 
 // Execute the actual handlers and page guards with only external boundaries
 // replaced. No Clerk account, database, quota write or upstream request is used.
@@ -72,10 +73,11 @@ const cases = [
 
 type Scenario = typeof cases[number];
 function harness(scenario: Scenario) {
-  const state = { scenario, collectorCalls: 0, quotaCalls: 0, suspended: false, rateLimited: false, local: false };
-  const collector = async () => { state.collectorCalls++; return { marker: 'private-radar-data' }; };
+  const state = { scenario, collectorCalls: 0, quotaCalls: 0, suspended: false, rateLimited: false, local: false, enabled: ['fr'] as Edition[], collectorEdition: '' };
+  const collector = async (options?: { edition?: Edition }) => { state.collectorCalls++; state.collectorEdition = options?.edition ?? ''; return { marker: 'private-radar-data' }; };
   const Dashboard = () => null;
   const mocks: Record<string, Exports> = {
+    '@/lib/editions': { enabledEditions: () => state.enabled, isEdition },
     '@/lib/access-control': { getCurrentAccessDecision: async () => ({ user: state.scenario.user, decision: state.scenario.decision, subscriptions: [], clerkSessionId: null }) },
     '@/lib/local-dev': { isLocalDevMode: () => state.local, isLocalDevRequest: (request: Request) => new URL(request.url).hostname === 'localhost' },
     '@/lib/abuse-alerts': { getActiveAbuseSuspension: async () => state.suspended ? { id: 'suspension' } : null, recordRateLimitAlert: async () => {} },
@@ -86,7 +88,9 @@ function harness(scenario: Scenario) {
     } },
     '@/lib/structured-log': { structuredLog: () => {} },
     '@/lib/live-osint': { getRadarNews: collector },
-    '@/lib/rss-collector': { getRadarRss: collector },
+    // Pont entre éditions (EDI-601) : lecture pure des caches, aucune autre édition active ici.
+    '@/lib/rss-collector': { getRadarRss: collector, editionBridgeCounts: () => [] },
+    '@/lib/world-desk': { getWorldDesk: collector },
     '@/lib/live-weather': { getRadarWeather: collector },
     '@/lib/live-disasters': { getDisasterEventsSnapshot: collector },
     '@/lib/live-firms': { getFirmsSnapshot: collector },
@@ -94,8 +98,15 @@ function harness(scenario: Scenario) {
     '@/lib/live-briefing': { getLiveBriefing: collector },
     '@/lib/live-channels': { getAfricanChannelsSummary: collector, getChannelsForAfricanCountry: collector },
     'next/navigation': { redirect: (destination: string) => { throw new Error(`redirect:${destination}`); } },
-    '@/app/(clerk)/app/live/LiveRadarDashboard': { __esModule: true, default: Dashboard },
+    '@/app/[edition]/(clerk)/app/live/LiveRadarDashboard': { __esModule: true, default: Dashboard },
     '@/components/shell/AppShell': { __esModule: true, default: 'app-shell' },
+    '@/i18n/client': { I18nProvider: 'i18n-provider' },
+    '@/i18n/edition': { getEdition: async () => 'fr' },
+    '@/i18n/server': { clientMessages: (edition: string, namespaces: string[]) => {
+      assert.equal(edition, 'fr');
+      assert.deepEqual(namespaces, ['radar', 'time', 'briefing', 'markets', 'weather', 'world']);
+      return undefined;
+    } },
     // Lecteur unique et recherche universelle du layout /app (P5) : frontières client simulées.
     '@/components/player/PlayerDock': { PlayerDockProvider: 'player-dock' },
     '@/components/search/UniversalSearch': { __esModule: true, default: 'universal-search' },
@@ -104,9 +115,30 @@ function harness(scenario: Scenario) {
   return { state, load: (file: string) => loadSource(file, mocks), Dashboard };
 }
 
-const routes = ['news', 'rss', 'weather', 'events', 'firms', 'markets', 'briefing', 'channels'];
+const routes = ['news', 'rss', 'world', 'weather', 'events', 'firms', 'markets', 'briefing', 'channels'];
 type Handler = (request: Request, context?: unknown) => Promise<Response>;
 const request = (route: string, query = '') => new Request(`http://localhost:3001/api/live/${route}${query}`);
+
+for (const route of ['rss', 'world', 'briefing']) {
+  test(`EDI-203: API ${route}, édition validée après autorisation et quota, FR implicite, EN actif et refus privés`, async () => {
+    const { load, state } = harness(cases[2]);
+    const GET = load(`app/api/live/${route}/route.ts`).GET as Handler;
+    assert.equal((await GET(request(route))).status, 200); assert.equal(state.collectorEdition, 'fr');
+    for (const query of ['?edition=en', '?edition=ar', '?edition=xx', '?edition=', '?edition=EN']) {
+      const before = state.collectorCalls, response = await GET(request(route, query));
+      assert.equal(response.status, 400); assert.equal((await response.json()).code, 'EDITION_UNAVAILABLE');
+      assert.equal(response.headers.get('cache-control'), 'private, no-store'); assert.equal(state.collectorCalls, before);
+    }
+    state.enabled = ['fr', 'en'];
+    assert.equal((await GET(request(route, '?edition=en'))).status, 200); assert.equal(state.collectorEdition, 'en');
+    const before = state.collectorCalls; state.rateLimited = true;
+    assert.equal((await GET(request(route, '?edition=en'))).status, 429); assert.equal(state.collectorCalls, before);
+    state.rateLimited = false; state.scenario = cases[0]; const quotas = state.quotaCalls;
+    assert.equal((await GET(request(route, '?edition=xx'))).status, 401); assert.equal(state.quotaCalls, quotas);
+    state.scenario = cases[6];
+    assert.equal((await GET(request(route, '?edition=en'))).status, 403); assert.equal(state.collectorCalls, before);
+  });
+}
 
 test('RW-003: weather query rejects unknown country and empty/out-of-range coordinates after authorization', async () => {
   const { load, state } = harness(cases[2]);
@@ -147,8 +179,8 @@ for (const route of routes) {
 test('dashboard guard denies expired accounts while the parent layout permits catalog browsing', async () => {
   for (const scenario of cases) {
     const { load, Dashboard } = harness(scenario);
-    const layout = load('app/(clerk)/app/layout.tsx').default as (props: { children: string }) => Promise<{ props: { children: { props: { children: unknown[] } }; admin: boolean } }>;
-    const page = load('app/(clerk)/app/live/page.tsx').default as () => Promise<{ type: unknown }>;
+    const layout = load('app/[edition]/(clerk)/app/layout.tsx').default as (props: { children: string }) => Promise<{ type: unknown; props: { edition: string; enabled: string[]; children: { type: unknown; props: { children: { props: { children: unknown[] } }; admin: boolean } } } }>;
+    const page = load('app/[edition]/(clerk)/app/live/page.tsx').default as () => Promise<{ type: unknown }>;
     if (!scenario.user) {
       await assert.rejects(layout({ children: 'catalog' }), /redirect:\/sign-in\?redirect_url=\/app\/live/);
       await assert.rejects(page(), /redirect:\/sign-in\?redirect_url=\/app\/live/);
@@ -157,9 +189,14 @@ test('dashboard guard denies expired accounts while the parent layout permits ca
       await assert.rejects(page(), /redirect:\/account\?access=required/);
     } else {
       const rendered = await layout({ children: 'catalog' });
+      assert.equal(rendered.type, 'i18n-provider');
+      assert.equal(rendered.props.edition, 'fr');
+      assert.deepEqual(rendered.props.enabled, ['fr']);
+      const shell = rendered.props.children;
+      assert.equal(shell.type, 'app-shell');
       // Le catalogue est rendu (à l'intérieur du lecteur unique de l'espace /app).
-      assert.ok(rendered.props.children.props.children.includes('catalog'));
-      assert.equal(rendered.props.admin, scenario.decision.reason === 'administrator_access');
+      assert.ok(shell.props.children.props.children.includes('catalog'));
+      assert.equal(shell.props.admin, scenario.decision.reason === 'administrator_access');
       if (scenario.status === 200) assert.equal((await page()).type, Dashboard);
       else await assert.rejects(page(), /redirect:\/account\?access=required/);
     }

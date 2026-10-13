@@ -1,4 +1,7 @@
 'use client';
+import { withoutEditionPrefix } from '@/lib/edition-routing';
+import EditionSwitcher from './EditionSwitcher';
+import { editionCountries, countryName } from '@/lib/country-names';
 
 import { Search } from 'lucide-react';
 import { Show } from '@clerk/nextjs';
@@ -12,7 +15,6 @@ import LocalAccountControls from '@/components/LocalAccountControls';
 import { ButtonLink } from '@/components/ui';
 import { catalogFilterUrl, catalogFiltersFromUrl } from '@/lib/catalog-filter-state';
 import { formatCountryName } from '@/lib/format';
-import { AFRICAN_COUNTRIES } from '@/lib/radar-countries';
 import { radarCountry, radarCountryUrl } from '@/lib/radar-workspace';
 import { buildNavItems, countryFromSearch } from '@/lib/shell-nav';
 import ClockBadge from './ClockBadge';
@@ -21,10 +23,10 @@ import CountryPicker from './CountryPicker';
 import NavLinks from './NavLinks';
 import { useOpenSearch } from './useOpenSearch';
 import { OPEN_UNIVERSAL_SEARCH_EVENT } from '@/lib/universal-search';
+import { useI18n } from '@/i18n/client';
 
 export type ShellMode = 'member' | 'public' | 'auto';
 
-const COUNTRIES = AFRICAN_COUNTRIES.map(({ code, name }) => ({ code, name }));
 
 /**
  * Barre unique de l'application : logo, Radar, TV, recherche, pays, heure, compte.
@@ -33,10 +35,11 @@ const COUNTRIES = AFRICAN_COUNTRIES.map(({ code, name }) => ({ code, name }));
  * `mode="auto"` : page publique qui s'adapte à la session Clerk (Tarifs).
  */
 export default function AppHeader({ admin, mode = 'member' }: { admin: boolean; mode?: ShellMode }) {
-  const pathname = usePathname();
+  const { t, edition } = useI18n();
+  const pathname = withoutEditionPrefix(usePathname());
   const params = useSearchParams();
   const country = countryFromSearch(params.get('country'));
-  const items = useMemo(() => buildNavItems({ pathname, country, admin }), [pathname, country, admin]);
+  const items = useMemo(() => buildNavItems({ pathname, country, admin, labels: t.shell.nav }), [pathname, country, admin, t]);
   const showCountry = pathname === '/app' || pathname === '/app/live';
   // Le Radar ne connaît que les pays africains : un code inconnu y retombe sur la vue Afrique.
   const pickerCountry = pathname === '/app/live' ? radarCountry(country) : country;
@@ -55,11 +58,12 @@ export default function AppHeader({ admin, mode = 'member' }: { admin: boolean; 
 
   const publicContent = (
     <>
-      <BrandLink href="/" label="Africa Live, accueil" />
-      <div className="ml-auto flex items-center gap-2">
-        <ButtonLink href="/sign-in" variant="ghost" size="sm">Se connecter</ButtonLink>
+      <BrandLink href="/" label={t.shell.header.homeAria} />
+      <div className="ms-auto flex items-center gap-2">
+        <EditionSwitcher />
+        <ButtonLink href="/sign-in" variant="ghost" size="sm">{t.shell.header.signIn}</ButtonLink>
         <span className="hidden sm:block">
-          <ButtonLink href="/sign-up" variant="secondary" size="sm">Commencer</ButtonLink>
+          <ButtonLink href="/sign-up" variant="secondary" size="sm">{t.shell.header.start}</ButtonLink>
         </span>
       </div>
     </>
@@ -67,19 +71,20 @@ export default function AppHeader({ admin, mode = 'member' }: { admin: boolean; 
 
   const memberContent = (
     <>
-      <BrandLink href="/app/live" label="Dashboard Africa Live" />
+      <BrandLink href="/app/live" label={t.shell.header.dashboardAria} />
       <NavLinks items={items} variant="header" />
-      <div className="ml-auto flex min-w-0 flex-1 items-center justify-end gap-2 md:flex-none">
+      <div className="ms-auto flex min-w-0 flex-1 items-center justify-end gap-2 md:flex-none">
         {showCountry && (
           <CountryPicker
             value={pickerCountry}
-            valueName={pickerCountry ? displayCountryName(pickerCountry) : undefined}
-            countries={COUNTRIES}
+            valueName={pickerCountry ? displayCountryName(pickerCountry, edition) : undefined}
+            countries={editionCountries(edition)}
             onChange={changeCountry}
             className="min-w-0 flex-1 md:w-52 md:flex-none lg:w-64"
           />
         )}
         <SearchButton pathname={pathname} country={country} />
+        <EditionSwitcher />
         <EcoToggle />
         <ClockBadge className="hidden h-11 lg:flex" />
         <LocalAccountControls />
@@ -100,8 +105,8 @@ export default function AppHeader({ admin, mode = 'member' }: { admin: boolean; 
 }
 
 /** Nom français du pays ; le code brut si l'environnement ne le connaît pas (« région inconnue »). */
-function displayCountryName(code: string) {
-  const name = formatCountryName(code);
+function displayCountryName(code: string, edition: import('@/lib/editions').Edition) {
+  const name = edition === 'fr' ? formatCountryName(code) : countryName(code, edition);
   return /inconnu/i.test(name) ? code : name;
 }
 
@@ -135,6 +140,7 @@ function BrandLink({ href, label }: { href: string; label: string }) {
  * ailleurs (Compte, Tarifs), où la palette n'existe pas, il conduit à la recherche de la TV.
  */
 function SearchButton({ pathname, country }: { pathname: string; country: string | null }) {
+  const { t } = useI18n();
   const openCatalogSearch = useOpenSearch(pathname, country);
   const inApp = pathname === '/app' || pathname.startsWith('/app/');
   const onClick = inApp ? () => window.dispatchEvent(new Event(OPEN_UNIVERSAL_SEARCH_EVENT)) : openCatalogSearch;
@@ -147,7 +153,7 @@ function SearchButton({ pathname, country }: { pathname: string; country: string
     >
       <Search size={16} aria-hidden="true" className="text-al-gold" />
       {/* Nom accessible = texte visible (« Rechercher ») ; masqué à l'écran entre 768 et 1279 px, lu par les lecteurs d'écran. */}
-      <span className="sr-only xl:not-sr-only">Rechercher</span>
+      <span className="sr-only xl:not-sr-only">{t.shell.header.search}</span>
       {inApp && <kbd aria-hidden="true" className="hidden rounded-md border border-line px-1.5 py-0.5 font-mono text-xs text-text-muted xl:inline">Ctrl K</kbd>}
     </button>
   );

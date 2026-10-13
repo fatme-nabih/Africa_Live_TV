@@ -32,6 +32,21 @@ async function account(page:Page,initial:string[] = [],countries:string[] = []) 
   return {accounts,writes,puts,control};
 }
 
+test('EDI-303: English legacy import names countries and reports unaccepted favourites without losing choices', async ({ page }) => {
+  await seed(page, ['unaccepted'], ['SN']);
+  const api = await account(page);
+  api.control.missing.add('unaccepted');
+  await page.goto('/?kind=legacy&tv=1&edition=en');
+  const englishSummary = page.getByRole('complementary', { name: 'Choices on this device' });
+  await expect(englishSummary).toContainText('Senegal');
+  await page.getByRole('button', { name: 'Add to my account', exact: true }).click();
+  await expect(page.getByRole('alert')).toHaveText('One channel could not be added to your favourites. Your choice is kept for another attempt.');
+  await expect(englishSummary).toContainText('Some choices still need to be added.');
+  expect((await snapshot(page)).rejectedFavorites).toEqual(['unaccepted']);
+  expect(api.control.countries).toEqual(['SN']);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('iptv_favorites')!))).toEqual(['unaccepted']);
+});
+
 test('already saved favorites: no misleading offer, recovery button or automatic mutation',async({page}) => {
   await seed(page); const api = await account(page,ids);
   await page.goto('/?kind=legacy');

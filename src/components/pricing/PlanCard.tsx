@@ -1,3 +1,6 @@
+'use client';
+import { fr } from '@/i18n/fr';
+import { useI18n } from '@/i18n/client';
 import { Check } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { cn } from '@/components/ui';
@@ -29,6 +32,7 @@ export default function PlanCard({
   note?: ReactNode;
   className?: string;
 }) {
+  const { t } = useI18n();
   return (
     <article
       className={cn(
@@ -38,7 +42,7 @@ export default function PlanCard({
       )}
     >
       {ribbon && (
-        <p className="absolute -top-3 left-6 rounded-pill bg-al-gold px-3 py-1 text-xs font-bold text-black shadow-md">
+        <p className="absolute -top-3 start-6 rounded-pill bg-al-gold px-3 py-1 text-xs font-bold text-black shadow-md">
           {ribbon}
         </p>
       )}
@@ -46,7 +50,7 @@ export default function PlanCard({
       <p className="mt-1.5 text-sm text-text-muted">{description}</p>
       <p className="mt-5 flex flex-wrap items-baseline gap-x-2">
         <span className="font-display text-4xl font-bold text-text">{price}</span>
-        <span className="text-base font-bold text-al-gold">FCFA</span>
+        <span className="text-base font-bold text-al-gold">{t.pricing.copy["FCFA"]}</span>
         <span className="text-sm text-text-muted">{period}</span>
       </p>
       <ul className="mt-6 flex-1 space-y-3 border-t border-line pt-5 text-sm text-text">
@@ -64,22 +68,4 @@ export default function PlanCard({
 }
 
 /** Offres affichées (montants identiques à NABOOPAY_PLANS ; 9 900 = 10 × 990, soit 2 mois offerts). */
-export const PLAN_COPY = {
-  annual: {
-    name: 'Abonnement Annuel',
-    price: '9 900',
-    period: '/ an',
-    ribbon: '2 mois offerts',
-    description: '12 mois d’accès pour le prix de 10.',
-    perks: ['12 mois de Radar et de TV en direct', 'Économisez 1 980 FCFA par rapport au mensuel', 'Un seul paiement, sans renouvellement automatique'],
-    cta: 'Activer pour 9 900 FCFA',
-  },
-  monthly: {
-    name: 'Abonnement Mensuel',
-    price: '990',
-    period: '/ mois',
-    description: '30 jours d’accès, sans engagement.',
-    perks: ['30 jours de Radar et de TV en direct', 'Favoris, Reprendre et zapping', 'Sans renouvellement automatique'],
-    cta: 'Activer pour 990 FCFA',
-  },
-} as const;
+export const PLAN_COPY = fr.pricing.plans;

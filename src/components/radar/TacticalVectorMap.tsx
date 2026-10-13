@@ -1,4 +1,5 @@
 'use client';
+import { countryName } from '@/lib/country-names';
 
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -17,7 +18,9 @@ import type { LiveChannelsSummarySnapshot } from '@/lib/live-channels-types';
 import { commodityFocusLabel, type CommodityFocus } from '@/lib/market-geography';
 import type { RadarSourceRow } from '@/lib/radar-workspace';
 import { Compass, Globe2, RotateCcw } from 'lucide-react';
-import { countLabel } from '@/lib/format';
+import { useI18n } from '@/i18n/client';
+import { consumeEditionHalo, EDITION_HALO_MS } from '@/lib/edition-halo';
+import { format, formatPlural } from '@/i18n/message';
 
 function isWebGLSupported(): boolean {
   if (typeof window === 'undefined') return false;
@@ -46,7 +49,6 @@ const AFRICA_BOUNDS: [[number, number], [number, number]] = [
   [-38.0, -40.0],
   [68.0, 42.0],
 ];
-const MAP_UNAVAILABLE = 'Carte indisponible. Le fil et le choix du pays restent accessibles.';
 
 export type BasemapMode = 'dark' | 'satellite';
 
@@ -111,13 +113,41 @@ function darkStyle(): StyleSpecification {
     layers: [
       { id: 'ocean', type: 'background', paint: { 'background-color': token('--color-ink', '#000000') } },
       { id: 'land', type: 'fill', source: 'countries', paint: { 'fill-color': token('--color-surface-2', '#141416') } },
+      // Halo de la sphère de l'édition (EDI-602) : vide et transparent hors de l'animation unique.
+      { id: 'land-sphere', type: 'fill', source: 'countries', filter: ['in', ['get', 'code'], ['literal', []]], paint: { 'fill-color': gold, 'fill-opacity': 0, 'fill-opacity-transition': { duration: HALO_FADE_MS, delay: 0 } } },
       { id: 'land-commodity', type: 'fill', source: 'countries', filter: ['in', ['get', 'code'], ['literal', []]], paint: { 'fill-color': green, 'fill-opacity': 0.3 } },
       { id: 'land-selected', type: 'fill', source: 'countries', filter: ['==', ['get', 'code'], ''], paint: { 'fill-color': gold, 'fill-opacity': 0.24 } },
       { id: 'borders', type: 'line', source: 'countries', paint: { 'line-color': border, 'line-width': ['interpolate', ['linear'], ['zoom'], 2, 0.6, 6, 1.4] } },
+      { id: 'borders-sphere', type: 'line', source: 'countries', filter: ['in', ['get', 'code'], ['literal', []]], paint: { 'line-color': gold, 'line-width': 1.5, 'line-opacity': 0, 'line-opacity-transition': { duration: HALO_FADE_MS, delay: 0 } } },
       { id: 'borders-commodity', type: 'line', source: 'countries', filter: ['in', ['get', 'code'], ['literal', []]], paint: { 'line-color': green, 'line-width': 1.5 } },
       { id: 'borders-selected', type: 'line', source: 'countries', filter: ['==', ['get', 'code'], ''], paint: { 'line-color': gold, 'line-width': 2 } },
     ],
   };
+}
+
+const HALO_FADE_MS = 700;
+
+/**
+ * Allume une fois les pays de la sphère (fond sombre seulement), puis les éteint et vide le filtre.
+ * Sans arrêt lié à l'effet React (double montage du mode strict) : les minuteries vérifient seulement que la carte vit encore.
+ * `data-edition-halo` (nombre de pays allumés) sert aux tests.
+ */
+function playEditionHalo(map: MapLibreMap, codes: string[], frame: HTMLElement | null, alive: () => boolean): void {
+  const filter = ['in', ['get', 'code'], ['literal', codes]] as const;
+  for (const id of ['land-sphere', 'borders-sphere']) map.setFilter(id, filter as never);
+  map.setPaintProperty('land-sphere', 'fill-opacity', 0.3);
+  map.setPaintProperty('borders-sphere', 'line-opacity', 0.9);
+  frame?.setAttribute('data-edition-halo', String(codes.length));
+  window.setTimeout(() => {
+    if (!alive() || !map.getLayer('land-sphere')) return;
+    map.setPaintProperty('land-sphere', 'fill-opacity', 0);
+    map.setPaintProperty('borders-sphere', 'line-opacity', 0);
+  }, EDITION_HALO_MS - HALO_FADE_MS);
+  window.setTimeout(() => {
+    frame?.removeAttribute('data-edition-halo');
+    if (!alive() || !map.getLayer('land-sphere')) return;
+    for (const id of ['land-sphere', 'borders-sphere']) map.setFilter(id, ['in', ['get', 'code'], ['literal', []]]);
+  }, EDITION_HALO_MS);
 }
 
 function basemapStyle(mode: BasemapMode): StyleSpecification {
@@ -161,6 +191,8 @@ export default function TacticalVectorMap({
   onSourcesChange,
   commodityFocus = null,
 }: TacticalVectorMapProps) {
+  const { t, edition } = useI18n();
+  const labels = t.radar.mapView;
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markersRef = useRef<Map<string, Marker>>(new Map());
@@ -225,7 +257,7 @@ export default function TacticalVectorMap({
           }
         }, 1300);
       }
-    } catch { setMapError(MAP_UNAVAILABLE); }
+    } catch { setMapError('unavailable'); }
   };
 
   // Initialize MapLibre GL
@@ -267,7 +299,7 @@ export default function TacticalVectorMap({
         });
 
         map.on('error', () => {
-          if (!disposed) setMapError(MAP_UNAVAILABLE);
+          if (!disposed) setMapError('unavailable');
         });
 
         map.on('style.load', () => {
@@ -285,7 +317,7 @@ export default function TacticalVectorMap({
 
         mapRef.current = map;
       } catch {
-        if (!disposed) setMapError(MAP_UNAVAILABLE);
+        if (!disposed) setMapError('unavailable');
       }
     };
     void initialize();
@@ -306,6 +338,20 @@ export default function TacticalVectorMap({
     onSelectRef.current = onSelectCountry;
     if (mapRef.current && isLoaded) highlightCountry(mapRef.current, selectedCountry);
   }, [selectedCountry, onSelectCountry, isLoaded]);
+
+  // Halo de la sphère (EDI-602) : une fois après un changement d'édition choisi, jamais en Éco ni en mouvement réduit.
+  const haloCheckedRef = useRef(false);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isLoaded || haloCheckedRef.current) return;
+    haloCheckedRef.current = true;
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.dataset.eco === 'true';
+    let session: Storage | null = null;
+    try { session = window.sessionStorage; } catch { /* stockage refusé : pas de halo */ }
+    const codes = consumeEditionHalo(edition, session, calm);
+    if (!codes?.length || !map.getLayer('land-sphere')) return;
+    playEditionHalo(map, codes, mapContainerRef.current, () => mapRef.current === map);
+  }, [isLoaded, edition]);
 
   useEffect(() => {
     commodityCodesRef.current = commodityFocus?.codes ?? [];
@@ -356,9 +402,7 @@ export default function TacticalVectorMap({
       // Update marker content and classes
       el.setAttribute(
         'aria-label',
-        `${country.name} : ${count} dépêches, ${channelCount} chaînes TV. ${
-          isSelected ? 'Désélectionner' : 'Sélectionner'
-        }`,
+        format(labels.markerAria, { name: countryName(country.code, edition), count, channels: channelCount, action: isSelected ? labels.deselect : labels.select }),
       );
 
       el.onclick = (e: MouseEvent) => {
@@ -387,6 +431,8 @@ export default function TacticalVectorMap({
         ? `<span class="radar-pulse radar-pulse-${tier}" aria-hidden="true"></span>`
         : '';
 
+      // Marqueur cartographique : positions physiques volontaires (pastille TV en haut à droite, infobulle centrée),
+      // la carte ne se retourne jamais en droite → gauche (EDI-401).
       el.innerHTML = `
         <div class="relative flex items-center justify-center transition-transform duration-200 group-hover:scale-110 ${
           isSelected ? 'scale-110 z-30' : 'z-10'
@@ -416,15 +462,15 @@ export default function TacticalVectorMap({
               : 'border-line bg-black/90 shadow-xl'
           } px-2.5 py-1.5 text-xs font-bold text-text z-50">
             <div class="flex items-center gap-1.5">
-              <span class="${isSelected ? 'text-al-gold' : 'text-text'}">${country.name}</span>
+              <span class="${isSelected ? 'text-al-gold' : 'text-text'}">${countryName(country.code, edition)}</span>
               ${
                 channelCount > 0
-                  ? `<span class="rounded bg-al-gold/20 px-1 text-xs font-black text-al-gold">${channelCount} TV</span>`
+                  ? `<span class="rounded bg-al-gold/20 px-1 text-xs font-black text-al-gold">${format(labels.tvBadge, { count: channelCount })}</span>`
                   : ''
               }
             </div>
-            <div class="text-xs font-normal text-text-muted mt-0.5">${countLabel(count, 'dépêche', 'dépêches')}${
-              channelCount > 0 ? ` · ${countLabel(channelCount, 'chaîne référencée', 'chaînes référencées')}` : ''
+            <div class="text-xs font-normal text-text-muted mt-0.5">${formatPlural(labels.news, count, {}, edition)}${
+              channelCount > 0 ? ` · ${formatPlural(labels.listedChannels, channelCount, {}, edition)}` : ''
             }</div>
           </div>
         </div>
@@ -446,6 +492,8 @@ export default function TacticalVectorMap({
     isLoaded,
     onSelectCountry,
     onSelectCountryForChannels,
+    labels,
+    edition,
   ]);
 
   // Camera Fly To on country selection (RAD-302)
@@ -516,9 +564,9 @@ export default function TacticalVectorMap({
     return (
       <div className="flex h-[480px] w-full flex-col items-center justify-center rounded-xl bg-surface-1 p-6 text-center text-text-muted">
         <Compass className="mb-3 h-10 w-10 text-al-gold" />
-        <p role="status" className="text-sm font-bold text-text">{mapError ?? 'WebGL non supporté'}</p>
+        <p role="status" className="text-sm font-bold text-text">{mapError ? labels.unavailable : labels.noWebgl}</p>
         <p className="mt-1 text-xs">
-          {mapError ? 'Vous pouvez sélectionner un pays et consulter les dépêches ci-dessous.' : 'Votre navigateur ou affichage ne supporte pas l’accélération matérielle WebGL.'}
+          {mapError ? labels.unavailableHelp : labels.noWebglHelp}
         </p>
       </div>
     );
@@ -543,9 +591,9 @@ export default function TacticalVectorMap({
   return (
     <div className="relative flex w-full flex-1 flex-col overflow-hidden rounded-xl border border-line bg-black/60">
       <div className="relative z-10 flex flex-wrap items-center gap-2 border-b border-line bg-black/60 p-2">
-        <div role="group" aria-label="Fond de carte" className="flex items-center rounded-xl border border-line bg-black/60 p-0.5">
-          {modeButton('dark', 'Sombre', 'Fond sombre léger : consomme peu de données')}
-          {modeButton('satellite', 'Satellite', 'Vue satellite : plus lourde en données')}
+        <div role="group" aria-label={labels.basemap} className="flex items-center rounded-xl border border-line bg-black/60 p-0.5">
+          {modeButton('dark', labels.dark, labels.darkTitle)}
+          {modeButton('satellite', labels.satellite, labels.satelliteTitle)}
         </div>
 
         <button
@@ -553,7 +601,7 @@ export default function TacticalVectorMap({
           onClick={handleToggleGlobe}
           aria-pressed={isGlobeMode}
           disabled={!isLoaded}
-          title={isGlobeMode ? 'Revenir à la carte à plat' : 'Afficher la Terre en relief'}
+          title={isGlobeMode ? labels.flat : labels.globeTitle}
           className={`inline-flex min-h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold ${
             isGlobeMode
               ? 'border-al-gold bg-al-gold/15 text-text'
@@ -561,19 +609,19 @@ export default function TacticalVectorMap({
           }`}
         >
           <Globe2 aria-hidden="true" className="h-3.5 w-3.5 text-al-gold" />
-          <span>Globe 3D</span>
-          <span className="text-xs font-black uppercase">{isGlobeMode ? 'ON' : 'OFF'}</span>
+          <span>{labels.globe}</span>
+          <span className="text-xs font-black uppercase">{isGlobeMode ? labels.on : labels.off}</span>
         </button>
 
         <button
           type="button"
           onClick={handleRecenter}
-          title="Recadrer sur l'Afrique"
-          aria-label="Recadrer la carte sur le continent africain"
-          className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-line bg-surface-2 px-3 text-xs font-bold text-text-muted transition hover:border-line-gold hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold sm:ml-auto"
+          title={labels.recenterTitle}
+          aria-label={labels.recenterAria}
+          className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-line bg-surface-2 px-3 text-xs font-bold text-text-muted transition hover:border-line-gold hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold sm:ms-auto"
         >
           <RotateCcw aria-hidden="true" className="h-3 w-3 text-al-gold" />
-          <span>Recadrer</span>
+          <span>{labels.recenter}</span>
         </button>
       </div>
 
@@ -588,21 +636,21 @@ export default function TacticalVectorMap({
         <div className="flex flex-wrap items-center gap-3">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-al-green" />
-            Pays avec dépêches · plus ça pulse, plus c’est actif (24 h)
+            {labels.legendNews}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full border border-dashed border-al-gold" />
-            Chaînes TV référencées
+            {labels.legendChannels}
           </span>
           {commodityFocus && (
             <span className="inline-flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm border border-al-green bg-al-green/30" />
-              {commodityFocusLabel(commodityFocus)}{basemapMode === 'satellite' && ' (fond Sombre)'}
+              {commodityFocusLabel(commodityFocus, t.markets.focus, edition)}{basemapMode === 'satellite' && labels.darkOnly}
             </span>
           )}
           {isGlobeMode && (
             <span className="inline-flex items-center gap-1.5 text-al-green">
-              Globe 3D : clic droit + glisser pour incliner
+              {labels.globeHelp}
             </span>
           )}
         </div>
@@ -612,12 +660,12 @@ export default function TacticalVectorMap({
             onClick={() => onSelectCountry(null)}
             className="min-h-9 px-2 font-semibold text-al-green hover:text-text"
           >
-            Effacer le filtre
+            {labels.clearFilter}
           </button>
         )}
         {/* Attribution obligatoire, sur une ligne : l'imagerie Esri n'est créditée que lorsqu'elle est affichée. */}
         <p className="w-full text-text-muted">
-          Contours : Natural Earth{basemapMode === 'satellite' && <> · Imagerie © Esri, Maxar, Earthstar Geographics</>}
+          {labels.contours}{basemapMode === 'satellite' && <>{labels.imagery}</>}
         </p>
       </div>
     </div>

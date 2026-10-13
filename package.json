@@ -42,6 +42,7 @@
     "capacity:media": "tsx src/scripts/estimate-media-capacity.ts",
     "worker:maintenance": "tsx src/scripts/run-maintenance.ts",
     "verify:streams": "tsx src/scripts/verify-streams.ts",
+    "feeds:verify": "tsx src/scripts/verify-feeds.ts",
     "worker:verify": "tsx src/scripts/verify-streams.ts --worker",
     "simulate:incident": "tsx src/scripts/simulate-incident.ts",
     "diagnose:local": "tsx src/scripts/diagnose-local.ts",

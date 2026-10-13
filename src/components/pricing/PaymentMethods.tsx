@@ -1,3 +1,5 @@
+'use client';
+import { useI18n } from '@/i18n/client';
 import { CreditCard } from 'lucide-react';
 import { cn } from '@/components/ui';
 
@@ -6,26 +8,28 @@ import { cn } from '@/components/ui';
  * Les couleurs de marque viennent des jetons `pay-*` de globals.css.
  */
 export default function PaymentMethods({ className, compact = false }: { className?: string; compact?: boolean }) {
+  const { t } = useI18n();
   return (
-    <ul aria-label="Moyens de paiement acceptés" className={cn('flex flex-wrap items-center gap-2', className)}>
+    <ul aria-label={t.pricing.copy["Moyens de paiement acceptés"]} className={cn('flex flex-wrap items-center gap-2', className)}>
+      <li className={cn(pill, 'border-line-gold bg-al-gold/10')}>
+        <CreditCard size={18} aria-hidden="true" className="shrink-0 text-al-gold" />
+        <span>{compact ? t.pricing.cardLabel : t.pricing.cardLabel + ' · Visa / Mastercard'}</span>
+      </li>
       <li className={pill}>
         <svg viewBox="0 0 20 20" aria-hidden="true" className="size-5 shrink-0">
           <rect width="20" height="20" rx="5" className="fill-pay-wave" />
           <path d="M3.5 11.5c1.6-2.4 3.2-2.4 4.4 0s2.8 2.4 4.2 0 2.8-2.4 4.4 0" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
-        <span>Wave</span>
+        <span>{t.pricing.copy["Wave"]}</span>
       </li>
       <li className={pill}>
         <svg viewBox="0 0 20 20" aria-hidden="true" className="size-5 shrink-0">
           <rect width="20" height="20" rx="3" className="fill-pay-orange" />
           <rect x="4" y="13" width="12" height="2.4" rx="1" fill="white" />
         </svg>
-        <span>Orange Money</span>
+        <span>{t.pricing.copy["Orange Money"]}</span>
       </li>
-      <li className={pill}>
-        <CreditCard size={18} aria-hidden="true" className="shrink-0 text-al-gold" />
-        <span>{compact ? 'Carte bancaire' : 'Visa / Mastercard'}</span>
-      </li>
+
     </ul>
   );
 }

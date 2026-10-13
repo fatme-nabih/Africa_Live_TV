@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>El Bilad</title>
+<link>https://feed.fixture.test/</link>
+<description>Flux synthétique Africa Live (EDI-002) : titres inventés, format de date réel.</description>
+<item>
+<title>عنوان تجريبي من الجزائر</title>
+<link>https://feed.fixture.test/el-bilad/1</link>
+<pubDate>17:24 | 11-10-2026</pubDate>
+</item>
+<item>
+<title>عنوان تجريبي آخر</title>
+<link>https://feed.fixture.test/el-bilad/2</link>
+<pubDate>00:05 | 01-11-2026</pubDate>
+</item>
+</channel>
+</rss>

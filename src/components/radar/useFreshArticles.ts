@@ -1,4 +1,6 @@
 'use client';
+import { useEdition } from '@/i18n/client';
+import { editionStorageKey } from '@/lib/edition-client';
 
 import { useCallback, useMemo, useState } from 'react';
 import { canonicalArticleUrl } from '@/lib/radar-data';
@@ -24,6 +26,8 @@ export function useFreshArticles(
   articles: RadarArticle[],
   { localKey, refreshToken, dataVersion }: { localKey: string; refreshToken: number; dataVersion: number },
 ) {
+  const edition = useEdition();
+  localKey = editionStorageKey(localKey, edition);
   const keys = useMemo(() => articles.map(article => canonicalArticleUrl(article.url)), [articles]);
   const [tracker, setTracker] = useState<Tracker>({ localKey, refreshToken, dataVersion, released: null, manual: false });
 

@@ -1,10 +1,13 @@
 import { ArrowUp } from 'lucide-react';
+import { useI18n } from '@/i18n/client';
+import { formatPlural } from '@/i18n/message';
 
 /**
  * Pastille « 3 nouvelles ↑ » : les dépêches arrivées d'elles-mêmes attendent ici au lieu de repousser ce qu'on lit.
  * Flottante sous la barre haute : elle n'occupe aucune place dans la page, donc ne décale rien.
  */
 export default function NewArrivalsPill({ count, onShow }: { count: number; onShow: () => void }) {
+  const { t, edition } = useI18n();
   return (
     <div
       role="status"
@@ -18,7 +21,7 @@ export default function NewArrivalsPill({ count, onShow }: { count: number; onSh
           className="pointer-events-auto inline-flex min-h-11 items-center gap-2 rounded-pill border border-al-gold bg-surface-1 px-4 text-xs font-bold text-text shadow-lg shadow-black/60 transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-al-gold"
         >
           <ArrowUp aria-hidden="true" className="h-3.5 w-3.5 text-al-gold" />
-          {count} nouvelle{count > 1 ? 's' : ''}
+          {formatPlural(t.radar.newArrivals, count, {}, edition)}
         </button>
       )}
     </div>

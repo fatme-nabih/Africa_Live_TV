@@ -1,3 +1,5 @@
+import type { Edition } from './editions';
+import { metadataValuesMatching } from './catalog-metadata';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { channels, streams } from '@/db/schema';
@@ -99,20 +101,26 @@ export async function getAfricanChannelsSummary(
 }
 
 export async function getChannelsForAfricanCountry(
-  countryCode: string, canPlay: boolean, limit = 40, customDb: LiveChannelsDb = db, localPlayback = false,
+  countryCode: string, canPlay: boolean, limit = 40, customDb: LiveChannelsDb = db, localPlayback = false, edition: Edition = 'fr',
 ): Promise<LiveCountryChannelsSnapshot> {
   const normalizedCode = countryCode.trim().toUpperCase();
   const countryName = AFRICAN_COUNTRY_NAME_BY_CODE.get(normalizedCode) ?? normalizedCode;
   if (!AFRICAN_COUNTRY_NAME_BY_CODE.has(normalizedCode)) return {countryCode:normalizedCode,countryName,channels:[],total:0,canPlay};
   limit = Math.max(1, Math.min(100, Math.trunc(limit) || 40));
   const now = Date.now();
-  const key = normalizedCode + ':' + localPlayback + ':' + limit;
+  const key = normalizedCode + ':' + localPlayback + ':' + limit + (edition === 'fr' ? '' : ':' + edition);
   const cached = countryChannelsCache.get(key);
   if (cached && now - cached.timestamp < CHANNELS_CACHE_TTL_MS) return {countryCode:normalizedCode,countryName,...cached.data,canPlay};
   for (const [key,entry] of countryChannelsCache) if(now-entry.timestamp>=CHANNELS_CACHE_TTL_MS)countryChannelsCache.delete(key);
   const condition = and(eq(channels.active,true),eq(channels.countryCode,normalizedCode),publicCatalogChannelCondition(),catalogHasVisibleStream(localPlayback));
+  let preferredValues: string[] = [];
+  if (edition !== 'fr') {
+    const languages = await customDb.select({ language: channels.language }).from(channels).where(condition);
+    preferredValues = metadataValuesMatching(languages.map(row => row.language), edition, 'language').filter((value): value is string => value !== null);
+  }
+  const preference = sql<number>`case when ${preferredValues.length ? inArray(channels.language, preferredValues) : sql`false`} then 0 else 1 end`;
   const [channelRows, counts] = await Promise.all([
-    customDb.select().from(channels).where(condition).orderBy(asc(channels.name),asc(channels.id)).limit(limit),
+    customDb.select().from(channels).where(condition).orderBy(...(edition !== 'fr' ? [asc(preference)] : []),asc(channels.name),asc(channels.id)).limit(limit),
     customDb.select({total:sql<number>`count(*)::int`}).from(channels).where(condition),
   ]);
   const total=counts[0]?.total ?? 0;
@@ -123,7 +131,7 @@ export async function getChannelsForAfricanCountry(
   for(const stream of streamRows) {const group=byChannel.get(stream.channelId)??[];group.push(stream);byChannel.set(stream.channelId,group);}
   const visible:Channel[]=channelRows.map(ch=>{
     const sources=byChannel.get(ch.id)??[];
-    return {id:ch.id,name:ch.name,logoUrl:ch.logoUrl,groupTitle:ch.groupTitle,countryCode:ch.countryCode,
+    return {id:ch.id,name:ch.name,logoUrl:ch.logoUrl,groupTitle:ch.groupTitle,countryCode:ch.countryCode,...(edition !== 'fr' ? { language: ch.language } : {}),
       playbackMode:resolvePlaybackMode(sources),availabilityStatus:resolveChannelAvailability(sources,new Date(now-PLAYBACK_SOURCE_FRESHNESS_MS))};
   });
   if(countryChannelsCache.size>=256)countryChannelsCache.delete(countryChannelsCache.keys().next().value!);

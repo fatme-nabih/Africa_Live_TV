@@ -1,4 +1,19 @@
+> **État après EDI-903, 13/10/2026 : 43/43 tickets reçus.** D7/juridique validés par le propriétaire sur les textes actuels ; publication FR/EN/AR **f4d85931-e353-422e-bbe6-aa1476ab360a SUCCESS** sur Railway staging, 22 migrations, 646/646 fichiers, santé 200, 28 E2E +22 ignorés, 45 captures. Aucun commit/push ; index, sources FR, données, .env, tâche et cycle conservés. [Publication](publication-editions-edi903-2026-10-13.md), [passation actuelle](passation-editions-publication-2026-10-13.md). Les bilans « en attente/non autorisé » ci-dessous décrivent les états antérieurs.
+
 # Checklist de non-régression — lots local et Railway
+
+## Éditions E0–E3 — reçues localement, passation du 12 octobre 2026
+
+[Réception E3 et limites](reception-editions-e3-2026-10-12.md), [passation fait/restant](passation-editions-2026-10-12.md). Ces contrôles sont locaux ; aucun chantier éditions publié sur Railway.
+
+- [x] Types/ESLint, 501 unités +41 ignorées, 104/104 composants, 4/4 invariants et builds `fr,en` / `fr` reçus ; dernier banc FR complémentaire 34/34.
+- [x] EN, sélecteur clavier, isolation des données, formats/météo/briefing et session Edge Clerk compte/TV/Radar reçus, puis retour FR.
+- [x] Catalogue complet conservé : 50 IDs Nigeria identiques FR/EN, sans doublon, priorité de langue sans filtre ; compte/droits/favoris/pays/Éco communs.
+- [x] Captures FR/EN 360/768/1366 ; comparaison FR seul à E2 17/18 identiques au seuil, écart D5 volontaire sur tarifs 360 px.
+- [x] Données métier et `.env*` préservées ; serveurs de réception arrêtés, aucune action distante, migration ou publication.
+- [ ] E4 : RTL/classes logiques/police/bidi/AR/Clerk `arSA`, non commencé, feu vert requis ; relecture native D7 avant réception.
+- [ ] E5/E6/E9 : public/SEO/partage/juridique, pont/finitions/décisions, réception globale et publication conditionnelle.
+- [ ] Disponibilité EN au premier appel à froid : repli puis reprise reçus, succès initial non garanti ; limite navigateur 15 s conservée.
 
 ## Bouton pause du bandeau supprimé — publié sur staging le 11 octobre 2026
 

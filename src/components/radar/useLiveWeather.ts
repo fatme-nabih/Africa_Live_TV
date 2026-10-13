@@ -4,10 +4,16 @@ import type { LiveWeatherSnapshot } from '@/lib/live-weather-types';
 import { loadClientWeather } from '@/lib/weather-client';
 import { admissibleWeather, makeWeatherSnapshot, WEATHER_TTL_MS } from '@/lib/weather-contract';
 import { WeatherRequestError } from '@/lib/weather-request';
+import { useI18n } from '@/i18n/client';
+
+// Messages propres au navigateur (le texte vient du dictionnaire) ; les autres erreurs gardent le message reçu.
+const WEATHER_FAILED = 'WEATHER_FAILED';
+const WEATHER_THROTTLED = 'WEATHER_THROTTLED';
 
 const CLOCK_TICK_MS = 15_000;
 
 export function useLiveWeather(code: string, refreshToken: number) {
+  const { t } = useI18n();
   const [snapshot, setSnapshot] = useState<LiveWeatherSnapshot | null>(null);
   const [weatherError, setError] = useState<string | null>(null);
   const [weatherLoading, setLoading] = useState(true);
@@ -36,7 +42,7 @@ export function useLiveWeather(code: string, refreshToken: number) {
         }
         setSnapshot(previous => !refused && previous?.current.countryCode === code && admissibleWeather(previous)
           ? makeWeatherSnapshot(previous.current, Date.now(), true) : null);
-        setError(error instanceof Error ? error.message : 'Erreur de chargement météo.');
+        setError(error instanceof Error ? error.message : WEATHER_FAILED);
       } finally {
         running = false;
         if (active) { setLoading(false); setNow(Date.now()); }
@@ -45,7 +51,7 @@ export function useLiveWeather(code: string, refreshToken: number) {
     const tick = () => { if (active) setNow(Date.now()); };
     tick(); void load();
     // No immediate retry when Retry-After elapses: the regular cadence/manual action applies.
-    if (Date.now() < retryDeadline.current) { setLoading(false); setError('Trop de demandes météo. Réessayez après le délai indiqué.'); }
+    if (Date.now() < retryDeadline.current) { setLoading(false); setError(WEATHER_THROTTLED); }
     const interval = window.setInterval(() => void load(), WEATHER_TTL_MS);
     // L'horloge ne sert qu'à constater l'expiration d'un relevé (quinze minutes de validité) : inutile de refaire le rendu de tout le Radar chaque seconde.
     const clock = window.setInterval(tick, CLOCK_TICK_MS);
@@ -53,6 +59,8 @@ export function useLiveWeather(code: string, refreshToken: number) {
   }, [code, refreshToken]);
   const weather = now > 0 && snapshot?.current.countryCode === code && admissibleWeather(snapshot, now)
     ? makeWeatherSnapshot(snapshot.current, now, snapshot.stale) : null;
-  return { weather, weatherError: weatherError ?? (snapshot?.current.countryCode === code && !weather ? 'Le relevé météo a expiré. Actualisez pour réessayer.' : null),
+  const messages = t.weather.errors;
+  const shownError = weatherError === WEATHER_FAILED ? messages.failed : weatherError === WEATHER_THROTTLED ? messages.throttled : weatherError;
+  return { weather, weatherError: shownError ?? (snapshot?.current.countryCode === code && !weather ? messages.expired : null),
     weatherLoading, retryBlocked: retryAt > now };
 }

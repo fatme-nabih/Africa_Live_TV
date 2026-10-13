@@ -1,4 +1,6 @@
 'use client';
+import { useEdition } from '@/i18n/client';
+import { editionApiUrl } from '@/lib/edition-client';
 
 import { useEffect, useRef, useState } from 'react';
 import { LatestRequestController } from '@/lib/latest-request';
@@ -9,11 +11,14 @@ const INTERVAL_MS = 10 * 60_000;
 
 /** Relevé « Regards sur le monde », chargé seulement quand la rubrique approche de l'écran (`enabled`). */
 export function useWorldDesk(enabled: boolean, refreshToken: number) {
+  const edition = useEdition();
   const requests = useRef(new LatestRequestController());
   const lastToken = useRef(refreshToken);
   const [data, setData] = useState<WorldSnapshot | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [dataEdition, setDataEdition] = useState(edition);
+  if (dataEdition !== edition) { setDataEdition(edition); setData(null); setError(false); }
   const [retry, setRetry] = useState(0);
 
   useEffect(() => {
@@ -27,7 +32,7 @@ export function useWorldDesk(enabled: boolean, refreshToken: number) {
       lastAttempt = Date.now();
       setLoading(true);
       try {
-        const snapshot = parseWorldSnapshot(await requestRadarJson(`/api/live/world${forceRefresh ? '?refresh=true' : ''}`, request.signal));
+        const snapshot = parseWorldSnapshot(await requestRadarJson(editionApiUrl(`/api/live/world${forceRefresh ? '?refresh=true' : ''}`, edition), request.signal));
         if (!snapshot) throw new Error('Invalid world snapshot');
         if (active && controller.isCurrent(request.id)) { setData(snapshot); setError(false); }
       } catch {
@@ -44,7 +49,7 @@ export function useWorldDesk(enabled: boolean, refreshToken: number) {
     const interval = window.setInterval(periodic, INTERVAL_MS);
     document.addEventListener('visibilitychange', periodic);
     return () => { active = false; controller.abort(); window.clearInterval(interval); document.removeEventListener('visibilitychange', periodic); };
-  }, [enabled, refreshToken, retry]);
+  }, [enabled, refreshToken, retry, edition]);
 
   return { data, loading: loading || (enabled && !data && !error), error, retry: () => setRetry(value => value + 1) };
 }

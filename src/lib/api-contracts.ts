@@ -20,6 +20,7 @@ export const channelSchema = z.object({
   logoUrl: z.url().nullable(),
   groupTitle: z.string().max(500).nullable(),
   countryCode: z.string().max(10).nullable(),
+  language: z.string().max(100).nullable().optional(),
   playbackMode: playbackModeSchema,
   availabilityStatus: channelAvailabilityStatusSchema,
 }).strict();
@@ -48,6 +49,7 @@ export const channelFiltersSchema = z.object({
 });
 
 export const catalogRequestSchema = channelFiltersSchema.extend({
+  edition: z.enum(['fr', 'en', 'ar']).optional(),
   favoritesOnly: z.boolean().default(false),
   cursor: z.string().max(1_000).nullable().default(null),
   limit: z.number().int().min(1).max(30).default(30),
@@ -251,7 +253,8 @@ export async function readApiResponse<T>(response: Response, schema: z.ZodType<T
   return parsed.data;
 }
 
-export function messageForApiError(error: unknown, fallback: string) {
+export function messageForApiError(error: unknown, fallback: string, messages?: Readonly<Record<string, string>>) {
+  if (messages) return error instanceof ApiRequestError && error.code ? messages[error.code] ?? fallback : fallback;
   if (error instanceof ApiRequestError || error instanceof Error) return error.message;
   return fallback;
 }
@@ -267,3 +270,11 @@ export const followedCountriesSchema = z
   .refine(({ countries }) => new Set(countries).size === countries.length, { message: 'Pays en double.' });
 
 export type FollowedCountriesPayload = z.infer<typeof followedCountriesSchema>;
+
+// Édition mémorisée dans le compte (EDI-603) : une édition connue et le propriétaire de la page qui l'envoie.
+export const editionPreferenceSchema = z
+  .object({
+    edition: z.enum(['fr', 'en', 'ar']),
+    owner: z.string().min(1).max(256),
+  })
+  .strict();

@@ -1,4 +1,5 @@
 'use client';
+import { useI18n } from '@/i18n/client';
 
 import {
   Keyboard,
@@ -51,52 +52,57 @@ const SHORTCUTS: Array<[string, string]> = [
 
 /** Commandes maison du lecteur : lecture, son, plein écran, image dans l'image, chaîne précédente / suivante, aide. */
 export default function PlayerControls(props: PlayerControlsProps) {
+  const { t } = useI18n();
   const helpId = useId();
   const { paused, muted, volume, fullscreen, helpOpen } = props;
   return (
     <>
+      {/* right-3 physique : l'aide s'ouvre au-dessus de son bouton, dans la barre média qui reste gauche → droite. */}
       {helpOpen && (
         <div
           id={helpId}
           role="region"
-          aria-label="Raccourcis clavier"
+          aria-label={t.player.copy["Raccourcis clavier"]}
           className="absolute bottom-16 right-3 z-30 w-72 max-w-[calc(100%-1.5rem)] rounded-card border border-line-gold bg-surface-1/95 p-4 text-xs shadow-2xl"
         >
-          <p className="mb-2 font-display text-sm font-bold text-text">Raccourcis</p>
+          <p className="mb-2 font-display text-sm font-bold text-text">{t.player.copy["Raccourcis"]}</p>
           <dl className="space-y-1.5">
             {SHORTCUTS.filter(([keys]) => props.onPrevious || keys !== '← →').map(([keys, label]) => (
               <div key={keys} className="flex items-center justify-between gap-3">
-                <dt><kbd className="rounded-md border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-text">{keys}</kbd></dt>
-                <dd className="text-text-muted">{label}</dd>
+                <dt><kbd className="rounded-md border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-text">{keys === 'Espace · K' ? t.player.copy['Espace · K'] : keys}</kbd></dt>
+                <dd className="text-text-muted">{(t.player.copy as Record<string, string>)[label] ?? label}</dd>
               </div>
             ))}
           </dl>
         </div>
       )}
+      {/* Barre média volontairement gauche → droite dans toutes les éditions : précédente/suivante, volume et raccourcis ← →
+          gardent la même géométrie (EDI-401). Les libellés arabes s'affichent correctement grâce à l'algorithme bidi. */}
       <div
+        dir="ltr"
         role="toolbar"
-        aria-label="Commandes du lecteur"
+        aria-label={t.player.copy["Commandes du lecteur"]}
         className={`absolute inset-x-0 bottom-0 z-20 flex items-center gap-0.5 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-2 pb-1.5 pt-10 transition-opacity duration-200 focus-within:pointer-events-auto focus-within:opacity-100 ${
           props.visible ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
       >
         {props.onPrevious && !props.compact && (
-          <button type="button" onClick={props.onPrevious} disabled={!props.hasPrevious} aria-label="Chaîne précédente" className={BUTTON}>
+          <button type="button" onClick={props.onPrevious} disabled={!props.hasPrevious} aria-label={t.player.copy["Chaîne précédente"]} className={BUTTON}>
             <SkipBack className="size-5" aria-hidden="true" />
           </button>
         )}
-        <button type="button" onClick={props.onTogglePlay} aria-label={paused ? 'Lecture' : 'Pause'} className={BUTTON}>
+        <button type="button" onClick={props.onTogglePlay} aria-label={paused ? t.player.copy["Lecture"] : t.player.copy["Pause"]} className={BUTTON}>
           {paused ? <Play className="size-5 fill-current" aria-hidden="true" /> : <Pause className="size-5 fill-current" aria-hidden="true" />}
         </button>
         {props.onNext && !props.compact && (
-          <button type="button" onClick={props.onNext} disabled={!props.hasNext} aria-label="Chaîne suivante" className={BUTTON}>
+          <button type="button" onClick={props.onNext} disabled={!props.hasNext} aria-label={t.player.copy["Chaîne suivante"]} className={BUTTON}>
             <SkipForward className="size-5" aria-hidden="true" />
           </button>
         )}
         <button
           type="button"
           onClick={props.onToggleMute}
-          aria-label={muted ? 'Rétablir le son' : 'Couper le son'}
+          aria-label={muted ? t.player.copy["Rétablir le son"] : t.player.copy["Couper le son"]}
           aria-pressed={muted}
           className={BUTTON}
         >
@@ -109,14 +115,14 @@ export default function PlayerControls(props: PlayerControlsProps) {
           step={0.05}
           value={muted ? 0 : volume}
           onChange={event => props.onVolumeChange(Number(event.target.value))}
-          aria-label="Volume"
+          aria-label={t.player.copy["Volume"]}
           className={`mx-1 hidden h-11 w-24 accent-al-yellow ${props.compact ? '' : 'sm:block'}`}
         />
         <span className="flex-1" />
         {!props.compact && <button
           type="button"
           onClick={props.onToggleHelp}
-          aria-label="Raccourcis clavier"
+          aria-label={t.player.copy["Raccourcis clavier"]}
           aria-expanded={helpOpen}
           aria-controls={helpOpen ? helpId : undefined}
           className={`${BUTTON} max-sm:hidden`}
@@ -124,14 +130,14 @@ export default function PlayerControls(props: PlayerControlsProps) {
           <Keyboard className="size-5" aria-hidden="true" />
         </button>}
         {props.pipAvailable && (
-          <button type="button" onClick={props.onTogglePip} aria-label="Image dans l’image" className={BUTTON}>
+          <button type="button" onClick={props.onTogglePip} aria-label={t.player.copy["Image dans l’image"]} className={BUTTON}>
             <PictureInPicture2 className="size-5" aria-hidden="true" />
           </button>
         )}
         {!props.compact && <button
           type="button"
           onClick={props.onToggleFullscreen}
-          aria-label={fullscreen ? 'Quitter le plein écran' : 'Plein écran'}
+          aria-label={fullscreen ? t.player.copy["Quitter le plein écran"] : t.player.copy["Plein écran"]}
           className={BUTTON}
         >
           {fullscreen ? <Minimize className="size-5" aria-hidden="true" /> : <Maximize className="size-5" aria-hidden="true" />}

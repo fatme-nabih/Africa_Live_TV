@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest, type NextFetchEvent } from 'next/server
 import { isAnonymousE2EMode, isLocalDevMode, isLocalDevRequest } from './lib/local-dev';
 import { isLoopbackAddress } from './lib/local-request';
 import { isClerkFreePublicPage } from './lib/public-static-pages';
+import { EDITION_COOKIE, enabledEditions } from './lib/editions';
+import { editionCookieOptions, resolveEditionRequest, withoutEditionPrefix, type EditionDecision } from './lib/edition-routing';
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
 const isProtectedRoute = createRouteMatcher([
@@ -14,6 +16,7 @@ const isProtectedRoute = createRouteMatcher([
   '/api/filters(.*)',
   '/api/favorites(.*)',
   '/api/followed-countries(.*)',
+  '/api/edition-preference(.*)',
   '/api/open-vlc(.*)',
   '/api/playback/resolutions(.*)',
   '/api/playback-events(.*)',
@@ -24,6 +27,20 @@ const authenticatedProxy = clerkMiddleware(async (auth, req) => {
     await auth.protect();
   }
 });
+
+/**
+ * Redirections d'édition (EDI-103). Le proxy ne réécrit rien : la réécriture interne vers `app/[edition]` est faite par
+ * `rewrites()` de next.config.ts (src/lib/edition-routing.ts). Les règles d'accès restent écrites sur les adresses visibles.
+ */
+function editionRedirect(req: NextRequest): NextResponse | null {
+  const decision: EditionDecision = resolveEditionRequest({ pathname: req.nextUrl.pathname, cookie: req.cookies.get(EDITION_COOKIE)?.value, enabled: enabledEditions() });
+  if (decision.kind !== 'redirect') return null;
+  const url = req.nextUrl.clone();
+  url.pathname = decision.pathname;
+  const response = NextResponse.redirect(url, decision.status);
+  if (decision.setCookie) response.cookies.set(EDITION_COOKIE, decision.setCookie, editionCookieOptions(req.nextUrl.protocol === 'https:'));
+  return response;
+}
 
 function isLoopbackTarget(req: NextRequest) {
   const host = req.headers.get('host');
@@ -46,7 +63,7 @@ export default async function proxy(req: NextRequest, event: NextFetchEvent) {
       }
       return NextResponse.redirect(new URL('/sign-in', req.url));
     }
-    return NextResponse.next();
+    return editionRedirect(req) ?? NextResponse.next();
   }
   if (isLocalDevMode()) {
     if (!isLocalDevRequest(req)) return NextResponse.json({ error: 'Accès local uniquement.' }, { status: 403 });
@@ -57,9 +74,12 @@ export default async function proxy(req: NextRequest, event: NextFetchEvent) {
       return NextResponse.redirect(new URL('/app/live', req.url));
     }
     if (req.nextUrl.pathname.startsWith('/api/webhooks/')) return new NextResponse(null, { status: 404 });
-    return NextResponse.next();
+    return editionRedirect(req) ?? NextResponse.next();
   }
-  if (isClerkFreePublicPage(req.nextUrl.pathname)) return NextResponse.next();
+  // Une redirection d'édition ne sert aucun contenu : la requête suivante repasse par Clerk.
+  const redirect = editionRedirect(req);
+  if (redirect) return redirect;
+  if (isClerkFreePublicPage(withoutEditionPrefix(req.nextUrl.pathname))) return NextResponse.next();
   const response = await authenticatedProxy(req, event);
   const rewrite = response?.headers?.get('x-middleware-rewrite');
   if (response && rewrite) {

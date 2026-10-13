@@ -27,6 +27,7 @@ export interface CatalogChannel {
   logoUrl: string | null;
   groupTitle: string | null;
   countryCode: string | null;
+  language?: string | null;
   playbackMode: PlaybackMode;
   availabilityStatus: ChannelAvailabilityStatus;
 }

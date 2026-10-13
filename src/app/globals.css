@@ -198,6 +198,19 @@ h3 {
   animation: live-pulse 1.8s ease-out infinite;
 }
 
+/* Édition arabe (EDI-402) : Manrope garde les lettres latines et les chiffres occidentaux (D3), Cairo prend l'arabe.
+   La classe --font-cairo n'existe que sur <html lang="ar"> (root-document.tsx) : aucune autre édition ne télécharge la police.
+   Les faces « Manrope Fallback » / « Unbounded Fallback » de next/font (Arial local) couvrent tous les caractères, arabe compris :
+   Cairo doit donc passer juste après les familles latines réelles et avant ces faces de repli (vérifié par l'E2E EDI-404).
+   L'espacement des lettres casserait les liaisons de l'écriture cursive : il est neutralisé en arabe. */
+html[lang='ar'] {
+  --font-sans: "Manrope", var(--font-cairo), var(--font-manrope), system-ui, sans-serif;
+  --font-display: "Unbounded", var(--font-cairo), var(--font-unbounded), var(--font-manrope), sans-serif;
+  /* Consolas n'a pas d'arabe : sans Cairo avant « Courier New », l'arabe des badges monospace perdrait ses liaisons. */
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, var(--font-cairo), "Liberation Mono", "Courier New", monospace;
+}
+html[lang='ar'] [class*='tracking-'] { letter-spacing: normal; }
+
 /* Squelettes */
 @keyframes skeleton-shimmer {
   100% {
@@ -217,6 +230,7 @@ h3 {
   background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.05), transparent);
   animation: skeleton-shimmer 1.6s infinite;
 }
+[dir='rtl'] .skeleton::after { animation-direction: reverse; }
 
 /* Logo de fond : couleur très atténuée, effacé par une vignette (BrandBackdrop) */
 .brand-backdrop-logo {
@@ -313,17 +327,23 @@ html[data-eco='true'] .radar-pulse {
   from { transform: translateX(0); }
   to { transform: translateX(calc(-1 * var(--ticker-distance, 0px))); }
 }
+/* Droite → gauche (édition arabe) : la copie est à gauche du groupe, le bandeau avance donc vers la droite. */
+@keyframes marquee-scroll-rtl {
+  from { transform: translateX(0); }
+  to { transform: translateX(var(--ticker-distance, 0px)); }
+}
 /* relative : les textes pour lecteurs d'écran (.sr-only, absolus) restent dans la ligne au lieu d'élargir la page sur mobile. */
 .marquee { position: relative; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
 .marquee::-webkit-scrollbar { display: none; }
 .animate-marquee { display: flex; width: max-content; animation-name: none; }
-.marquee-group { display: flex; flex: 0 0 auto; align-items: center; gap: 0.375rem; padding-right: 0.375rem; white-space: nowrap; }
-.ticker-wire .marquee-group { gap: 2.5rem; padding-right: 2.5rem; }
+.marquee-group { display: flex; flex: 0 0 auto; align-items: center; gap: 0.375rem; padding-inline-end: 0.375rem; white-space: nowrap; }
+.ticker-wire .marquee-group { gap: 2.5rem; padding-inline-end: 2.5rem; }
 .marquee-clone, .ticker-wire { display: none; }
 .ticker-reader { display: block; }
 @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
   html:not([data-eco='true']) .marquee { overflow: hidden; }
   html:not([data-eco='true']) .animate-marquee { animation-name: marquee-scroll; animation-duration: var(--ticker-duration, 60s); animation-timing-function: linear; animation-iteration-count: infinite; will-change: transform; }
+  html[dir='rtl']:not([data-eco='true']) .animate-marquee { animation-name: marquee-scroll-rtl; }
   html:not([data-eco='true']) .marquee-group { min-width: var(--ticker-viewport, 0px); }
   html:not([data-eco='true']) .marquee-clone { display: flex; }
   html:not([data-eco='true']) .ticker-wire { display: block; }

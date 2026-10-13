@@ -1,3 +1,5 @@
+import { parseEnabledEditions } from './editions';
+
 type Environment = Record<string, string | undefined>;
 
 export class EnvironmentValidationError extends Error {
@@ -146,4 +148,7 @@ export function validateServerEnvironment(env: Environment) {
   }
 
   if (issues.length) throw new EnvironmentValidationError(issues);
+  // La même analyse au démarrage et en CLI : valeurs inconnues et dictionnaires absents masqués, FR toujours actif.
+  // Aucun texte soumis n'est journalisé ici (le proxy émet un avertissement structuré, la CLI les compte).
+  return { editions: parseEnabledEditions(env.EDITIONS) };
 }

@@ -1,9 +1,11 @@
 'use client';
+import { useI18n } from '@/i18n/client';
 import {useState,useRef,useCallback,useEffect} from 'react';
 import {LatestRequestController,SingleFlightGate} from '@/lib/latest-request';
 import {catalogRequestSchema,catalogResponseSchema,readApiResponse,messageForApiError,type CatalogRequest} from '@/lib/api-contracts';
 import type {Channel} from '@/types/channel';
 export function useCatalog(catalogRequest:CatalogRequest,favoritesRevision:number){
+ const { t, edition } = useI18n();
  const catalogRequestsRef=useRef(new LatestRequestController());
  const loadingMoreGateRef=useRef(new SingleFlightGate());
  const [channels,setChannels]=useState<Channel[]>([]);
@@ -17,7 +19,7 @@ export function useCatalog(catalogRequest:CatalogRequest,favoritesRevision:numbe
     setLoading(true);
     setCatalogError(null);
     try {
-      const body = catalogRequestSchema.parse(requestInput);
+      const body = catalogRequestSchema.parse({ ...requestInput, ...(edition !== 'fr' ? { edition } : {}) });
       const response = await fetch('/api/channels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -37,7 +39,7 @@ export function useCatalog(catalogRequest:CatalogRequest,favoritesRevision:numbe
       setNextCursor(data.nextCursor);
     } catch (error) {
       if (request.signal.aborted || !catalogRequestsRef.current!.isCurrent(request.id)) return;
-      setCatalogError(messageForApiError(error, 'Impossible de charger le catalogue.'));
+      setCatalogError(messageForApiError(error, t.tv.copy['Le catalogue n’a pas pu être chargé.'], edition === 'fr' ? undefined : t.errors.api));
     } finally {
       if (append) loadingMoreGateRef.current.leave();
       if (catalogRequestsRef.current!.isCurrent(request.id)) {
@@ -45,7 +47,7 @@ export function useCatalog(catalogRequest:CatalogRequest,favoritesRevision:numbe
         catalogRequestsRef.current!.finish(request.id);
       }
     }
-  }, []);
+  }, [edition, t]);
 
   const handleLoadMore = useCallback(() => {
     if (!nextCursor || loading || loadingMoreGateRef.current.isActive()) return;

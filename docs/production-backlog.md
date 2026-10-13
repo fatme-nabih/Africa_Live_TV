@@ -1,4 +1,19 @@
+> **État après EDI-903, 13/10/2026 : 43/43 tickets reçus.** D7/juridique validés par le propriétaire sur les textes actuels ; publication FR/EN/AR **f4d85931-e353-422e-bbe6-aa1476ab360a SUCCESS** sur Railway staging, 22 migrations, 646/646 fichiers, santé 200, 28 E2E +22 ignorés, 45 captures. Aucun commit/push ; index, sources FR, données, .env, tâche et cycle conservés. [Publication](publication-editions-edi903-2026-10-13.md), [passation actuelle](passation-editions-publication-2026-10-13.md). Les bilans « en attente/non autorisé » ci-dessous décrivent les états antérieurs.
+
 # Africa Live — Plan de préparation à la production
+
+## Éditions linguistiques FR · EN · AR — E0 à E3 vérifiés localement les 11 et 12 octobre 2026
+
+[Étude et sources vérifiées](plan-editions-linguistiques-2026-10-11.md),
+[plan technique](plan-technique-editions-2026-10-11.md),
+[backlog EDI-000 à EDI-903, 43 tickets](backlog-editions-2026-10-11.md),
+[prompt de reprise](prompt-agent-editions-2026-10-11.md). Choisir une langue change
+l'interface et les sources du Radar ; compte, droits, paiement et catalogue TV
+complet restent communs. Décisions D1–D6 et D8 reçues, D7 (relecteur arabe) en
+attente. E0 à E3 (jusqu’à EDI-308) vérifiés localement, non committés et non publiés.
+[Réception E1, preuves et limites](reception-editions-e1-2026-10-11.md). [Réception E2, moteur multilingue](reception-editions-e2-2026-10-11.md). [Réception E3, interface anglaise](reception-editions-e3-2026-10-12.md). E4 non commencé : un lot à la fois, au feu vert explicite du propriétaire. Flux FR conservés sur décision du propriétaire, R1–R5 après mesures de semaine.
+
+Passation demandée le 12/10 : [fait/restant, limites et poste](passation-editions-2026-10-12.md), **27/43 tickets reçus, 16 restants**. Nouveau prompt prêt pour le même checkout local non committé ; la mise à jour documentaire ne donne pas le feu vert E4 ni l'autorisation de publication.
 
 ## B01–B20/A1 et hydratation Clerk — publiés sur staging le 10 octobre 2026
 

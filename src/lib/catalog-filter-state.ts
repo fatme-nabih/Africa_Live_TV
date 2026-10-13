@@ -20,11 +20,11 @@ export function catalogFilterUrl(href: string, filters: ChannelFilters, favorite
   if (favoritesOnly) url.searchParams.set('favorites', '1'); else url.searchParams.delete('favorites');
   return url.pathname + url.search + url.hash;
 }
-export function catalogPreset(filters: ChannelFilters, favoritesOnly: boolean) {
+export function catalogPreset(filters: ChannelFilters, favoritesOnly: boolean, defaultCountry = 'SN') {
   if (favoritesOnly) return 'favorites';
   const groups: Record<string, string> = { News: 'news', Entertainment: 'entertainment', Movies: 'movies', Sports: 'sports', Series: 'series' };
   if (filters.group) return groups[filters.group] ?? '';
-  if (filters.country === 'SN') return 'senegal';
+  if (filters.country === defaultCountry) return 'senegal';
   if (filters.region === 'africa' && !filters.country) return 'africa';
   return Object.values(filters).some(Boolean) ? '' : 'all';
 }

@@ -1,3 +1,5 @@
+'use client';
+import { useI18n } from '@/i18n/client';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/components/ui';
 
@@ -30,15 +32,16 @@ export const FAQ: Record<FaqId, { q: string; a: string }> = {
 export const FAQ_ORDER: readonly FaqId[] = ['what', 'trial', 'price', 'install', 'source'];
 
 export default function Faq({ ids = FAQ_ORDER, className }: { ids?: readonly FaqId[]; className?: string }) {
+  const { t } = useI18n();
   return (
     <div className={cn('space-y-3', className)}>
       {ids.map(id => (
         <details key={id} className="group rounded-card border border-line bg-surface-1/90 transition-colors open:border-line-gold">
           <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-bold text-text [&::-webkit-details-marker]:hidden">
-            <span className="text-base">{FAQ[id].q}</span>
+            <span className="text-base">{t.pricing.faq[id].q}</span>
             <ChevronDown size={18} aria-hidden="true" className="shrink-0 text-text-muted transition-transform group-open:rotate-180 group-open:text-al-gold" />
           </summary>
-          <p className="px-5 pb-5 text-sm leading-relaxed text-text-muted">{FAQ[id].a}</p>
+          <p className="px-5 pb-5 text-sm leading-relaxed text-text-muted">{t.pricing.faq[id].a}</p>
         </details>
       ))}
     </div>

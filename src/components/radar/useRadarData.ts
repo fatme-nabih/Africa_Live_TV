@@ -1,4 +1,5 @@
 'use client';
+import { editionApiUrl } from '@/lib/edition-client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { temporalWindow } from '@/lib/radar-data';
@@ -17,12 +18,17 @@ import type { LiveChannelsSummarySnapshot } from '@/lib/live-channels-types';
 import type { Channel } from '@/types/channel';
 import { LatestRequestController } from '@/lib/latest-request';
 import { requestRadarJson } from '@/lib/radar-request';
+import { useI18n } from '@/i18n/client';
+import { parseEditionBridge } from '@/lib/edition-bridge';
 
 const REFRESH_INTERVAL_MS = 5 * 60_000;
-const NEWS_UNAVAILABLE = 'Les dépêches sont momentanément indisponibles.';
+// Codes d'erreur internes ; le texte affiché vient du dictionnaire de l'édition.
+const NEWS_UNAVAILABLE = 'NEWS_UNAVAILABLE';
+const COUNTRY_CHANNELS_UNAVAILABLE = 'COUNTRY_CHANNELS_UNAVAILABLE';
 
 /** Données du Radar : dépêches, résumé du catalogue TV et chaînes du pays choisi. */
 export function useRadarData(selectedCountry: string | null) {
+  const { t, edition, enabled } = useI18n();
   const rssRequests = useRef(new LatestRequestController());
   const summaryRequests = useRef(new LatestRequestController());
   const countryController = useRef<AbortController|null>(null);
@@ -33,6 +39,8 @@ export function useRadarData(selectedCountry: string | null) {
   const [refreshing, setRefreshing] = useState(false);
   const [asOf, setAsOf] = useState(0);
   const [rss, setRss] = useState<RadarRssSnapshot | null>(null);
+  const [dataEdition, setDataEdition] = useState(edition);
+  if (dataEdition !== edition) { setDataEdition(edition); setRss(null); setNewsError(null); setAsOf(0); }
 
   const [summaryError, setSummaryError] = useState(false);
   const [channelsSummary, setChannelsSummary] = useState<LiveChannelsSummarySnapshot | null>(null);
@@ -43,7 +51,7 @@ export function useRadarData(selectedCountry: string | null) {
   const applies = selection.country === selectedCountry && countryResource.epoch === selection.epoch && countryResource.key === selectedCountry && countryResource.token === refreshToken;
   const countryChannels = applies ? countryResource.channels : [];
   const countryChannelsLoading = Boolean(selectedCountry) && (!applies || countryResource.loading);
-  const countryChannelsError = applies ? countryResource.error : null;
+  const countryChannelsError = applies && countryResource.error ? t.radar.errors.countryChannels : null;
   const countryChannelsCountry = applies ? countryResource.key : null;
 
   useEffect(() => {
@@ -54,7 +62,7 @@ export function useRadarData(selectedCountry: string | null) {
       const request = requests.begin();
       setRefreshing(true);
       try {
-        const body = await requestRadarJson('/api/live/rss',request.signal);
+        const body = await requestRadarJson(editionApiUrl('/api/live/rss', edition),request.signal);
         if (!body || typeof body !== 'object' || !Array.isArray((body as RadarRssSnapshot).articles)) throw new Error(NEWS_UNAVAILABLE);
         if (!Array.isArray((body as RadarRssSnapshot).sources) || typeof (body as RadarRssSnapshot).updatedAt !== 'string') throw new Error(NEWS_UNAVAILABLE);
         if (!active || !requests.isCurrent(request.id)) return;
@@ -81,7 +89,7 @@ export function useRadarData(selectedCountry: string | null) {
       requests.abort();
       window.clearInterval(interval);
     };
-  }, [refreshToken]);
+  }, [refreshToken, edition]);
 
   useEffect(() => {
     let active = true;
@@ -110,7 +118,7 @@ export function useRadarData(selectedCountry: string | null) {
       requests.abort();
       window.clearInterval(interval);
     };
-  }, [refreshToken]);
+  }, [refreshToken, edition]);
 
   useEffect(() => {
     if (!selectedCountry) return;
@@ -122,14 +130,14 @@ export function useRadarData(selectedCountry: string | null) {
     const loadCountryChannels = async () => {
       setCountryResource({ key:selectedCountry,token:refreshToken,epoch:selection.epoch,channels:[],loading:true,error:null });
       try {
-        const body = await requestRadarJson(`/api/live/channels?country=${encodeURIComponent(selectedCountry)}`,controller.signal) as { channels?:Channel[] };
+        const body = await requestRadarJson(editionApiUrl(`/api/live/channels?country=${encodeURIComponent(selectedCountry)}`, edition),controller.signal) as { channels?:Channel[] };
         if (!active || controller.signal.aborted) return;
         if (Array.isArray(body.channels)) {
           setCountryResource({ key:selectedCountry,token:refreshToken,epoch:selection.epoch,channels:body.channels,loading:false,error:null });
         } else throw new Error('INVALID_COUNTRY_CHANNELS');
       } catch {
         if (active && !controller.signal.aborted) {
-          setCountryResource({ key:selectedCountry,token:refreshToken,epoch:selection.epoch,channels:[],loading:false,error:'Impossible de charger les chaînes de ce pays.' });
+          setCountryResource({ key:selectedCountry,token:refreshToken,epoch:selection.epoch,channels:[],loading:false,error:COUNTRY_CHANNELS_UNAVAILABLE });
         }
       } finally {
         if (active && !controller.signal.aborted) setCountryResource(previous => ({ ...previous,loading:false }));
@@ -142,21 +150,24 @@ export function useRadarData(selectedCountry: string | null) {
       controller.abort();
       if (countryController.current === controller) countryController.current = null;
     };
-  }, [selectedCountry, refreshToken,selection.epoch]);
+  }, [selectedCountry, refreshToken,selection.epoch, edition]);
 
   const merged = useMemo<RadarArticle[]>(() => mergeRadarArticles(radarArticlesFromRss(rss)), [rss]);
   const windowed = useMemo(() => temporalWindow(merged, (article) => article.indexedAt, asOf), [merged, asOf]);
   const countryCounts = useMemo(() => countByCountry(windowed.recent), [windowed]);
+  // Comptes des autres éditions (EDI-601), contrôlés avant usage ; absents avec une seule édition active.
+  const bridge = useMemo(() => parseEditionBridge(rss?.bridge, enabled), [rss, enabled]);
 
   return {
     refreshToken,
     refresh,
     refreshing,
     rss,
-    newsError,
+    newsError: newsError ? t.radar.errors.news : null,
     asOf,
     windowed,
     countryCounts,
+    bridge,
     channelsSummary,
     summaryError,
     countryChannels,

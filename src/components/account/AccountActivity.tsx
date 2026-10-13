@@ -1,4 +1,7 @@
 'use client';
+import { editionStorageKey } from '@/lib/edition-client';
+import { useI18n } from '@/i18n/client';
+import { format } from '@/i18n/message';
 
 import { Heart, History, MapPin, Radar, Star, X } from 'lucide-react';
 import Link from 'next/link';
@@ -39,11 +42,12 @@ function read(key: string) {
  * et le nombre de favoris du compte calculé côté serveur. Aucune nouvelle donnée collectée.
  */
 export default function AccountActivity({ favoritesCount }: { favoritesCount: number }) {
+  const { t, edition } = useI18n();
   const recents = useRecentChannels();
   const followed = useFollowedCountries();
   const writeFollowedCountries = useWriteFollowedCountries();
   const countriesRaw = useSyncExternalStore(subscribe, () => read(STORAGE_KEYS.recentCountries), () => null);
-  const visitRaw = useSyncExternalStore(subscribe, () => read(STORAGE_KEYS.radarVisit), () => null);
+  const visitRaw = useSyncExternalStore(subscribe, () => read(editionStorageKey(STORAGE_KEYS.radarVisit, edition)), () => null);
   // 0 avant le montage : le serveur ne connaît pas l'appareil, le premier rendu client est identique.
   const now = useNow(60_000);
   const hydrated = now > 0;
@@ -55,62 +59,61 @@ export default function AccountActivity({ favoritesCount }: { favoritesCount: nu
   return (
     <section aria-labelledby="activity-title" className="rounded-card border border-line bg-surface-1/90 p-5 sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="activity-title" className="font-display text-xl font-bold text-text">Mon activité</h2>
-        <p className="text-xs text-text-muted">Chaînes et visite : cet appareil · pays et favoris : votre compte</p>
+        <h2 id="activity-title" className="font-display text-xl font-bold text-text">{t.account.copy["Mon activité"]}</h2>
+        <p className="text-xs text-text-muted">{t.account.copy["Chaînes et visite : cet appareil · pays et favoris : votre compte"]}</p>
       </div>
       <LegacyPreferencesRecovery />
 
       {hydrated && empty ? (
         <EmptyState
           illustration="lion"
-          title="Votre activité apparaîtra ici"
-          description="Choisissez un pays sur le Radar ou lancez une chaîne : vous les retrouverez ici."
-          action={<ButtonLink href="/app/live" variant="secondary" icon={<Radar size={16} aria-hidden="true" />}>Ouvrir le Radar</ButtonLink>}
+          title={t.account.copy["Votre activité apparaîtra ici"]}
+          description={t.account.copy["Choisissez un pays sur le Radar ou lancez une chaîne : vous les retrouverez ici."]}
+          action={<ButtonLink href="/app/live" variant="secondary" icon={<Radar size={16} aria-hidden="true" />}>{t.account.copy["Ouvrir le Radar"]}</ButtonLink>}
         />
       ) : (
         <div className="mt-5 grid gap-5 sm:grid-cols-2">
-          <Block icon={History} title="Dernières chaînes">
+          <Block icon={History} title={t.account.copy["Dernières chaînes"]}>
             {recents.length ? (
               <ul className="space-y-1.5">
                 {recents.slice(0, 4).map(channel => (
                   <li key={channel.id} className="flex min-w-0 items-center gap-2 text-sm text-text">
                     <span aria-hidden="true">{flagEmoji(channel.countryCode)}</span>
-                    <span className="truncate">{channel.name}</span>
+                    <span className="truncate"><bdi>{channel.name}</bdi></span>
                   </li>
                 ))}
               </ul>
-            ) : <Muted>Aucune chaîne regardée pour l’instant.</Muted>}
-            <ActivityLink href="/app">Reprendre à la TV</ActivityLink>
+            ) : <Muted>{t.account.copy["Aucune chaîne regardée pour l’instant."]}</Muted>}
+            <ActivityLink href="/app">{t.account.copy["Reprendre à la TV"]}</ActivityLink>
           </Block>
 
-          <Block icon={Star} title="Pays suivis">
+          <Block icon={Star} title={t.account.copy["Pays suivis"]}>
             {followed.length ? (
               <ul className="space-y-1.5">
                 {followed.map((code, index) => (
                   <li key={code} className="flex min-w-0 items-center gap-2 text-sm text-text">
                     <span aria-hidden="true">{flagEmoji(code)}</span>
-                    <Link href={`/app/live?country=${code}`} className="min-w-0 truncate hover:text-al-gold">{formatCountryName(code)}</Link>
+                    <Link href={`/app/live?country=${code}`} className="min-w-0 truncate hover:text-al-gold">{formatCountryName(code, 'International', edition)}</Link>
                     {index === 0 ? (
-                      <span className="shrink-0 rounded-pill border border-line-gold px-2 text-xs text-al-gold">Principal</span>
+                      <span className="shrink-0 rounded-pill border border-line-gold px-2 text-xs text-al-gold">{t.account.copy["Principal"]}</span>
                     ) : (
                       <button type="button" onClick={() => writeFollowedCountries(makePrimaryCountry(followed, code))}
-                        aria-label={`Faire de ${formatCountryName(code)} le pays principal`}
+                        aria-label={format(t.account.copy["Faire de {v0} le pays principal"], {v0: formatCountryName(code, 'International', edition)})}
                         className="shrink-0 rounded-pill border border-line px-2 text-xs text-text-muted hover:border-line-gold hover:text-text">
-                        En principal
-                      </button>
+                        {t.account.copy["En principal"]}</button>
                     )}
                     <button type="button" onClick={() => writeFollowedCountries(toggleFollowedCountry(followed, code))}
-                      aria-label={`Ne plus suivre ${formatCountryName(code)}`}
-                      className="ml-auto inline-flex size-8 shrink-0 items-center justify-center rounded-control text-text-muted hover:bg-surface-3 hover:text-text">
+                      aria-label={format(t.account.copy["Ne plus suivre {v0}"], {v0: formatCountryName(code, 'International', edition)})}
+                      className="ms-auto inline-flex size-8 shrink-0 items-center justify-center rounded-control text-text-muted hover:bg-surface-3 hover:text-text">
                       <X size={14} aria-hidden="true" />
                     </button>
                   </li>
                 ))}
               </ul>
-            ) : <Muted>Suivez jusqu’à 5 pays depuis le Radar : le premier devient votre pays principal.</Muted>}
+            ) : <Muted>{t.account.copy["Suivez jusqu’à 5 pays depuis le Radar : le premier devient votre pays principal."]}</Muted>}
           </Block>
 
-          <Block icon={MapPin} title="Pays récents">
+          <Block icon={MapPin} title={t.account.copy["Pays récents"]}>
             {countries.length ? (
               <ul className="flex flex-wrap gap-2">
                 {countries.map(code => (
@@ -120,26 +123,26 @@ export default function AccountActivity({ favoritesCount }: { favoritesCount: nu
                       className="inline-flex min-h-9 items-center gap-1.5 rounded-pill border border-line bg-surface-2 px-3 text-sm text-text transition-colors hover:border-line-gold"
                     >
                       <span aria-hidden="true">{flagEmoji(code)}</span>
-                      {formatCountryName(code)}
+                      {formatCountryName(code, 'International', edition)}
                     </Link>
                   </li>
                 ))}
               </ul>
-            ) : <Muted>Aucun pays choisi pour l’instant.</Muted>}
+            ) : <Muted>{t.account.copy["Aucun pays choisi pour l’instant."]}</Muted>}
           </Block>
 
-          <Block icon={Heart} title="Favoris">
+          <Block icon={Heart} title={t.account.copy["Favoris"]}>
             <p className="text-sm text-text">
-              {favoritesCount === 0 ? 'Aucun favori enregistré.' : favoritesCount === 1 ? '1 chaîne en favori' : `${favoritesCount} chaînes en favori`}
+              {favoritesCount === 0 ? t.account.copy["Aucun favori enregistré."] : favoritesCount === 1 ? t.account.copy["1 chaîne en favori"] : format(t.account.copy["{v0} chaînes en favori"], {v0: favoritesCount})}
             </p>
-            {favoritesCount > 0 && <ActivityLink href="/app?favorites=1">Voir mes favoris</ActivityLink>}
+            {favoritesCount > 0 && <ActivityLink href="/app?favorites=1">{t.account.copy["Voir mes favoris"]}</ActivityLink>}
           </Block>
 
-          <Block icon={Radar} title="Radar">
+          <Block icon={Radar} title={t.account.copy["Radar"]}>
             <p className="text-sm text-text">
-              {visit === null ? 'Pas encore de visite enregistrée.' : `Dernière visite ${formatAgo(new Date(visit).toISOString(), now)}`}
+              {visit === null ? t.account.copy["Pas encore de visite enregistrée."] : format(t.account.copy["Dernière visite {v0}"], {v0: formatAgo(new Date(visit).toISOString(), now)})}
             </p>
-            <ActivityLink href="/app/live">Voir les nouvelles</ActivityLink>
+            <ActivityLink href="/app/live">{t.account.copy["Voir les nouvelles"]}</ActivityLink>
           </Block>
         </div>
       )}

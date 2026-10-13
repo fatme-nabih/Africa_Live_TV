@@ -1,0 +1,2 @@
+ALTER TABLE "users" ADD COLUMN "preferred_edition" text;--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "users_preferred_edition_check" CHECK ("users"."preferred_edition" is null or "users"."preferred_edition" in ('fr', 'en', 'ar'));

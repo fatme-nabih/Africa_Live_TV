@@ -1,3 +1,5 @@
+import { fr } from '@/i18n/fr';
+import type { Dictionary } from '@/i18n/dictionary';
 import { catalogCountryHref } from './catalog-filter-state';
 import { radarCountry } from './radar-workspace';
 
@@ -8,16 +10,18 @@ export type NavItem = { id: NavItemId; label: string; href: string; ariaLabel?: 
  * Entrées de la navigation principale. Le pays choisi suit l'utilisateur d'un écran à l'autre
  * (paramètre `country`) ; l'entrée Admin n'existe que si le serveur a validé la capacité.
  */
-export function buildNavItems({ pathname, country, admin }: { pathname: string; country?: string | null; admin: boolean }): NavItem[] {
+export function buildNavItems({ pathname, country, admin, labels = fr.shell.nav }: {
+  pathname: string; country?: string | null; admin: boolean; labels?: Dictionary['shell']['nav'];
+}): NavItem[] {
   const tvHref = catalogCountryHref(country);
   const radarCode = radarCountry(country ?? null);
   const radarHref = radarCode ? `/app/live?country=${encodeURIComponent(radarCode)}` : '/app/live';
   const items: NavItem[] = [
-    { id: 'radar', label: 'Radar', href: radarHref, active: pathname === '/app/live' },
-    { id: 'tv', label: 'TV', href: tvHref, active: pathname === '/app' },
-    { id: 'account', label: 'Compte', href: '/account', active: pathname === '/account' },
+    { id: 'radar', label: labels.radar, href: radarHref, active: pathname === '/app/live' },
+    { id: 'tv', label: labels.tv, href: tvHref, active: pathname === '/app' },
+    { id: 'account', label: labels.account, href: '/account', active: pathname === '/account' },
   ];
-  if (admin) items.push({ id: 'admin', label: 'Admin', href: '/admin', ariaLabel: 'Administration', active: pathname === '/admin' });
+  if (admin) items.push({ id: 'admin', label: labels.admin, href: '/admin', ariaLabel: labels.adminAria, active: pathname === '/admin' });
   return items;
 }
 

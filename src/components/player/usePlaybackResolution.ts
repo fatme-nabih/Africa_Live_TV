@@ -1,4 +1,5 @@
 'use client';
+import { useI18n } from '@/i18n/client';
 
 import { useCallback, useRef, type Dispatch, type RefObject } from 'react';
 import { ApiRequestError, playbackResolutionRequestSchema, playbackResolutionResponseSchema, readApiResponse } from '@/lib/api-contracts';
@@ -17,6 +18,7 @@ type Options = {
 // This hook owns the resolution controller, sequence and 12-second deadline.
 // The selection effect in Player cancels it before replacing a channel.
 export function usePlaybackResolution({ channelId, selectedChannelIdRef, webAttemptCountRef, playbackSessionRef, setResolvedChannel, dispatch }: Options) {
+  const { t, edition } = useI18n();
   const sequenceRef = useRef(0);
   const controllerRef = useRef<AbortController | null>(null);
   const cancelResolution = useCallback(() => {
@@ -53,13 +55,14 @@ export function usePlaybackResolution({ channelId, selectedChannelIdRef, webAtte
       dispatch({ type: 'RESOLVED', source: { url: payload.sourceUrl }, attemptId: payload.attemptId });
     } catch (error) {
       if (sequence !== sequenceRef.current || signal?.aborted) return;
-      if (controller.signal.aborted) throw new ApiRequestError('La préparation de la lecture a dépassé le délai attendu.', 408, 'RESOLUTION_TIMEOUT');
+      if (controller.signal.aborted) throw new ApiRequestError(t.player.copy["La préparation de la lecture a dépassé le délai attendu."], 408, 'RESOLUTION_TIMEOUT');
+      if (edition !== 'fr') throw new ApiRequestError(error instanceof ApiRequestError && error.code ? (t.errors.api as Record<string,string>)[error.code] ?? t.player.copy['Impossible de préparer la lecture de cette chaîne.'] : t.player.copy['Impossible de préparer la lecture de cette chaîne.'], error instanceof ApiRequestError ? error.status : 503, error instanceof ApiRequestError ? error.code : undefined);
       throw error;
     } finally {
       window.clearTimeout(deadline);
       signal?.removeEventListener('abort', abort);
       if (controllerRef.current === controller) controllerRef.current = null;
     }
-  }, [channelId, selectedChannelIdRef, webAttemptCountRef, playbackSessionRef, setResolvedChannel, dispatch]);
+  }, [channelId, selectedChannelIdRef, webAttemptCountRef, playbackSessionRef, setResolvedChannel, dispatch, t.player.copy, t.errors.api, edition]);
   return { resolveWebSource, cancelResolution };
 }

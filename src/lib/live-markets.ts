@@ -1,3 +1,4 @@
+import type { Edition } from './editions';
 import type { LiveMarketsSnapshot, MarketCommodity, MarketForex, MarketTickerAlert } from './live-markets-types';
 import { getDisasterEventsSnapshot } from './live-disasters';
 import { detectCountryCode, getRadarRss } from './rss-collector';
@@ -16,8 +17,8 @@ export function usdXofRate(rates:{EUR:number;XOF?:number}) {
 }
 const TTL = 15 * 60_000;
 const MAX_STALE = 6 * 60 * 60_000;
-let cache: { snapshot: LiveMarketsSnapshot; at: number } | null = null;
-let inFlight: Promise<LiveMarketsSnapshot> | null = null;
+const caches = new Map<Edition, { snapshot: LiveMarketsSnapshot; at: number }>();
+const inFlight = new Map<Edition, Promise<LiveMarketsSnapshot>>();
 const quotes = new Map<string, { value: MarketCommodity; at: number }>();
 let forexCache: { value: MarketForex[]; at: number } | null = null;
 const definitions = [
@@ -89,6 +90,10 @@ async function forex(now: number) {
       { pair: 'USD / EUR', base: 'USD', quote: 'EUR', rate: payload.rates.EUR, label: 'Taux indicatif mondial', isPegged: false, updatedAt: date, source: 'ExchangeRate-API' },
       { pair: 'USD / XOF', base: 'USD', quote: 'XOF', rate: usdXofRate(payload.rates), label: 'Taux indicatif dérivé', isPegged: false, updatedAt: date, source: 'ExchangeRate-API / parité BCEAO' },
     ];
+    for (const quote of ['NGN', 'GHS', 'KES', 'ZAR', 'DZD', 'MAD', 'TND', 'EGP']) {
+      const rate = payload.rates[quote];
+      if (Number.isFinite(rate) && rate > 0) value.push({ pair: 'USD / ' + quote, base: 'USD', quote, rate, label: 'Taux indicatif mondial', isPegged: false, updatedAt: date, source: 'ExchangeRate-API' });
+    }
     forexCache = { value, at: now };
     return { value: [...fixed, ...value], source: radarSource('ExchangeRate-API', 'Monde · devises', now, TTL, value.length, { dataAt: date }) };
   } catch {
@@ -111,9 +116,9 @@ export function marketArticleScope(article: Pick<RadarRssArticle, 'countryCode' 
   return 'unknown';
 }
 
-async function tickerAlerts(now: number) {
+async function tickerAlerts(now: number, edition: Edition) {
   const alerts: MarketTickerAlert[] = [], availability: RadarSourceState[] = [];
-  const settled = await Promise.allSettled([getDisasterEventsSnapshot(), getRadarRss()]);
+  const settled = await Promise.allSettled([getDisasterEventsSnapshot(), getRadarRss({ edition })]);
   const disasters = settled[0];
   if (disasters.status === 'fulfilled') {
     availability.push(...disasters.value.metadata.availability ?? []);
@@ -129,7 +134,7 @@ async function tickerAlerts(now: number) {
   if (rss.status === 'fulfilled') {
     availability.push(...rss.value.availability ?? []);
     for (const article of [...rss.value.articles, ...rss.value.undatedArticles ?? []]) {
-      if (!articleTopics(article).includes('economie') && article.sourceName !== 'Agence Ecofin') continue;
+      if (!articleTopics(article, edition).includes('economie') && article.sourceName !== 'Agence Ecofin') continue;
       const scope = marketArticleScope(article);
       alerts.push({ id: `news-${article.id}`, type: 'news', title: article.title, severity: 'info', source: article.sourceName,
         dateKind: 'publication', countryCode: scope === 'Africa' ? article.countryCode ?? undefined : undefined, scope, url: article.url, timestamp: article.publishedAt });
@@ -146,21 +151,26 @@ async function tickerAlerts(now: number) {
   return { alerts: selected, availability };
 }
 
-export async function getLiveMarkets(options: { forceRefresh?: boolean } = {}): Promise<LiveMarketsSnapshot> {
+export async function getLiveMarkets(options: { forceRefresh?: boolean; edition?: Edition } = {}): Promise<LiveMarketsSnapshot> {
+  const edition = options.edition ?? 'fr';
+  const cache = caches.get(edition);
   const now = Date.now();
   if (!options.forceRefresh && cache && now - cache.at < TTL) {
     const windowed = temporalWindow(cache.snapshot.alerts, alert => alert.timestamp, now);
     return { ...cache.snapshot, alerts: [...windowed.recent, ...windowed.undated] };
   }
-  if (!inFlight) inFlight = (async () => {
-    const [commodityResults, currencies, ticker] = await Promise.all([Promise.all(definitions.map(def => commodity(def, now))), forex(now), tickerAlerts(now)]);
+  let promise = inFlight.get(edition);
+  if (!promise) { promise = (async () => {
+    const [commodityResults, currencies, ticker] = await Promise.all([Promise.all(definitions.map(def => commodity(def, now))), forex(now), tickerAlerts(now, edition)]);
     const snapshot: LiveMarketsSnapshot = {
       commodities: commodityResults.flatMap(result => result.value ? [result.value] : []), forex: currencies.value, alerts: ticker.alerts,
       updatedAt: new Date(now).toISOString(), availability: [...commodityResults.map(result => result.source), currencies.source, ...ticker.availability],
       disclaimer: 'Dernières cotations disponibles, à usage informatif ; dates de séance distinctes de la collecte. Parités fixes BCEAO/BEAC.' };
-    cache = { snapshot, at: now };
+    caches.set(edition, { snapshot, at: now });
     return snapshot;
-  })().finally(() => { inFlight = null; });
-  return inFlight;
+  })().finally(() => { inFlight.delete(edition); });
+    inFlight.set(edition, promise);
+  }
+  return promise;
 }
-export function clearMarketsCache() { cache = null; inFlight = null; quotes.clear(); forexCache = null; }
+export function clearMarketsCache() { caches.clear(); inFlight.clear(); quotes.clear(); forexCache = null; }

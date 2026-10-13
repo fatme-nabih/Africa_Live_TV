@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 import { CLERK_CAPTCHA_ORIGIN, clerkFrontendApiOrigin } from "./src/lib/clerk-csp";
+import { editionRewrites } from "./src/lib/edition-routing";
+import { enabledEditions } from "./src/lib/editions";
 
 const isDev = process.env.NODE_ENV !== 'production';
 // Domaine Clerk de l'instance utilisée (dev : *.clerk.accounts.dev ; production : clerk.africatv.sn), lu dans la clé publique.
@@ -22,6 +24,14 @@ const cspHeader = `
 `.replace(/\s{2,}/g, ' ').trim();
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Les pages vivent sous app/[edition] : une adresse inconnue n'a pas de layout racine commun (not-found.md).
+    globalNotFound: true,
+  },
+  // Éditions linguistiques : adresses visibles inchangées, réécriture interne vers app/[edition] (EDI-103).
+  async rewrites() {
+    return editionRewrites(enabledEditions());
+  },
   async headers() {
     return [
       {
@@ -84,8 +94,8 @@ const nextConfig: NextConfig = {
       './public/**/*',
       './src/app/favicon.ico',
       './src/app/globals.css',
-      './src/app/layout.tsx',
-      './src/app/page.tsx',
+      './src/app/[edition]/layout.tsx',
+      './src/app/[edition]/page.tsx',
       './src/components/**/*',
       './src/scripts/**/*',
       './tsconfig.json',

@@ -4,14 +4,17 @@ import { test, expect, type Page } from '@playwright/test';
 const hours = (n: number) => new Date(Date.now() - n * 3600_000).toISOString();
 const article = (id: string, title: string, region: string | null, over: Record<string, unknown> = {}) => ({ id, title, url: `https://example.test/${id}`, sourceName: 'RFI', origin: 'France',
   publishedAt: hours(1), region, regionBasis: 'source', africanCountries: [], touchesAfrica: false, ...over });
-const snapshot = () => ({ updatedAt: new Date().toISOString(), availability: [{ provider: 'Le Monde', scope: 'Monde · europe', status: 'unavailable', fetchedAt: new Date().toISOString(), lastSuccessAt: null, dataAt: null, cacheExpiresAt: null, count: 0 }],
+const snapshot = () => {
+  const at = Date.now();
+  return { updatedAt: new Date(at).toISOString(), availability: [{ provider: 'Le Monde', scope: 'Monde · europe', status: 'unavailable', fetchedAt: new Date(at).toISOString(), lastSuccessAt: null, dataAt: null, cacheExpiresAt: null, count: 0 }],
   articles: [
-    ...Array.from({ length: 15 }, (_, i) => article('eu' + i, `Europe dépêche ${i + 1}`, 'europe', { sourceName: i % 2 ? 'France 24' : 'RFI' })),
+    ...Array.from({ length: 15 }, (_, i) => article('eu' + i, `Europe dépêche ${i + 1}`, 'europe', { sourceName: i % 2 ? 'France 24' : 'RFI', publishedAt: new Date(at - 3600_000 - i * 1000).toISOString() })),
     article('am', 'Séisme au Panama', 'ameriques', { sourceName: 'Radio-Canada', origin: 'Canada', regionBasis: 'inferred' }),
     article('mo', 'Trêve discutée à Gaza', 'moyen-orient'),
     article('za', 'La Sud-Africaine Pillay récompensée', null, { sourceName: 'Radio-Canada', origin: 'Canada', regionBasis: 'inferred', africanCountries: ['ZA'], touchesAfrica: true, publishedAt: hours(1) }),
     article('sn', 'Le pacte migratoire européen inquiète Dakar', 'europe', { africanCountries: ['SN'], touchesAfrica: true, publishedAt: hours(2) }),
-  ] });
+  ] };
+};
 const desk = (page: Page) => page.getByRole('region', { name: 'Regards sur le monde' });
 
 test.beforeEach(async ({ page }) => { await page.setViewportSize({ width: 1366, height: 900 }); });

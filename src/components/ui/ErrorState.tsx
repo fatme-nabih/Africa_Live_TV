@@ -1,3 +1,5 @@
+'use client';
+import { useI18n } from '@/i18n/client';
 import { TriangleAlert } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Button } from './Button';
@@ -5,10 +7,10 @@ import { cn } from './cn';
 
 /** Erreur annoncée aux lecteurs d'écran. Le rouge reste réservé aux alertes. */
 export function ErrorState({
-  title = 'Signal interrompu',
+  title,
   description,
   onRetry,
-  retryLabel = 'Réessayer',
+  retryLabel,
   action,
   className,
 }: {
@@ -19,6 +21,9 @@ export function ErrorState({
   action?: ReactNode;
   className?: string;
 }) {
+  const { t } = useI18n();
+  title ??= t.errors.copy["Signal interrompu"];
+  retryLabel ??= t.errors.copy["Réessayer"];
   return (
     <div
       role="alert"

@@ -1,0 +1,2548 @@
+{
+ "edition": "en",
+ "collectedAt": "2026-10-11T18:40:00Z",
+ "source": "Titres réels relevés par `npm run feeds:verify -- --edition all --dump-titles` le 11/10/2026 (annexes A et B de l’étude), échantillon déterministe par flux puis pièges ; annotations manuelles relues titre par titre.",
+ "review": "Annoté par l’agent ; relecture rapide conseillée.",
+ "conventions": {
+  "country": "Pays africain attendu (ISO) en sortie de la détection, repli compris : pays nommé par le titre, sinon pays du média pour un flux national, sinon null.",
+  "basis": "title : le titre nomme le pays (nom, capitale, ville, gentilé, dirigeant) ; media : repli sur le pays du média ; none : aucun pays africain.",
+  "accept": "Autres pays acceptables quand le titre en cite plusieurs.",
+  "region": "Flux « monde » : région attendue (europe, ameriques, moyen-orient, asie-pacifique) ou null ; pour une rubrique régionale, la région de la rubrique.",
+  "regionAccept": "Autres régions acceptables quand le titre est ambigu (null = écarté s'il ne touche pas l'Afrique).",
+  "africa": "Flux « monde » : pays africains nommés par le titre ; touchesAfrica : le titre parle de l'Afrique.",
+  "trap": "Piège du plan technique § 1.5 ou piège réel relevé dans les flux du jour.",
+  "traps": "Phrases construites (synthetic: true) pour les pièges absents des flux du jour ; aucun article recopié.",
+  "criterion": "EDI-206 : au moins 90 % de pays exacts (country ou accept) sur titles, zéro faux positif sur traps et sur les titres marqués trap."
+ },
+ "titles": [
+  {
+   "id": "en-001",
+   "feed": "Botswana Gazette",
+   "feedCountry": "BW",
+   "role": "national",
+   "title": "Okavango, Woven in Venice",
+   "country": "BW",
+   "basis": "media",
+   "note": "Okavango : delta du Botswana, non nommé comme pays"
+  },
+  {
+   "id": "en-002",
+   "feed": "Botswana Gazette",
+   "feedCountry": "BW",
+   "role": "national",
+   "title": "Govt Wildlife Offer to Serowe Stands",
+   "country": "BW",
+   "basis": "media",
+   "note": "Serowe, ville du Botswana"
+  },
+  {
+   "id": "en-003",
+   "feed": "Sunday Standard",
+   "feedCountry": "BW",
+   "role": "national",
+   "title": "Sunday Standard, October 11 – 17",
+   "country": "BW",
+   "basis": "media"
+  },
+  {
+   "id": "en-004",
+   "feed": "Sunday Standard",
+   "feedCountry": "BW",
+   "role": "national",
+   "title": "Used Vehicles steer motor market as new registrations slow",
+   "country": "BW",
+   "basis": "media"
+  },
+  {
+   "id": "en-005",
+   "feed": "The Post",
+   "feedCountry": "CM",
+   "role": "national",
+   "title": "Shipbuilding Is Back",
+   "country": "CM",
+   "basis": "media"
+  },
+  {
+   "id": "en-006",
+   "feed": "The Post",
+   "feedCountry": "CM",
+   "role": "national",
+   "title": "Land Commissioner Buckingham Announces Removal of",
+   "country": "CM",
+   "basis": "media"
+  },
+  {
+   "id": "en-007",
+   "feed": "Cameroon News Agency",
+   "feedCountry": "CM",
+   "role": "national",
+   "title": "Ark of God Silent on Supervision, Life Jackets After Fatal Tiko Boat Accident",
+   "country": "CM",
+   "basis": "media",
+   "note": "Tiko, Cameroun"
+  },
+  {
+   "id": "en-008",
+   "feed": "Cameroon News Agency",
+   "feedCountry": "CM",
+   "role": "national",
+   "title": "NWR: MINAT suspends sales of Motorbikes for 48h",
+   "country": "CM",
+   "basis": "media",
+   "note": "NWR : région du Nord-Ouest"
+  },
+  {
+   "id": "en-009",
+   "feed": "Egypt Independent",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "Authorities successfully rescue Nile cruise ship carrying 99 tourists",
+   "country": "EG",
+   "basis": "media"
+  },
+  {
+   "id": "en-010",
+   "feed": "Egypt Independent",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "Egypt, Italy complete restoration of ancient Fayoum ‘Portrait of the Two Brothers’",
+   "country": "EG",
+   "basis": "title"
+  },
+  {
+   "id": "en-011",
+   "feed": "Daily News Egypt",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "LIXIL’s 1967 shower toilet technology receives IEEE Milestone recognition",
+   "country": "EG",
+   "basis": "media"
+  },
+  {
+   "id": "en-012",
+   "feed": "Daily News Egypt",
+   "feedCountry": "EG",
+   "role": "national",
+   "title": "Egypt, ICARDA seek to scale up solar irrigation, desalination projects",
+   "country": "EG",
+   "basis": "title"
+  },
+  {
+   "id": "en-013",
+   "feed": "Shabait",
+   "feedCountry": "ER",
+   "role": "national",
+   "title": "Haddas Ertra 11 October 2026",
+   "country": "ER",
+   "basis": "media"
+  },
+  {
+   "id": "en-014",
+   "feed": "Shabait",
+   "feedCountry": "ER",
+   "role": "national",
+   "title": "Haddas Ertra 10 October 2026",
+   "country": "ER",
+   "basis": "media"
+  },
+  {
+   "id": "en-015",
+   "feed": "Fana",
+   "feedCountry": "ET",
+   "role": "national",
+   "title": "Ethiopia’s Nutrition and Mechanised Farming Models to Be Adopted by Nigeria",
+   "country": "ET",
+   "basis": "title",
+   "accept": [
+    "NG"
+   ]
+  },
+  {
+   "id": "en-016",
+   "feed": "Fana",
+   "feedCountry": "ET",
+   "role": "national",
+   "title": "PM Abiy Ahmed Launches Ethiopia’s First-Ever State-of-the-Art Precious Metals Refinery",
+   "country": "ET",
+   "basis": "title"
+  },
+  {
+   "id": "en-017",
+   "feed": "MyJoyOnline",
+   "feedCountry": "GH",
+   "role": "national",
+   "title": "JoyNews’ Jacqueline Ansomah Yeboah selected for UK Media Excellence for Emerging Technology Fellowship",
+   "country": "GH",
+   "basis": "media"
+  },
+  {
+   "id": "en-018",
+   "feed": "MyJoyOnline",
+   "feedCountry": "GH",
+   "role": "national",
+   "title": "President Mahama ends Resetting Ghana tour of Ahafo Region",
+   "country": "GH",
+   "basis": "title"
+  },
+  {
+   "id": "en-019",
+   "feed": "Graphic Online",
+   "feedCountry": "GH",
+   "role": "national",
+   "title": "NPP to aspirants: Stop campaigning now or risk disqualification",
+   "country": "GH",
+   "basis": "media"
+  },
+  {
+   "id": "en-020",
+   "feed": "Graphic Online",
+   "feedCountry": "GH",
+   "role": "national",
+   "title": "President Mahama: You can still preach in buses, just not when moving",
+   "country": "GH",
+   "basis": "title",
+   "note": "dirigeant : Mahama"
+  },
+  {
+   "id": "en-021",
+   "feed": "Kerr Fatou",
+   "feedCountry": "GM",
+   "role": "national",
+   "title": "APRC No-to-Alliance Faction Says NPP Alliance Could Pave Way for Jammeh’s Return, Unlike UDP",
+   "country": "GM",
+   "basis": "media"
+  },
+  {
+   "id": "en-022",
+   "feed": "Kerr Fatou",
+   "feedCountry": "GM",
+   "role": "national",
+   "title": "UDP Plans to Sue Election Commission Over Withheld Voter Registration Data, Questions Whereabouts of Semlex ID Records",
+   "country": "GM",
+   "basis": "media"
+  },
+  {
+   "id": "en-023",
+   "feed": "Kenyans.co.ke",
+   "feedCountry": "KE",
+   "role": "national",
+   "title": "Uproar Over Felling of Trees Along State House Road",
+   "country": "KE",
+   "basis": "media"
+  },
+  {
+   "id": "en-024",
+   "feed": "Kenyans.co.ke",
+   "feedCountry": "KE",
+   "role": "national",
+   "title": "State Unveils Policy to Boost Access to Information, End Govt Secrecy",
+   "country": "KE",
+   "basis": "media"
+  },
+  {
+   "id": "en-025",
+   "feed": "Capital FM",
+   "feedCountry": "KE",
+   "role": "national",
+   "title": "Trump announces deal for Russian diesel as Zelensky calls it a gift to Putin",
+   "country": "KE",
+   "basis": "media",
+   "note": "dépêche étrangère d’un média kényan : repli sur le pays du média"
+  },
+  {
+   "id": "en-026",
+   "feed": "Capital FM",
+   "feedCountry": "KE",
+   "role": "national",
+   "title": "Twelve killed and 300 injured in attack on airport in Saudi capital Riyadh",
+   "country": "KE",
+   "basis": "media",
+   "note": "Riyad : aucun pays africain"
+  },
+  {
+   "id": "en-027",
+   "feed": "KBC",
+   "feedCountry": "KE",
+   "role": "national",
+   "title": "1,000 compete in Mombasa satellite run ahead of 23rd Standard Chartered Nairobi marathon",
+   "country": "KE",
+   "basis": "title",
+   "note": "Mombasa, Nairobi"
+  },
+  {
+   "id": "en-028",
+   "feed": "KBC",
+   "feedCountry": "KE",
+   "role": "national",
+   "title": "Russian cultural festival draws to a close in Nairobi",
+   "country": "KE",
+   "basis": "title",
+   "note": "Nairobi"
+  },
+  {
+   "id": "en-029",
+   "feed": "The Standard",
+   "feedCountry": "KE",
+   "role": "national",
+   "title": "Optics tell it all: Why William Ruto looks tell of a desperate politician",
+   "country": "KE",
+   "basis": "title",
+   "note": "dirigeant : William Ruto"
+  },
+  {
+   "id": "en-030",
+   "feed": "The Standard",
+   "feedCountry": "KE",
+   "role": "national",
+   "title": "Two more suspects arrested over lawyer Kyalo Mbobu murder",
+   "country": "KE",
+   "basis": "media"
+  },
+  {
+   "id": "en-031",
+   "feed": "FrontPage Africa",
+   "feedCountry": "LR",
+   "role": "national",
+   "title": "Liberia: Jury Returns Mixed Verdict, Kemayah, Sirleaf, Kollie and Bility Guilty",
+   "country": "LR",
+   "basis": "title"
+  },
+  {
+   "id": "en-032",
+   "feed": "FrontPage Africa",
+   "feedCountry": "LR",
+   "role": "national",
+   "title": "Liberia: Former Vice President Howard-Taylor among 19 indicted, six Defendants currently held at Monrovia Central Prison",
+   "country": "LR",
+   "basis": "title"
+  },
+  {
+   "id": "en-033",
+   "feed": "Libya Herald",
+   "feedCountry": "LY",
+   "role": "national",
+   "title": "Small importers call on Tripoli government to halt Decisions No. 428, 449, & 465 of 2026, which regulate foreign trade",
+   "country": "LY",
+   "basis": "title",
+   "note": "Tripoli de Libye"
+  },
+  {
+   "id": "en-034",
+   "feed": "Libya Herald",
+   "feedCountry": "LY",
+   "role": "national",
+   "title": "AGOCO discusses with U.S.-based BlueVee Energy upgrading Tobruk & Sarir Refineries to meet domestic market needs",
+   "country": "LY",
+   "basis": "media",
+   "note": "Tobrouk"
+  },
+  {
+   "id": "en-035",
+   "feed": "Hespress English",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "Several provinces brace for heavy thundershowers, hail on Sunday",
+   "country": "MA",
+   "basis": "media"
+  },
+  {
+   "id": "en-036",
+   "feed": "Hespress English",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "Last Ceuta migrant camp removed ahead of Spanish king's visit",
+   "country": "MA",
+   "basis": "media",
+   "note": "Ceuta"
+  },
+  {
+   "id": "en-037",
+   "feed": "NewsMoris",
+   "feedCountry": "MU",
+   "role": "national",
+   "title": "Cabinet Approves New Mauritius Telecom Foundation HSC Science Scholarship",
+   "country": "MU",
+   "basis": "title"
+  },
+  {
+   "id": "en-038",
+   "feed": "NewsMoris",
+   "feedCountry": "MU",
+   "role": "national",
+   "title": "CEB Teams Rush To Restore Power After Outages Hit 2 Mauritian Regions",
+   "country": "MU",
+   "basis": "title",
+   "note": "gentilé"
+  },
+  {
+   "id": "en-039",
+   "feed": "Nyasa Times",
+   "feedCountry": "MW",
+   "role": "national",
+   "title": "MCP candidates emerge as party prepares for fresh regional elections",
+   "country": "MW",
+   "basis": "media"
+  },
+  {
+   "id": "en-040",
+   "feed": "Nyasa Times",
+   "feedCountry": "MW",
+   "role": "national",
+   "title": "Malawi puts US$1m into seed plan as AGRA warns of gap between laws and farms",
+   "country": "MW",
+   "basis": "title"
+  },
+  {
+   "id": "en-041",
+   "feed": "Malawi24",
+   "feedCountry": "MW",
+   "role": "national",
+   "title": "Malawi netball rebuild gets a boost",
+   "country": "MW",
+   "basis": "title"
+  },
+  {
+   "id": "en-042",
+   "feed": "Malawi24",
+   "feedCountry": "MW",
+   "role": "national",
+   "title": "Zomba mental hospital warns against delayed treatment",
+   "country": "MW",
+   "basis": "media",
+   "note": "Zomba"
+  },
+  {
+   "id": "en-043",
+   "feed": "Club of Mozambique",
+   "feedCountry": "MZ",
+   "role": "national",
+   "title": "Young Farmers Association of Portugal establishes agricultural incubator in Mozambique",
+   "country": "MZ",
+   "basis": "title"
+  },
+  {
+   "id": "en-044",
+   "feed": "Club of Mozambique",
+   "feedCountry": "MZ",
+   "role": "national",
+   "title": "German Investment Powers Growth and Jobs at MozParks industrial parks in Mozambique",
+   "country": "MZ",
+   "basis": "title"
+  },
+  {
+   "id": "en-045",
+   "feed": "The Namibian",
+   "feedCountry": "NA",
+   "role": "national",
+   "title": "Man City shrug off uncertain future to beat 10-man Liverpool",
+   "country": "NA",
+   "basis": "media",
+   "note": "football anglais"
+  },
+  {
+   "id": "en-046",
+   "feed": "The Namibian",
+   "feedCountry": "NA",
+   "role": "national",
+   "title": "FMD fence construction begins in ||Kharas",
+   "country": "NA",
+   "basis": "media"
+  },
+  {
+   "id": "en-047",
+   "feed": "New Era",
+   "feedCountry": "NA",
+   "role": "national",
+   "title": "Tomorrow’s News",
+   "country": "NA",
+   "basis": "media"
+  },
+  {
+   "id": "en-048",
+   "feed": "New Era",
+   "feedCountry": "NA",
+   "role": "national",
+   "title": "Omanyakwa taa shiki oiketala mEenhana",
+   "country": "NA",
+   "basis": "media",
+   "note": "titre en oshiwambo dans un flux anglais"
+  },
+  {
+   "id": "en-049",
+   "feed": "Punch",
+   "feedCountry": "NG",
+   "role": "national",
+   "title": "Four injured as part of 60-year-old building collapses in Rivers",
+   "country": "NG",
+   "basis": "media",
+   "note": "Rivers : État du Nigeria"
+  },
+  {
+   "id": "en-050",
+   "feed": "Punch",
+   "feedCountry": "NG",
+   "role": "national",
+   "title": "Jigawa ADC kicks as INEC omits Ringim, seven others from final list",
+   "country": "NG",
+   "basis": "media"
+  },
+  {
+   "id": "en-051",
+   "feed": "Vanguard",
+   "feedCountry": "NG",
+   "role": "national",
+   "title": "2027: Enugu Govt alleges opposition plot to import armed t, bandits",
+   "country": "NG",
+   "basis": "media"
+  },
+  {
+   "id": "en-052",
+   "feed": "Vanguard",
+   "feedCountry": "NG",
+   "role": "national",
+   "title": "Amnesty condemns cancellation of Tinubu book presentation",
+   "country": "NG",
+   "basis": "title",
+   "note": "dirigeant : Tinubu"
+  },
+  {
+   "id": "en-053",
+   "feed": "Nairametrics",
+   "feedCountry": "NG",
+   "role": "national",
+   "title": "Sanwo-Olu Targets 3,000MW Electricity Supply for Lagos by March 2027",
+   "country": "NG",
+   "basis": "title",
+   "note": "Lagos"
+  },
+  {
+   "id": "en-054",
+   "feed": "Nairametrics",
+   "feedCountry": "NG",
+   "role": "national",
+   "title": "TAP processes N3 billion monthly in Lagos transport fares, Afolabi Olamide reveals",
+   "country": "NG",
+   "basis": "title",
+   "note": "Lagos"
+  },
+  {
+   "id": "en-055",
+   "feed": "Premium Times",
+   "feedCountry": "NG",
+   "role": "national",
+   "title": "PDP speaks on candidates’ omission from INEC’s list, says it will be addressed",
+   "country": "NG",
+   "basis": "media"
+  },
+  {
+   "id": "en-056",
+   "feed": "Premium Times",
+   "feedCountry": "NG",
+   "role": "national",
+   "title": "Foundation donates patrol vehicle, money to Abuja police division",
+   "country": "NG",
+   "basis": "title",
+   "note": "Abuja"
+  },
+  {
+   "id": "en-057",
+   "feed": "Daily Trust",
+   "feedCountry": "NG",
+   "role": "national",
+   "title": "Man remanded for allegedly stabbing Kano resident to death",
+   "country": "NG",
+   "basis": "title",
+   "note": "Kano"
+  },
+  {
+   "id": "en-058",
+   "feed": "Daily Trust",
+   "feedCountry": "NG",
+   "role": "national",
+   "title": "Adebutu: INEC listed All Ogun PDP Candidates except my running mate and I",
+   "country": "NG",
+   "basis": "media"
+  },
+  {
+   "id": "en-059",
+   "feed": "Channels TV",
+   "feedCountry": "NG",
+   "role": "national",
+   "title": "Tinubu Welcomes World Bank Report, Says Economic Reforms Are Delivering Results",
+   "country": "NG",
+   "basis": "title",
+   "note": "dirigeant : Tinubu"
+  },
+  {
+   "id": "en-060",
+   "feed": "Channels TV",
+   "feedCountry": "NG",
+   "role": "national",
+   "title": "Bill Gates Warns Unregulated AI Could Spark Surge In Cyberattacks",
+   "country": "NG",
+   "basis": "media"
+  },
+  {
+   "id": "en-061",
+   "feed": "Leadership",
+   "feedCountry": "NG",
+   "role": "national",
+   "title": "Army Begins Night Patrols, Stop-And-Search Operations In Oyo",
+   "country": "NG",
+   "basis": "media"
+  },
+  {
+   "id": "en-062",
+   "feed": "Leadership",
+   "feedCountry": "NG",
+   "role": "national",
+   "title": "22 Feared Dead As Bandits Ambush Traders Under Army Escort In Zamfara",
+   "country": "NG",
+   "basis": "media"
+  },
+  {
+   "id": "en-063",
+   "feed": "BusinessDay",
+   "feedCountry": "NG",
+   "role": "national",
+   "title": "The SaaS Playbook: Building a business before building the hype",
+   "country": "NG",
+   "basis": "media"
+  },
+  {
+   "id": "en-064",
+   "feed": "BusinessDay",
+   "feedCountry": "NG",
+   "role": "national",
+   "title": "NDLEA arrests 83-year-old ex-convict, South African lady with Colos, Meth shipments",
+   "country": "NG",
+   "basis": "media",
+   "accept": [
+    "ZA"
+   ],
+   "note": "NDLEA nigériane ; « South African » est un gentilé secondaire"
+  },
+  {
+   "id": "en-065",
+   "feed": "KT Press",
+   "feedCountry": "RW",
+   "role": "national",
+   "title": "Ground Floor Saved: Some Relief From Musanze Fire That Ravaged Rwf 7.5 Billion Complex",
+   "country": "RW",
+   "basis": "media"
+  },
+  {
+   "id": "en-066",
+   "feed": "KT Press",
+   "feedCountry": "RW",
+   "role": "national",
+   "title": "They Told Us We Were Dreaming —Then President Kagame Handed Us The World",
+   "country": "RW",
+   "basis": "title",
+   "note": "dirigeant : Kagame"
+  },
+  {
+   "id": "en-067",
+   "feed": "Dabanga",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "Drone strikes and deadly explosions kill scores of civilians across Sudan",
+   "country": "SD",
+   "basis": "title"
+  },
+  {
+   "id": "en-068",
+   "feed": "Dabanga",
+   "feedCountry": "SD",
+   "role": "national",
+   "title": "World Teachers’ Day: Sudanese educators call for housing and better support",
+   "country": "SD",
+   "basis": "title",
+   "note": "gentilé"
+  },
+  {
+   "id": "en-069",
+   "feed": "Sierraloaded",
+   "feedCountry": "SL",
+   "role": "national",
+   "title": "Former APC Ministers Appeal to Supreme Court for JFK’s Release",
+   "country": "SL",
+   "basis": "media"
+  },
+  {
+   "id": "en-070",
+   "feed": "Sierraloaded",
+   "feedCountry": "SL",
+   "role": "national",
+   "title": "East End Lions Host Ports Authority in Premier League Opener",
+   "country": "SL",
+   "basis": "media"
+  },
+  {
+   "id": "en-071",
+   "feed": "Sierra Leone Telegraph",
+   "feedCountry": "SL",
+   "role": "national",
+   "title": "Sierra Leone’s prickly Chief Justice Komba Kamanda lost his rag and ordered the arrest of senior opposition lawyer for contempt of Supreme Court",
+   "country": "SL",
+   "basis": "title"
+  },
+  {
+   "id": "en-072",
+   "feed": "Sierra Leone Telegraph",
+   "feedCountry": "SL",
+   "role": "national",
+   "title": "Call for nominations for Sierra Leone Diaspora Excellence Awards",
+   "country": "SL",
+   "basis": "title"
+  },
+  {
+   "id": "en-073",
+   "feed": "Somali Dispatch",
+   "feedCountry": "SO",
+   "role": "national",
+   "title": "Somali Government Deploys Troops Near Opposition Leaders’ Residences in Mogadishu",
+   "country": "SO",
+   "basis": "title",
+   "note": "Mogadishu"
+  },
+  {
+   "id": "en-074",
+   "feed": "Somali Dispatch",
+   "feedCountry": "SO",
+   "role": "national",
+   "title": "Ethiopia Criticizes President Hassan Sheikh’s Position at Egypt Summit",
+   "country": "SO",
+   "basis": "media",
+   "accept": [
+    "ET",
+    "EG"
+   ],
+   "note": "président somalien non nommé comme pays"
+  },
+  {
+   "id": "en-075",
+   "feed": "Somali Guardian",
+   "feedCountry": "SO",
+   "role": "national",
+   "title": "Somalia: Government forces mass near opposition leaders’ homes",
+   "country": "SO",
+   "basis": "title"
+  },
+  {
+   "id": "en-076",
+   "feed": "Somali Guardian",
+   "feedCountry": "SO",
+   "role": "national",
+   "title": "Somalia: Laftagaren forces take Qansah-dhere, west of Baidoa",
+   "country": "SO",
+   "basis": "title"
+  },
+  {
+   "id": "en-077",
+   "feed": "Eye Radio",
+   "feedCountry": "SS",
+   "role": "national",
+   "title": "Security forces deployed to Tonj town to support peace efforts",
+   "country": "SS",
+   "basis": "media"
+  },
+  {
+   "id": "en-078",
+   "feed": "Eye Radio",
+   "feedCountry": "SS",
+   "role": "national",
+   "title": "Bank of South Sudan denies Rumbek currency branch was looted",
+   "country": "SS",
+   "basis": "title",
+   "trap": "south-sudan"
+  },
+  {
+   "id": "en-079",
+   "feed": "Sudans Post",
+   "feedCountry": "SS",
+   "role": "national",
+   "title": "Opposition alliance warns against possible delay of December elections",
+   "country": "SS",
+   "basis": "media"
+  },
+  {
+   "id": "en-080",
+   "feed": "Sudans Post",
+   "feedCountry": "SS",
+   "role": "national",
+   "title": "South Sudan rivals trade conflicting claims after Wunkur clashes",
+   "country": "SS",
+   "basis": "title",
+   "trap": "south-sudan"
+  },
+  {
+   "id": "en-081",
+   "feed": "Times of Eswatini",
+   "feedCountry": "SZ",
+   "role": "national",
+   "title": "No thermal power breakthrough",
+   "country": "SZ",
+   "basis": "media"
+  },
+  {
+   "id": "en-082",
+   "feed": "Times of Eswatini",
+   "feedCountry": "SZ",
+   "role": "national",
+   "title": "Eswatini U-23 stars impress on league return",
+   "country": "SZ",
+   "basis": "title"
+  },
+  {
+   "id": "en-083",
+   "feed": "Daily News",
+   "feedCountry": "TZ",
+   "role": "national",
+   "title": "African Court on human rights celebrates 20 years of its landmark rulings",
+   "country": "TZ",
+   "basis": "media"
+  },
+  {
+   "id": "en-084",
+   "feed": "Daily News",
+   "feedCountry": "TZ",
+   "role": "national",
+   "title": "Reckless drivers must stop turning roads into cemetaries",
+   "country": "TZ",
+   "basis": "media"
+  },
+  {
+   "id": "en-085",
+   "feed": "The Citizen",
+   "feedCountry": "TZ",
+   "role": "national",
+   "title": "GEMS International School of Zanzibar set to begin construction with capacity for 1,500 students",
+   "country": "TZ",
+   "basis": "title",
+   "note": "Zanzibar"
+  },
+  {
+   "id": "en-086",
+   "feed": "The Citizen",
+   "feedCountry": "TZ",
+   "role": "national",
+   "title": "Born a woman? Welcome to the fight to prove you are human",
+   "country": "TZ",
+   "basis": "media"
+  },
+  {
+   "id": "en-087",
+   "feed": "Nile Post",
+   "feedCountry": "UG",
+   "role": "national",
+   "title": "Fresh Killing Reported as Security Teams Deploy to Mubende",
+   "country": "UG",
+   "basis": "media",
+   "note": "Mubende"
+  },
+  {
+   "id": "en-088",
+   "feed": "Nile Post",
+   "feedCountry": "UG",
+   "role": "national",
+   "title": "Maresca says 'feeling is fantastic' among Man City squad",
+   "country": "UG",
+   "basis": "media"
+  },
+  {
+   "id": "en-089",
+   "feed": "The Independent",
+   "feedCountry": "UG",
+   "role": "national",
+   "title": "REPORT: Eastern Uganda records highest fuel quality violations",
+   "country": "UG",
+   "basis": "title"
+  },
+  {
+   "id": "en-090",
+   "feed": "The Independent",
+   "feedCountry": "UG",
+   "role": "national",
+   "title": "The State of Teachers: Motivation, welfare and the daily struggle",
+   "country": "UG",
+   "basis": "media"
+  },
+  {
+   "id": "en-091",
+   "feed": "The Citizen",
+   "feedCountry": "ZA",
+   "role": "national",
+   "title": "Daily Lotto results: Sunday, 11 October 2026",
+   "country": "ZA",
+   "basis": "media"
+  },
+  {
+   "id": "en-092",
+   "feed": "The Citizen",
+   "feedCountry": "ZA",
+   "role": "national",
+   "title": "Daily Lotto results: Saturday, 10 October 2026",
+   "country": "ZA",
+   "basis": "media"
+  },
+  {
+   "id": "en-093",
+   "feed": "IOL",
+   "feedCountry": "ZA",
+   "role": "national",
+   "title": "PAGAD-led march follows deadly gang shootings in Athlone",
+   "country": "ZA",
+   "basis": "media"
+  },
+  {
+   "id": "en-094",
+   "feed": "IOL",
+   "feedCountry": "ZA",
+   "role": "national",
+   "title": "Boy, 9, drowns at Kleinmond Lagoon",
+   "country": "ZA",
+   "basis": "media"
+  },
+  {
+   "id": "en-095",
+   "feed": "Daily Maverick",
+   "feedCountry": "ZA",
+   "role": "national",
+   "title": "TALK IS CHEAP: Morero vows transparency, but Joburg withholds release of R4bn misconduct records",
+   "country": "ZA",
+   "basis": "title",
+   "note": "Joburg"
+  },
+  {
+   "id": "en-096",
+   "feed": "Daily Maverick",
+   "feedCountry": "ZA",
+   "role": "national",
+   "title": "OUTLAW OCEAN PROJECT: The price paid beyond the plate — the huge costs of farmed seafood",
+   "country": "ZA",
+   "basis": "media"
+  },
+  {
+   "id": "en-097",
+   "feed": "SABC News",
+   "feedCountry": "ZA",
+   "role": "national",
+   "title": "SAAF’s heaviest loss in a single day in World War II remembered",
+   "country": "ZA",
+   "basis": "media"
+  },
+  {
+   "id": "en-098",
+   "feed": "SABC News",
+   "feedCountry": "ZA",
+   "role": "national",
+   "title": "Smith breaks catching record",
+   "country": "ZA",
+   "basis": "media"
+  },
+  {
+   "id": "en-099",
+   "feed": "Mail & Guardian",
+   "feedCountry": "ZA",
+   "role": "national",
+   "title": "Uganda at 64: Between confusion, fear, hope and back again",
+   "country": "UG",
+   "basis": "title",
+   "note": "média sud-africain, sujet ougandais"
+  },
+  {
+   "id": "en-100",
+   "feed": "Mail & Guardian",
+   "feedCountry": "ZA",
+   "role": "national",
+   "title": "Mhudi’, a novel ahead of its time",
+   "country": "ZA",
+   "basis": "media"
+  },
+  {
+   "id": "en-101",
+   "feed": "Lusaka Times",
+   "feedCountry": "ZM",
+   "role": "national",
+   "title": "Government Condemns Political Chants At Nkana Stadium",
+   "country": "ZM",
+   "basis": "media"
+  },
+  {
+   "id": "en-102",
+   "feed": "Lusaka Times",
+   "feedCountry": "ZM",
+   "role": "national",
+   "title": "Haimbe urges private sector to partner with LCC",
+   "country": "ZM",
+   "basis": "media"
+  },
+  {
+   "id": "en-103",
+   "feed": "Diggers",
+   "feedCountry": "ZM",
+   "role": "national",
+   "title": "INDIVIDUALISM IN RELATIONSHIPS",
+   "country": "ZM",
+   "basis": "media"
+  },
+  {
+   "id": "en-104",
+   "feed": "Diggers",
+   "feedCountry": "ZM",
+   "role": "national",
+   "title": "Woman drags neighbour to court for calling her a witch",
+   "country": "ZM",
+   "basis": "media"
+  },
+  {
+   "id": "en-105",
+   "feed": "NewZimbabwe",
+   "feedCountry": "ZW",
+   "role": "national",
+   "title": "Funding gap in health sector triggers medicines shortages, staffing crisis in Zimbabwe",
+   "country": "ZW",
+   "basis": "title"
+  },
+  {
+   "id": "en-106",
+   "feed": "NewZimbabwe",
+   "feedCountry": "ZW",
+   "role": "national",
+   "title": "Mnangagwa presides over graduation of 2,729 ZOU students",
+   "country": "ZW",
+   "basis": "title",
+   "note": "dirigeant : Mnangagwa"
+  },
+  {
+   "id": "en-107",
+   "feed": "Al Jazeera English",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Lebanon’s first electric train hopes to revive railway system",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "en-108",
+   "feed": "Al Jazeera English",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Turkiye highway crash kills 11, injures 27 after tour bus hits truck",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "en-109",
+   "feed": "Al Jazeera English",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "How the ICC can be saved",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "en-110",
+   "feed": "Al Jazeera English",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "The Mafia Football Murders | True Crime Reports",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "en-111",
+   "feed": "Africanews",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Nepal orders evacuations after landslide triggers Budhi Gandaki flash flood",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "en-112",
+   "feed": "Africanews",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Former DR Congo president says the country is 'in peril'",
+   "country": "CD",
+   "basis": "title"
+  },
+  {
+   "id": "en-113",
+   "feed": "Africanews",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Navi Pillay dedicates Nobel Prize to survivors of international crimes",
+   "country": null,
+   "basis": "none",
+   "note": "Navi Pillay est sud-africaine, mais le titre ne le dit pas"
+  },
+  {
+   "id": "en-114",
+   "feed": "Africanews",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "South African human rights lawyer wins 2026 Nobel Peace Prize",
+   "country": "ZA",
+   "basis": "title",
+   "note": "gentilé"
+  },
+  {
+   "id": "en-115",
+   "feed": "AllAfrica",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Sudan: Diplomatic Setbacks Undermine U.S. Approach to Sudan",
+   "country": "SD",
+   "basis": "title"
+  },
+  {
+   "id": "en-116",
+   "feed": "AllAfrica",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "South Africa: Zuma Remains in Hospital as Conflicting Reports Emerge Over His Health",
+   "country": "ZA",
+   "basis": "title"
+  },
+  {
+   "id": "en-117",
+   "feed": "AllAfrica",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Kenya: U.S. Report Flags Kenya's Failure to Act On Officials Linked to Human Trafficking",
+   "country": "KE",
+   "basis": "title"
+  },
+  {
+   "id": "en-118",
+   "feed": "AllAfrica",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Africa: All of Africa Today - October 8, 2026",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "en-119",
+   "feed": "Guardian Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "At least 139 dead including children after migrant boat capsizes off Djibouti",
+   "country": "DJ",
+   "basis": "title"
+  },
+  {
+   "id": "en-120",
+   "feed": "Guardian Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Nobel peace prize winner Navi Pillay jokes about sharing award with Donald Trump – video",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "en-121",
+   "feed": "Guardian Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Ethiopia launches drone attack against Eritrean troops who crossed into Tigray",
+   "country": "ET",
+   "basis": "title",
+   "accept": [
+    "ER"
+   ]
+  },
+  {
+   "id": "en-122",
+   "feed": "Guardian Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "‘Green, red, yellow, blue’? Beneath the surface, diaspora language is anything but Black and white",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "en-123",
+   "feed": "The EastAfrican",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Why Kenya’s film stars are quitting acting",
+   "country": "KE",
+   "basis": "title"
+  },
+  {
+   "id": "en-124",
+   "feed": "The EastAfrican",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "East Africa disease watch queried as Kenya deals with Ebola scare",
+   "country": "KE",
+   "basis": "title"
+  },
+  {
+   "id": "en-125",
+   "feed": "The EastAfrican",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "East Africa’s refining contest: Who will find the margins to survive?",
+   "country": null,
+   "basis": "none",
+   "note": "Afrique de l’Est : région, pas un pays"
+  },
+  {
+   "id": "en-126",
+   "feed": "The EastAfrican",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Ebola case in Kenya puts East African region on alert",
+   "country": "KE",
+   "basis": "title"
+  },
+  {
+   "id": "en-127",
+   "feed": "DW Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Eritrea urges UN deterrence measures against Ethiopia",
+   "country": "ER",
+   "basis": "title",
+   "accept": [
+    "ET"
+   ]
+  },
+  {
+   "id": "en-128",
+   "feed": "DW Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "How the Houthi-Saudi conflict is affecting countries on Africa's Red Sea coast — and beyond",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "en-129",
+   "feed": "DW Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "South Sudan's road to elections remains uncertain",
+   "country": "SS",
+   "basis": "title",
+   "trap": "south-sudan"
+  },
+  {
+   "id": "en-130",
+   "feed": "DW Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Anthropic report: Is Russia using AI for disinformation in the Central African Republic and elsewhere across Africa?",
+   "country": "CF",
+   "basis": "title",
+   "trap": "central-african-republic"
+  },
+  {
+   "id": "en-131",
+   "feed": "RFI English Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "How Egyptian femtech is tackling taboos around women's health",
+   "country": "EG",
+   "basis": "title",
+   "note": "gentilé"
+  },
+  {
+   "id": "en-132",
+   "feed": "RFI English Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "United States accused of exploiting migrant suffering with Africa deportations",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "en-133",
+   "feed": "RFI English Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "France pledges more support to fight DRC Ebola outbreak as deaths top 4,000",
+   "country": "CD",
+   "basis": "title"
+  },
+  {
+   "id": "en-134",
+   "feed": "RFI English Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Mali army and Russian fighters accused of killing dozens of civilians",
+   "country": "ML",
+   "basis": "title"
+  },
+  {
+   "id": "en-135",
+   "feed": "BBC Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Children among 139 dead after boat capsizes off Djibouti, UN says",
+   "country": "DJ",
+   "basis": "title"
+  },
+  {
+   "id": "en-136",
+   "feed": "BBC Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Why Zimbabwe tycoon 'Sir Wicknell' was loved and hated in Africa",
+   "country": "ZW",
+   "basis": "title"
+  },
+  {
+   "id": "en-137",
+   "feed": "BBC Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "How fresh fighting in Tigray could spark wider conflict in Ethiopia",
+   "country": "ET",
+   "basis": "title"
+  },
+  {
+   "id": "en-138",
+   "feed": "BBC Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Pretorius breaks Gayle's T20 record score",
+   "country": null,
+   "basis": "none",
+   "trap": "pretorius-not-pretoria"
+  },
+  {
+   "id": "en-139",
+   "feed": "France 24 Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "At least 139 migrants dead, more than 84 missing after boat capsizes off Djibouti",
+   "country": "DJ",
+   "basis": "title"
+  },
+  {
+   "id": "en-140",
+   "feed": "France 24 Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Africa joins the data centre backlash",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "en-141",
+   "feed": "France 24 Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Ethiopian army pushes back Tigrayan rebels",
+   "country": "ET",
+   "basis": "title"
+  },
+  {
+   "id": "en-142",
+   "feed": "France 24 Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Morocco's king appoints Marrakesh mayor El Mansouri as first woman prime minister",
+   "country": "MA",
+   "basis": "title"
+  },
+  {
+   "id": "en-143",
+   "feed": "Business Insider Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Uganda considers five-year Russian-language training deal as Museveni deepens military ties with Moscow",
+   "country": "UG",
+   "basis": "title"
+  },
+  {
+   "id": "en-144",
+   "feed": "Business Insider Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "113-year-old MV Liemba, one of the world’s oldest passenger vessels, resumes service connecting 4 African countries",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "en-145",
+   "feed": "Business Insider Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Central Africa’s gold, diamonds and uranium feature in Russia’s 30-point plan as Africa Corps maintains its foothold",
+   "country": null,
+   "basis": "none",
+   "trap": "central-africa-region"
+  },
+  {
+   "id": "en-146",
+   "feed": "Business Insider Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Africa’s top gold producer revises mining bill after concerns over foreign firms’ leases, including a proposed 20-year term",
+   "country": null,
+   "basis": "none",
+   "note": "pays non nommé"
+  },
+  {
+   "id": "en-147",
+   "feed": "TechCabal",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "The Nigerian founders who turned travel frustrations into a fintech",
+   "country": "NG",
+   "basis": "title",
+   "note": "gentilé"
+  },
+  {
+   "id": "en-148",
+   "feed": "TechCabal",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "“You already had your chance”: The silent shame of online dating after divorce in Africa",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "en-149",
+   "feed": "TechCabal",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "The 20-metre neobank: How Mukuru is solving the gap between receiving cash and spending it",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "en-150",
+   "feed": "TechCabal",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Why Moove is leaving the Nigerian market it was built in",
+   "country": "NG",
+   "basis": "title",
+   "note": "gentilé"
+  },
+  {
+   "id": "en-151",
+   "feed": "African Arguments",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Enemies of Convenience: Ethiopia’s New Opposition Alignment and the Question of What Comes Next",
+   "country": "ET",
+   "basis": "title"
+  },
+  {
+   "id": "en-152",
+   "feed": "African Arguments",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "How Zambia Defeated an Election Petition Without Ever Arguing the Case",
+   "country": "ZM",
+   "basis": "title"
+  },
+  {
+   "id": "en-153",
+   "feed": "African Arguments",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Drongo Company: Can Washington’s new PSYOP unit win back African trust?",
+   "country": null,
+   "basis": "none"
+  },
+  {
+   "id": "en-154",
+   "feed": "African Arguments",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "DRC: Peace in Eastern Congo Must Include the Banyamulenge",
+   "country": "CD",
+   "basis": "title",
+   "trap": "congo-alone"
+  },
+  {
+   "id": "en-155",
+   "feed": "Guardian",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "europe",
+   "title": "Trump announces partial ceasefire in Ukraine war as Zelenskyy says deal is ‘news to me’",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-156",
+   "feed": "Guardian",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "europe",
+   "title": "French minister invites UK to ‘come all the way back’ to the EU",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-157",
+   "feed": "France 24",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "europe",
+   "title": "Ukraine: Coerced into a Corner?",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-158",
+   "feed": "France 24",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "europe",
+   "title": "Falling test scores in schools startle EU countries: Why are standards going down?",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-159",
+   "feed": "BBC",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "europe",
+   "title": "Poland detains man suspected of planning assassination of PM Tusk",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-160",
+   "feed": "BBC",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "europe",
+   "title": "Protesters blame 'vulture funds' for Spain's housing crisis",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-161",
+   "feed": "Guardian",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "ameriques",
+   "title": "Thousands without power in Florida and Alabama as Isaias moves north",
+   "country": null,
+   "basis": "none",
+   "region": "ameriques",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-162",
+   "feed": "Guardian",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "ameriques",
+   "title": "Candlelit theatre in Havana – in pictures",
+   "country": null,
+   "basis": "none",
+   "region": "ameriques",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-163",
+   "feed": "BBC US & Canada",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "ameriques",
+   "title": "'Time for Ukraine to get new president,' says Trump after Zelensky condemns diesel deal",
+   "country": null,
+   "basis": "none",
+   "region": "ameriques",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-164",
+   "feed": "BBC US & Canada",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "ameriques",
+   "title": "Watch: 'I am Jane Doe' protests across US call for end to sexual violence",
+   "country": null,
+   "basis": "none",
+   "region": "ameriques",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-165",
+   "feed": "France 24",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "ameriques",
+   "title": "Brazil's Lula accuses social media giant Meta of election interference amid tight run-off campaign",
+   "country": null,
+   "basis": "none",
+   "region": "ameriques",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-166",
+   "feed": "France 24",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "ameriques",
+   "title": "White House promotes 'Trump TV' with AI-altered photo",
+   "country": null,
+   "basis": "none",
+   "region": "ameriques",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-167",
+   "feed": "BBC Latin America",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "ameriques",
+   "title": "Powerful magnitude 7.7 earthquake hits Panama, damaging buildings",
+   "country": null,
+   "basis": "none",
+   "region": "ameriques",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-168",
+   "feed": "BBC Latin America",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "ameriques",
+   "title": "Owner, businessman & player: Messi has big plans as a golden era ends",
+   "country": null,
+   "basis": "none",
+   "region": "ameriques",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-169",
+   "feed": "Guardian",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "moyen-orient",
+   "title": "Middle East crisis: Riyadh airport hit again as Houthis claim attacks, including strike that killed 12 – as it happened",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-170",
+   "feed": "Guardian",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "moyen-orient",
+   "title": "In the Shadows review – true tale of Ramla Ali’s remarkable rise through the boxing ranks is a knockout",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-171",
+   "feed": "France 24",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "moyen-orient",
+   "title": "Escalating fighting in Yemen worsens food security crisis",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-172",
+   "feed": "France 24",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "moyen-orient",
+   "title": "Explosions heard in Saudi capital Riyadh after Houthis' deadly attacks on airports",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-173",
+   "feed": "BBC",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "moyen-orient",
+   "title": "Saudi capital airport hit by second Houthi strike in two days",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-174",
+   "feed": "BBC",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "moyen-orient",
+   "title": "Inside Yemen's front-line city as Houthis battle for control",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-175",
+   "feed": "Guardian",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "asie-pacifique",
+   "title": "Volkswagen boss backs EU plan to bolster domestic European industry",
+   "country": null,
+   "basis": "none",
+   "region": "asie-pacifique",
+   "africa": [],
+   "touchesAfrica": false,
+   "note": "rubrique régionale : la région vient de la source"
+  },
+  {
+   "id": "en-176",
+   "feed": "Guardian",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "asie-pacifique",
+   "title": "Satellite images show attack jets at Chinese military facility in Laos",
+   "country": null,
+   "basis": "none",
+   "region": "asie-pacifique",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-177",
+   "feed": "BBC",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "asie-pacifique",
+   "title": "Young men live in fear of being snatched off the streets and sold to Myanmar's army",
+   "country": null,
+   "basis": "none",
+   "region": "asie-pacifique",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-178",
+   "feed": "BBC",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "asie-pacifique",
+   "title": "Australian AI data centre firm scraps mega stock market listing",
+   "country": null,
+   "basis": "none",
+   "region": "asie-pacifique",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-179",
+   "feed": "France 24",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "asie-pacifique",
+   "title": "India court orders release of 'cockroach' movement leaders after detention",
+   "country": null,
+   "basis": "none",
+   "region": "asie-pacifique",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-180",
+   "feed": "France 24",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": "asie-pacifique",
+   "title": "Journalism and resistance under Taliban rule",
+   "country": null,
+   "basis": "none",
+   "region": "asie-pacifique",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-181",
+   "feed": "SCMP (Hong Kong)",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": null,
+   "title": "UK PM Burnham to publish Manchester City dealings after intervention draws criticism",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-182",
+   "feed": "SCMP (Hong Kong)",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": null,
+   "title": "Trump’s new spokeswoman is a ‘devoted fan’ who lived in Beijing and speaks Chinese",
+   "country": null,
+   "basis": "none",
+   "region": "ameriques",
+   "africa": [],
+   "touchesAfrica": false,
+   "regionAccept": [
+    null
+   ],
+   "note": "Trump et Pékin : ambigu"
+  },
+  {
+   "id": "en-183",
+   "feed": "ABC (Australie)",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": null,
+   "title": "The punks trying to reclaim the internet from 'big tech'",
+   "country": null,
+   "basis": "none",
+   "region": null,
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-184",
+   "feed": "ABC (Australie)",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": null,
+   "title": "Saudi Arabia extends airport closure as Houthis warn 'worse is yet to come'",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-185",
+   "feed": "The Hindu (Inde)",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": null,
+   "title": "Dissanayake highlights ‘good relations’ with India, points to New Delhi’s Katchatheevu stance",
+   "country": null,
+   "basis": "none",
+   "region": "asie-pacifique",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-186",
+   "feed": "The Hindu (Inde)",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": null,
+   "title": "Rights group says paramilitary drone strike in Sudan killed 41 near Ethiopian border",
+   "country": "SD",
+   "basis": "title",
+   "region": null,
+   "africa": [
+    "SD",
+    "ET"
+   ],
+   "touchesAfrica": true
+  },
+  {
+   "id": "en-187",
+   "feed": "Euronews",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": null,
+   "title": "Iran's IRGC strikes tanker and threatens to target vessels beyond Hormuz",
+   "country": null,
+   "basis": "none",
+   "region": "moyen-orient",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-188",
+   "feed": "NPR (États-Unis)",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": null,
+   "title": "Pope Leo XIV to undergo lung surgery this week",
+   "country": null,
+   "basis": "none",
+   "region": null,
+   "africa": [],
+   "touchesAfrica": false,
+   "note": "aucun indice de région"
+  },
+  {
+   "id": "en-189",
+   "feed": "NPR (États-Unis)",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": null,
+   "title": "Protests against voter roll revisions rock capital of world's largest democracy",
+   "country": null,
+   "basis": "none",
+   "region": null,
+   "africa": [],
+   "touchesAfrica": false,
+   "note": "Inde non nommée"
+  },
+  {
+   "id": "en-190",
+   "feed": "DW World (Allemagne)",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": null,
+   "title": "Surrogacy in Georgia is booming, but at what cost?",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false,
+   "trap": "georgia-country"
+  },
+  {
+   "id": "en-191",
+   "feed": "DW World (Allemagne)",
+   "feedCountry": null,
+   "role": "world",
+   "sourceRegion": null,
+   "title": "Schools crisis in France: Investment fails to inspire confidence",
+   "country": null,
+   "basis": "none",
+   "region": "europe",
+   "africa": [],
+   "touchesAfrica": false
+  },
+  {
+   "id": "en-192",
+   "feed": "MyJoyOnline",
+   "feedCountry": "GH",
+   "role": "national",
+   "title": "2026 World Maritime Day: Danish Embassy organises “The Gulf of Guinea Speaks”",
+   "country": "GH",
+   "basis": "media",
+   "trap": "gulf-of-guinea"
+  },
+  {
+   "id": "en-193",
+   "feed": "Hespress English",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "Guterres meets Sahara envoys as MINURSO renewal deadline approaches",
+   "country": "EH",
+   "basis": "title",
+   "accept": [
+    "MA"
+   ],
+   "trap": "sahara-alone",
+   "note": "« Sahara » seul : Sahara occidental dans ce contexte"
+  },
+  {
+   "id": "en-194",
+   "feed": "Hespress English",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "Washington weighs options for UN mission in the Sahara, report says",
+   "country": "EH",
+   "basis": "title",
+   "accept": [
+    "MA"
+   ],
+   "trap": "sahara-alone"
+  },
+  {
+   "id": "en-195",
+   "feed": "Hespress English",
+   "feedCountry": "MA",
+   "role": "national",
+   "title": "Mauritania’s UN envoy meets de Mistura after Security Council talks on Sahara",
+   "country": "MR",
+   "basis": "title",
+   "accept": [
+    "EH"
+   ],
+   "trap": "mauritania-vs-mauritius"
+  },
+  {
+   "id": "en-196",
+   "feed": "NewsMoris",
+   "feedCountry": "MU",
+   "role": "national",
+   "title": "Statistics Mauritius Reveals 3 Vital Pillars Behind Transparent Upgrades to National GDP Figures",
+   "country": "MU",
+   "basis": "title",
+   "trap": "mauritius"
+  },
+  {
+   "id": "en-197",
+   "feed": "NewsMoris",
+   "feedCountry": "MU",
+   "role": "national",
+   "title": "Mauritian Industry Hits Breaking Point as Costs Crunch Margins",
+   "country": "MU",
+   "basis": "title",
+   "trap": "mauritius"
+  },
+  {
+   "id": "en-198",
+   "feed": "Channels TV",
+   "feedCountry": "NG",
+   "role": "national",
+   "title": "Police Arrest Alleged Killer Of Farmer In Niger State",
+   "country": "NG",
+   "basis": "title",
+   "trap": "niger-state"
+  },
+  {
+   "id": "en-199",
+   "feed": "KT Press",
+   "feedCountry": "RW",
+   "role": "national",
+   "title": "Junior Wasps Sting South Sudan, Uganda Hit Eight in CECAFA U-17 Openers",
+   "country": "SS",
+   "basis": "title",
+   "accept": [
+    "UG"
+   ],
+   "trap": "south-sudan"
+  },
+  {
+   "id": "en-200",
+   "feed": "KT Press",
+   "feedCountry": "RW",
+   "role": "national",
+   "title": "Rwandan Scientist Wins $150,000 Grant For Congo Basin Forests Research",
+   "country": "RW",
+   "basis": "title",
+   "trap": "congo-basin",
+   "note": "gentilé rwandais ; Congo Basin n’est pas un pays"
+  },
+  {
+   "id": "en-201",
+   "feed": "Somali Dispatch",
+   "feedCountry": "SO",
+   "role": "national",
+   "title": "UK Raises Concerns Over Journalist Arrests in Somaliland, Urges Media Protections",
+   "country": "SO",
+   "basis": "title",
+   "trap": "somaliland"
+  },
+  {
+   "id": "en-202",
+   "feed": "Somali Dispatch",
+   "feedCountry": "SO",
+   "role": "national",
+   "title": "Egypt, Somalia, Sudan and Eritrea Strengthen Regional Coordination as Ethiopia and Somaliland Respond",
+   "country": "SO",
+   "basis": "media",
+   "accept": [
+    "EG",
+    "SD",
+    "ER",
+    "ET"
+   ]
+  },
+  {
+   "id": "en-203",
+   "feed": "Somali Dispatch",
+   "feedCountry": "SO",
+   "role": "national",
+   "title": "Somaliland Rejects Hassan Sheikh’s Claims Over Alleged Israeli Base in Berbera",
+   "country": "SO",
+   "basis": "title",
+   "trap": "somaliland"
+  },
+  {
+   "id": "en-204",
+   "feed": "Eye Radio",
+   "feedCountry": "SS",
+   "role": "national",
+   "title": "South Sudan breaks ground for Naivasha dry port to ease trade costs",
+   "country": "SS",
+   "basis": "title",
+   "trap": "south-sudan"
+  },
+  {
+   "id": "en-205",
+   "feed": "Sudans Post",
+   "feedCountry": "SS",
+   "role": "national",
+   "title": "Ex-foreign minister acknowledges ‘enormous’ obstacles to credible South Sudan elections",
+   "country": "SS",
+   "basis": "title",
+   "trap": "south-sudan"
+  },
+  {
+   "id": "en-206",
+   "feed": "Sudans Post",
+   "feedCountry": "SS",
+   "role": "national",
+   "title": "South Sudan worker body rejects claim it is illegal",
+   "country": "SS",
+   "basis": "title",
+   "trap": "south-sudan"
+  },
+  {
+   "id": "en-207",
+   "feed": "Sudans Post",
+   "feedCountry": "SS",
+   "role": "national",
+   "title": "Kenya backs South Sudan’s December elections",
+   "country": "SS",
+   "basis": "title",
+   "accept": [
+    "KE"
+   ],
+   "trap": "south-sudan"
+  },
+  {
+   "id": "en-208",
+   "feed": "Nile Post",
+   "feedCountry": "UG",
+   "role": "national",
+   "title": "Uganda, South Sudan Seek to Unlock Trade Opportunities at Business Forum",
+   "country": "UG",
+   "basis": "title",
+   "accept": [
+    "SS"
+   ],
+   "trap": "south-sudan"
+  },
+  {
+   "id": "en-209",
+   "feed": "Nile Post",
+   "feedCountry": "UG",
+   "role": "national",
+   "title": "Uganda Seeks Diplomatic Solution Over South Sudan Restrictions on Ugandan Traders",
+   "country": "UG",
+   "basis": "title",
+   "accept": [
+    "SS"
+   ],
+   "trap": "south-sudan"
+  },
+  {
+   "id": "en-210",
+   "feed": "Nile Post",
+   "feedCountry": "UG",
+   "role": "national",
+   "title": "South Sudan Envoy Dismisses Juba Order Targeting Ugandan, Foreign Traders",
+   "country": "SS",
+   "basis": "title",
+   "accept": [
+    "UG"
+   ],
+   "trap": "south-sudan",
+   "note": "Juba"
+  },
+  {
+   "id": "en-211",
+   "feed": "Africanews",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Guinea-Bissau elections in doubt as Senegal urges military to ease restrictions",
+   "country": "GW",
+   "basis": "title",
+   "accept": [
+    "SN"
+   ],
+   "trap": "guinea-bissau"
+  },
+  {
+   "id": "en-212",
+   "feed": "Africanews",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Niger set for $200 million financial package from IMF",
+   "country": "NE",
+   "basis": "title",
+   "trap": "niger-vs-nigeria"
+  },
+  {
+   "id": "en-213",
+   "feed": "Africanews",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "WFP urgently seeking over $30 million to keep feeding Congolese refugees in Burundi",
+   "country": "BI",
+   "basis": "title",
+   "accept": [
+    "CD"
+   ],
+   "trap": "congolese-ambiguous"
+  },
+  {
+   "id": "en-214",
+   "feed": "AllAfrica",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Africa: Guinean Entrepreneur Mariama Camara Promotes African Textiles Worldwide",
+   "country": "GN",
+   "basis": "title",
+   "trap": "guinean"
+  },
+  {
+   "id": "en-215",
+   "feed": "AllAfrica",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Niger: Niger Intelligence Agents Expelled From France in Sign of Diplomatic Strain",
+   "country": "NE",
+   "basis": "title",
+   "trap": "niger-vs-nigeria"
+  },
+  {
+   "id": "en-216",
+   "feed": "Guardian Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Controversial vaccine trial touted by RFK Jr gets go-ahead in Guinea-Bissau",
+   "country": "GW",
+   "basis": "title",
+   "trap": "guinea-bissau"
+  },
+  {
+   "id": "en-217",
+   "feed": "Guardian Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Bullet and blast injuries … and a constant need for blood: inside South Sudan’s overwhelmed trauma wards",
+   "country": "SS",
+   "basis": "title",
+   "trap": "south-sudan"
+  },
+  {
+   "id": "en-218",
+   "feed": "The EastAfrican",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "South Sudan breaks ground for Naivasha dry port",
+   "country": "SS",
+   "basis": "title",
+   "accept": [
+    "KE"
+   ],
+   "trap": "south-sudan"
+  },
+  {
+   "id": "en-219",
+   "feed": "The EastAfrican",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "South Sudan denies plan to eject foreign traders",
+   "country": "SS",
+   "basis": "title",
+   "trap": "south-sudan"
+  },
+  {
+   "id": "en-220",
+   "feed": "The EastAfrican",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Kagame, M23 host AU elders on eastern Congo peace",
+   "country": "CD",
+   "basis": "title",
+   "accept": [
+    "RW"
+   ],
+   "trap": "congo-alone"
+  },
+  {
+   "id": "en-221",
+   "feed": "RFI English Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Niger intelligence agents expelled from France in sign of diplomatic strain",
+   "country": "NE",
+   "basis": "title",
+   "trap": "niger-vs-nigeria"
+  },
+  {
+   "id": "en-222",
+   "feed": "RFI English Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "African Union to launch continent's first credit rating agency in Mauritius",
+   "country": "MU",
+   "basis": "title",
+   "trap": "mauritius"
+  },
+  {
+   "id": "en-223",
+   "feed": "RFI English Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "France earmarks a further €7m to help fight DRC's worst-ever Ebola crisis",
+   "country": "CD",
+   "basis": "title"
+  },
+  {
+   "id": "en-224",
+   "feed": "RFI English Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "'Absolutely nothing' justifies arrest of Niger journalist, rights expert tells RFI",
+   "country": "NE",
+   "basis": "title",
+   "trap": "niger-vs-nigeria"
+  },
+  {
+   "id": "en-225",
+   "feed": "RFI English Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Burkina Faso, Mali and Niger launch Tafouk TV channel to push their own narrative",
+   "country": "BF",
+   "basis": "title",
+   "accept": [
+    "ML",
+    "NE"
+   ]
+  },
+  {
+   "id": "en-226",
+   "feed": "France 24 Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Kenya reports first-ever Ebola death after patient returns from DR Congo",
+   "country": "KE",
+   "basis": "title",
+   "accept": [
+    "CD"
+   ]
+  },
+  {
+   "id": "en-227",
+   "feed": "France 24 Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Ebola a 'terrifying disease': Conflict-ravaged DRC faces overburdened healthcare system",
+   "country": "CD",
+   "basis": "title"
+  },
+  {
+   "id": "en-228",
+   "feed": "France 24 Africa",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "‘Super El Niño’ deepens hunger crisis in South Sudan says UN",
+   "country": "SS",
+   "basis": "title",
+   "trap": "south-sudan"
+  },
+  {
+   "id": "en-229",
+   "feed": "African Arguments",
+   "feedCountry": null,
+   "role": "panafrican",
+   "title": "Same Cocoa Crash, Opposite Answers: what Ghana and Côte d’Ivoire Reveal about Power in Global Trade",
+   "country": "GH",
+   "basis": "title",
+   "accept": [
+    "CI"
+   ]
+  }
+ ],
+ "traps": [
+  {
+   "id": "en-trap-01",
+   "synthetic": true,
+   "title": "Equatorial Guinea opens new port in Malabo",
+   "country": "GQ",
+   "trap": "equatorial-guinea"
+  },
+  {
+   "id": "en-trap-02",
+   "synthetic": true,
+   "title": "Guinea and Equatorial Guinea sign fisheries accord",
+   "country": "GQ",
+   "trap": "guinea-vs-equatorial-guinea",
+   "accept": [
+    "GN"
+   ]
+  },
+  {
+   "id": "en-trap-03",
+   "synthetic": true,
+   "title": "Papua New Guinea floods displace thousands",
+   "country": null,
+   "trap": "papua-new-guinea"
+  },
+  {
+   "id": "en-trap-04",
+   "synthetic": true,
+   "title": "Militants attack oil pipeline in the Niger Delta",
+   "country": "NG",
+   "trap": "niger-delta"
+  },
+  {
+   "id": "en-trap-05",
+   "synthetic": true,
+   "title": "Niger junta reopens border with Benin",
+   "country": "NE",
+   "trap": "niger-vs-nigeria",
+   "accept": [
+    "BJ"
+   ]
+  },
+  {
+   "id": "en-trap-06",
+   "synthetic": true,
+   "title": "Chad Michael wins best actor award in Los Angeles",
+   "country": null,
+   "trap": "chad-first-name"
+  },
+  {
+   "id": "en-trap-07",
+   "synthetic": true,
+   "title": "Chad closes border with Sudan after clashes",
+   "country": "TD",
+   "trap": "chad-country",
+   "accept": [
+    "SD"
+   ]
+  },
+  {
+   "id": "en-trap-08",
+   "synthetic": true,
+   "title": "Congo river traffic halted by low water",
+   "country": null,
+   "trap": "congo-alone",
+   "accept": [
+    "CD",
+    "CG"
+   ]
+  },
+  {
+   "id": "en-trap-09",
+   "synthetic": true,
+   "title": "Republic of the Congo holds presidential vote",
+   "country": "CG",
+   "trap": "republic-of-congo"
+  },
+  {
+   "id": "en-trap-10",
+   "synthetic": true,
+   "title": "DR Congo and Rwanda sign peace framework",
+   "country": "CD",
+   "trap": "drc",
+   "accept": [
+    "RW"
+   ]
+  },
+  {
+   "id": "en-trap-11",
+   "synthetic": true,
+   "title": "Sudan army retakes Khartoum airport",
+   "country": "SD",
+   "trap": "sudan"
+  },
+  {
+   "id": "en-trap-12",
+   "synthetic": true,
+   "title": "South Sudan president reshuffles cabinet",
+   "country": "SS",
+   "trap": "south-sudan"
+  },
+  {
+   "id": "en-trap-13",
+   "synthetic": true,
+   "title": "Ivory Coast cocoa farmers demand higher prices",
+   "country": "CI",
+   "trap": "ivory-coast"
+  },
+  {
+   "id": "en-trap-14",
+   "synthetic": true,
+   "title": "Cape Verde tourism hits record",
+   "country": "CV",
+   "trap": "cape-verde"
+  },
+  {
+   "id": "en-trap-15",
+   "synthetic": true,
+   "title": "Western Sahara: UN envoy visits Laayoune",
+   "country": "EH",
+   "trap": "western-sahara"
+  },
+  {
+   "id": "en-trap-16",
+   "synthetic": true,
+   "title": "Victoria Falls bridge closed for repairs",
+   "country": null,
+   "trap": "victoria-ambiguous"
+  },
+  {
+   "id": "en-trap-17",
+   "synthetic": true,
+   "title": "Prince William visits Kenya wildlife reserve",
+   "country": "KE",
+   "trap": "person-name-noise"
+  },
+  {
+   "id": "en-trap-18",
+   "synthetic": true,
+   "title": "Mali junta extends transition to 2030",
+   "country": "ML",
+   "trap": "mali"
+  },
+  {
+   "id": "en-trap-19",
+   "synthetic": true,
+   "title": "Somaliland marks 35 years of self-declared independence",
+   "country": "SO",
+   "trap": "somaliland"
+  },
+  {
+   "id": "en-trap-20",
+   "synthetic": true,
+   "title": "Gambia River ferry capsizes near Banjul",
+   "country": "GM",
+   "trap": "gambia"
+  }
+ ]
+}

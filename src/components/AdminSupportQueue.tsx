@@ -130,7 +130,7 @@ export default function AdminSupportQueue() {
               {item.events.length > 1 && (
                 <details className="mt-3 text-xs text-text-muted">
                   <summary className="cursor-pointer">Historique ({item.events.length} événements)</summary>
-                  <ol className="mt-2 space-y-2 pl-4">
+                  <ol className="mt-2 space-y-2 ps-4">
                     {item.events.slice(1).map((event) => (
                       <li key={event.id}>
                         {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(event.createdAt))} — {statusLabels[event.eventType] ?? event.eventType}

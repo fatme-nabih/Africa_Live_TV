@@ -69,6 +69,7 @@ test('detectCountryCode resolves countries by keywords and demonyms', () => {
 
 test('parseFeedXml parses RSS 2.0 items accurately', () => {
   const feed: FeedConfig = {
+    edition: 'fr', origin: 'Test', role: 'national',
     id: 'test-feed',
     name: 'Test News',
     domain: 'example.com',
@@ -111,6 +112,7 @@ test('parseFeedXml parses RSS 2.0 items accurately', () => {
 
 test('parseFeedXml parses Atom 1.0 entries accurately', () => {
   const feed: FeedConfig = {
+    edition: 'fr', origin: 'Test', role: 'national',
     id: 'atom-feed',
     name: 'Atom News',
     domain: 'atom.org',

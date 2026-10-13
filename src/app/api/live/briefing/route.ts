@@ -1,3 +1,4 @@
+import { apiEdition } from '@/lib/api-edition';
 import { NextResponse } from 'next/server';
 
 import { withApiErrorHandler, BadRequestError } from '@/lib/api-errors';
@@ -15,6 +16,7 @@ export const GET = withApiErrorHandler(async (request: Request) => {
   if (!authorization.ok) return authorization.response;
 
   const url = new URL(request.url);
+  const edition = apiEdition(url);
   const countryCode = url.searchParams.get('countryCode') || url.searchParams.get('code');
   const forceRefresh = url.searchParams.get('refresh') === 'true';
 
@@ -25,6 +27,7 @@ export const GET = withApiErrorHandler(async (request: Request) => {
   const snapshot = await getLiveBriefing({
     countryCode,
     forceRefresh,
+    edition,
   });
 
   return NextResponse.json(snapshot, {

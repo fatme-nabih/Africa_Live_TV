@@ -1,3 +1,5 @@
+import { collator, intlLanguage } from '@/i18n/format';
+import { DEFAULT_EDITION, type Edition } from './editions';
 // Briques pures du sélecteur de pays : drapeaux, recherche sans accents, pays récents.
 export type PickerCountry = { code: string; name: string };
 
@@ -56,9 +58,9 @@ function rank(country: PickerCountry, query: string): number {
 }
 
 /** Liste triée par pertinence ; sans requête, ordre alphabétique français. */
-export function filterCountries(countries: readonly PickerCountry[], rawQuery: string): PickerCountry[] {
+export function filterCountries(countries: readonly PickerCountry[], rawQuery: string, edition: Edition = DEFAULT_EDITION): PickerCountry[] {
   const query = normalizeSearch(rawQuery);
-  const alphabetical = [...countries].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+  const alphabetical = [...countries].sort((a, b) => collator(intlLanguage(edition)).compare(a.name, b.name));
   if (!query) return alphabetical;
   return alphabetical
     .map(country => ({ country, score: rank(country, query) }))

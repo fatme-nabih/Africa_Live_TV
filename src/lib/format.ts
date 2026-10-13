@@ -1,11 +1,13 @@
-const regionNameFormatter = new Intl.DisplayNames(['fr'], { type: 'region' });
-const languageNameFormatter = new Intl.DisplayNames(['fr'], { type: 'language' });
+import { countryName } from './country-names';
+import { displayNames, intlLanguage } from '@/i18n/format';
+import { DEFAULT_EDITION, type Edition } from './editions';
 
-export function formatCountryName(code: string | null | undefined, fallback = 'International') {
+export function formatCountryName(code: string | null | undefined, fallback = 'International', edition: Edition = DEFAULT_EDITION) {
   if (!code) return fallback;
+  if (edition !== 'fr' && /^[a-z]{2}$/i.test(code)) return countryName(code, edition);
 
   try {
-    return regionNameFormatter.of(code.toUpperCase()) || code;
+    return displayNames(intlLanguage(edition), 'region').of(code.toUpperCase()) || code;
   } catch {
     return code;
   }
@@ -14,11 +16,12 @@ export function formatCountryName(code: string | null | undefined, fallback = 'I
 export function formatLanguageName(
   code: string | null | undefined,
   fallback = 'Non renseignée',
+  edition: Edition = DEFAULT_EDITION,
 ) {
-  if (!code) return fallback;
+  if (!code) return edition === 'en' && fallback === 'Non renseignée' ? 'Not specified' : fallback;
 
   try {
-    return languageNameFormatter.of(code.toLowerCase()) || code;
+    return displayNames(intlLanguage(edition), 'language').of(code.toLowerCase()) || code;
   } catch {
     return code;
   }

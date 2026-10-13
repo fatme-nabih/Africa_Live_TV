@@ -1,3 +1,6 @@
+import { fr } from '@/i18n/fr';
+import { format } from '@/i18n/message';
+import type { Dictionary } from '@/i18n/dictionary';
 import type { LiveWeatherCondition } from './live-weather-types';
 
 export type WeatherAlert = { label: string; detail: string };
@@ -13,18 +16,18 @@ const EXTREME_HEAT_C = 45;
  * Phénomène marquant dans la dernière observation d'un lieu, sinon `null`.
  * C'est un repère tiré d'un relevé automatisé, jamais une alerte officielle de protection civile.
  */
-export function weatherAlert(current: Pick<LiveWeatherCondition, 'weatherCode' | 'weatherIcon' | 'windSpeedKmh' | 'precipitationMm' | 'temperatureC'>): WeatherAlert | null {
+export function weatherAlert(current: Pick<LiveWeatherCondition, 'weatherCode' | 'weatherIcon' | 'windSpeedKmh' | 'precipitationMm' | 'temperatureC'>, labels: Dictionary['weather']['alert'] = fr.weather.alert): WeatherAlert | null {
   if (current.weatherIcon === 'storm' || (current.weatherCode !== null && STORM_CODES.has(current.weatherCode))) {
-    return { label: 'Orage', detail: 'Orage en cours' };
+    return { label: labels.storm, detail: labels.stormDetail };
   }
   if ((current.weatherCode !== null && HEAVY_RAIN_CODES.has(current.weatherCode)) || current.precipitationMm >= HEAVY_RAIN_MM) {
-    return { label: 'Fortes pluies', detail: `${current.precipitationMm} mm` };
+    return { label: labels.heavyRain, detail: format(labels.heavyRainDetail, { value: current.precipitationMm }) };
   }
   if (current.windSpeedKmh >= STRONG_WIND_KMH) {
-    return { label: 'Vent fort', detail: `${Math.round(current.windSpeedKmh)} km/h` };
+    return { label: labels.wind, detail: format(labels.windDetail, { value: Math.round(current.windSpeedKmh) }) };
   }
   if (current.temperatureC >= EXTREME_HEAT_C) {
-    return { label: 'Chaleur extrême', detail: `${current.temperatureC} °C` };
+    return { label: labels.heat, detail: format(labels.heatDetail, { value: current.temperatureC }) };
   }
   return null;
 }

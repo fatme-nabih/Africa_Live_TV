@@ -1,3 +1,7 @@
+> **État après EDI-903, 13/10/2026 : 43/43 tickets reçus.** D7/juridique validés par le propriétaire sur les textes actuels ; publication FR/EN/AR **f4d85931-e353-422e-bbe6-aa1476ab360a SUCCESS** sur Railway staging, 22 migrations, 646/646 fichiers, santé 200, 28 E2E +22 ignorés, 45 captures. Aucun commit/push ; index, sources FR, données, .env, tâche et cycle conservés. [Publication](publication-editions-edi903-2026-10-13.md), [passation actuelle](passation-editions-publication-2026-10-13.md). Les bilans « en attente/non autorisé » ci-dessous décrivent les états antérieurs.
+
+Staging actuel : EDITIONS=fr,en,ar au build et au runtime ; 22 migrations, préférences NULL ; modes locaux/VLC/CI anonyme désactivés, éligibilité et mur TV conservés. .env locales inchangées, build local FR seul Clerk. Les états21 migrations ci-dessous sont historiques.
+
 # Matrice des environnements — revue du 1er octobre 2026
 
 Complément BUG du 10 octobre : [réception locale](validation-correctifs-bugs-2026-10-09.md),
@@ -108,3 +112,22 @@ une modification Railway exige un nouveau build pour atteindre le navigateur.
 Ces constats décrivent la préproduction après le déploiement staging autorisé du
 29 septembre 2026. L'environnement visible `production` reste de rôle applicatif
 `staging` ; aucun lancement ou changement de domaine de production n'a eu lieu.
+
+## Éditions linguistiques — configuration du socle E1 (11 octobre 2026)
+
+**État courant au 12/10 après E3 :** FR/EN prêts, AR masquée ; les paragraphes E1/E2 ci-dessous sont historiques. [Passation locale](passation-editions-2026-10-12.md). `EDITIONS` distant inchangé. Dernier `.next` local = build FR seul, mode Clerk : reconstruire avec les éditions et drapeaux du processus voulu avant `next start`, sans éditer `.env*`. E4 attend son feu vert et D7 reste nécessaire pour sa réception.
+
+`EDITIONS` est une variable **serveur**, sans équivalent `NEXT_PUBLIC_`. Elle doit être identique au build et à l'exécution.
+Par défaut, ou avec `EDITIONS=fr`, seul le français est actif. `fr` reste toujours inclus ; valeurs inconnues ignorées avec avertissement,
+sans journaliser leur contenu. Une édition sans dictionnaire prêt est masquée : **en E1, `EDITIONS=fr,en` conserve seulement `fr`**, avec avertissement.
+Le proxy, la génération statique, le validateur de démarrage et la CLI utilisent la même analyse.
+Local Clerk et MVP : essais dans les variables du processus, `.env*` inchangées.
+Railway staging et future production : défaut `fr` conservé ; **aucune variable distante modifiée**. L'activation distante d'autres éditions nécessite une demande explicite.
+
+### Moteur E2 reçu le 11 octobre 2026
+
+Les trois registres et collecteurs existent, mais les API RSS/monde/briefing utilisent les mêmes éditions **actives** que le routage : sans `edition` → FR, édition inconnue/inactive → 400 `EDITION_UNAVAILABLE` après autorisation/quota, réponse privée sans cache. `READY_EDITIONS` reste limité à FR ; `EDITIONS=fr,en` masque encore EN en E2. Les scripts de réception peuvent mesurer directement EN/AR sans les exposer dans l’application. L’activation de l’interface sera traitée en E3/E4. `.env*` et variables distantes inchangés.
+
+### Édition anglaise E3 reçue le 12 octobre 2026
+
+`READY_EDITIONS=['fr','en']`. Avec `EDITIONS=fr,en`, les deux éditions sont actives ; avec `EDITIONS=fr`, sélecteur masqué et anglais indisponible. Build et exécution doivent conserver la même valeur. AR reste masquée jusqu’à E4. Essais uniquement dans l’environnement des processus, `.env*` et Railway inchangés. Les API marchés et chaînes de pays acceptent aussi `edition`, le catalogue un champ optionnel pour le tri ; droits et quotas inchangés. Aucune activation distante autorisée.

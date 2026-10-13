@@ -1,4 +1,5 @@
 'use client';
+import { useI18n } from '@/i18n/client';
 import {useEffect,useRef,type RefObject,type Dispatch} from 'react';
 import Hls from 'hls.js';
 import {classifyHlsFailure,nextMediaRecoveryAction,nextNetworkRecoveryAction} from '@/lib/playback-errors';
@@ -16,6 +17,7 @@ type Options={anchored:boolean;channelId:string;source:{url:string}|null;attempt
 };
 export function useMediaLifecycle({anchored,eco,beginNativeLoadRef,failedAttemptIdsRef,channelId,source,attemptId,videoRef,hlsRef,activeAttemptRef,selectedChannelIdRef,
  startupTimeoutRef,networkRecoveryCountRef,mediaRecoveryCountRef,stopStartupTimeout,failCurrentAttempt,updateAttemptEngine,dispatch}:Options){
+  const { t } = useI18n();
   const deferredRef = useRef(anchored || eco);
   useEffect(() => { deferredRef.current = anchored || eco; }, [anchored, eco]);
   useEffect(() => {
@@ -45,7 +47,7 @@ export function useMediaLifecycle({anchored,eco,beginNativeLoadRef,failedAttempt
     };
     const startPreparation = () => {
       clearPreparation();
-      preparationTimer = window.setTimeout(() => finish({ category: 'network', code: 'MEDIA_PREPARATION_TIMEOUT', message: 'Le flux ne répond pas dans le délai attendu.' }), PREPARATION_TIMEOUT_MS);
+      preparationTimer = window.setTimeout(() => finish({ category: 'network', code: 'MEDIA_PREPARATION_TIMEOUT', message: t.player.copy["Le flux ne répond pas dans le délai attendu."] }), PREPARATION_TIMEOUT_MS);
     };
     const directFile = /\.(mp4|m4v|webm|og[gv])$/i.test(new URL(playbackUrl).pathname);
 
@@ -88,7 +90,7 @@ export function useMediaLifecycle({anchored,eco,beginNativeLoadRef,failedAttempt
             networkRecoveryCountRef.current += 1;
             hls.startLoad();
             if (startupTimeoutRef.current === null) startupTimeoutRef.current = window.setTimeout(() => {
-              finish({ category:'network',code:'NETWORK_RECOVERY_TIMEOUT',message:'Le flux ne parvient pas à reprendre la lecture.' });
+              finish({ category:'network',code:'NETWORK_RECOVERY_TIMEOUT',message:t.player.copy["Le flux ne parvient pas à reprendre la lecture."] });
             }, PREPARATION_TIMEOUT_MS);
             return;
           }
@@ -104,7 +106,7 @@ export function useMediaLifecycle({anchored,eco,beginNativeLoadRef,failedAttempt
             {
               stopStartupTimeout();
               startupTimeoutRef.current = window.setTimeout(() => {
-                finish({ category: 'media', code: 'MEDIA_RECOVERY_TIMEOUT', message: 'Le lecteur ne parvient pas à reprendre le flux.' });
+                finish({ category: 'media', code: 'MEDIA_RECOVERY_TIMEOUT', message: t.player.copy["Le lecteur ne parvient pas à reprendre le flux."] });
               }, PREPARATION_TIMEOUT_MS);
             }
             return;
@@ -119,7 +121,7 @@ export function useMediaLifecycle({anchored,eco,beginNativeLoadRef,failedAttempt
           {
             category: 'media',
             code: 'VIDEO_ELEMENT_ERROR',
-            message: 'L’élément vidéo a interrompu la lecture.',
+            message: t.player.copy["L’élément vidéo a interrompu la lecture."],
           },
           'hls.js',
         );
@@ -166,7 +168,7 @@ export function useMediaLifecycle({anchored,eco,beginNativeLoadRef,failedAttempt
             : {
                 category: code === MediaError.MEDIA_ERR_NETWORK ? 'network' : 'media',
                 code: 'NATIVE_HLS_ERROR',
-                message: 'La lecture HLS native a échoué.',
+                message: t.player.copy["La lecture HLS native a échoué."],
               },
           'native-hls',
         );
@@ -207,6 +209,6 @@ export function useMediaLifecycle({anchored,eco,beginNativeLoadRef,failedAttempt
       message: 'Ce navigateur ne prend pas en charge la lecture HLS.',
     });
   }, [channelId, failCurrentAttempt, source, attemptId, stopStartupTimeout, updateAttemptEngine,beginNativeLoadRef,failedAttemptIdsRef,
-    videoRef,hlsRef,activeAttemptRef,selectedChannelIdRef,startupTimeoutRef,networkRecoveryCountRef,mediaRecoveryCountRef,dispatch]);
+    videoRef,hlsRef,activeAttemptRef,selectedChannelIdRef,startupTimeoutRef,networkRecoveryCountRef,mediaRecoveryCountRef,dispatch, t.player.copy]);
 
 }

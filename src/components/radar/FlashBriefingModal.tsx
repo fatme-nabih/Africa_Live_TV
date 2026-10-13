@@ -17,6 +17,9 @@ import {
   Calendar,
 } from 'lucide-react';
 import type { LiveBriefingSnapshot, BriefingSection } from '@/lib/live-briefing-types';
+import { useI18n } from '@/i18n/client';
+import { format } from '@/i18n/message';
+import { intlLocale } from '@/i18n/format';
 
 interface FlashBriefingModalProps {
   isOpen: boolean;
@@ -31,7 +34,12 @@ export default function FlashBriefingModal({
   selectedCountryCode,
   onSelectCountryForChannels,
 }: FlashBriefingModalProps) {
+  const { t, edition } = useI18n();
+  const labels = t.briefing;
+  const locale = intlLocale(edition);
   const [data, setData] = useState<LiveBriefingSnapshot | null>(null);
+  const [dataEdition, setDataEdition] = useState(edition);
+  if (dataEdition !== edition) { setDataEdition(edition); setData(null); }
   const [loading, setLoading] = useState(false);
   const [scopeOverride, setScopeOverride] = useState<'continent' | 'country' | null>(null);
   const activeScope = scopeOverride ?? (selectedCountryCode ? 'country' : 'continent');
@@ -52,6 +60,7 @@ export default function FlashBriefingModal({
     async function fetchBriefing() {
       try {
         const queryParams = new URLSearchParams();
+        if (edition !== 'fr') queryParams.set('edition', edition);
         if (activeScope === 'country' && selectedCountryCode) {
           queryParams.set('code', selectedCountryCode);
         }
@@ -73,12 +82,13 @@ export default function FlashBriefingModal({
       active = false;
       controller.abort();
     };
-  }, [isOpen, activeScope, selectedCountryCode]);
+  }, [isOpen, activeScope, selectedCountryCode, edition]);
 
   const handleManualRefresh = async () => {
     setLoading(true);
     try {
       const queryParams = new URLSearchParams({ refresh: 'true' });
+      if (edition !== 'fr') queryParams.set('edition', edition);
       if (activeScope === 'country' && selectedCountryCode) {
         queryParams.set('code', selectedCountryCode);
       }
@@ -97,19 +107,19 @@ export default function FlashBriefingModal({
   const handleCopyText = async () => {
     if (!data) return;
     const text = [
-      `AFRICA LIVE — ${data.headline.toUpperCase()}`,
-      `Période : ${data.periodCovered} · Généré le ${new Date(data.generatedAt).toLocaleString('fr-FR')}`,
+      format(labels.copyTitle, { headline: data.headline.toLocaleUpperCase(locale) }),
+      format(labels.copyPeriod, { period: data.periodCovered, date: new Date(data.generatedAt).toLocaleString(locale) }),
       '',
-      `RÉSUMÉ EXÉCUTIF :`,
+      labels.copySummary,
       data.executiveSummary,
       '',
       ...data.sections.map((s) => [
-        `--- ${s.title.toUpperCase()} ---`,
+        `--- ${s.title.toLocaleUpperCase(locale)} ---`,
         s.summary,
         ...s.highlights.map((h) => `• ${h}`),
         '',
       ].join('\n')),
-      `Source : Africa Live Radar OSINT (https://africatv.sn)`,
+      labels.copySource,
     ].join('\n');
 
     try {
@@ -151,14 +161,14 @@ export default function FlashBriefingModal({
             <div>
               <div className="flex items-center gap-2">
                 <h2 id="briefing-title" className="text-base font-black tracking-tight text-text sm:text-lg">
-                  Flash Briefing IA Panafricain
+                  {labels.title}
                 </h2>
                 <span className="rounded-full border border-al-green/30 bg-al-green/10 px-2 py-0.5 text-xs font-extrabold uppercase tracking-wider text-al-green">
-                  12h en direct
+                  {labels.live}
                 </span>
               </div>
               <p className="text-xs text-text-muted">
-                Synthèse situationnelle multi-sources (Dépêches vérifiées, USGS/GDACS, Marchés, TV directe)
+                {labels.subtitle}
               </p>
             </div>
           </div>
@@ -189,7 +199,7 @@ export default function FlashBriefingModal({
                   }`}
                 >
                   <Globe2 className="h-3 w-3" />
-                  <span>Afrique</span>
+                  <span>{labels.africa}</span>
                 </button>
               </div>
             )}
@@ -200,8 +210,8 @@ export default function FlashBriefingModal({
               onClick={() => void handleManualRefresh()}
               disabled={loading}
               className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white/[0.04] text-text transition hover:bg-white/[0.08] hover:text-text disabled:opacity-50"
-              title="Actualiser la synthèse"
-              aria-label="Actualiser la synthèse"
+              title={labels.refresh}
+              aria-label={labels.refresh}
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
             </button>
@@ -212,10 +222,10 @@ export default function FlashBriefingModal({
               onClick={() => void handleCopyText()}
               disabled={!data}
               className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-white/[0.04] px-2.5 text-xs font-semibold text-text transition hover:bg-white/[0.08] hover:text-text"
-              title="Copier le compte-rendu textuel"
+              title={labels.copyButton}
             >
               {copied ? <Check className="h-3.5 w-3.5 text-al-green" /> : <Copy className="h-3.5 w-3.5" />}
-              <span className="hidden sm:inline">{copied ? 'Copié !' : 'Copier'}</span>
+              <span className="hidden sm:inline">{copied ? labels.copied : labels.copy}</span>
             </button>
 
             {/* Bouton Fermer */}
@@ -223,8 +233,8 @@ export default function FlashBriefingModal({
               type="button"
               onClick={handleClose}
               className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white/[0.04] text-text-muted transition hover:bg-white/[0.08] hover:text-text"
-              title="Fermer"
-              aria-label="Fermer le Flash Briefing"
+              title={labels.close}
+              aria-label={labels.closeAria}
             >
               <X className="h-4 w-4" />
             </button>
@@ -236,7 +246,7 @@ export default function FlashBriefingModal({
           {!data && (
             <div className="flex h-64 flex-col items-center justify-center gap-3 text-text-muted">
               <div className="h-7 w-7 animate-spin rounded-full border-2 border-al-green border-t-transparent" />
-              <p className="text-xs font-semibold">Génération de la synthèse en cours…</p>
+              <p className="text-xs font-semibold">{labels.generating}</p>
             </div>
           )}
 
@@ -244,11 +254,11 @@ export default function FlashBriefingModal({
             <div className="space-y-6">
               {/* Carte Résumé Exécutif */}
               <div className="relative overflow-hidden rounded-2xl border border-line bg-surface-1/80 p-4 sm:p-5 shadow-2xl">
-                <div className="h-[2px] w-full bg-tricolor-bar absolute top-0 left-0 right-0 opacity-80" />
+                <div className="h-[2px] w-full bg-tricolor-bar absolute top-0 inset-x-0 opacity-80" />
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-xs font-bold text-al-green">
                     <Sparkles className="h-4 w-4" />
-                    <span>RÉSUMÉ EXÉCUTIF · {data.targetName.toUpperCase()}</span>
+                    <span>{format(labels.executive, { target: data.targetName.toLocaleUpperCase(locale) })}</span>
                   </div>
                   <div className="flex items-center gap-1.5 font-mono text-xs text-text-muted">
                     <Calendar className="h-3 w-3" />
@@ -268,7 +278,7 @@ export default function FlashBriefingModal({
                 <div className="rounded-lg border border-line bg-white/[0.02] p-3 text-center">
                   <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-text-muted">
                     <Newspaper className="h-3.5 w-3.5 text-al-green" />
-                    <span>Dépêches</span>
+                    <span>{labels.metricArticles}</span>
                   </div>
                   <div className="mt-1 text-xl font-black text-text sm:text-2xl">
                     {data.metrics.articlesAnalyzed}
@@ -278,7 +288,7 @@ export default function FlashBriefingModal({
                 <div className="rounded-lg border border-line bg-white/[0.02] p-3 text-center">
                   <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-text-muted">
                     <AlertTriangle className="h-3.5 w-3.5 text-al-gold" />
-                    <span>Alertes</span>
+                    <span>{labels.metricAlerts}</span>
                   </div>
                   <div className="mt-1 text-xl font-black text-al-gold sm:text-2xl">
                     {data.metrics.alertsActive}
@@ -288,7 +298,7 @@ export default function FlashBriefingModal({
                 <div className="rounded-lg border border-line bg-white/[0.02] p-3 text-center">
                   <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-text-muted">
                     <Globe2 className="h-3.5 w-3.5 text-sky-400" />
-                    <span>Pays couverts</span>
+                    <span>{labels.metricCountries}</span>
                   </div>
                   <div className="mt-1 text-xl font-black text-text sm:text-2xl">
                     {data.metrics.countriesCovered}
@@ -298,7 +308,7 @@ export default function FlashBriefingModal({
                 <div className="rounded-lg border border-line bg-white/[0.02] p-3 text-center">
                   <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-text-muted">
                     <Tv className="h-3.5 w-3.5 text-al-red-soft" />
-                    <span>TV en direct</span>
+                    <span>{labels.metricTv}</span>
                   </div>
                   <div className="mt-1 text-xl font-black text-text sm:text-2xl">
                     {data.metrics.channelsOnAir}
@@ -343,7 +353,7 @@ export default function FlashBriefingModal({
                                   : 'bg-al-gold/20 text-al-gold'
                               }`}
                             >
-                              {section.status === 'critical' ? 'Critique' : 'Vigilance'}
+                              {section.status === 'critical' ? labels.critical : labels.vigilance}
                             </span>
                           )}
                         </div>
@@ -374,7 +384,7 @@ export default function FlashBriefingModal({
                             className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-al-gold/30 bg-al-gold/10 px-3 py-1.5 text-xs font-bold text-al-gold transition hover:bg-al-gold/20"
                           >
                             <Tv className="h-3.5 w-3.5" />
-                            <span>Voir les chaînes TV de {data.targetName}</span>
+                            <span>{format(labels.seeChannels, { name: data.targetName })}</span>
                           </button>
                         </div>
                       )}
@@ -385,7 +395,7 @@ export default function FlashBriefingModal({
 
               {/* Mentions légales & Attribution */}
               <div className="rounded-lg border border-white/[0.05] bg-black/30 p-3 text-xs leading-relaxed text-text-muted">
-                <span className="font-semibold text-text-muted">Attribution & Open Data : </span>
+                <span className="font-semibold text-text-muted">{labels.attribution}</span>
                 {data.disclaimer}
               </div>
             </div>

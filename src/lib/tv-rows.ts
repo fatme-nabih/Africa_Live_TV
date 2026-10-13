@@ -1,3 +1,6 @@
+import { fr } from '@/i18n/fr';
+import type { Dictionary } from '@/i18n/dictionary';
+import type { Edition } from './editions';
 import { channelSchema, type CatalogRequest } from './api-contracts';
 import { STORAGE_KEYS } from './storage-keys';
 import type { Channel, ChannelFilters } from '@/types/channel';
@@ -26,13 +29,13 @@ export function tvRowRequest(id: TvRowId, followedCountry: string = DEFAULT_FOLL
   };
 }
 
-export function tvRowTitle(id: TvRowId, countryName = 'Sénégal') {
+export function tvRowTitle(id: TvRowId, countryName = 'Sénégal', labels: Dictionary['tv']['rows'] = fr.tv.rows) {
   switch (id) {
-    case 'favorites': return 'Mes favoris';
-    case 'country': return `${countryName} en direct`;
-    case 'news': return 'Info';
-    case 'sports': return 'Sport';
-    case 'music': return 'Musique';
+    case 'favorites': return labels.favorites;
+    case 'country': return labels.country.replace('{name}', countryName);
+    case 'news': return labels.news;
+    case 'sports': return labels.sports;
+    case 'music': return labels.music;
   }
 }
 
@@ -41,8 +44,9 @@ export function isCatalogHome(filters: ChannelFilters, favoritesOnly: boolean) {
   return !favoritesOnly && !filters.search && !filters.country && !filters.group && !filters.language && !filters.status && !filters.region;
 }
 
-export function tvRowCacheKey(id: TvRowId, followedCountry: string) {
-  return id === 'country' ? `country:${followedCountry}` : id;
+export function tvRowCacheKey(id: TvRowId, followedCountry: string, edition: Edition = 'fr') {
+  const key = id === 'country' ? `country:${followedCountry}` : id;
+  return edition === 'fr' ? key : `${key}:${edition}`;
 }
 
 type CacheEntry = { at: number; channels: Channel[] };

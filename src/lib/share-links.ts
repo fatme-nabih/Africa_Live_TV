@@ -1,5 +1,12 @@
 // Partage (WhatsApp, Facebook, menu du téléphone, copie) : titre + adresse publique, rien d'autre.
-// Jamais d'URL de flux média ni de donnée personnelle.
+// Jamais d'URL de flux média ni de donnée personnelle. Textes et liens selon l'édition (EDI-502) ; le français est inchangé.
+import { fr } from '@/i18n/fr';
+import type { Dictionary } from '@/i18n/dictionary';
+import { format } from '@/i18n/message';
+import { DEFAULT_EDITION, type Edition } from './editions';
+import { editionHref } from './edition-routing';
+
+type ShareMessages = Dictionary['share']['messages'];
 const MAX_MESSAGE_LENGTH = 1_000;
 const MEDIA_PATH = /\.(m3u8?|mpd|ts|mp4|webm|aac)(\?|#|$)/i;
 
@@ -31,23 +38,27 @@ export function facebookHref(url: string): string {
 /** `href` : lien WhatsApp ; `title` : titre pour le menu de partage du téléphone. */
 export type ShareLink = { href: string; facebook: string; title: string; text: string; url: string };
 
-/** Chaîne : lien vers le lecteur Africa Live (le destinataire se connecte, puis regarde). */
-export function channelShare(input: { name: string; id: string; origin: string }): ShareLink | null {
-  const url = `${input.origin.replace(/\/+$/, '')}/player/${encodeURIComponent(input.id)}`;
+/**
+ * Chaîne : lien vers le lecteur Africa Live (le destinataire se connecte, puis regarde). Hors français, le lien porte
+ * l'édition (`/en/player/…`) : le proxy la mémorise puis ouvre l'adresse courte.
+ */
+export function channelShare(input: { name: string; id: string; origin: string }, edition: Edition = DEFAULT_EDITION, messages: ShareMessages = fr.share.messages): ShareLink | null {
+  const url = `${input.origin.replace(/\/+$/, '')}${editionHref(`/player/${encodeURIComponent(input.id)}`, edition)}`;
   if (!isShareableUrl(url)) return null;
-  const title = `${input.name.trim()} en direct sur Africa Live`;
-  const text = `Regarde ${input.name.trim()} en direct sur Africa Live : ${url}`;
+  const title = format(messages.channelTitle, { name: input.name.trim() });
+  const text = format(messages.channelText, { name: input.name.trim(), url });
   return { href: whatsappHref(text), facebook: facebookHref(url), title, text: clamp(text), url };
 }
 
-/** Dépêche : titre, rédaction, adresse de l'article chez l'éditeur, puis l'accueil d'Africa Live. */
-export function articleShare(input: { title: string; sourceName?: string; articleUrl: string; origin: string }): ShareLink | null {
+/** Dépêche : titre, rédaction, adresse de l'article chez l'éditeur, puis l'accueil d'Africa Live dans l'édition. */
+export function articleShare(input: { title: string; sourceName?: string; articleUrl: string; origin: string }, edition: Edition = DEFAULT_EDITION, messages: ShareMessages = fr.share.messages): ShareLink | null {
   if (!isShareableUrl(input.articleUrl)) return null;
   const source = input.sourceName?.trim();
+  const home = input.origin.replace(/\/+$/, '') + (edition === DEFAULT_EDITION ? '' : `/${edition}`);
   const text = [
     source ? `${input.title.trim()} (${source})` : input.title.trim(),
     input.articleUrl,
-    `Via Africa Live : ${input.origin.replace(/\/+$/, '')}`,
+    format(messages.via, { url: home }),
   ].join('\n');
   return { href: whatsappHref(text), facebook: facebookHref(input.articleUrl), title: input.title.trim(), text: clamp(text), url: input.articleUrl };
 }

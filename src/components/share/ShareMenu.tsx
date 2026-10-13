@@ -1,4 +1,5 @@
 'use client';
+import { useI18n } from '@/i18n/client';
 
 import { Check, Copy, Ellipsis, MessageCircle } from 'lucide-react';
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react';
@@ -14,7 +15,7 @@ function useNativeShare() {
 }
 
 const ITEM =
-  'flex min-h-11 w-full items-center gap-3 rounded-control px-3 text-left text-sm font-semibold text-text transition-colors hover:bg-surface-2 focus-visible:bg-surface-2 focus-visible:outline-none';
+  'flex min-h-11 w-full items-center gap-3 rounded-control px-3 text-start text-sm font-semibold text-text transition-colors hover:bg-surface-2 focus-visible:bg-surface-2 focus-visible:outline-none';
 
 /**
  * Bouton « Partager » et son menu : WhatsApp, Facebook, menu du téléphone, copie du lien.
@@ -35,6 +36,7 @@ export default function ShareMenu({
   tabIndex?: number;
   children: ReactNode;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [copy, setCopy] = useState<'idle' | 'copied' | 'failed'>('idle');
   const nativeShare = useNativeShare();
@@ -133,7 +135,7 @@ export default function ShareMenu({
         type="button"
         tabIndex={tabIndex}
         aria-label={label}
-        title="Partager"
+        title={t.share.copy["Partager"]}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
@@ -154,18 +156,15 @@ export default function ShareMenu({
         >
           <a role="menuitem" href={share.href} target="_blank" rel="noopener noreferrer" onClick={() => close()} className={ITEM}>
             <MessageCircle aria-hidden="true" className="size-4 shrink-0 text-al-green" />
-            WhatsApp
-          </a>
+            {t.share.copy["WhatsApp"]}</a>
           <a role="menuitem" href={share.facebook} target="_blank" rel="noopener noreferrer" onClick={() => close()} className={ITEM}>
-            <span aria-hidden="true" className="inline-flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-[#1877F2] text-[11px] font-black leading-none text-white">f</span>
-            Facebook
-          </a>
+            <span aria-hidden="true" className="inline-flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-[#1877F2] text-[11px] font-black leading-none text-white">{t.share.copy["f"]}</span>
+            {t.share.copy["Facebook"]}</a>
           {nativeShare && (
             <button role="menuitem" type="button" onClick={shareNative} className={ITEM}>
               <Ellipsis aria-hidden="true" className="size-4 shrink-0 text-text-muted" />
               <span className="min-w-0">
-                Plus d’options…
-                <span className="block text-xs font-normal text-text-muted">Instagram, TikTok, Telegram…</span>
+                {t.share.copy["Plus d’options…"]}<span className="block text-xs font-normal text-text-muted">{t.share.copy["Instagram, TikTok, Telegram…"]}</span>
               </span>
             </button>
           )}
@@ -173,11 +172,11 @@ export default function ShareMenu({
             {copy === 'copied'
               ? <Check aria-hidden="true" className="size-4 shrink-0 text-al-green" />
               : <Copy aria-hidden="true" className="size-4 shrink-0 text-text-muted" />}
-            {copy === 'copied' ? 'Lien copié' : copy === 'failed' ? 'Copie impossible' : 'Copier le lien'}
+            {copy === 'copied' ? t.share.copy["Lien copié"] : copy === 'failed' ? t.share.copy["Copie impossible"] : t.share.copy["Copier le lien"]}
           </button>
         </div>
       )}
-      <span role="status" className="sr-only">{copy === 'copied' ? 'Lien copié' : copy === 'failed' ? 'Copie impossible' : ''}</span>
+      <span role="status" className="sr-only">{copy === 'copied' ? t.share.copy["Lien copié"] : copy === 'failed' ? t.share.copy["Copie impossible"] : t.share.copy[""]}</span>
     </span>
   );
 }

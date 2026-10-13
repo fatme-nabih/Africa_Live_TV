@@ -1,0 +1,18 @@
+
+<rss version="2.0">
+<channel>
+<title>Windows 1256</title>
+<link>https://feed.fixture.test/</link>
+<description>Flux synthétique Africa Live (EDI-002) : titres inventés, format de date réel.</description>
+<item>
+<title>ÚäæÇä ÊÌÑíÈí ÈÊÑãíÒ æíäÏæÒ ááÚÑÈíÉ</title>
+<link>https://feed.fixture.test/windows-1256/1</link>
+<pubDate>Sun, 11 Oct 2026 17:00:00 +0000</pubDate>
+</item>
+<item>
+<title>ÎÈÑ ÊÌÑíÈí ËÇä Úä ÇáÇŞÊÕÇÏ</title>
+<link>https://feed.fixture.test/windows-1256/2</link>
+<pubDate>Sun, 11 Oct 2026 16:00:00 +0000</pubDate>
+</item>
+</channel>
+</rss>
