@@ -1,4 +1,4 @@
-> **Suite Git autorisée le 13/10/2026 :** le propriétaire demande « commit et push sur github ». Le chantier E0–E9, les tests et les dossiers seront enregistrés sur main après contrôle des fichiers/secrets. La publication staging f4d85931 reste celle du paquet déjà reçu ; cette demande Git n’ouvre pas une nouvelle livraison distante. .claude, logs, sauvegardes et secrets restent hors Git. État avant commit conservé dans .local-logs/git-editions-2026-10-13/.
+> **GitHub, 13/10/2026 :** demande explicite « commit et push sur github » exécutée. Commit applicatif **[62171a3](https://github.com/fatme-nabih/Africa_Live_TV/commit/62171a324884b9f4aa51cf3d744c13ebf2d9f9b1)** poussé sur main ; CI **[EN COURS](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38475620783)**. Les 646 fichiers du paquet staging correspondent au commit après les seules fins de ligne de Git ; aucune nouvelle publication Railway. .claude reste non suivi, index vide. [Preuve GitHub](github-editions-2026-10-13.md).
 
 # Passation après publication EDI-903 — 13 octobre 2026
 
@@ -12,6 +12,8 @@
 - D7 et juridique : le propriétaire confirme **« Relectures validées, publier les textes actuels »** ; EDI-404 reçu. Dictionnaires et CSV canonique inchangés. Propositions juridiques A–D non appliquées ; faits/documents JUR non fournis ne sont pas inventés.
 
 ## Poste local à préserver
+
+**Après Git :** code/test/documentation enregistrés sur main ; index vide, seul .claude non suivi. La description de l’arbre et des 27 renommages ci-dessous est celle de la réception EDI-903 avant l’autorisation Git.
 
 Même checkout **C:/Users/GAMER PC/Africa_Live_TV**, arbre volontairement sale, **index 27 renommages inchangé**. Aucun clone/worktree depuis HEAD, nettoyage ou opération Git de staging. Git : 236 entrées avant EDI-903, 238 après (deux nouveaux documents publication/passation), index 27 renommages identique. [Contrôle final](../.local-logs/publication-editions-2026-10-13/final-check.json). Consulter git status avant toute édition ; préserver .claude et toutes les sources non committées. Le paquet uploadé est une copie de livraison depuis le disque, pas un checkout HEAD.
 

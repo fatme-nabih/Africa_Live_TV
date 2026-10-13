@@ -1,3 +1,5 @@
+> **GitHub, 13/10/2026 :** demande explicite « commit et push sur github » exécutée. Commit applicatif **[62171a3](https://github.com/fatme-nabih/Africa_Live_TV/commit/62171a324884b9f4aa51cf3d744c13ebf2d9f9b1)** poussé sur main ; CI **[EN COURS](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38475620783)**. Les 646 fichiers du paquet staging correspondent au commit après les seules fins de ligne de Git ; aucune nouvelle publication Railway. .claude reste non suivi, index vide. [Preuve GitHub](github-editions-2026-10-13.md).
+
 # EDI-903 — publication Railway staging reçue, 13 octobre 2026
 
 **FR · EN · AR publiées sur [staging.africatv.sn](https://staging.africatv.sn). 43/43 tickets EDI reçus avec les limites ci-dessous.** Le propriétaire a demandé « go pour EDI-903 », puis confirmé « Relectures validées, publier les textes actuels ». [Validation D7/juridique](relectures-editions-2026-10-13/validation-proprietaire.md) : EDI-404 reçu, sources actuelles acceptées, propositions juridiques A–D non appliquées. Les neuf constats JUR restent documentés ; aucune qualification réglementaire ou donnée d'exploitant supplémentaire n'est inventée.

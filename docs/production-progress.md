@@ -1,3 +1,7 @@
+## Éditions — commit et push GitHub reçus, 13 octobre 2026
+
+Autorisation explicite reçue ; [62171a3](https://github.com/fatme-nabih/Africa_Live_TV/commit/62171a324884b9f4aa51cf3d744c13ebf2d9f9b1) poussé sur main, 279 fichiers. 999 fichiers contrôlés sans secret/privé ; 646 fichiers correspondants au paquet staging avec seules fins de ligne Git. CI [EN COURS](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38475620783). Seul .claude non suivi, index vide ; aucun code/donnée/configuration/tâche/cycle modifié pour cette opération, aucune nouvelle publication Railway. [Preuve](github-editions-2026-10-13.md).
+
 ## EDI-903 — publication staging FR/EN/AR reçue, 13 octobre 2026
 
 Relectures validées par le propriétaire sur les textes actuels ; EDI-404 reçu. **43/43 tickets**, staging f4d85931-e353-422e-bbe6-aa1476ab360a SUCCESS, EDITIONS=fr,en,ar identique build/runtime. Sauvegarde chiffrée restaurée (25 tables) puis migration additive 0021 via pré-déploiement db:migrate:deploy ; 22 migrations, 646/646 fichiers. Santé 200 deux domaines, 28 E2E reçus +22 ignorés, 45 captures ; adaptations privées cookie localhost et URL canonique documentées, aucun test/app modifié. Données/index/.env/tâche/cycle conservés ; aucun commit/push, production, DNS, Clerk ou OVHcloud. Session Clerk connectée et deux navigateurs non reçus, paiement réel/lecture amont non effectués. [Dossier](publication-editions-edi903-2026-10-13.md), [passation](passation-editions-publication-2026-10-13.md).
