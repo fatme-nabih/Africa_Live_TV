@@ -1,6 +1,6 @@
 ## Éditions — commit et push GitHub reçus, 13 octobre 2026
 
-Autorisation explicite reçue ; [62171a3](https://github.com/fatme-nabih/Africa_Live_TV/commit/62171a324884b9f4aa51cf3d744c13ebf2d9f9b1) poussé sur main, 279 fichiers. 999 fichiers contrôlés sans secret/privé ; 646 fichiers correspondants au paquet staging avec seules fins de ligne Git. CI [EN COURS](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38475620783). Seul .claude non suivi, index vide ; aucun code/donnée/configuration/tâche/cycle modifié pour cette opération, aucune nouvelle publication Railway. [Preuve](github-editions-2026-10-13.md).
+Autorisation explicite reçue ; [62171a3](https://github.com/fatme-nabih/Africa_Live_TV/commit/62171a324884b9f4aa51cf3d744c13ebf2d9f9b1) poussé sur main, 279 fichiers. 999 fichiers contrôlés sans secret/privé ; 646 fichiers correspondants au paquet staging avec seules fins de ligne Git. CI [SUCCESS](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38475620783). Seul .claude non suivi, index vide ; aucun code/donnée/configuration/tâche/cycle modifié pour cette opération, aucune nouvelle publication Railway. [Preuve](github-editions-2026-10-13.md).
 
 ## EDI-903 — publication staging FR/EN/AR reçue, 13 octobre 2026
 

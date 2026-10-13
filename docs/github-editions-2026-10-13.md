@@ -11,7 +11,7 @@
 
 ## CI GitHub
 
-Run **[38475620783](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38475620783) — EN COURS** au relevé 2026-10-13T22:16:42.279Z. Le résultat est consigné tel que reçu ; aucun succès anticipé.
+Run **[38475620783](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38475620783) — SUCCESS** au relevé 2026-10-13T22:18:54.989Z. Logs reçus : **519 unités +44 ignorées (0 échec), 44 intégrations, 16 E2E de build, 104 composants, 68 UI**. Les cas ignorés restent distincts des réussites. Le job build-and-test est réussi ; Snyk Code non exécuté, avertissement prévu par le workflow (indisponibilité organisation/token). Les champs de progression des étapes de l'API étaient encore partiels à la clôture ; le résultat terminé/success et les logs sont conservés dans la preuve privée.
 
 Les logs/preuves privés sont dans .local-logs/git-editions-2026-10-13/ : scan-before/staged, whitespace-review, application-commit, commit-source-proof, ci-current/ci-proof et sortie du commit. Aucun secret ni log privé ajouté au dépôt. Le SAST Snyk dépend de la disponibilité de l'organisation/du token ; les cas ignorés ne sont pas des succès.
 

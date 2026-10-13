@@ -1,4 +1,4 @@
-> **GitHub, 13/10/2026 :** demande explicite « commit et push sur github » exécutée. Commit applicatif **[62171a3](https://github.com/fatme-nabih/Africa_Live_TV/commit/62171a324884b9f4aa51cf3d744c13ebf2d9f9b1)** poussé sur main ; CI **[EN COURS](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38475620783)**. Les 646 fichiers du paquet staging correspondent au commit après les seules fins de ligne de Git ; aucune nouvelle publication Railway. .claude reste non suivi, index vide. [Preuve GitHub](github-editions-2026-10-13.md).
+> **GitHub, 13/10/2026 :** demande explicite « commit et push sur github » exécutée. Commit applicatif **[62171a3](https://github.com/fatme-nabih/Africa_Live_TV/commit/62171a324884b9f4aa51cf3d744c13ebf2d9f9b1)** poussé sur main ; CI **[SUCCESS](https://github.com/fatme-nabih/Africa_Live_TV/actions/runs/38475620783)**. Les 646 fichiers du paquet staging correspondent au commit après les seules fins de ligne de Git ; aucune nouvelle publication Railway. .claude reste non suivi, index vide. [Preuve GitHub](github-editions-2026-10-13.md).
 
 # Passation après publication EDI-903 — 13 octobre 2026
 
